@@ -68,10 +68,11 @@ URL="$(gcloud run services describe "$SERVICE" --region "$REGION" --format='valu
 echo "== Nightly worksheet jobs (Cloud Scheduler)"
 TOKEN="$(gcloud secrets versions access latest --secret=birdbrains-batch-token)"
 schedule() {  # name, cron, path
-  local verb=create
-  gcloud scheduler jobs describe "$1" --location "$REGION" >/dev/null 2>&1 && verb=update
+  # create takes --headers; update takes --update-headers
+  local verb=create headers=--headers
+  gcloud scheduler jobs describe "$1" --location "$REGION" >/dev/null 2>&1 && verb=update headers=--update-headers
   gcloud scheduler jobs $verb http "$1" --location "$REGION" --schedule "$2" --time-zone "America/Toronto" \
-    --uri "$URL$3" --http-method POST --update-headers "X-Batch-Token=$TOKEN" >/dev/null
+    --uri "$URL$3" --http-method POST "$headers" "X-Batch-Token=$TOKEN" >/dev/null
 }
 schedule birdbrains-worksheets-submit  "0 1 * * *"     /internal/batch/worksheets/submit
 schedule birdbrains-worksheets-collect "*/30 2-8 * * *" /internal/batch/worksheets/collect
