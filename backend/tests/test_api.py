@@ -46,7 +46,7 @@ def test_full_flow(client, family):
     assert [p["pillar"] for p in grading["pillarBreakdowns"]] == ["CON", "PRC", "FAC", "TST"]
     # Carry-forward: step 5 is protected and only one root cause is reported.
     assert grading["stepDiagnostics"][4]["isCarryForwardProtected"] is True
-    assert [e["misconceptionId"] for e in grading["entityExtractions"]] == ["PRC-01"]
+    assert [e["misconceptionId"] for e in grading["entityExtractions"]] == ["PRC-03"]
     assert grading["pillarBreakdowns"][1]["errorCount"] == 1
 
     # Idempotent.
@@ -112,3 +112,17 @@ def test_pipeline_failure_is_reported(client, family, deps):
     sub = upload(client, family["studentId"]).json()
     assert client.post(f"/submissions/{sub['submissionId']}/process", headers=auth("alex")).status_code == 502
     assert client.get(f"/submissions/{sub['submissionId']}", headers=auth("alex")).json()["status"] == "FAILED"
+
+
+def test_duplicate_photo_is_rejected(client, family):
+    """UT-06: the same image bytes again is a 409 that points at the first submission."""
+    sid = family["studentId"]
+    page = photo()
+    files = lambda: [("files", ("p.jpg", page, "image/jpeg"))]
+    first = upload(client, sid, files=files())
+    assert first.status_code == 201
+    again = upload(client, sid, files=files())
+    assert again.status_code == 409
+    assert again.headers["location"] == f"/submissions/{first.json()['submissionId']}"
+    # A different photo still goes through.
+    assert upload(client, sid).status_code == 201

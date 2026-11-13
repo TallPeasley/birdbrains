@@ -1,7 +1,8 @@
 """Record persistence: Firestore in production, in-memory for local runs and tests.
 
 A deliberately small document interface. Collections used: users, linkcodes,
-submissions, transcriptions, gradings, worksheets, ledgers, batchjobs.
+submissions, imagehashes, transcriptions, gradings, worksheets, ledgers,
+batchjobs.
 """
 from __future__ import annotations
 

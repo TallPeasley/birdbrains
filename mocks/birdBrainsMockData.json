@@ -79,7 +79,7 @@
     ],
     "entityExtractions": [
       {
-        "misconceptionId": "PRC-01",
+        "misconceptionId": "PRC-03",
         "description": "Failure to distribute leading coefficient to subtracted square term when extracting from bracket.",
         "severity": "HIGH"
       }

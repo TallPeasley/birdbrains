@@ -21,7 +21,7 @@ STUDENT_ID_PATTERN = r"^stu_[a-zA-Z0-9]{12}$"
 SUBMISSION_ID_PATTERN = r"^sub_[a-zA-Z0-9]{12}$"
 GRADING_ID_PATTERN = r"^grd_[a-zA-Z0-9]{12}$"
 WORKSHEET_ID_PATTERN = r"^wks_[a-zA-Z0-9]{12}$"
-ERROR_CODE_PATTERN = r"^(CON|PRC|FAC|TST)-\d{2}$"
+ERROR_CODE_PATTERN = r"^(CON|PRC|FAC|TST)-0[1-4]$"  # the 16 official codes
 
 
 class Strict(BaseModel):

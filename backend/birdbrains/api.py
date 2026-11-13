@@ -1,5 +1,6 @@
 """HTTP API (FastAPI). Run locally with ``uvicorn birdbrains.api:app``."""
 
+import hashlib
 import hmac
 import io
 import logging
@@ -237,15 +238,23 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
                 raise HTTPException(422, f"Photo {i + 1} is below 1080p ({w}x{h}). Please retake it.")
             if smallest is None or min(w, h) < min(smallest):
                 smallest = (w, h)
-            stored.append((i, data, ALLOWED_TYPES[fmt], fmt.lower()))
+            stored.append((i, data, ALLOWED_TYPES[fmt], fmt.lower(), hashlib.sha256(data).hexdigest()))
         if sharpnessScore < MIN_SHARPNESS_SCORE:
             raise HTTPException(422, "The photo is too blurry. Please retake it.")
+        # UT-06: the exact same photo uploaded again for this student is a 409, and
+        # the pipeline is not run a second time. Location points at the original.
+        for i, *_, sha in stored:
+            seen = d.store.get("imagehashes", f"{studentId}_{sha}")
+            if seen:
+                raise HTTPException(
+                    409, f"Photo {i + 1} was already uploaded. Open your earlier diagnostic instead.",
+                    headers={"Location": f"/submissions/{seen['submissionId']}"})
 
         file_records = []
-        for i, data, mime, ext in stored:
+        for i, data, mime, ext, sha in stored:
             path = f"submissions/{studentId}/{submission_id}/{i}.{ext}"
             uri = d.storage.write_bytes(path, data, mime)
-            file_records.append({"path": path, "uri": uri, "mimeType": mime})
+            file_records.append({"path": path, "uri": uri, "mimeType": mime, "sha256": sha})
         record = {
             "submissionId": submission_id,
             "studentId": studentId,
@@ -261,6 +270,8 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
             "uploadedBy": user["uid"],
         }
         d.store.put("submissions", submission_id, record)
+        for *_, sha in stored:
+            d.store.put("imagehashes", f"{studentId}_{sha}", {"studentId": studentId, "submissionId": submission_id})
         return submission_payload(record)
 
     def submission_payload(record: dict) -> SubmissionIngestionPayload:

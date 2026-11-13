@@ -1,6 +1,6 @@
 # BirdBrains web
 
-Next.js 15 (App Router) + React 19 + Tailwind CSS 3 frontend built from the BirdBrains UI/UX spec, plus a Python backend in [`backend/`](backend/README.md).
+Next.js 15 (App Router) + React 19 + Tailwind CSS 3 frontend built from the BirdBrains UI/UX spec, plus a Python backend in [`backend/`](backend/README.md). Team roles, branch rules and the API contract: [`docs/TEAM.md`](docs/TEAM.md).
 
 With no environment variables set the site runs on demo data from `mocks/birdBrainsMockData.json`. Set `NEXT_PUBLIC_API_URL` (see `.env.example`) and it switches to real sign-in, real uploads and live dashboards.
 
