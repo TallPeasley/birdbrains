@@ -19,7 +19,8 @@ gcloud config set project "$PROJECT" >/dev/null
 echo "== Enabling APIs"
 gcloud services enable run.googleapis.com cloudbuild.googleapis.com artifactregistry.googleapis.com \
   aiplatform.googleapis.com firestore.googleapis.com storage.googleapis.com \
-  secretmanager.googleapis.com cloudscheduler.googleapis.com identitytoolkit.googleapis.com
+  secretmanager.googleapis.com cloudscheduler.googleapis.com identitytoolkit.googleapis.com \
+  compute.googleapis.com
 
 echo "== Storage bucket and Firestore (both in $REGION)"
 gcloud storage buckets describe "gs://$BUCKET" >/dev/null 2>&1 || \
@@ -45,6 +46,15 @@ if ! gcloud secrets describe birdbrains-batch-token >/dev/null 2>&1; then
 fi
 gcloud secrets add-iam-policy-binding birdbrains-batch-token --member="serviceAccount:$SA" \
   --role=roles/secretmanager.secretAccessor >/dev/null
+
+echo "== Build permissions"
+# New projects build source deploys as the default compute service account, which
+# starts without build rights. Grant them, then give IAM a minute to propagate.
+PROJECT_NUMBER="$(gcloud projects describe "$PROJECT" --format='value(projectNumber)')"
+gcloud projects add-iam-policy-binding "$PROJECT" \
+  --member="serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com" \
+  --role=roles/run.builder --condition=None >/dev/null
+sleep 60
 
 echo "== Deploying to Cloud Run"
 # --allow-unauthenticated: the browser calls the API directly; every route except
