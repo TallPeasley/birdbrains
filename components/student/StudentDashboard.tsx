@@ -6,7 +6,7 @@ import AffectCard from '@/components/student/AffectCard';
 import PillarCards from '@/components/student/PillarCards';
 import StepDiagnostics from '@/components/student/StepDiagnostics';
 import WorksheetViewer from '@/components/student/WorksheetViewer';
-import { Loading, Notice, NoWorkNotice, useDashboardGate } from '@/components/DashboardStates';
+import { LoadError, Loading, NoWorkNotice, useDashboardGate } from '@/components/DashboardStates';
 import { api, ApiError } from '@/lib/api';
 import { demoPersonas, gradingOutput, worksheet as demoWorksheet } from '@/lib/mockData';
 import { useSession } from '@/lib/session';
@@ -27,7 +27,8 @@ type State =
 
 export default function StudentDashboard() {
   const { live, profile, activeStudentId, getToken, dataVersion } = useSession();
-  const gate = useDashboardGate();
+  const gate = useDashboardGate('student');
+  const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState<State>({ kind: 'loading' });
 
   useEffect(() => {
@@ -54,7 +55,7 @@ export default function StudentDashboard() {
     return () => {
       cancelled = true;
     };
-  }, [live, activeStudentId, getToken, dataVersion]);
+  }, [live, activeStudentId, getToken, dataVersion, attempt]);
 
   if (!live) {
     return (
@@ -62,9 +63,11 @@ export default function StudentDashboard() {
     );
   }
   if (gate) return gate;
-  if (state.kind === 'loading') return <Loading />;
+  if (state.kind === 'loading') return <Loading variant="student" />;
   if (state.kind === 'empty') return <NoWorkNotice />;
-  if (state.kind === 'error') return <Notice title="We couldn’t load the diagnostic">{state.message}</Notice>;
+  if (state.kind === 'error') {
+    return <LoadError title="We couldn’t load your results" message={state.message} onRetry={() => setAttempt((n) => n + 1)} />;
+  }
   return <View name={profile!.name} own={profile!.role === 'student'} {...state} />;
 }
 

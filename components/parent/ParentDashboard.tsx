@@ -5,7 +5,7 @@ import EqaoForecast from '@/components/parent/EqaoForecast';
 import FrictionAlerts from '@/components/parent/FrictionAlerts';
 import MasteryChart from '@/components/parent/MasteryChart';
 import PillarErrorChart from '@/components/parent/PillarErrorChart';
-import { Loading, Notice, NoWorkNotice, useDashboardGate } from '@/components/DashboardStates';
+import { LoadError, Loading, NoWorkNotice, useDashboardGate } from '@/components/DashboardStates';
 import { api, ApiError } from '@/lib/api';
 import { parentSummary as demoSummary } from '@/lib/mockData';
 import { useSession } from '@/lib/session';
@@ -19,7 +19,8 @@ type State =
 
 export default function ParentDashboard() {
   const { live, profile, activeStudentId, setActiveStudentId, getToken, dataVersion } = useSession();
-  const gate = useDashboardGate();
+  const gate = useDashboardGate('parent');
+  const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState<State>({ kind: 'loading' });
 
   useEffect(() => {
@@ -37,13 +38,15 @@ export default function ParentDashboard() {
     return () => {
       cancelled = true;
     };
-  }, [live, activeStudentId, getToken, dataVersion]);
+  }, [live, activeStudentId, getToken, dataVersion, attempt]);
 
   if (!live) return <View s={demoSummary} />;
   if (gate) return gate;
-  if (state.kind === 'loading') return <Loading />;
+  if (state.kind === 'loading') return <Loading variant="parent" />;
   if (state.kind === 'empty') return <NoWorkNotice />;
-  if (state.kind === 'error') return <Notice title="We couldn’t load the dashboard">{state.message}</Notice>;
+  if (state.kind === 'error') {
+    return <LoadError title="We couldn’t load the dashboard" message={state.message} onRetry={() => setAttempt((n) => n + 1)} />;
+  }
 
   const children = profile?.role === 'parent' ? profile.childStudentIds : [];
   return (

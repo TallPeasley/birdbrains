@@ -2,28 +2,85 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { AlertCircle, FileQuestion, RotateCcw, UploadCloud } from 'lucide-react';
 import { useSession } from '@/lib/session';
 import { useRole } from '@/lib/roleContext';
 
-export function Notice({ title, children }: { title: string; children?: React.ReactNode }) {
+export function Notice({
+  title,
+  icon,
+  children,
+}: {
+  title: string;
+  icon?: React.ReactNode;
+  children?: React.ReactNode;
+}) {
   return (
     <div className="card mx-auto max-w-xl p-8 text-center">
+      {icon && <div className="mb-4 flex justify-center">{icon}</div>}
       <h2 className="text-lg font-semibold text-slate-900">{title}</h2>
       <div className="mt-2 space-y-4 text-sm text-slate-600">{children}</div>
     </div>
   );
 }
 
-export function Loading() {
+/** Grey placeholder blocks shaped like the dashboard that is about to load. */
+export function Loading({ variant = 'student' }: { variant?: 'student' | 'parent' }) {
+  const block = 'rounded-2xl border border-slate-200 bg-slate-100';
   return (
-    <div className="flex items-center justify-center gap-2 py-24 text-sm text-slate-500" role="status">
-      <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> Loading…
+    <div className="animate-pulse space-y-6" role="status" aria-label="Loading dashboard">
+      <div className="space-y-2">
+        <div className="h-3 w-28 rounded bg-slate-200" />
+        <div className="h-8 w-2/3 max-w-md rounded-lg bg-slate-200" />
+      </div>
+      {variant === 'student' ? (
+        <>
+          <div className={`h-28 ${block}`} />
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className={`h-32 ${block}`} />
+            ))}
+          </div>
+          <div className={`h-72 ${block}`} />
+        </>
+      ) : (
+        <>
+          <div className={`h-20 ${block}`} />
+          <div className={`h-80 ${block}`} />
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div className={`h-64 ${block}`} />
+            <div className={`h-64 ${block}`} />
+          </div>
+        </>
+      )}
+      <span className="sr-only">Loading…</span>
     </div>
   );
 }
 
-const primary = 'inline-flex rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700';
+/** Shown when a dashboard request fails. The button runs the request again. */
+export function LoadError({ title, message, onRetry }: { title: string; message: string; onRetry: () => void }) {
+  return (
+    <Notice
+      title={title}
+      icon={
+        <span className="grid h-14 w-14 place-items-center rounded-full bg-rose-50 text-rose-600">
+          <AlertCircle className="h-7 w-7" aria-hidden />
+        </span>
+      }
+    >
+      <p role="alert">{message}</p>
+      <button onClick={onRetry} className={dark}>
+        <RotateCcw className="h-4 w-4" aria-hidden /> Try again
+      </button>
+    </Notice>
+  );
+}
+
+const primary =
+  'inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700';
+const dark =
+  'inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800';
 
 export function SignInNotice() {
   return (
@@ -38,10 +95,17 @@ export function SignInNotice() {
 export function NoWorkNotice() {
   const { openCapture } = useRole();
   return (
-    <Notice title="No graded work yet">
-      <p>Upload a photo of handwritten math work and the diagnostic will appear here.</p>
+    <Notice
+      title="No graded work yet"
+      icon={
+        <span className="grid h-14 w-14 place-items-center rounded-full bg-indigo-50 text-indigo-600">
+          <FileQuestion className="h-7 w-7" aria-hidden />
+        </span>
+      }
+    >
+      <p>Take a photo of some handwritten math work and upload it. Your results will show up here.</p>
       <button onClick={openCapture} className={primary}>
-        Upload work
+        <UploadCloud className="h-4 w-4" aria-hidden /> Upload work
       </button>
     </Notice>
   );
@@ -86,9 +150,9 @@ export function LinkChildForm() {
 }
 
 /** Shared gate for both dashboards. Returns a screen to show instead of data, or null to proceed. */
-export function useDashboardGate(): React.ReactNode | null {
+export function useDashboardGate(variant: 'student' | 'parent' = 'student'): React.ReactNode | null {
   const { ready, profile, activeStudentId } = useSession();
-  if (!ready) return <Loading />;
+  if (!ready) return <Loading variant={variant} />;
   if (!profile) return <SignInNotice />;
   if (!activeStudentId) return <LinkChildForm />;
   return null;
