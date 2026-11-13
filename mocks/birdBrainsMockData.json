@@ -1,0 +1,259 @@
+{
+  "stage2GradingAndAffectOutput": {
+    "gradingId": "grd_mpm2d_001",
+    "submissionId": "sub_8839201",
+    "studentId": "std_alex_99",
+    "topic": "Grade 10 Completing the Square (PRC-01)",
+    "totalScore": 7.5,
+    "maxPossibleScore": 10.0,
+    "affectState": "HIGH_FRICTION_FRUSTRATION",
+    "supportiveFramingMessage": "Great persistence! You executed the core algebraic steps correctly. A minor procedural slip on step 4 created downstream errors, but your conceptual understanding of quadratic structures shines through.",
+    "pillarBreakdowns": [
+      {
+        "pillar": "CONCEPTUAL",
+        "maxScore": 3.0,
+        "earnedScore": 3.0,
+        "errorCount": 0,
+        "feedback": "Flawless grasp of vertex form conversion logic and maintaining equation equivalence."
+      },
+      {
+        "pillar": "PROCEDURAL",
+        "maxScore": 3.0,
+        "earnedScore": 1.5,
+        "errorCount": 1,
+        "feedback": "Forgot to distribute the leading coefficient when extracting the constant in Step 4."
+      },
+      {
+        "pillar": "REPRESENTATION",
+        "maxScore": 2.0,
+        "earnedScore": 1.5,
+        "errorCount": 0,
+        "feedback": "Clear progression of algebraic lines, minor formatting inconsistency."
+      },
+      {
+        "pillar": "COMMUNICATION",
+        "maxScore": 2.0,
+        "earnedScore": 1.5,
+        "errorCount": 0,
+        "feedback": "Final vertex stated clearly, though step reasoning could be explicitly labeled."
+      }
+    ],
+    "stepDiagnostics": [
+      {
+        "stepNumber": 1,
+        "studentInput": "y = 2x^2 + 12x + 5",
+        "isCorrect": true,
+        "pillarImpacted": "CONCEPTUAL",
+        "isCarryForwardProtected": false,
+        "explanation": "Original equation correctly written."
+      },
+      {
+        "stepNumber": 2,
+        "studentInput": "y = 2(x^2 + 6x) + 5",
+        "isCorrect": true,
+        "pillarImpacted": "PROCEDURAL",
+        "isCarryForwardProtected": false,
+        "explanation": "Factored out coefficient 2 from the first two terms accurately."
+      },
+      {
+        "stepNumber": 3,
+        "studentInput": "y = 2(x^2 + 6x + 9 - 9) + 5",
+        "isCorrect": true,
+        "pillarImpacted": "PROCEDURAL",
+        "isCarryForwardProtected": false,
+        "explanation": "Correctly completed square inside parenthesis using (6/2)^2 = 9."
+      },
+      {
+        "stepNumber": 4,
+        "studentInput": "y = 2(x + 3)^2 - 9 + 5",
+        "isCorrect": false,
+        "pillarImpacted": "PROCEDURAL",
+        "isCarryForwardProtected": false,
+        "explanation": "Procedural Slip: Forgot to multiply -9 by the outer factor of 2 when removing it from parentheses. Should be -18."
+      },
+      {
+        "stepNumber": 5,
+        "studentInput": "y = 2(x + 3)^2 - 4",
+        "isCorrect": true,
+        "pillarImpacted": "CONCEPTUAL",
+        "isCarryForwardProtected": true,
+        "explanation": "Carry-Forward Protection Applied: The calculation -9 + 5 = -4 is mathematically consistent with Step 4's error. Conceptual vertex conversion logic praised."
+      }
+    ],
+    "entityExtractions": [
+      {
+        "misconceptionId": "MISC_COEFF_DISTRIB_04",
+        "description": "Failure to distribute leading coefficient to subtracted square term when extracting from bracket.",
+        "severity": "HIGH"
+      }
+    ]
+  },
+  "ws3StageV1": {
+    "worksheetId": "ws_rem_sq_001",
+    "gradingId": "grd_mpm2d_001",
+    "title": "Mastering Leading Coefficients in Completing the Square",
+    "targetConcept": "Distributing outer factors when extracting terms from completed squares.",
+    "sectionA_DiagnosticMirror": [
+      {
+        "originalStepText": "y = 2(x + 3)^2 - 9 + 5",
+        "annotatedCorrection": "y = 2(x + 3)^2 - (2 * 9) + 5  =>  y = 2(x + 3)^2 - 18 + 5",
+        "keyTakeaway": "Remember: Any number exiting the bracket MUST be multiplied by the factor outside!"
+      }
+    ],
+    "sectionB_FadedScaffolding": [
+      {
+        "stepNumber": 1,
+        "prompt": "Convert y = 3x^2 + 12x + 1 to vertex form.",
+        "scaffoldingType": "GIVEN",
+        "givenContent": "Step 1: Group and factor out 3 -> y = 3(x^2 + 4x) + 1",
+        "hint": "Always confirm factoring by redistributing in your head."
+      },
+      {
+        "stepNumber": 2,
+        "prompt": "Complete the square inside the bracket.",
+        "scaffoldingType": "PARTIAL_BLANK",
+        "givenContent": "y = 3(x^2 + 4x + [ __ ] - [ __ ]) + 1",
+        "blankPlaceholder": "4",
+        "hint": "Take half of 4, which is 2, and square it."
+      },
+      {
+        "stepNumber": 3,
+        "prompt": "Extract the negative term from the bracket.",
+        "scaffoldingType": "PARTIAL_BLANK",
+        "givenContent": "y = 3(x + 2)^2 - (3 * [ __ ]) + 1",
+        "blankPlaceholder": "4",
+        "hint": "Don't forget to multiply the extracted term by 3!"
+      },
+      {
+        "stepNumber": 4,
+        "prompt": "Simplify the final constants to find the vertex.",
+        "scaffoldingType": "INDEPENDENT",
+        "givenContent": "y = 3(x + 2)^2 - 11",
+        "hint": "Combine -12 and +1."
+      }
+    ],
+    "sectionC_IndependentTransfer": {
+      "problemId": "tp_quad_99",
+      "problemStatement": "Convert y = -4x^2 + 24x - 7 into vertex form y = a(x - h)^2 + k and state the maximum point.",
+      "targetPillarFocus": "PROCEDURAL",
+      "metacognitiveChecklist": [
+        "I factored out the negative coefficient (-4) correctly in step 1.",
+        "I multiplied the value removed from the bracket by -4.",
+        "I verified my vertex coordinates by expanding back to standard form."
+      ]
+    }
+  },
+  "parentProjectionSummary": {
+    "studentId": "std_alex_99",
+    "studentName": "Alex Mercer",
+    "course": "MPM2D",
+    "overallEqaoForecast": "LEVEL_3",
+    "eqaoForecastConfidence": 88,
+    "strandMasteries": [
+      {
+        "strandName": "Linear Relations",
+        "currentEWMAMastery": 0.92,
+        "historicalTrajectory": [
+          {
+            "weekLabel": "Wk 1",
+            "score": 82
+          },
+          {
+            "weekLabel": "Wk 2",
+            "score": 85
+          },
+          {
+            "weekLabel": "Wk 3",
+            "score": 89
+          },
+          {
+            "weekLabel": "Wk 4",
+            "score": 91
+          },
+          {
+            "weekLabel": "Wk 5",
+            "score": 92
+          }
+        ]
+      },
+      {
+        "strandName": "Quadratics",
+        "currentEWMAMastery": 0.76,
+        "historicalTrajectory": [
+          {
+            "weekLabel": "Wk 1",
+            "score": 65
+          },
+          {
+            "weekLabel": "Wk 2",
+            "score": 70
+          },
+          {
+            "weekLabel": "Wk 3",
+            "score": 68
+          },
+          {
+            "weekLabel": "Wk 4",
+            "score": 74
+          },
+          {
+            "weekLabel": "Wk 5",
+            "score": 76
+          }
+        ]
+      },
+      {
+        "strandName": "Trigonometry",
+        "currentEWMAMastery": 0.84,
+        "historicalTrajectory": [
+          {
+            "weekLabel": "Wk 1",
+            "score": 78
+          },
+          {
+            "weekLabel": "Wk 2",
+            "score": 80
+          },
+          {
+            "weekLabel": "Wk 3",
+            "score": 81
+          },
+          {
+            "weekLabel": "Wk 4",
+            "score": 83
+          },
+          {
+            "weekLabel": "Wk 5",
+            "score": 84
+          }
+        ]
+      }
+    ],
+    "pillarErrorDistribution": [
+      {
+        "pillar": "PROCEDURAL",
+        "percentageOfTotalErrors": 55
+      },
+      {
+        "pillar": "COMMUNICATION",
+        "percentageOfTotalErrors": 25
+      },
+      {
+        "pillar": "REPRESENTATION",
+        "percentageOfTotalErrors": 12
+      },
+      {
+        "pillar": "CONCEPTUAL",
+        "percentageOfTotalErrors": 8
+      }
+    ],
+    "cognitiveFrictionAlerts": [
+      {
+        "detectedDate": "2024-10-24",
+        "frictionLevel": "HIGH_FRICTION_FRUSTRATION",
+        "topicContext": "Completing the Square - Multi-step Coefficient Distribution",
+        "actionableParentInsight": "Alex fully understands how quadratic formulas work conceptually, but gets frustrated by arithmetic distribution slips. Ask Alex to read the bracket multiplication step out loud before solving."
+      }
+    ]
+  }
+}
