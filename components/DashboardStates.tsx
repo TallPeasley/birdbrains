@@ -92,18 +92,23 @@ export function SignInNotice() {
   );
 }
 
-export function NoWorkNotice() {
+export function NoWorkNotice({ variant = 'student' }: { variant?: 'student' | 'parent' }) {
   const { openCapture } = useRole();
+  const parent = variant === 'parent';
   return (
     <Notice
-      title="No graded work yet"
+      title={parent ? 'Nothing to show yet' : 'No graded work yet'}
       icon={
         <span className="grid h-14 w-14 place-items-center rounded-full bg-indigo-50 text-indigo-600">
           <FileQuestion className="h-7 w-7" aria-hidden />
         </span>
       }
     >
-      <p>Take a photo of some handwritten math work and upload it. Your results will show up here.</p>
+      <p>
+        {parent
+          ? 'Your child hasn’t uploaded any work yet. Once they do, or you upload a photo of their work, progress and tips for helping at home will show up here.'
+          : 'Take a photo of some handwritten math work and upload it. Your results will show up here.'}
+      </p>
       <button onClick={openCapture} className={primary}>
         <UploadCloud className="h-4 w-4" aria-hidden /> Upload work
       </button>

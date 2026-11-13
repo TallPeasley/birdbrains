@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { CalendarClock } from 'lucide-react';
+import { CalendarClock, UploadCloud } from 'lucide-react';
+import { useRole } from '@/lib/roleContext';
 import AffectCard from '@/components/student/AffectCard';
 import PillarCards from '@/components/student/PillarCards';
 import StepDiagnostics from '@/components/student/StepDiagnostics';
@@ -84,13 +85,22 @@ function View({
   worksheet: WS_3STAGE_V1 | null;
   worksheetNote: string;
 }) {
+  const { openCapture } = useRole();
   return (
     <div className="space-y-6">
-      <header>
-        <p className="eyebrow">Student dashboard</p>
-        <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-          {own ? `Hi ${name.split(' ')[0]}, here’s your latest diagnostic` : 'Latest diagnostic'}
-        </h1>
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="eyebrow">Student dashboard</p>
+          <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+            {own ? `Hi ${name.split(' ')[0]}, here’s your latest diagnostic` : 'Latest diagnostic'}
+          </h1>
+        </div>
+        <button
+          onClick={openCapture}
+          className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"
+        >
+          <UploadCloud className="h-4 w-4" aria-hidden /> Upload new work
+        </button>
       </header>
       <AffectCard grading={grading} />
       <PillarCards pillars={grading.pillarBreakdowns} />

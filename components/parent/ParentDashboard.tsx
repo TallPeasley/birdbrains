@@ -43,7 +43,7 @@ export default function ParentDashboard() {
   if (!live) return <View s={demoSummary} />;
   if (gate) return gate;
   if (state.kind === 'loading') return <Loading variant="parent" />;
-  if (state.kind === 'empty') return <NoWorkNotice />;
+  if (state.kind === 'empty') return <NoWorkNotice variant="parent" />;
   if (state.kind === 'error') {
     return <LoadError title="We couldn’t load the dashboard" message={state.message} onRetry={() => setAttempt((n) => n + 1)} />;
   }
