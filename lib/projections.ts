@@ -17,17 +17,23 @@ export function projectStrand(strand: StrandMastery, weeksAhead = 2, alpha = 0.5
 }
 
 export function buildTrajectoryRows(strands: StrandMastery[], weeksAhead = 2) {
-  const weeks = strands[0]?.historicalTrajectory.map((p) => p.weekLabel) ?? [];
-  const rows: Record<string, string | number | null>[] = weeks.map((w, i) => {
+  // Strands are practised in different weeks, so rows are the union of all week
+  // labels ("Wk 3"), matched by label rather than by position.
+  const weekNum = (label: string) => Number(label.replace(/\D+/g, '')) || 0;
+  const weeks = [...new Set(strands.flatMap((s) => s.historicalTrajectory.map((p) => p.weekLabel)))].sort(
+    (a, b) => weekNum(a) - weekNum(b),
+  );
+  const rows: Record<string, string | number | null>[] = weeks.map((w) => {
     const row: Record<string, string | number | null> = { week: w };
     strands.forEach((s) => {
-      row[s.strandName] = s.historicalTrajectory[i]?.score ?? null;
-      // Join the projected line to the last real point so the dashes start there.
-      row[`${s.strandName}__proj`] = i === weeks.length - 1 ? (s.historicalTrajectory[i]?.score ?? null) : null;
+      const score = s.historicalTrajectory.find((p) => p.weekLabel === w)?.score ?? null;
+      row[s.strandName] = score;
+      // Join the projected line to the strand's last real point so the dashes start there.
+      row[`${s.strandName}__proj`] = s.historicalTrajectory.at(-1)?.weekLabel === w ? score : null;
     });
     return row;
   });
-  const lastNum = weeks.length;
+  const lastNum = weekNum(weeks.at(-1) ?? '');
   const projections = strands.map((s) => projectStrand(s, weeksAhead));
   for (let k = 0; k < weeksAhead; k++) {
     const row: Record<string, string | number | null> = { week: `Wk ${lastNum + k + 1}` };

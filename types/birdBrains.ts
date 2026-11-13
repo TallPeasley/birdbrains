@@ -1,7 +1,20 @@
 export type GradeCourse = 'MTH1W' | 'MPM2D';
-export type AffectState = 'CONFIDENT' | 'NEUTRAL' | 'MILD_FRICTION' | 'HIGH_FRICTION_FRUSTRATION';
+/** Affect states from the AI pipeline spec. */
+export type AffectState =
+  | 'CONFIDENT_MASTERY'
+  | 'PRODUCTIVE_STRUGGLE'
+  | 'HIGH_FRICTION_FRUSTRATION'
+  | 'COGNITIVE_OVERLOAD_AVOIDANCE'
+  | 'RUSHED_CARELESSNESS';
+export type ScaffoldingMode =
+  | 'HIGH_SUPPORT_DEESCALATION'
+  | 'METACOGNITIVE_SPEED_BUMP'
+  | 'STANDARD_PROGRESSIVE_FADE';
+export type SubmissionStatus = 'UPLOADED' | 'TRANSCRIBING' | 'GRADING' | 'GRADED' | 'NEEDS_RETAKE' | 'FAILED';
 export type EQAOLevel = 'LEVEL_1' | 'LEVEL_2' | 'LEVEL_3' | 'LEVEL_4';
-export type PillarCategory = 'CONCEPTUAL' | 'PROCEDURAL' | 'REPRESENTATION' | 'COMMUNICATION';
+/** Four-Pillar Taxonomy from the AI pipeline spec: Conceptual, Procedural,
+ *  Factual & Calculation Fluency, Test-Taking & Communication Habits. */
+export type PillarCategory = 'CON' | 'PRC' | 'FAC' | 'TST';
 
 export interface SubmissionIngestionPayload {
   submissionId: string;
@@ -16,6 +29,9 @@ export interface SubmissionIngestionPayload {
   isQualityPassed: boolean;
   uploadedAt: string;
   fileUrls: string[];
+  /** Set by the backend. */
+  status?: SubmissionStatus;
+  gradingId?: string | null;
 }
 
 export interface PillarBreakdown {
@@ -51,6 +67,9 @@ export interface Stage2GradingAndAffectOutput {
     description: string;
     severity: 'LOW' | 'MEDIUM' | 'HIGH';
   }[];
+  /** Set by the backend. */
+  scaffoldingMode?: ScaffoldingMode;
+  gradedAt?: string;
 }
 
 export interface DiagnosticMirrorItem {
@@ -111,4 +130,15 @@ export interface ParentProjectionSummary {
     topicContext: string;
     actionableParentInsight: string;
   }[];
+}
+
+export interface UserProfile {
+  uid: string;
+  role: 'student' | 'parent';
+  name: string;
+  studentId?: string | null;
+  course?: GradeCourse | null;
+  /** Students: share with a parent so they can link their account. */
+  linkCode?: string | null;
+  childStudentIds: string[];
 }

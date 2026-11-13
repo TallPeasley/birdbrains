@@ -4,58 +4,60 @@ export const PILLARS: Record<
   PillarCategory,
   { label: string; short: string; description: string; color: string }
 > = {
-  CONCEPTUAL: {
+  CON: {
     label: 'Conceptual Understanding',
     short: 'Conceptual',
     description: 'Grasp of the underlying mathematical ideas and why methods work.',
     color: '#6366f1',
   },
-  PROCEDURAL: {
+  PRC: {
     label: 'Procedural Accuracy',
     short: 'Procedural',
-    description: 'Carrying out steps, arithmetic and algebra correctly.',
+    description: 'Carrying out the steps of a method in the right order, without dropping any.',
     color: '#8b5cf6',
   },
-  REPRESENTATION: {
-    label: 'Representation & Modeling',
-    short: 'Representation',
-    description: 'Translating between equations, graphs, tables and context.',
+  FAC: {
+    label: 'Factual & Calculation Fluency',
+    short: 'Calculation',
+    description: 'Recalling facts and formulas and doing the arithmetic accurately.',
     color: '#0ea5e9',
   },
-  COMMUNICATION: {
-    label: 'Communication',
+  TST: {
+    label: 'Test-Taking & Communication',
     short: 'Communication',
-    description: 'Explaining reasoning clearly with labelled, ordered steps.',
+    description: 'Answering what was asked and showing clear, labelled, complete work.',
     color: '#64748b',
   },
 };
 
-export const PILLAR_ORDER: PillarCategory[] = [
-  'CONCEPTUAL',
-  'PROCEDURAL',
-  'REPRESENTATION',
-  'COMMUNICATION',
-];
+export const PILLAR_ORDER: PillarCategory[] = ['CON', 'PRC', 'FAC', 'TST'];
 
+/** `level` 2+ shows the supportive friction callout. */
 export const AFFECT_META: Record<
   AffectState,
   { label: string; tone: string; badge: string; level: number }
 > = {
-  CONFIDENT: {
-    label: 'Confident',
+  CONFIDENT_MASTERY: {
+    label: 'Confident Mastery',
     tone: 'Steady and assured',
     badge: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
     level: 0,
   },
-  NEUTRAL: {
-    label: 'Neutral',
-    tone: 'Focused',
-    badge: 'bg-slate-100 text-slate-700 ring-slate-200',
+  PRODUCTIVE_STRUGGLE: {
+    label: 'Productive Struggle',
+    tone: 'Working hard and getting there',
+    badge: 'bg-indigo-50 text-indigo-700 ring-indigo-200',
     level: 1,
   },
-  MILD_FRICTION: {
-    label: 'Mild Friction',
-    tone: 'Some hesitation',
+  RUSHED_CARELESSNESS: {
+    label: 'Rushing',
+    tone: 'Moving fast and skipping checks',
+    badge: 'bg-amber-50 text-amber-800 ring-amber-200',
+    level: 1,
+  },
+  COGNITIVE_OVERLOAD_AVOIDANCE: {
+    label: 'Overloaded',
+    tone: 'Stopping or avoiding when it gets heavy',
     badge: 'bg-amber-50 text-amber-800 ring-amber-200',
     level: 2,
   },
