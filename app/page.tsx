@@ -7,6 +7,7 @@ import { demoPersonas } from '@/lib/mockData';
 import { PILLARS, PILLAR_ORDER } from '@/lib/pillars';
 import { IS_LIVE } from '@/lib/api';
 import AccountCard from '@/components/AccountCard';
+import { useSession } from '@/lib/session';
 
 const PILLAR_ICONS = {
   CON: Brain,
@@ -18,8 +19,10 @@ const PILLAR_ICONS = {
 export default function HomePage() {
   const { role, setRole } = useRole();
   const router = useRouter();
+  const { setDemo } = useSession();
 
   const signIn = (r: Role) => {
+    if (IS_LIVE) setDemo(true);
     setRole(r, false);
     router.push(`/${r}`);
   };
@@ -66,12 +69,14 @@ export default function HomePage() {
 
       {/* Right: quick auth */}
       <section className="lg:pt-8">
-        {IS_LIVE ? (
-          <AccountCard />
-        ) : (
-        <div className="card p-6">
-          <h2 className="text-lg font-semibold text-slate-900">Sign in</h2>
-          <p className="text-sm text-slate-500">Choose a demo persona to explore with sample data.</p>
+        {IS_LIVE && <AccountCard />}
+        <div className={`card p-6 ${IS_LIVE ? 'mt-6' : ''}`}>
+          <h2 className="text-lg font-semibold text-slate-900">{IS_LIVE ? 'Try the demo' : 'Sign in'}</h2>
+          <p className="text-sm text-slate-500">
+            {IS_LIVE
+              ? 'No account needed. Explore as a sample student or parent; nothing is saved.'
+              : 'Choose a demo persona to explore with sample data.'}
+          </p>
 
           <div className="mt-5 space-y-3">
             {(['student', 'parent'] as Role[]).map((r) => {
@@ -115,7 +120,6 @@ export default function HomePage() {
           </div>
 
         </div>
-        )}
       </section>
     </div>
   );
