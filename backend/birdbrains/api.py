@@ -164,6 +164,7 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         return doc
 
     # ------------------------------------------------------------------ account
+    @app.get("/health")
     @app.get("/healthz")
     def healthz():
         return {"ok": True}

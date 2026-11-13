@@ -58,7 +58,7 @@ sleep 60
 
 echo "== Deploying to Cloud Run"
 # --allow-unauthenticated: the browser calls the API directly; every route except
-# /healthz checks a Firebase sign-in token (or the batch token) itself.
+# /health checks a Firebase sign-in token (or the batch token) itself.
 gcloud run deploy "$SERVICE" --source . --region "$REGION" --service-account "$SA" \
   --allow-unauthenticated --memory 1Gi --timeout 300 --max-instances 5 \
   --set-env-vars "GOOGLE_CLOUD_PROJECT=$PROJECT,BIRDBRAINS_BUCKET=$BUCKET,BIRDBRAINS_CORS_ORIGINS=$ORIGIN" \
