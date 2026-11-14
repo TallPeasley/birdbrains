@@ -47,7 +47,7 @@ Counts: 65 tasks. Maalik 28, Claude 14, Gemini 13, Freelancer 10. The freelancer
 - [ ] **Mon Nov 23** · **Freelancer:** Build the accuracy test harness. ai_eval: runs the gold set through the live pipeline and reports schema pass rate, pillar F1, error-code F1, cascading-error accuracy and P95 latency, saved as a report.
 - [ ] **Tue Nov 24** · **Maalik:** Review 5 misgraded samples (30 min). The freelancer (or Claude) sends the cases the AI got wrong. Say which grade is right; these become exemplars.
 - [ ] **Tue Nov 24** · **Freelancer:** Prompt tuning round 1 (target 85% on 25). Tune Stage 1 and 2 prompts and few-shot exemplars until the 25-sample gold set reaches 85% (Phase 2 exit gate).
-- [ ] **Wed Nov 25** · **Gemini:** Plans, usage and upgrade screens. Pricing page (Free vs Pro from the pricing brief), plan badge, uploads-left meter, an upgrade prompt when the Free cap is hit, and locked Pro cards (mood tracking, worksheets) with an upgrade button on Free dashboards. Built against Claude's Nov 23 contract.
+- [x] **Wed Nov 25** · **Gemini:** Plans, usage and upgrade screens. Pricing page (Free vs Pro from the pricing brief), plan badge, uploads-left meter, an upgrade prompt when the Free cap is hit, and locked Pro cards (mood tracking, worksheets) with an upgrade button on Free dashboards. Built against Claude's Nov 23 contract.
 - [ ] **Wed Nov 25** · **Freelancer:** Speed: diagnostic under 14 s. E2E-01: P95 from upload to diagnostic under 14 s. Profile Stage 1 and 2; Claude helps move work onto Cloud Tasks if needed.
 - [ ] **Thu Nov 26** · **Maalik:** Week 2 exit check: accuracy + merges. Read the accuracy report; go or no-go on 85% for the 25 samples. Merge the week-2 PRs (freelancer/Claude pipeline, Gemini screens).
 
