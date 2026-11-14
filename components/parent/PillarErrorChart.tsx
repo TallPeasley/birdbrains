@@ -3,13 +3,16 @@
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import type { ParentProjectionSummary } from '@/types/birdBrains';
 import { PILLARS } from '@/lib/pillars';
+import { MathNumber } from '@/components/MathText';
+
+const LATEX_FONT = "'KaTeX_Main', 'Latin Modern Math', 'Computer Modern', 'STIX Two Math', 'Cambria Math', 'Times New Roman', Georgia, serif";
 
 export default function PillarErrorChart({ data }: { data: ParentProjectionSummary['pillarErrorDistribution'] }) {
   const sorted = [...data].sort((a, b) => b.percentageOfTotalErrors - a.percentageOfTotalErrors);
   const top = sorted[0];
 
   return (
-    <section className="card p-6">
+    <section className="card min-w-0 p-4 sm:p-6">
       <h2 className="text-lg font-semibold text-slate-900">Where errors come from</h2>
       <p className="text-sm text-slate-500">Share of all errors by pillar.</p>
 
@@ -33,27 +36,27 @@ export default function PillarErrorChart({ data }: { data: ParentProjectionSumma
               </Pie>
               <Tooltip
                 formatter={(v: number, n: string) => [`${v}%`, PILLARS[n as keyof typeof PILLARS]?.short ?? n]}
-                contentStyle={{ borderRadius: 12, border: '1px solid #e2e8f0', fontSize: 12 }}
+                contentStyle={{ borderRadius: 12, border: '1px solid #e2e8f0', fontSize: 12, fontFamily: LATEX_FONT }}
               />
             </PieChart>
           </ResponsiveContainer>
           {top && (
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-2xl font-bold text-slate-900">{top.percentageOfTotalErrors}%</span>
+              <MathNumber value={top.percentageOfTotalErrors} suffix="%" className="text-2xl font-bold text-slate-900" />
               <span className="text-[11px] text-slate-500">{PILLARS[top.pillar].short}</span>
             </div>
           )}
         </div>
 
-        <ul className="space-y-3">
+        <ul className="min-w-0 space-y-3">
           {sorted.map((d) => (
-            <li key={d.pillar}>
-              <div className="flex items-center justify-between text-sm">
-                <span className="flex items-center gap-2 text-slate-700">
-                  <span className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: PILLARS[d.pillar].color }} />
-                  {PILLARS[d.pillar].label}
+            <li key={d.pillar} className="min-w-0">
+              <div className="flex items-center justify-between gap-2 text-sm">
+                <span className="flex min-w-0 items-center gap-2 text-slate-700">
+                  <span className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ backgroundColor: PILLARS[d.pillar].color }} />
+                  <span className="truncate">{PILLARS[d.pillar].label}</span>
                 </span>
-                <span className="font-semibold tabular-nums text-slate-900">{d.percentageOfTotalErrors}%</span>
+                <MathNumber value={d.percentageOfTotalErrors} suffix="%" className="shrink-0 font-semibold text-slate-900" />
               </div>
               <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-slate-100">
                 <div className="h-full rounded-full" style={{ width: `${d.percentageOfTotalErrors}%`, backgroundColor: PILLARS[d.pillar].color }} />

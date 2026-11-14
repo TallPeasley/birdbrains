@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { Lock, Sparkles } from 'lucide-react';
 import type { ApiUsage, PlanTier } from '@/types/birdBrains';
+import { MathNumber, MathText } from '@/components/MathText';
 
 export const DEMO_FREE_USAGE: ApiUsage = {
   studentId: 'stu_alexmercer99',
@@ -52,7 +53,9 @@ export function UploadsLeftMeter({
           <PlanBadge plan="pro" />
           <p className="text-sm font-medium text-slate-800">
             Unlimited uploads this month ·{' '}
-            <span className="tabular-nums text-slate-500">{usage.usedThisMonth} uploaded</span>
+            <span className="text-slate-500">
+              <MathNumber value={usage.usedThisMonth} /> uploaded
+            </span>
           </p>
         </div>
         <Link
@@ -80,9 +83,7 @@ export function UploadsLeftMeter({
         <div className="flex flex-wrap items-center gap-2">
           <PlanBadge plan="free" />
           <p className="text-sm font-semibold text-slate-900">
-            {exhausted
-              ? `0 of ${limit} uploads left this month`
-              : `${remaining} of ${limit} uploads left this month`}
+            <MathNumber value={exhausted ? 0 : remaining} /> of <MathNumber value={limit} /> uploads left this month
           </p>
         </div>
         <Link
@@ -110,9 +111,13 @@ export function UploadsLeftMeter({
 
       {!compact && (
         <p className="mt-2 text-xs text-slate-600">
-          {exhausted
-            ? 'You have reached the Free monthly upload limit. Upgrade to Pro for unlimited uploads, mood insights, and nightly practice worksheets.'
-            : 'Free includes 10 uploads per calendar month. Pro adds unlimited uploads, mood & friction insights, and nightly 3-stage practice worksheets.'}
+          <MathText
+            text={
+              exhausted
+                ? 'You have reached the Free monthly upload limit. Upgrade to Pro for unlimited uploads, mood insights, and nightly practice worksheets.'
+                : 'Free includes 10 uploads per calendar month. Pro adds unlimited uploads, mood & friction insights, and nightly 3-stage practice worksheets.'
+            }
+          />
         </p>
       )}
     </div>
@@ -137,12 +142,18 @@ export function LockedProCard({
               <Lock className="h-3 w-3" aria-hidden /> Pro feature
             </span>
           </div>
-          <h2 className="mt-2 text-lg font-semibold text-slate-900">{title}</h2>
-          <p className="mt-1 text-sm text-slate-600">{description}</p>
+          <h2 className="mt-2 text-lg font-semibold text-slate-900">
+            <MathText text={title} />
+          </h2>
+          <p className="mt-1 text-sm text-slate-600">
+            <MathText text={description} />
+          </p>
           {features && features.length > 0 && (
             <ul className="mt-3 list-disc space-y-1 pl-4 text-xs text-slate-600">
               {features.map((f) => (
-                <li key={f}>{f}</li>
+                <li key={f}>
+                  <MathText text={f} />
+                </li>
               ))}
             </ul>
           )}
