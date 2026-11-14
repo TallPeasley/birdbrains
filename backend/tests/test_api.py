@@ -162,3 +162,41 @@ def test_free_monthly_cap(client, family, deps):
     client.post("/internal/users/alex/plan", json={"plan": "pro"}, headers={"X-Batch-Token": "s3cret"})
     assert client.get(f"/students/{sid}/usage", headers=auth("alex")).json()["monthlyLimit"] is None
     assert upload(client, sid).status_code == 201
+
+
+def test_extension_upload_link(client, family, deps):
+    sid = family["studentId"]
+    body = {"studentId": sid, "course": "MPM2D", "unitTopic": "Factoring", "sharpnessScore": 80}
+    assert client.post("/uploads", json=body, headers=auth("stranger")).status_code == 404
+    t = client.post("/uploads", json=body, headers=auth("alex")).json()
+    assert t["method"] == "PUT" and t["uploadUrl"].startswith(f"/uploads/{t['uploadId']}/file?token=")
+    assert client.put(f"/uploads/{t['uploadId']}/file?token=wrong", content=photo()).status_code == 404
+    assert client.put(t["uploadUrl"], content=b"junk").status_code == 422  # a bad file does not burn the link
+    r = client.put(t["uploadUrl"], content=photo(), headers={"Content-Type": "image/jpeg"})  # no sign-in header
+    assert r.status_code == 201 and r.json()["status"] == "UPLOADED"
+    sub = r.json()["submissionId"]
+    assert deps.store.get("submissions", sub)["source"] == "extension"
+    assert client.put(t["uploadUrl"], content=photo()).status_code == 404  # one use only
+    done = client.post(f"/submissions/{sub}/process", headers=auth("alex")).json()
+    assert done["submission"]["status"] == "GRADED"
+    assert client.get(f"/submissions/{sub}", headers=auth("alex")).json()["gradingId"]
+
+    t2 = client.post("/uploads", json=body, headers=auth("alex")).json()
+    ticket = deps.store.get("uploadtickets", t2["uploadId"])
+    deps.store.put("uploadtickets", t2["uploadId"], ticket | {"expiresAt": "2020-01-01T00:00:00+00:00"})
+    assert client.put(t2["uploadUrl"], content=photo()).json()["detail"] == "UPLOAD_LINK_EXPIRED"
+
+
+def test_worksheet_pdf(client, family):
+    sid = family["studentId"]
+    token = {"X-Batch-Token": "s3cret"}
+    client.post("/internal/users/alex/plan", json={"plan": "pro"}, headers=token)
+    sub = upload(client, sid).json()
+    g = client.post(f"/submissions/{sub['submissionId']}/process", headers=auth("alex")).json()["grading"]
+    url = f"/gradings/{g['gradingId']}/worksheet.pdf"
+    assert client.get(url, headers=auth("alex")).status_code == 404  # not generated yet
+    client.post("/internal/batch/worksheets/submit", headers=token)
+    client.post("/internal/batch/worksheets/collect", headers=token)
+    r = client.get(url, headers=auth("jordan"))
+    assert r.status_code == 200 and r.headers["content-type"] == "application/pdf" and r.content[:5] == b"%PDF-"
+    assert client.get(url, headers=auth("stranger")).status_code == 404
