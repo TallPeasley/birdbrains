@@ -3,6 +3,9 @@
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import type { ParentProjectionSummary } from '@/types/birdBrains';
 import { PILLARS } from '@/lib/pillars';
+import { MathNumber } from '@/components/MathText';
+
+const LATEX_FONT = "'KaTeX_Main', 'Latin Modern Math', 'Computer Modern', 'STIX Two Math', 'Cambria Math', 'Times New Roman', Georgia, serif";
 
 export default function PillarErrorChart({ data }: { data: ParentProjectionSummary['pillarErrorDistribution'] }) {
   const sorted = [...data].sort((a, b) => b.percentageOfTotalErrors - a.percentageOfTotalErrors);
@@ -33,13 +36,13 @@ export default function PillarErrorChart({ data }: { data: ParentProjectionSumma
               </Pie>
               <Tooltip
                 formatter={(v: number, n: string) => [`${v}%`, PILLARS[n as keyof typeof PILLARS]?.short ?? n]}
-                contentStyle={{ borderRadius: 12, border: '1px solid #e2e8f0', fontSize: 12 }}
+                contentStyle={{ borderRadius: 12, border: '1px solid #e2e8f0', fontSize: 12, fontFamily: LATEX_FONT }}
               />
             </PieChart>
           </ResponsiveContainer>
           {top && (
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-2xl font-bold text-slate-900">{top.percentageOfTotalErrors}%</span>
+              <MathNumber value={top.percentageOfTotalErrors} suffix="%" className="text-2xl font-bold text-slate-900" />
               <span className="text-[11px] text-slate-500">{PILLARS[top.pillar].short}</span>
             </div>
           )}
@@ -53,7 +56,7 @@ export default function PillarErrorChart({ data }: { data: ParentProjectionSumma
                   <span className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ backgroundColor: PILLARS[d.pillar].color }} />
                   <span className="truncate">{PILLARS[d.pillar].label}</span>
                 </span>
-                <span className="shrink-0 font-semibold tabular-nums text-slate-900">{d.percentageOfTotalErrors}%</span>
+                <MathNumber value={d.percentageOfTotalErrors} suffix="%" className="shrink-0 font-semibold text-slate-900" />
               </div>
               <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-slate-100">
                 <div className="h-full rounded-full" style={{ width: `${d.percentageOfTotalErrors}%`, backgroundColor: PILLARS[d.pillar].color }} />

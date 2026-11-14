@@ -1,3 +1,5 @@
+@import url('https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -18,7 +20,116 @@
   .eyebrow {
     @apply text-xs font-semibold uppercase tracking-wider text-slate-500;
   }
-  .math {
-    @apply break-words font-mono text-[0.95em] [overflow-wrap:anywhere];
+  .math,
+  .latex-math {
+    font-family: 'KaTeX_Main', 'Latin Modern Math', 'Computer Modern', 'STIX Two Math', 'Cambria Math', 'Times New Roman', Georgia, serif;
+    @apply break-words text-[1.03em] leading-relaxed [overflow-wrap:anywhere];
+  }
+  .latex-num {
+    font-family: 'KaTeX_Main', 'Latin Modern Math', 'Computer Modern', 'STIX Two Math', 'Cambria Math', 'Times New Roman', Georgia, serif;
+    font-style: normal;
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+  .latex-var {
+    font-family: 'KaTeX_Math', 'Latin Modern Math', 'Computer Modern', 'STIX Two Math', 'Cambria Math', 'Times New Roman', Georgia, serif;
+    font-style: italic;
+    padding-right: 0.04em;
+  }
+  .latex-fn {
+    font-family: 'KaTeX_Main', 'Latin Modern Math', 'Computer Modern', 'STIX Two Math', 'Cambria Math', 'Times New Roman', Georgia, serif;
+    font-style: normal;
+    padding-right: 0.08em;
+  }
+  .latex-delim {
+    font-family: 'KaTeX_Main', 'Latin Modern Math', 'Computer Modern', 'STIX Two Math', 'Cambria Math', 'Times New Roman', Georgia, serif;
+    font-style: normal;
+  }
+  .latex-op {
+    font-family: 'KaTeX_Main', 'Latin Modern Math', 'Computer Modern', 'STIX Two Math', 'Cambria Math', 'Times New Roman', Georgia, serif;
+    font-style: normal;
+    padding: 0 0.14em;
+  }
+  .latex-op-unary {
+    font-family: 'KaTeX_Main', 'Latin Modern Math', 'Computer Modern', 'STIX Two Math', 'Cambria Math', 'Times New Roman', Georgia, serif;
+    font-style: normal;
+    padding-right: 0.04em;
+  }
+  .latex-sup {
+    font-family: 'KaTeX_Main', 'Latin Modern Math', 'Computer Modern', 'STIX Two Math', 'Cambria Math', 'Times New Roman', Georgia, serif;
+    font-size: 0.74em;
+    line-height: 0;
+    position: relative;
+    vertical-align: baseline;
+    top: -0.52em;
+    margin-left: 0.03em;
+    margin-right: 0.04em;
+  }
+  .latex-sub {
+    font-family: 'KaTeX_Main', 'Latin Modern Math', 'Computer Modern', 'STIX Two Math', 'Cambria Math', 'Times New Roman', Georgia, serif;
+    font-size: 0.74em;
+    line-height: 0;
+    position: relative;
+    vertical-align: baseline;
+    bottom: -0.24em;
+    margin-left: 0.02em;
+    margin-right: 0.04em;
+  }
+  .latex-frac {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    vertical-align: -0.32em;
+    margin: 0 0.14em;
+    font-size: 0.88em;
+    line-height: 1.05;
+  }
+  .latex-frac-num {
+    padding: 0 0.18em 0.06em;
+  }
+  .latex-frac-bar {
+    width: 100%;
+    height: 1.25px;
+    background-color: currentColor;
+  }
+  .latex-frac-den {
+    padding: 0.08em 0.18em 0;
+  }
+  .latex-sqrt {
+    display: inline-flex;
+    align-items: baseline;
+    margin: 0 0.08em;
+  }
+  .latex-sqrt-idx {
+    font-size: 0.65em;
+    margin-right: -0.15em;
+    position: relative;
+    top: -0.45em;
+  }
+  .latex-sqrt-sign {
+    font-family: 'KaTeX_Main', 'Latin Modern Math', 'STIX Two Math', 'Cambria Math', serif;
+    font-size: 1.08em;
+    line-height: 1;
+    margin-right: 0.02em;
+  }
+  .latex-sqrt-body {
+    border-top: 1.2px solid currentColor;
+    padding: 0.04em 0.14em 0 0.08em;
+  }
+  .latex-cancel {
+    position: relative;
+    display: inline-block;
+    padding: 0 0.1em;
+    opacity: 0.75;
+  }
+  .latex-cancel::after {
+    content: '';
+    position: absolute;
+    left: -0.05em;
+    right: -0.05em;
+    top: 50%;
+    height: 1.5px;
+    background-color: #e11d48;
+    transform: rotate(-14deg);
+    pointer-events: none;
   }
 }

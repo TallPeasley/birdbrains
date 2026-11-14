@@ -2,7 +2,8 @@ import { AlertCircle, CheckCircle2, ShieldCheck } from 'lucide-react';
 import type { Stage2GradingAndAffectOutput } from '@/types/birdBrains';
 import { PILLARS } from '@/lib/pillars';
 import { errorCodeName } from '@/lib/errorCodes';
-import { errorCodeHelp, errorCodePillar } from '@/lib/errorCodeHelp';
+import { errorCodeHelp, errorCodePillar } from '@/components/student/errorCodeHelp';
+import { MathNumber, MathText } from '@/components/MathText';
 
 export default function StepDiagnostics({ grading }: { grading: Stage2GradingAndAffectOutput }) {
   const firstError = grading.stepDiagnostics.find((s) => !s.isCorrect);
@@ -19,8 +20,8 @@ export default function StepDiagnostics({ grading }: { grading: Stage2GradingAnd
           <div className="flex items-center gap-2 rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-900 ring-1 ring-amber-200">
             <ShieldCheck className="h-5 w-5 shrink-0 text-amber-600" aria-hidden />
             <span>
-              <strong>Carry-forward protection:</strong> the slip in step {firstError.stepNumber} didn&apos;t cost you
-              marks in step {protectedSteps.map((s) => s.stepNumber).join(', ')}.
+              <strong>Carry-forward protection:</strong> the slip in step <MathNumber value={firstError.stepNumber} /> didn&apos;t cost you
+              marks in step <MathText text={protectedSteps.map((s) => s.stepNumber).join(', ')} />.
             </span>
           </div>
         )}
@@ -38,14 +39,14 @@ export default function StepDiagnostics({ grading }: { grading: Stage2GradingAnd
           return (
             <li key={s.stepNumber} className="relative flex gap-3 pb-4 sm:gap-4">
               {!last && <span className="absolute left-[15px] top-8 h-full w-px bg-slate-200" aria-hidden />}
-              <span className={`relative z-10 grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-bold text-white ${tone.dot}`}>
+              <span className={`latex-num relative z-10 grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-bold text-white ${tone.dot}`}>
                 {s.stepNumber}
               </span>
               <div className={`min-w-0 flex-1 rounded-xl border p-3 ${tone.card}`}>
                 <div className="flex flex-wrap items-center gap-2">
-                  <code className="math max-w-full break-words rounded-md bg-slate-900/[0.04] px-2 py-1 text-slate-900 [overflow-wrap:anywhere]">
-                    {s.studentInput}
-                  </code>
+                  <span className="math max-w-full break-words rounded-md bg-slate-900/[0.04] px-2.5 py-1 text-base text-slate-900 [overflow-wrap:anywhere]">
+                    <MathText mode="math" text={s.studentInput} />
+                  </span>
                   {s.isCarryForwardProtected ? (
                     <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800">
                       <ShieldCheck className="h-3.5 w-3.5" aria-hidden /> Carry-Forward Protected
@@ -70,7 +71,9 @@ export default function StepDiagnostics({ grading }: { grading: Stage2GradingAnd
                     </span>
                   )}
                 </div>
-                <p className="mt-2 break-words text-sm text-slate-600">{s.explanation}</p>
+                <p className="mt-2 break-words text-sm text-slate-600">
+                  <MathText text={s.explanation} />
+                </p>
               </div>
             </li>
           );
@@ -100,7 +103,7 @@ export default function StepDiagnostics({ grading }: { grading: Stage2GradingAnd
                       className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold text-white"
                       style={{ backgroundColor: pillarColor }}
                     >
-                      {pillar ? pillar.short : code}
+                      {pillar ? pillar.short : <MathText text={code} />}
                     </span>
                     <span
                       className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${
@@ -116,23 +119,25 @@ export default function StepDiagnostics({ grading }: { grading: Stage2GradingAnd
                   </div>
 
                   <p className="mt-2 break-words text-sm font-semibold text-slate-900">
-                    {plainWords}
+                    <MathText text={plainWords} />
                   </p>
 
                   {m.description && (
                     <p className="mt-1 break-words text-sm text-slate-600">
-                      {m.description}
+                      <MathText text={m.description} />
                     </p>
                   )}
 
                   <p className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
-                    <span className="font-mono font-semibold" style={{ color: pillarColor }}>
-                      {code}
+                    <span className="font-semibold" style={{ color: pillarColor }}>
+                      <MathText text={code} />
                     </span>
                     {officialName && (
                       <>
                         <span aria-hidden>·</span>
-                        <span>{officialName}</span>
+                        <span>
+                          <MathText text={officialName} />
+                        </span>
                       </>
                     )}
                   </p>

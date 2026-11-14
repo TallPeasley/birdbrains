@@ -1,6 +1,7 @@
 import { Flame, HeartHandshake, Sprout } from 'lucide-react';
 import type { Stage2GradingAndAffectOutput } from '@/types/birdBrains';
 import { AFFECT_META } from '@/lib/pillars';
+import { MathNumber, MathText } from '@/components/MathText';
 
 export default function AffectCard({ grading }: { grading: Stage2GradingAndAffectOutput }) {
   // affectState is null on the Free plan: no mood or friction panel then.
@@ -20,8 +21,12 @@ export default function AffectCard({ grading }: { grading: Stage2GradingAndAffec
               <Sprout className="h-3.5 w-3.5" aria-hidden /> Growth-Mindset Tone
             </span>
           </div>
-          <p className="mt-4 text-lg font-medium leading-relaxed text-slate-800">{grading.supportiveFramingMessage}</p>
-          <p className="mt-2 text-sm text-slate-500">{grading.topic}</p>
+          <p className="mt-4 text-lg font-medium leading-relaxed text-slate-800">
+            <MathText text={grading.supportiveFramingMessage} />
+          </p>
+          <p className="mt-2 text-sm text-slate-500">
+            <MathText text={grading.topic} />
+          </p>
 
           {affect && highFriction && (
             <div className={`mt-5 flex gap-3 rounded-xl p-3 text-sm ring-1 ${affect.badge}`} role="status">
@@ -64,8 +69,10 @@ function ScoreRing({ value, max, pct }: { value: number; max: number; pct: numbe
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-3xl font-bold tabular-nums text-slate-900">{value}</span>
-        <span className="text-xs text-slate-500">out of {max}</span>
+        <MathNumber value={value} className="text-3xl font-bold text-slate-900" />
+        <span className="text-xs text-slate-500">
+          out of <MathNumber value={max} />
+        </span>
       </div>
     </div>
   );

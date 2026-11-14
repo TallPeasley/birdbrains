@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { CheckCircle2, Eye, Lightbulb, RotateCcw, XCircle } from 'lucide-react';
 import type { FadedScaffoldingStep, WS_3STAGE_V1 } from '@/types/birdBrains';
 import { PILLARS } from '@/lib/pillars';
+import { formatMathPlaceholder, MathNumber, MathText } from '@/components/MathText';
 
 const SECTIONS = [
   { key: 'A', title: 'Diagnostic Mirror', sub: 'Your work vs. the fix' },
@@ -20,8 +21,12 @@ export default function WorksheetViewer({ worksheet }: { worksheet: WS_3STAGE_V1
     <section className="card overflow-hidden">
       <div className="border-b border-slate-200 p-4 pb-0 sm:p-6 sm:pb-0">
         <p className="eyebrow">Your remedial worksheet</p>
-        <h2 className="mt-1 text-xl font-semibold text-slate-900">{worksheet.title}</h2>
-        <p className="mt-1 text-sm text-slate-500">Target concept: {worksheet.targetConcept}</p>
+        <h2 className="mt-1 text-xl font-semibold text-slate-900">
+          <MathText text={worksheet.title} />
+        </h2>
+        <p className="mt-1 text-sm text-slate-500">
+          Target concept: <MathText text={worksheet.targetConcept} />
+        </p>
 
         <div role="tablist" aria-label="Worksheet sections" className="mt-5 grid grid-cols-3 gap-1">
           {SECTIONS.map((s) => (
@@ -66,7 +71,7 @@ function DiagnosticMirror({ worksheet }: { worksheet: WS_3STAGE_V1 }) {
             <div className="min-w-0 rounded-xl border border-rose-200 bg-rose-50/50 p-4">
               <p className="text-xs font-semibold uppercase tracking-wider text-rose-700">What you wrote</p>
               <p className="math mt-3 break-words text-base text-slate-800 underline decoration-rose-400 decoration-wavy underline-offset-4 sm:text-lg [overflow-wrap:anywhere]">
-                {item.originalStepText}
+                <MathText mode="math" text={item.originalStepText} />
               </p>
             </div>
             <div className="min-w-0 rounded-xl border border-emerald-200 bg-emerald-50/50 p-4">
@@ -74,8 +79,8 @@ function DiagnosticMirror({ worksheet }: { worksheet: WS_3STAGE_V1 }) {
               <div className="math mt-3 space-y-1 break-words text-base text-slate-800 sm:text-lg [overflow-wrap:anywhere]">
                 {item.annotatedCorrection.split('=>').map((line, j) => (
                   <p key={j}>
-                    {j > 0 && <span className="mr-2 text-emerald-600">⇒</span>}
-                    {line.trim()}
+                    {j > 0 && <span className="latex-op mr-2 text-emerald-600">⇒</span>}
+                    <MathText mode="math" text={line.trim()} />
                   </p>
                 ))}
               </div>
@@ -84,7 +89,7 @@ function DiagnosticMirror({ worksheet }: { worksheet: WS_3STAGE_V1 }) {
           <div className="flex gap-3 rounded-xl bg-indigo-50 p-4 text-sm text-indigo-900 ring-1 ring-indigo-200">
             <Lightbulb className="h-5 w-5 shrink-0 text-indigo-600" aria-hidden />
             <p>
-              <strong>Key takeaway:</strong> {item.keyTakeaway}
+              <strong>Key takeaway:</strong> <MathText text={item.keyTakeaway} />
             </p>
           </div>
         </div>
@@ -102,7 +107,10 @@ function FadedScaffolding({ steps }: { steps: FadedScaffoldingStep[] }) {
     <div>
       {problem && (
         <p className="mb-5 break-words rounded-xl bg-slate-100 p-4 text-sm text-slate-800">
-          <strong>Problem:</strong> <span className="math">{problem}</span>
+          <strong>Problem:</strong>{' '}
+          <span className="math">
+            <MathText text={problem} />
+          </span>
         </p>
       )}
       <ol className="space-y-3">
@@ -137,23 +145,27 @@ function ScaffoldStep({ step }: { step: FadedScaffoldingStep }) {
   return (
     <li className="min-w-0 rounded-xl border border-slate-200 p-3.5 sm:p-4">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-slate-900 text-xs font-bold text-white">
+        <span className="latex-num grid h-6 w-6 shrink-0 place-items-center rounded-full bg-slate-900 text-xs font-bold text-white">
           {step.stepNumber}
         </span>
-        <p className="min-w-0 flex-1 break-words font-medium text-slate-900">{step.stepNumber === 1 ? 'Set up' : step.prompt}</p>
+        <p className="min-w-0 flex-1 break-words font-medium text-slate-900">
+          {step.stepNumber === 1 ? 'Set up' : <MathText text={step.prompt} />}
+        </p>
         <span className={`ml-auto rounded-full px-2 py-0.5 text-[11px] font-semibold ${label.cls}`}>{label.text}</span>
       </div>
 
       <div className="mt-3 sm:pl-8">
         {step.scaffoldingType === 'GIVEN' && (
-          <p className="math break-words rounded-lg bg-slate-50 p-3 text-slate-800 [overflow-wrap:anywhere]">{step.givenContent}</p>
+          <p className="math break-words rounded-lg bg-slate-50 p-3 text-slate-800 [overflow-wrap:anywhere]">
+            <MathText text={step.givenContent} />
+          </p>
         )}
 
         {step.scaffoldingType === 'PARTIAL_BLANK' && (
           <p className="math flex flex-wrap items-center gap-1 break-words rounded-lg bg-slate-50 p-3 text-slate-800 [overflow-wrap:anywhere]">
             {parts.map((part, i) => (
               <span key={i} className="inline-flex items-center gap-1">
-                <span>{part}</span>
+                <MathText mode="math" text={part} />
                 {i < blanks && (
                   <input
                     aria-label={`Blank ${i + 1}`}
@@ -164,7 +176,7 @@ function ScaffoldStep({ step }: { step: FadedScaffoldingStep }) {
                       setAnswers(next);
                       setChecked(false);
                     }}
-                    className={`w-12 rounded-md border px-1 py-0.5 text-center font-mono text-sm ${
+                    className={`latex-num w-12 rounded-md border px-1 py-0.5 text-center text-sm ${
                       checked
                         ? norm(answers[i]) === norm(step.blankPlaceholder ?? '')
                           ? 'border-emerald-400 bg-emerald-50'
@@ -187,12 +199,18 @@ function ScaffoldStep({ step }: { step: FadedScaffoldingStep }) {
                 setFree(e.target.value);
                 setChecked(false);
               }}
-              placeholder="y = a(x − h)^2 + k"
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 font-mono text-sm"
+              placeholder={formatMathPlaceholder('y = a(x - h)^2 + k')}
+              className="latex-math w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
             />
+            {free.trim() && (
+              <p className="math rounded-lg bg-slate-50 px-3 py-2 text-sm text-slate-700 ring-1 ring-slate-200">
+                <span className="mr-2 font-sans text-xs font-medium text-slate-400">Preview:</span>
+                <MathText mode="math" text={free} />
+              </p>
+            )}
             {revealed && (
               <p className="math rounded-lg bg-emerald-50 p-3 text-emerald-900 ring-1 ring-emerald-200">
-                {step.givenContent}
+                <MathText mode="math" text={step.givenContent} />
               </p>
             )}
           </div>
@@ -236,7 +254,7 @@ function ScaffoldStep({ step }: { step: FadedScaffoldingStep }) {
         {(showHint || step.scaffoldingType === 'GIVEN') && (
           <p className="mt-2 text-sm text-slate-500">
             <Lightbulb className="mr-1 inline h-3.5 w-3.5 text-amber-500" aria-hidden />
-            {step.hint}
+            <MathText text={step.hint} />
           </p>
         )}
       </div>
@@ -257,27 +275,41 @@ function IndependentTransfer({ worksheet }: { worksheet: WS_3STAGE_V1 }) {
           <span className="rounded-full bg-violet-100 px-2 py-0.5 text-[11px] font-semibold text-violet-700">
             Focus: {PILLARS[t.targetPillarFocus].short}
           </span>
-          <span className="font-mono text-[11px] text-slate-400">{t.problemId}</span>
+          <span className="text-[11px] text-slate-400">
+            <MathText text={t.problemId} />
+          </span>
         </div>
-        <p className="math mt-3 text-lg text-slate-900">{t.problemStatement}</p>
+        <p className="mt-3 text-lg text-slate-900">
+          <MathText text={t.problemStatement} />
+        </p>
         <label className="mt-4 block">
           <span className="mb-1 block text-sm font-medium text-slate-700">Your work</span>
           <textarea
             value={work}
             onChange={(e) => setWork(e.target.value)}
             rows={8}
-            placeholder={'y = -4(x^2 - 6x) - 7\n...'}
-            className="w-full rounded-xl border border-slate-300 p-3 font-mono text-sm"
+            placeholder={formatMathPlaceholder('y = -4(x^2 - 6x) - 7\n...')}
+            className="latex-math w-full rounded-xl border border-slate-300 p-3 text-sm"
           />
         </label>
+        {work.trim() && (
+          <div className="math mt-2 space-y-1 rounded-xl bg-slate-50 p-3 text-sm text-slate-800 ring-1 ring-slate-200">
+            <p className="font-sans text-xs font-medium text-slate-400">LaTeX preview:</p>
+            {work.split('\n').map((line, idx) => (
+              <p key={idx}>
+                <MathText mode="math" text={line} />
+              </p>
+            ))}
+          </div>
+        )}
         <p className="mt-1 text-xs text-slate-500">Prefer paper? Solve it by hand and use Upload Work to submit a photo.</p>
       </div>
 
       <div className="rounded-2xl bg-slate-50 p-5 ring-1 ring-slate-200">
         <div className="flex items-center justify-between">
           <h3 className="font-semibold text-slate-900">Self-check</h3>
-          <span className="text-xs font-medium tabular-nums text-slate-500">
-            {doneCount}/{checks.length}
+          <span className="latex-math text-xs font-medium text-slate-500">
+            <MathNumber value={doneCount} />/<MathNumber value={checks.length} />
           </span>
         </div>
         <ul className="mt-3 space-y-3">
@@ -290,7 +322,9 @@ function IndependentTransfer({ worksheet }: { worksheet: WS_3STAGE_V1 }) {
                   onChange={() => setChecks(checks.map((c, j) => (j === i ? !c : c)))}
                   className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                 />
-                <span className={checks[i] ? 'text-slate-400 line-through' : ''}>{item}</span>
+                <span className={checks[i] ? 'text-slate-400 line-through' : ''}>
+                  <MathText text={item} />
+                </span>
               </label>
             </li>
           ))}
