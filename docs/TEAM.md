@@ -28,7 +28,7 @@ Shared files, changed only with the owner's review:
 
 ## 2. Branches, PRs and reviews
 
-- `main` is what ships. Nobody pushes to it directly; **Maalik merges every PR**.
+- `main` is what ships. Nobody pushes to it directly. **Maalik merges Gemini's and the freelancer's PRs**; Claude merges its own once checks pass.
 - **Gemini pushes only to `gemini/*` branches** (e.g. `gemini/upload-states`).
   Claude uses `claude/*`, the freelancer `luca/*`.
 - One task per PR, titled like the TickTick task. Say in the description which
