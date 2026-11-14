@@ -134,6 +134,39 @@ are set with the admin route below.
 - Human review of grades is **not** part of launch: there is no review queue.
   Unreadable pages come back as `NEEDS_RETAKE`; ask for a clearer photo.
 
+### Upgrading to Pro (Stripe)
+
+- `POST /billing/checkout` → `{url}`. Send the browser to `url` (Stripe Checkout, monthly Pro
+  subscription). Stripe returns to `/account?upgrade=success` or `/account?upgrade=cancelled`.
+  409 `ALREADY_PRO`; 503 `BILLING_NOT_CONFIGURED` (hide the button).
+- The plan changes when Stripe confirms the payment, usually within seconds. On the success page,
+  re-read `GET /me` until `plan` is `pro` (poll a few times); do not assume it.
+- `POST /billing/portal` → `{url}` to Stripe's page for updating the card or cancelling.
+  404 `NO_SUBSCRIPTION` if the account never subscribed.
+- Cancelling keeps Pro until the paid period ends; then the account goes back to Free on its own.
+- `POST /billing/webhook` is for Stripe only.
+
+### Google Classroom (Pro, teacher accounts)
+
+A third role, `teacher`, can be chosen at sign-up (`POST /me {role: "teacher", name}`).
+Teachers need Pro; everyone they import is treated as Pro.
+
+1. `GET /classroom/status` → `{configured, plan, connected}`. Free → upgrade prompt.
+2. `POST /classroom/connect` → `{url}`. Send the browser there (Google consent). Google returns to
+   `/teacher?classroom=connected` or `/teacher?classroom=failed`. 402 `PRO_ONLY`, 403 not a teacher,
+   503 `CLASSROOM_NOT_CONFIGURED`.
+3. `GET /classroom/courses` → `[{id, name, section}]`; `GET /classroom/courses/{id}/coursework` →
+   `[{id, title}]`. 409 `CLASSROOM_NOT_CONNECTED` → show "Connect" again.
+4. `POST /classroom/courses/{id}/coursework/{workId}/import` `{course, unitTopic}` →
+   `{imported: [{studentId, studentName, submissionId}], skipped: [{studentName, reason}]}`.
+   Only photos (JPEG, PNG, WebP) that were handed in are imported; PDFs and Docs are skipped.
+   Then call `POST /submissions/{id}/process` for each imported one (one at a time, show progress).
+5. `GET /teacher/students` → `[{studentId, name, course, googleCourseId}]`. A teacher can use every
+   `/students/{id}/...`, `/submissions/{id}` and `/gradings/{id}` route for these students.
+6. `DELETE /classroom` disconnects. Deleting the teacher account deletes the imported class data.
+
+There is no teacher dashboard yet: `/teacher` is a new page to build.
+
 ### Chrome extension upload
 
 1. The popup (signed in with Firebase) calls `POST /uploads` and gets `uploadUrl`.

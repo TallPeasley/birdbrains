@@ -25,7 +25,7 @@ export interface SubmissionIngestionPayload {
     width: number;
     height: number;
   };
-  sharpnessScore: number; // 0 to 100 scale
+  sharpnessScore: number | null; // 0 to 100 scale; null for work imported from Classroom
   isQualityPassed: boolean;
   uploadedAt: string;
   fileUrls: string[];
@@ -138,7 +138,7 @@ export interface ParentProjectionSummary {
 
 export interface UserProfile {
   uid: string;
-  role: 'student' | 'parent';
+  role: 'student' | 'parent' | 'teacher';
   name: string;
   studentId?: string | null;
   course?: GradeCourse | null;
@@ -181,4 +181,28 @@ export interface ApiUploadTicket {
   method: 'PUT';
   expiresAt: string;
   maxBytes: number;
+}
+
+export interface ClassroomCourse {
+  id: string;
+  name: string;
+  section?: string | null;
+}
+
+export interface ClassroomCoursework {
+  id: string;
+  title: string;
+}
+
+/** A student a teacher imported from Google Classroom (no account of their own). */
+export interface RosterStudent {
+  studentId: string;
+  name: string;
+  course: GradeCourse;
+  googleCourseId: string;
+}
+
+export interface ClassroomImportResult {
+  imported: { studentId: string; studentName: string; submissionId: string }[];
+  skipped: { studentName: string; reason: string }[];
 }

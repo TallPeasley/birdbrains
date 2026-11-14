@@ -14,9 +14,12 @@ from typing import Annotated, Optional
 from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, Request, Response, UploadFile
 from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 from PIL import Image
 
 from . import mastery_affect_ledger as ledger_engine
+from .billing import Billing, BillingError, plan_change
+from .classroom import Classroom, ClassroomError
 from .auth import Authenticator
 from .batch_engine import BatchEngine, FlaggedGrading, is_flagged
 from .privacy import CloudDlpDetector, PhotoScrubber
@@ -26,6 +29,9 @@ from .schemas import (
     STUDENT_ID_PATTERN,
     ApiGrading,
     ApiClass,
+    ApiClassroomImport,
+    ApiRosterStudent,
+    ClassroomImportRequest,
     ApiUploadTicket,
     ApiUsage,
     CreateUploadRequest,
@@ -86,6 +92,9 @@ class Deps:
     scrubber: PhotoScrubber = field(default_factory=PhotoScrubber)
     free_monthly_limit: int = 10  # uploads per student per calendar month on the Free plan
     free_worksheets: bool = False  # nightly 3-stage worksheets are a Pro feature
+    billing: Optional[Billing] = None  # Stripe; None = upgrades not configured
+    classroom: Optional[Classroom] = None  # Google Classroom OAuth; None = not configured
+    site_url: str = "https://birdbrains.netlify.app"
 
 
 def deps_from_env() -> Deps:
@@ -132,6 +141,18 @@ def deps_from_env() -> Deps:
     header = float(os.environ.get("BIRDBRAINS_HEADER_MASK", "0"))
     scrubber = PhotoScrubber(CloudDlpDetector(project) if backend == "gcp" else None, header_fraction=header)
 
+    env = os.environ.get
+    billing = classroom = None
+    if env("STRIPE_SECRET_KEY") and env("STRIPE_WEBHOOK_SECRET") and env("STRIPE_PRICE_ID"):
+        from .billing import StripeBilling
+
+        billing = StripeBilling(env("STRIPE_SECRET_KEY"), env("STRIPE_WEBHOOK_SECRET"), env("STRIPE_PRICE_ID"))
+    if env("GOOGLE_OAUTH_CLIENT_ID") and env("GOOGLE_OAUTH_CLIENT_SECRET") and env("BIRDBRAINS_PUBLIC_URL"):
+        from .classroom import GoogleClassroom
+
+        classroom = GoogleClassroom(env("GOOGLE_OAUTH_CLIENT_ID"), env("GOOGLE_OAUTH_CLIENT_SECRET"),
+                                    env("BIRDBRAINS_PUBLIC_URL").rstrip("/") + "/classroom/callback")
+
     origins = os.environ.get("BIRDBRAINS_CORS_ORIGINS")
     return Deps(
         store=store,
@@ -145,6 +166,9 @@ def deps_from_env() -> Deps:
         scrubber=scrubber,
         free_monthly_limit=int(os.environ.get("BIRDBRAINS_FREE_MONTHLY_SUBMISSIONS", "10")),
         free_worksheets=os.environ.get("BIRDBRAINS_FREE_WORKSHEETS", "0") == "1",
+        billing=billing,
+        classroom=classroom,
+        site_url=(env("BIRDBRAINS_SITE_URL") or Deps.site_url).rstrip("/"),
     )
 
 
@@ -176,6 +200,11 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
     def require_student_access(user: dict, student_id: str) -> None:
         """Students see themselves; parents see linked children. 404, not 403, so
         that ids cannot be probed."""
+        if user["role"] == "teacher":  # teachers see the students they imported from Classroom
+            roster = d.store.get("rosters", student_id)
+            if not roster or roster["teacherUid"] != user["uid"]:
+                raise HTTPException(404, "Not found")
+            return
         allowed = [user.get("studentId")] if user["role"] == "student" else user.get("childStudentIds", [])
         if student_id not in allowed:
             raise HTTPException(404, "Not found")
@@ -230,9 +259,12 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
 
     def student_profile(student_id: str) -> dict:
         found = d.store.query("users", "studentId", student_id)
-        if not found:
+        if found:
+            return found[0]
+        roster = d.store.get("rosters", student_id)  # imported from Classroom: no account of their own
+        if not roster:
             raise HTTPException(404, "Not found")
-        return found[0]
+        return roster
 
     @app.patch("/me", response_model=UserProfile)
     def update_profile(body: UpdateProfileRequest, user: User):
@@ -242,9 +274,13 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
 
     # ------------------------------------------------------------ plans + usage
     def effective_plan(student_id: str) -> str:
-        """Pro if the student, or any parent linked to them, is on Pro."""
+        """Pro if the student, a parent linked to them, or the teacher who imported
+        them from Classroom is on Pro."""
         accounts = d.store.query("users", "studentId", student_id) + \
             d.store.query_contains("users", "childStudentIds", student_id)
+        roster = d.store.get("rosters", student_id)
+        if roster and (teacher := d.store.get("users", roster["teacherUid"])):
+            accounts.append(teacher)
         return "pro" if any(a.get("plan") == "pro" for a in accounts) else "free"
 
     def usage(student_id: str) -> ApiUsage:
@@ -307,6 +343,7 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
             d.store.delete("worksheets", g["gradingId"])
             d.store.delete("gradings", g["gradingId"])
         d.store.delete("ledgers", student_id)
+        d.store.delete("rosters", student_id)
         for parent in d.store.query_contains("users", "childStudentIds", student_id):
             parent["childStudentIds"].remove(student_id)
             d.store.put("users", parent["uid"], parent)
@@ -328,6 +365,10 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         if user["role"] == "student":
             purge_student(user["studentId"])
         else:
+            if user["role"] == "teacher":
+                for r in d.store.query("rosters", "teacherUid", user["uid"]):
+                    purge_student(r["studentId"])
+                disconnect_classroom(user)
             d.store.delete("users", user["uid"])
             d.auth.delete_user(user["uid"])
         return Response(status_code=204)
@@ -349,7 +390,8 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         return ingest(user["uid"], tenant_of(user), studentId, course, unitTopic, sharpnessScore, blobs)
 
     def ingest(uid: str, tenant_id: str, studentId: str, course: CourseEnum, unitTopic: str,
-               sharpnessScore: float, blobs: list[bytes], source: str = "web") -> SubmissionIngestionPayload:
+               sharpnessScore: Optional[float], blobs: list[bytes],
+               source: str = "web") -> SubmissionIngestionPayload:
         """Shared by the web upload and the extension's one-time upload link: plan
         limit, image checks, duplicate check, privacy scrub, then storage."""
         if usage(studentId).remaining == 0:
@@ -372,7 +414,9 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
             if smallest is None or min(w, h) < min(smallest):
                 smallest = (w, h)
             stored.append((i, data, ALLOWED_TYPES[fmt], fmt.lower(), hashlib.sha256(data).hexdigest()))
-        if sharpnessScore < MIN_SHARPNESS_SCORE:
+        # Classroom imports come with no browser sharpness score; unreadable pages are
+        # caught by Stage 1 (NEEDS_RETAKE) instead.
+        if sharpnessScore is not None and sharpnessScore < MIN_SHARPNESS_SCORE:
             raise HTTPException(422, "The photo is too blurry. Please retake it.")
         # UT-06: the exact same photo uploaded again for this student is a 409, and
         # the pipeline is not run a second time. Location points at the original.
@@ -600,6 +644,184 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         if summary is None:
             raise HTTPException(404, "NO_GRADED_WORK")
         return summary
+
+    # ------------------------------------------------------- billing (Stripe)
+    @app.post("/billing/checkout")
+    def billing_checkout(user: User):
+        """Start a Pro subscription: returns the Stripe Checkout URL to send the browser to."""
+        if not d.billing:
+            raise HTTPException(503, "BILLING_NOT_CONFIGURED")
+        if user.get("plan") == "pro":
+            raise HTTPException(409, "ALREADY_PRO")
+        try:
+            url = d.billing.checkout_url(user["uid"], user.get("stripeCustomerId"),
+                                         f"{d.site_url}/account?upgrade=success", f"{d.site_url}/account?upgrade=cancelled")
+        except BillingError:
+            log.exception("Stripe checkout failed")
+            raise HTTPException(502, "Checkout could not be started. Please try again.")
+        return {"url": url}
+
+    @app.post("/billing/portal")
+    def billing_portal(user: User):
+        """Manage or cancel: returns the Stripe customer portal URL."""
+        if not d.billing:
+            raise HTTPException(503, "BILLING_NOT_CONFIGURED")
+        if not user.get("stripeCustomerId"):
+            raise HTTPException(404, "NO_SUBSCRIPTION")
+        try:
+            return {"url": d.billing.portal_url(user["stripeCustomerId"], f"{d.site_url}/account")}
+        except BillingError:
+            log.exception("Stripe portal failed")
+            raise HTTPException(502, "The billing page could not be opened. Please try again.")
+
+    @app.post("/billing/webhook")
+    async def billing_webhook(request: Request, stripe_signature: Annotated[Optional[str], Header()] = None):
+        """Called by Stripe. The signed event is the only thing that changes a plan."""
+        if not d.billing:
+            raise HTTPException(503, "BILLING_NOT_CONFIGURED")
+        try:
+            event = d.billing.parse_webhook(await request.body(), stripe_signature or "")
+        except BillingError:
+            raise HTTPException(400, "Invalid signature")
+        change = plan_change(event)
+        if change:
+            uid, customer, plan = change
+            profile = d.store.get("users", uid) if uid else None
+            if not profile and customer:
+                profile = next(iter(d.store.query("users", "stripeCustomerId", customer)), None)
+            # Ignore events about a different customer than the one on file (e.g. an old subscription).
+            if profile and (not profile.get("stripeCustomerId") or profile["stripeCustomerId"] == customer
+                            or plan == "pro"):
+                profile.update(plan=plan, stripeCustomerId=customer or profile.get("stripeCustomerId"))
+                d.store.put("users", profile["uid"], profile)
+                log.info("Plan for %s set to %s by Stripe event %s", profile["uid"], plan, event.get("type"))
+        return {"received": True}
+
+    # --------------------------------------------- Google Classroom (Pro teachers)
+    def classroom_teacher(user: dict) -> dict:
+        if user["role"] != "teacher":
+            raise HTTPException(403, "Only teacher accounts can use Google Classroom")
+        if user.get("plan") != "pro":
+            raise HTTPException(402, "PRO_ONLY")
+        if not d.classroom:
+            raise HTTPException(503, "CLASSROOM_NOT_CONFIGURED")
+        return user
+
+    def classroom_session(user: dict):
+        tokens = d.store.get("googletokens", classroom_teacher(user)["uid"])
+        if not tokens:
+            raise HTTPException(409, "CLASSROOM_NOT_CONNECTED")
+        try:
+            return d.classroom.open(tokens["refreshToken"])
+        except ClassroomError:
+            d.store.delete("googletokens", user["uid"])  # access was revoked on Google's side
+            raise HTTPException(409, "CLASSROOM_NOT_CONNECTED")
+
+    def disconnect_classroom(user: dict) -> None:
+        tokens = d.store.get("googletokens", user["uid"])
+        if tokens:
+            if d.classroom:
+                d.classroom.revoke(tokens["refreshToken"])
+            d.store.delete("googletokens", user["uid"])
+
+    def google(call):
+        try:
+            return call()
+        except ClassroomError as e:
+            log.warning("Google Classroom call failed: %s", e)
+            raise HTTPException(502, "Google Classroom could not be reached. Please try again.")
+
+    @app.get("/classroom/status")
+    def classroom_status(user: User):
+        return {"configured": d.classroom is not None, "plan": user.get("plan", "free"),
+                "connected": d.store.get("googletokens", user["uid"]) is not None}
+
+    @app.post("/classroom/connect")
+    def classroom_connect(user: User):
+        """Returns the Google consent URL. Google sends the teacher back to /classroom/callback."""
+        classroom_teacher(user)
+        state = secrets.token_urlsafe(32)
+        d.store.put("oauthstates", state, {"uid": user["uid"], "expiresAt":
+                    (datetime.now(timezone.utc) + timedelta(minutes=10)).isoformat()})
+        return {"url": d.classroom.auth_url(state)}
+
+    @app.get("/classroom/callback")
+    def classroom_callback(state: str = "", code: str = "", error: str = ""):
+        back = f"{d.site_url}/teacher?classroom="
+        pending = d.store.get("oauthstates", state) if state else None
+        if state:
+            d.store.delete("oauthstates", state)
+        if (not pending or not d.classroom or not code or error
+                or datetime.fromisoformat(pending["expiresAt"]) < datetime.now(timezone.utc)):
+            return RedirectResponse(back + "failed", status_code=303)
+        try:
+            refresh = d.classroom.exchange(code)
+        except ClassroomError:
+            return RedirectResponse(back + "failed", status_code=303)
+        d.store.put("googletokens", pending["uid"], {"uid": pending["uid"], "refreshToken": refresh,
+                                                     "connectedAt": now_iso()})
+        return RedirectResponse(back + "connected", status_code=303)
+
+    @app.delete("/classroom", status_code=204)
+    def classroom_disconnect(user: User):
+        disconnect_classroom(user)
+        return Response(status_code=204)
+
+    @app.get("/classroom/courses")
+    def classroom_courses(user: User):
+        sess = classroom_session(user)
+        return google(sess.courses)
+
+    @app.get("/classroom/courses/{course_id}/coursework")
+    def classroom_coursework(course_id: str, user: User):
+        sess = classroom_session(user)
+        return google(lambda: sess.coursework(course_id))
+
+    @app.post("/classroom/courses/{course_id}/coursework/{work_id}/import", response_model=ApiClassroomImport)
+    def classroom_import(course_id: str, work_id: str, body: ClassroomImportRequest, user: User):
+        """Pull the photos students handed in for one assignment into BirdBrains.
+        Each becomes a submission (not yet graded): call /submissions/{id}/process for each."""
+        sess = classroom_session(user)
+        names = google(lambda: sess.student_names(course_id))
+        handed_in = google(lambda: sess.submissions(course_id, work_id))
+        imported, skipped = [], []
+        for sub in handed_in:
+            name = names.get(sub["userId"], "Student")
+            if sub.get("state") not in ("TURNED_IN", "RETURNED"):
+                skipped.append({"studentName": name, "reason": "Not handed in yet"})
+                continue
+            blobs = []
+            for f in sub["files"][:MAX_FILES]:
+                try:
+                    blobs.append(sess.download(f["id"])[0])
+                except ClassroomError:
+                    pass  # not a photo, too large, or not shared with the teacher
+            if not blobs:
+                skipped.append({"studentName": name, "reason": "No photo attached (JPEG, PNG or WebP)"})
+                continue
+            key = f"{user['uid']}:{sub['userId']}"
+            roster = next(iter(d.store.query("rosters", "googleKey", key)), None)
+            if not roster:
+                roster = {"studentId": new_id("stu"), "teacherUid": user["uid"], "googleKey": key,
+                          "googleCourseId": course_id, "tenantId": tenant_of(user), "createdAt": now_iso()}
+            roster.update(name=name, course=body.course.value)
+            d.store.put("rosters", roster["studentId"], roster)
+            try:
+                payload = ingest(user["uid"], tenant_of(user), roster["studentId"], body.course,
+                                 body.unitTopic, None, blobs, "classroom")
+            except HTTPException as e:
+                reason = "Already imported" if e.status_code == 409 else str(e.detail)
+                skipped.append({"studentName": name, "reason": reason})
+                continue
+            imported.append({"studentId": roster["studentId"], "studentName": name,
+                             "submissionId": payload.submissionId})
+        return {"imported": imported, "skipped": skipped}
+
+    @app.get("/teacher/students", response_model=list[ApiRosterStudent])
+    def teacher_students(user: User):
+        if user["role"] != "teacher":
+            raise HTTPException(403, "Only teacher accounts have a class list")
+        return sorted(d.store.query("rosters", "teacherUid", user["uid"]), key=lambda r: r["name"])
 
     # ------------------------------------------------- nightly batch (internal)
     def require_batch_token(x_batch_token: Annotated[Optional[str], Header()] = None) -> None:

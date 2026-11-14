@@ -217,7 +217,7 @@ class SubmissionIngestionPayload(Api):
     course: CourseEnum
     unitTopic: str
     imageResolution: ImageResolution
-    sharpnessScore: float
+    sharpnessScore: Optional[float] = None  # null for work imported from Classroom
     isQualityPassed: bool
     uploadedAt: str
     fileUrls: List[str]
@@ -342,7 +342,7 @@ class ApiParentSummary(Api):
 
 class UserProfile(Api):
     uid: str
-    role: Literal["student", "parent"]
+    role: Literal["student", "parent", "teacher"]
     name: str
     studentId: Optional[str] = None
     course: Optional[CourseEnum] = None
@@ -354,7 +354,7 @@ class UserProfile(Api):
 
 
 class RegisterRequest(Api):
-    role: Literal["student", "parent"]
+    role: Literal["student", "parent", "teacher"]
     name: str = Field(..., min_length=1, max_length=80)
     course: Optional[CourseEnum] = None
 
@@ -421,3 +421,33 @@ class ApiUploadTicket(Api):
     method: Literal["PUT"] = "PUT"
     expiresAt: str
     maxBytes: int
+
+
+class ClassroomImportRequest(Api):
+    course: CourseEnum
+    unitTopic: str = Field(..., min_length=1, max_length=200)
+
+
+class ApiRosterStudent(Api):
+    """A student a teacher imported from Google Classroom (no account of their own)."""
+
+    studentId: str
+    name: str
+    course: CourseEnum
+    googleCourseId: str
+
+
+class ApiImportedWork(Api):
+    studentId: str
+    studentName: str
+    submissionId: str
+
+
+class ApiSkippedWork(Api):
+    studentName: str
+    reason: str
+
+
+class ApiClassroomImport(Api):
+    imported: List[ApiImportedWork]
+    skipped: List[ApiSkippedWork]

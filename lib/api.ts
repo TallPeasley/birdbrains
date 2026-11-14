@@ -1,5 +1,10 @@
 import type {
   ApiClass,
+  ClassroomCourse,
+  ClassroomCoursework,
+  ClassroomImportResult,
+  PlanTier,
+  RosterStudent,
   ApiUploadTicket,
   ApiUsage,
   ParentProjectionSummary,
@@ -89,6 +94,23 @@ export const api = {
     if (!res.ok) throw new ApiError(res.status, 'The worksheet PDF is not available yet.');
     return res.blob();
   },
+  /** Upgrade to Pro: returns the Stripe Checkout URL; send the browser there (window.location). */
+  startCheckout: (t: string) => request<{ url: string }>('/billing/checkout', t, { method: 'POST' }),
+  /** Manage or cancel the subscription: returns the Stripe portal URL. 404 NO_SUBSCRIPTION if never subscribed. */
+  billingPortal: (t: string) => request<{ url: string }>('/billing/portal', t, { method: 'POST' }),
+  /** Google Classroom (Pro teacher accounts). */
+  classroomStatus: (t: string) =>
+    request<{ configured: boolean; plan: PlanTier; connected: boolean }>('/classroom/status', t),
+  /** Returns Google's consent URL; Google returns the teacher to /teacher?classroom=connected|failed. */
+  classroomConnect: (t: string) => request<{ url: string }>('/classroom/connect', t, { method: 'POST' }),
+  classroomDisconnect: (t: string) => request<void>('/classroom', t, { method: 'DELETE' }),
+  classroomCourses: (t: string) => request<ClassroomCourse[]>('/classroom/courses', t),
+  classroomCoursework: (t: string, courseId: string) =>
+    request<ClassroomCoursework[]>(`/classroom/courses/${courseId}/coursework`, t),
+  /** Imports handed-in photos as submissions (ungraded). Then call processSubmission for each. */
+  classroomImport: (t: string, courseId: string, workId: string, body: { course: string; unitTopic: string }) =>
+    request<ClassroomImportResult>(`/classroom/courses/${courseId}/coursework/${workId}/import`, t, json(body)),
+  teacherStudents: (t: string) => request<RosterStudent[]>('/teacher/students', t),
   /** Plan and uploads left this month. A 402 FREE_LIMIT_REACHED on upload means remaining hit 0. */
   usage: (t: string, studentId: string) => request<ApiUsage>(`/students/${studentId}/usage`, t),
   updateProfile: (t: string, name: string) => request<UserProfile>('/me', t, { ...json({ name }), method: 'PATCH' }),
