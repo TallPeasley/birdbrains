@@ -252,5 +252,38 @@
         "actionableParentInsight": "Alex fully understands how quadratic formulas work conceptually, but gets frustrated by arithmetic distribution slips. Ask Alex to read the bracket multiplication step out loud before solving."
       }
     ]
-  }
+  },
+  "demoProfiles": {
+    "student": {
+      "uid": "usr_alexmercer99",
+      "role": "student",
+      "name": "Alex Mercer",
+      "studentId": "stu_alexmercer99",
+      "course": "MPM2D",
+      "linkCode": "DBLE7QA2",
+      "childStudentIds": [],
+      "plan": "pro",
+      "classIds": ["cls_mpm2d_p2"]
+    },
+    "parent": {
+      "uid": "par_mercer_01",
+      "role": "parent",
+      "name": "Jordan Mercer",
+      "studentId": null,
+      "course": null,
+      "linkCode": null,
+      "childStudentIds": ["stu_alexmercer99"],
+      "plan": "pro",
+      "classIds": []
+    }
+  },
+  "demoClasses": [
+    {
+      "classId": "cls_mpm2d_p2",
+      "className": "MPM2D \u00b7 Period 2",
+      "gradeLevel": 10,
+      "schoolId": "sch_oakridge_01",
+      "schoolName": "Oakridge Secondary School"
+    }
+  ]
 }
