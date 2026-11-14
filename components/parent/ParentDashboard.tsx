@@ -10,6 +10,7 @@ import { api, ApiError } from '@/lib/api';
 import { parentSummary as demoSummary } from '@/lib/mockData';
 import { useSession } from '@/lib/session';
 import type { ParentProjectionSummary } from '@/types/birdBrains';
+import { MathText } from '@/components/MathText';
 
 type State =
   | { kind: 'loading' }
@@ -79,11 +80,11 @@ function View({ s }: { s: ParentProjectionSummary }) {
         <div>
           <p className="eyebrow">Parent dashboard</p>
           <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-            How {s.studentName.split(' ')[0]} is doing in {s.course}
+            How {s.studentName.split(' ')[0]} is doing in <MathText text={s.course} />
           </h1>
         </div>
         <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200">
-          {s.studentName} · {s.course === 'MPM2D' ? 'Grade 10' : 'Grade 9'}
+          {s.studentName} · <MathText text={s.course === 'MPM2D' ? 'Grade 10' : 'Grade 9'} />
         </span>
       </header>
 
