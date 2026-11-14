@@ -65,6 +65,8 @@ To exercise real Gemini from your machine, keep `BIRDBRAINS_BACKEND=local`, set
 | `GET /students/{id}/parent-summary` | same | `ParentProjectionSummary` |
 | `PATCH /me`, `DELETE /me` | signed-in | Change name; delete the account (a student's account takes all their data with it) |
 | `GET/POST /me/classes`, `DELETE /me/classes/{id}` | student | List, join with a class code, leave |
+| `POST /uploads`, `PUT /uploads/{id}/file?token=` | owner; link holder | One-time 15-minute upload link for the Chrome extension, then the raw photo |
+| `GET /gradings/{id}/worksheet.pdf` | owner | Worksheet PDF (WeasyPrint, template in `worksheet_pdf.py`) |
 | `GET /students/{id}/usage` | owner | Plan and uploads left this month (Free: 402 `FREE_LIMIT_REACHED` when 0) |
 | `POST /internal/users/{uid}/plan` | `X-Batch-Token` | Set `free` / `pro` until billing exists |
 | `DELETE /students/{id}` | student, linked parent | Delete every record and photo for that student |

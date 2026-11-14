@@ -406,3 +406,18 @@ class ApiUsage(Api):
     usedThisMonth: int
     remaining: Optional[int]
     resetsAt: str  # first moment of next month, ISO 8601
+
+
+class CreateUploadRequest(Api):
+    studentId: str = Field(..., pattern=STUDENT_ID_PATTERN)
+    course: CourseEnum
+    unitTopic: str = Field(..., min_length=1, max_length=200)
+    sharpnessScore: float = Field(..., ge=0, le=100)
+
+
+class ApiUploadTicket(Api):
+    uploadId: str
+    uploadUrl: str  # relative to the API; PUT the raw image bytes here, no Authorization header
+    method: Literal["PUT"] = "PUT"
+    expiresAt: str
+    maxBytes: int

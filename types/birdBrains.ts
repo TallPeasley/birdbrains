@@ -172,3 +172,13 @@ export interface ApiUsage {
   remaining: number | null;
   resetsAt: string; // ISO 8601, first moment of next month (UTC)
 }
+
+/** One-time upload link for the Chrome extension (POST /uploads). */
+export interface ApiUploadTicket {
+  uploadId: string;
+  /** Relative to the API. PUT the raw image bytes here; no Authorization header. Works once. */
+  uploadUrl: string;
+  method: 'PUT';
+  expiresAt: string;
+  maxBytes: number;
+}
