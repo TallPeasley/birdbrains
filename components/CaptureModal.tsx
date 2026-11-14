@@ -4,9 +4,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import {
   AlertTriangle,
+  Camera,
   CheckCircle2,
   ImagePlus,
   Loader2,
+  RotateCcw,
   Tag,
   Trash2,
   UploadCloud,
@@ -26,10 +28,10 @@ const UNITS: Record<GradeCourse, string[]> = {
 
 type Stage = 'IDLE' | 'UPLOADING' | 'PRE_CHECKING' | 'INGESTING' | 'PROCESSING' | 'DONE' | 'ERROR';
 const PIPELINE: { stage: Stage; label: string }[] = [
-  { stage: 'UPLOADING', label: 'Uploading' },
-  { stage: 'PRE_CHECKING', label: 'Pre-Checking Sharpness' },
-  { stage: 'INGESTING', label: 'Ingesting via Pipeline' },
-  { stage: 'PROCESSING', label: 'Processing Diagnostic' },
+  { stage: 'UPLOADING', label: 'Uploading your photos' },
+  { stage: 'PRE_CHECKING', label: 'Checking the photos are clear' },
+  { stage: 'INGESTING', label: 'Reading your handwriting' },
+  { stage: 'PROCESSING', label: 'Checking each step of your work' },
 ];
 
 interface QueuedFile {
@@ -131,8 +133,17 @@ export default function CaptureModal() {
   const targetStudentId = live ? (activeStudentId ?? '') : studentId.trim();
   const canSubmit = allPassed && !analyzing && targetStudentId !== '' && stage === 'IDLE';
 
-  const submit = () => {
-    if (!canSubmit) return;
+  const failedCount = files.filter((f) => f.error || (f.quality && !f.quality.passed)).length;
+
+  /** Drop the photos that failed the check and open the picker for a new one. */
+  const retake = () => {
+    files.filter((f) => f.error || (f.quality && !f.quality.passed)).forEach((f) => removeFile(f.id));
+    inputRef.current?.click();
+  };
+
+  // `again` is set when retrying from the error screen, where stage is not IDLE yet.
+  const submit = (again = false) => {
+    if (again ? !(allPassed && !analyzing && targetStudentId !== '') : !canSubmit) return;
     const qualities = files.map((f) => f.quality!);
     const weakest = qualities.reduce((a, b) => (a.sharpnessScore <= b.sharpnessScore ? a : b));
     const smallest = qualities.reduce((a, b) =>
@@ -236,7 +247,7 @@ export default function CaptureModal() {
               Upload student work
             </h2>
             <p className="text-sm text-slate-500">
-              Photos are checked for resolution and sharpness before they enter the pipeline.
+              We check each photo is big and sharp enough to read before it is sent.
             </p>
           </div>
           <button onClick={close} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label="Close">
@@ -366,6 +377,27 @@ export default function CaptureModal() {
                   ))}
                 </ul>
               )}
+
+              {failedCount > 0 && !analyzing && (
+                <div role="alert" className="flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                  <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" aria-hidden />
+                  <div className="space-y-2 text-sm text-amber-900">
+                    <p className="font-semibold">
+                      {failedCount === 1 ? 'One photo is' : `${failedCount} photos are`} too blurry or too small to use
+                    </p>
+                    <p className="text-amber-800">
+                      Try again in good light, hold the camera still, and fill the frame with the page.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={retake}
+                      className="inline-flex items-center gap-2 rounded-xl border border-amber-300 bg-white px-3 py-1.5 text-sm font-semibold text-amber-900 hover:bg-amber-100"
+                    >
+                      <Camera className="h-4 w-4" aria-hidden /> Retake photo
+                    </button>
+                  </div>
+                </div>
+              )}
             </>
           ) : (
             <PipelineView
@@ -374,6 +406,10 @@ export default function CaptureModal() {
               payload={payload}
               problem={problem?.message}
               onRetry={() => {
+                setProblem(null);
+                submit(true);
+              }}
+              onBack={() => {
                 setProblem(null);
                 setStage('IDLE');
               }}
@@ -395,10 +431,10 @@ export default function CaptureModal() {
                   ? 'Checking image quality…'
                   : allPassed
                     ? `${files.length} photo${files.length > 1 ? 's' : ''} ready.`
-                    : 'Remove or retake photos that failed the check.'}
+                    : 'Retake or remove the photos that are too blurry.'}
             </p>
             <button
-              onClick={submit}
+              onClick={() => submit()}
               disabled={!canSubmit}
               className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-300"
             >
@@ -465,6 +501,7 @@ function PipelineView({
   payload,
   problem,
   onRetry,
+  onBack,
   onClose,
 }: {
   stage: Stage;
@@ -472,11 +509,32 @@ function PipelineView({
   payload: SubmissionIngestionPayload | null;
   problem?: string;
   onRetry: () => void;
+  onBack: () => void;
   onClose: () => void;
 }) {
   const done = stage === 'DONE';
   return (
     <div className="space-y-6 py-2">
+      {done ? (
+        <div className="text-center">
+          <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-emerald-50 text-emerald-600">
+            <CheckCircle2 className="h-7 w-7" aria-hidden />
+          </span>
+          <h3 className="mt-3 text-lg font-semibold text-slate-900">All done!</h3>
+        </div>
+      ) : stage === 'ERROR' ? (
+        <div className="text-center">
+          <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-rose-50 text-rose-600">
+            <AlertTriangle className="h-7 w-7" aria-hidden />
+          </span>
+          <h3 className="mt-3 text-lg font-semibold text-slate-900">That didn’t work</h3>
+        </div>
+      ) : (
+        <div className="text-center">
+          <h3 className="text-lg font-semibold text-slate-900">Looking at your work…</h3>
+          <p className="mt-1 text-sm text-slate-500">This can take a little while. Keep this window open.</p>
+        </div>
+      )}
       <ol className="space-y-3" aria-live="polite">
         {PIPELINE.map((p, i) => {
           const complete = done || i < activeIndex;
@@ -503,9 +561,18 @@ function PipelineView({
           <div role="alert" className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
             {problem}
           </div>
-          <div className="flex justify-end">
-            <button onClick={onRetry} className="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700">
+          <div className="flex justify-end gap-2">
+            <button
+              onClick={onBack}
+              className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            >
               Back to photos
+            </button>
+            <button
+              onClick={onRetry}
+              className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"
+            >
+              <RotateCcw className="h-4 w-4" aria-hidden /> Try again
             </button>
           </div>
         </div>
@@ -513,11 +580,12 @@ function PipelineView({
       {done && payload && (
         <div className="space-y-4">
           <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
-            Submission <span className="font-mono">{payload.submissionId}</span> is in. The diagnostic is ready on the
-            student dashboard.
+            Your work has been checked. See which steps went well and where you got stuck on the student dashboard.
           </div>
           <details className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs">
-            <summary className="cursor-pointer font-medium text-slate-600">SubmissionIngestionPayload</summary>
+            <summary className="cursor-pointer font-medium text-slate-600">
+              Submission details <span className="font-mono">{payload.submissionId}</span>
+            </summary>
             <pre className="mt-2 overflow-x-auto text-slate-700">{JSON.stringify(payload, null, 2)}</pre>
           </details>
           <div className="flex justify-end">
@@ -526,7 +594,7 @@ function PipelineView({
               onClick={onClose}
               className="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"
             >
-              View diagnostic
+              See the results
             </Link>
           </div>
         </div>

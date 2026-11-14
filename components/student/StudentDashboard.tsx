@@ -1,12 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { CalendarClock } from 'lucide-react';
+import { CalendarClock, UploadCloud } from 'lucide-react';
+import { useRole } from '@/lib/roleContext';
 import AffectCard from '@/components/student/AffectCard';
 import PillarCards from '@/components/student/PillarCards';
 import StepDiagnostics from '@/components/student/StepDiagnostics';
 import WorksheetViewer from '@/components/student/WorksheetViewer';
-import { Loading, Notice, NoWorkNotice, useDashboardGate } from '@/components/DashboardStates';
+import { LoadError, Loading, NoWorkNotice, useDashboardGate } from '@/components/DashboardStates';
 import { api, ApiError } from '@/lib/api';
 import { demoPersonas, gradingOutput, worksheet as demoWorksheet } from '@/lib/mockData';
 import { useSession } from '@/lib/session';
@@ -27,7 +28,8 @@ type State =
 
 export default function StudentDashboard() {
   const { live, profile, activeStudentId, getToken, dataVersion } = useSession();
-  const gate = useDashboardGate();
+  const gate = useDashboardGate('student');
+  const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState<State>({ kind: 'loading' });
 
   useEffect(() => {
@@ -54,7 +56,7 @@ export default function StudentDashboard() {
     return () => {
       cancelled = true;
     };
-  }, [live, activeStudentId, getToken, dataVersion]);
+  }, [live, activeStudentId, getToken, dataVersion, attempt]);
 
   if (!live) {
     return (
@@ -62,9 +64,11 @@ export default function StudentDashboard() {
     );
   }
   if (gate) return gate;
-  if (state.kind === 'loading') return <Loading />;
+  if (state.kind === 'loading') return <Loading variant="student" />;
   if (state.kind === 'empty') return <NoWorkNotice />;
-  if (state.kind === 'error') return <Notice title="We couldn’t load the diagnostic">{state.message}</Notice>;
+  if (state.kind === 'error') {
+    return <LoadError title="We couldn’t load your results" message={state.message} onRetry={() => setAttempt((n) => n + 1)} />;
+  }
   return <View name={profile!.name} own={profile!.role === 'student'} {...state} />;
 }
 
@@ -81,13 +85,22 @@ function View({
   worksheet: WS_3STAGE_V1 | null;
   worksheetNote: string;
 }) {
+  const { openCapture } = useRole();
   return (
     <div className="space-y-6">
-      <header>
-        <p className="eyebrow">Student dashboard</p>
-        <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-          {own ? `Hi ${name.split(' ')[0]}, here’s your latest diagnostic` : 'Latest diagnostic'}
-        </h1>
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="eyebrow">Student dashboard</p>
+          <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+            {own ? `Hi ${name.split(' ')[0]}, here’s your latest diagnostic` : 'Latest diagnostic'}
+          </h1>
+        </div>
+        <button
+          onClick={openCapture}
+          className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"
+        >
+          <UploadCloud className="h-4 w-4" aria-hidden /> Upload new work
+        </button>
       </header>
       <AffectCard grading={grading} />
       <PillarCards pillars={grading.pillarBreakdowns} />
