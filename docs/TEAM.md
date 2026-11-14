@@ -12,7 +12,7 @@ and in `BirdBrains Plan.md`; task titles start with the owner.
 | **Gemini** (UI, via Jules or Gemini CLI) | `app/`, `components/`, `extension/` (Chrome extension), page styles, `public/` | `backend/`, `lib/api.ts`, `types/birdBrains.ts` |
 | **Claude** (API, infrastructure, privacy) | `backend/` except the AI pipeline files below, `backend/deploy.sh`, `lib/api.ts`, `lib/session.tsx`, `types/birdBrains.ts`, `docs/TEAM.md` | UI layout and visual design |
 | **Freelancer** (AI pipeline) | `backend/birdbrains/pipeline.py`, `taxonomy.py`, `batch_engine.py`, `backend/eval/` (accuracy harness, gold set) | API routes, storage, auth |
-| **Maalik** | Product decisions, merging every PR, GCP/Netlify/Firebase consoles, test photos and grading reviews | |
+| **Maalik** | Product decisions, merging Gemini and freelancer PRs, GCP/Netlify/Firebase consoles, test photos and grading reviews | |
 
 Until the freelancer is confirmed (decision due **Tue Nov 17**), Claude covers
 the pipeline files too.
@@ -28,7 +28,7 @@ Shared files, changed only with the owner's review:
 
 ## 2. Branches, PRs and reviews
 
-- `main` is what ships. Nobody pushes to it directly; **Maalik merges every PR**.
+- `main` is what ships. Nobody pushes to it directly. **Maalik merges Gemini and freelancer PRs**; Claude merges its own PRs once the build and tests pass (Maalik, Nov 13).
 - **Gemini pushes only to `gemini/*` branches** (e.g. `gemini/upload-states`).
   Claude uses `claude/*`, the freelancer `luca/*`.
 - One task per PR, titled like the TickTick task. Say in the description which
