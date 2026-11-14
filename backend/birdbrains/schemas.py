@@ -21,6 +21,7 @@ STUDENT_ID_PATTERN = r"^stu_[a-zA-Z0-9]{12}$"
 SUBMISSION_ID_PATTERN = r"^sub_[a-zA-Z0-9]{12}$"
 GRADING_ID_PATTERN = r"^grd_[a-zA-Z0-9]{12}$"
 WORKSHEET_ID_PATTERN = r"^wks_[a-zA-Z0-9]{12}$"
+TENANT_ID_PATTERN = r"^ten_[a-zA-Z0-9]{10}$"
 ERROR_CODE_PATTERN = r"^(CON|PRC|FAC|TST)-0[1-4]$"  # the 16 official codes
 
 
@@ -343,6 +344,8 @@ class UserProfile(Api):
     course: Optional[CourseEnum] = None
     linkCode: Optional[str] = None  # students: share with a parent to link accounts
     childStudentIds: List[str] = Field(default_factory=list)
+    tenantId: Optional[str] = None
+    classIds: List[str] = Field(default_factory=list)  # students: classes joined with a code
 
 
 class RegisterRequest(Api):
@@ -353,3 +356,33 @@ class RegisterRequest(Api):
 
 class LinkChildRequest(Api):
     linkCode: str = Field(..., min_length=6, max_length=12)
+
+
+class UpdateProfileRequest(Api):
+    name: str = Field(..., min_length=1, max_length=80)
+
+
+class JoinClassRequest(Api):
+    joinCode: str = Field(..., min_length=6, max_length=12)
+
+
+class ApiClass(Api):
+    classId: str
+    className: str
+    gradeLevel: int
+    schoolId: str
+    schoolName: str
+
+
+class CreateSchoolRequest(Api):
+    """Internal until the teacher role lands (Nov 23)."""
+
+    schoolName: str = Field(..., min_length=1, max_length=255)
+    tenantId: Optional[str] = Field(default=None, pattern=TENANT_ID_PATTERN)  # omit to create a new tenant
+    organizationName: Optional[str] = Field(default=None, max_length=255)
+    districtCode: Optional[str] = Field(default=None, max_length=64)
+
+
+class CreateClassRequest(Api):
+    className: str = Field(..., min_length=1, max_length=128)
+    gradeLevel: int = Field(..., ge=3, le=12)

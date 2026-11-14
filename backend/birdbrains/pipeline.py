@@ -59,6 +59,8 @@ Rules:
 6. overall_ocr_confidence is your confidence in the transcription as a whole.
    Set requires_hitl to true if the page is unreadable, is not mathematics, or
    contains no student work.
+7. Never transcribe people's names, student numbers, signatures, emails or phone
+   numbers. Parts of the page may already be blacked out for privacy; ignore them.
 Do not grade. Do not comment. Output only the structured result.
 """
 

@@ -68,10 +68,16 @@ own or their linked children's data; anything else is a 404.
 | `GET /health` | anyone | `{"ok": true}` | |
 | `GET /me` | signed in | `UserProfile` | 401 not signed in, 403 `PROFILE_REQUIRED` (show the "who are you" step) |
 | `POST /me` `{role, name, course?}` | signed in | `UserProfile` (students get a `studentId` and a `linkCode`) | 422 student without course. Role cannot change later |
+| `PATCH /me` `{name}` | signed in | `UserProfile` | |
+| `DELETE /me` | signed in | 204. A student's account goes with all their data; a parent's account only | Ask for confirmation first; sign the user out after |
 | `POST /me/children` `{linkCode}` | parent | `UserProfile` with `childStudentIds` | 404 unknown code, 403 not a parent |
-| `POST /submissions` multipart | student, linked parent | `SubmissionIngestionPayload`, 201 | 422 bad file, below 1080p or too blurry; 413 over 12 MB; **409 same photo already uploaded** (`Location` header = the earlier submission) |
+| `GET /me/classes` | student | `ApiClass[]` | |
+| `POST /me/classes` `{joinCode}` | student | `ApiClass[]` after joining (codes are 6 characters, any case) | 404 unknown code, 403 not a student |
+| `DELETE /me/classes/{classId}` | student | `ApiClass[]` after leaving | |
+| `DELETE /students/{id}` | the student, or a linked parent | 204. Deletes every photo, diagnostic, worksheet and the student's account | 404 |
+| `POST /submissions` multipart | student, linked parent | `SubmissionIngestionPayload`, 201 | 422 bad file, below 1080p or too blurry; 413 over 12 MB; **409 same photo already uploaded** (`Location` header = the earlier submission); 503 privacy check failed, try again |
 | `GET /submissions/{id}` | owner | `SubmissionIngestionPayload` | 404 |
-| `GET /submissions/{id}/files/{i}` | owner | the image | 404 |
+| `GET /submissions/{id}/files/{i}` | owner | the image, with names blacked out | 404; 410 `PHOTO_EXPIRED` (photos are deleted after 90 days) |
 | `POST /submissions/{id}/process` | owner | `{submission, grading}`; `grading` is null when `status` is `NEEDS_RETAKE` | 502 pipeline failed (show "try again") |
 | `GET /students/{id}/gradings` | owner | `Stage2GradingAndAffectOutput[]`, newest first, max 50 | |
 | `GET /students/{id}/gradings/latest` | owner | `Stage2GradingAndAffectOutput` | 404 `NO_GRADED_WORK` (empty state) |
@@ -79,12 +85,22 @@ own or their linked children's data; anything else is a 404.
 | `GET /gradings/{id}/worksheet` | owner | `WS_3STAGE_V1` | 404 `WORKSHEET_QUEUED` / `WORKSHEET_PENDING` (made overnight), `WORKSHEET_NOT_NEEDED` (no errors), `WORKSHEET_FAILED` |
 | `GET /students/{id}/parent-summary` | linked parent (or the student) | `ParentProjectionSummary` | 404 `NO_GRADED_WORK` |
 | `POST /internal/batch/worksheets/{submit,collect}` | Cloud Scheduler only | | not for the UI |
+| `POST /internal/schools`, `POST /internal/schools/{id}/classes` | admin token only | school, class with `joinCode` | not for the UI; teachers get this on Nov 23 |
 
 Upload form fields for `POST /submissions`: `studentId`, `course` (`MTH1W` or
 `MPM2D`), `unitTopic` (1 to 200 characters), `sharpnessScore` (0 to 100, from
 `lib/imageQuality.ts`), and 1 to 6 `files` (JPEG, PNG or WebP). Submission
 `status` goes `UPLOADED → TRANSCRIBING → GRADING → GRADED`, or ends in
 `NEEDS_RETAKE` or `FAILED`.
+
+`UserProfile` now also has `tenantId` and `classIds`. `ApiClass` is
+`{classId, className, gradeLevel (3 to 12), schoolId, schoolName}`.
+
+**Privacy, for UI copy:** before a photo is stored, the top 12% of the page is
+blacked out (where names usually go), names, emails and phone numbers found
+anywhere else are blacked out, and location data is removed. Tell students to
+write their name at the top or not at all. Photos are deleted after 90 days;
+diagnostics stay until the family deletes them.
 
 ### Shared vocabulary
 
@@ -215,7 +231,7 @@ These are real responses from the local backend with the fake model (section 5).
 
 | Due | Endpoints | For Gemini's task |
 |---|---|---|
-| Wed Nov 18 | Schools, classes (grades 3 to 12), class join codes, `DELETE` my data | Account and settings screens (Thu Nov 19) |
+| ~~Wed Nov 18~~ done | Profile, classes and join codes, delete my data (in the table above) | Account and settings screens (Thu Nov 19) |
 | Mon Nov 23 | Teacher role; review queue: list, approve, fix grade, request rescan | Teacher review queue screens (Wed Nov 25) |
 | Fri Nov 27 | Signed-URL upload + status for the Chrome extension | Chrome extension (Mon Nov 30) |
 | Mon Dec 7 | Worksheet PDF download links | PDF buttons (Tue Dec 8) |

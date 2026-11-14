@@ -15,6 +15,9 @@ class BlobStorage(Protocol):
 
     def read_texts(self, prefix: str, suffix: str) -> list[str]: ...
 
+    def delete_prefix(self, prefix: str) -> int:
+        """Delete every object under ``prefix``; return how many were removed."""
+
 
 class LocalStorage:
     def __init__(self, root: str) -> None:
@@ -45,6 +48,13 @@ class LocalStorage:
             return []
         return [p.read_text() for p in sorted(base.rglob(f"*{suffix}")) if p.is_file()]
 
+    def delete_prefix(self, prefix: str) -> int:
+        base = self._path(prefix)
+        files = [p for p in base.rglob("*") if p.is_file()] if base.exists() else []
+        for f in files:
+            f.unlink()
+        return len(files)
+
 
 class GcsStorage:
     """Bucket should live in northamerica-northeast1 with uniform access and no
@@ -72,3 +82,9 @@ class GcsStorage:
             for b in self._bucket.list_blobs(prefix=prefix)
             if b.name.endswith(suffix)
         ]
+
+    def delete_prefix(self, prefix: str) -> int:
+        blobs = list(self._bucket.list_blobs(prefix=prefix))
+        for b in blobs:
+            b.delete()
+        return len(blobs)

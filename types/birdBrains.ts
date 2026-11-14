@@ -141,4 +141,16 @@ export interface UserProfile {
   /** Students: share with a parent so they can link their account. */
   linkCode?: string | null;
   childStudentIds: string[];
+  tenantId?: string | null;
+  /** Students: classes joined with a class code. */
+  classIds?: string[];
+}
+
+/** A class a student joined with a code (GET /me/classes). */
+export interface ApiClass {
+  classId: string;
+  className: string;
+  gradeLevel: number; // 3 to 12
+  schoolId: string;
+  schoolName: string;
 }
