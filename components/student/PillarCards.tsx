@@ -1,5 +1,6 @@
 import type { PillarBreakdown } from '@/types/birdBrains';
 import { PILLARS, PILLAR_ORDER } from '@/lib/pillars';
+import { MathNumber, MathText } from '@/components/MathText';
 
 export default function PillarCards({ pillars }: { pillars: PillarBreakdown[] }) {
   const sorted = [...pillars].sort((a, b) => PILLAR_ORDER.indexOf(a.pillar) - PILLAR_ORDER.indexOf(b.pillar));
@@ -21,18 +22,23 @@ export default function PillarCards({ pillars }: { pillars: PillarBreakdown[] })
                   </span>
                 ) : p.errorCount > 0 ? (
                   <span className="rounded-full bg-rose-50 px-2 py-0.5 text-[11px] font-semibold text-rose-700 ring-1 ring-rose-200">
-                    {p.errorCount} error{p.errorCount > 1 ? 's' : ''}
+                    <MathNumber value={p.errorCount} /> error{p.errorCount > 1 ? 's' : ''}
                   </span>
                 ) : null}
               </div>
-              <p className="mt-2 text-2xl font-bold tabular-nums text-slate-900">
-                {p.earnedScore}
-                <span className="text-base font-medium text-slate-400"> / {p.maxScore}</span>
+              <p className="latex-math mt-2 text-2xl font-bold text-slate-900">
+                <MathNumber value={p.earnedScore} />
+                <span className="text-base font-medium text-slate-400">
+                  {' / '}
+                  <MathNumber value={p.maxScore} />
+                </span>
               </p>
               <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label={`${PILLARS[p.pillar].label} score`}>
                 <div className={`h-full rounded-full ${bar}`} style={{ width: `${pct}%` }} />
               </div>
-              <p className="mt-3 text-sm text-slate-600">{p.feedback}</p>
+              <p className="mt-3 text-sm text-slate-600">
+                <MathText text={p.feedback} />
+              </p>
             </article>
           );
         })}
