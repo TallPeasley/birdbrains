@@ -14,6 +14,16 @@ import type { GradeCourse, UserProfile } from '@/types/birdBrains';
  */
 const DEV_AUTH = process.env.NEXT_PUBLIC_AUTH_MODE === 'dev';
 const DEV_KEY = 'birdbrains.devUid';
+const DEMO_KEY = 'birdbrains.demo';
+
+function readDemoFlag(): boolean {
+  try {
+    if (new URLSearchParams(window.location.search).get('demo') === '1') return true;
+    return window.sessionStorage.getItem(DEMO_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
 
 export interface NewProfile {
   role: 'student' | 'parent';
@@ -22,7 +32,11 @@ export interface NewProfile {
 }
 
 interface SessionValue {
+  /** True when this visitor uses the real API (a live build, not in demo mode). */
   live: boolean;
+  /** Demo mode: sample data on a live build. Always true on a build with no API URL. */
+  demo: boolean;
+  setDemo: (on: boolean) => void;
   /** False until the first sign-in check has finished. */
   ready: boolean;
   signedIn: boolean;
@@ -72,6 +86,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [selectedChild, setSelectedChild] = useState<string | null>(null);
   const [dataVersion, setDataVersion] = useState(0);
+  const [demoOn, setDemoOn] = useState(false);
   const devUid = useRef<string | null>(null);
 
   const getToken = useCallback(async () => {
@@ -93,6 +108,20 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       else throw err;
     }
   }, [getToken]);
+
+  useEffect(() => {
+    if (IS_LIVE && readDemoFlag()) setDemoOn(true);
+  }, []);
+
+  const setDemo = useCallback((on: boolean) => {
+    setDemoOn(on);
+    try {
+      if (on) window.sessionStorage.setItem(DEMO_KEY, '1');
+      else window.sessionStorage.removeItem(DEMO_KEY);
+    } catch {
+      /* storage blocked: demo lasts until reload */
+    }
+  }, []);
 
   useEffect(() => {
     if (!IS_LIVE) return;
@@ -131,8 +160,10 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       setProfile(await api.register(await getToken(), p));
     };
     return {
-      live: IS_LIVE,
-      ready,
+      live: IS_LIVE && !demoOn,
+      demo: !IS_LIVE || demoOn,
+      setDemo,
+      ready: ready || demoOn,
       signedIn,
       profile,
       activeStudentId: profile
@@ -184,7 +215,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       dataVersion,
       bumpData: () => setDataVersion((v) => v + 1),
     };
-  }, [ready, signedIn, profile, selectedChild, dataVersion, getToken, loadProfile]);
+  }, [ready, signedIn, profile, selectedChild, dataVersion, getToken, loadProfile, demoOn, setDemo]);
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;
 }

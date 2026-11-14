@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Bird, GraduationCap, Users } from 'lucide-react';
 import { useRole, type Role } from '@/lib/roleContext';
+import { useSession } from '@/lib/session';
+import { IS_LIVE } from '@/lib/api';
 
 const OPTIONS: { value: Role; label: string; icon: typeof Users }[] = [
   { value: 'student', label: 'Student View', icon: GraduationCap },
@@ -13,6 +15,7 @@ const OPTIONS: { value: Role; label: string; icon: typeof Users }[] = [
 export default function Navbar() {
   const { role, setRole } = useRole();
   const pathname = usePathname();
+  const { demo, setDemo } = useSession();
 
   return (
     <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/90 backdrop-blur">
@@ -25,6 +28,14 @@ export default function Navbar() {
         </Link>
 
         <div className="flex items-center gap-3">
+          {IS_LIVE && demo && (
+            <span className="flex items-center gap-2 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800 ring-1 ring-amber-200">
+              Demo
+              <Link href="/" onClick={() => setDemo(false)} className="underline hover:text-amber-950">
+                Exit
+              </Link>
+            </span>
+          )}
           {pathname !== '/' && (
             <Link
               href={`/${role}`}
