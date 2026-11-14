@@ -84,6 +84,9 @@ own or their linked children's data; anything else is a 404.
 | `GET /students/{id}/gradings/latest` | owner | `Stage2GradingAndAffectOutput` | 404 `NO_GRADED_WORK` (empty state) |
 | `GET /gradings/{id}` | owner | `Stage2GradingAndAffectOutput` | 404 |
 | `GET /gradings/{id}/worksheet` | owner | `WS_3STAGE_V1` | 404 `WORKSHEET_QUEUED` / `WORKSHEET_PENDING` (made overnight), `WORKSHEET_NOT_NEEDED` (no errors), `WORKSHEET_FAILED` |
+| `GET /gradings/{id}/worksheet.pdf` | owner | the worksheet as a PDF download | same 404 codes as the worksheet route |
+| `POST /uploads` `{studentId, course, unitTopic, sharpnessScore}` | student, linked parent | `ApiUploadTicket {uploadId, uploadUrl, method, expiresAt, maxBytes}` | 402 `FREE_LIMIT_REACHED` |
+| `PUT {uploadUrl}` raw image bytes, no sign-in header | whoever holds the link | `SubmissionIngestionPayload`, 201 | same errors as `POST /submissions`; 404 used or wrong link; 410 `UPLOAD_LINK_EXPIRED` |
 | `GET /students/{id}/parent-summary` | linked parent (or the student) | `ParentProjectionSummary` | 404 `NO_GRADED_WORK` |
 | `POST /internal/batch/worksheets/{submit,collect}` | Cloud Scheduler only | | not for the UI |
 | `POST /internal/schools`, `POST /internal/schools/{id}/classes` | admin token only | school, class with `joinCode` | not for the UI |
@@ -130,6 +133,17 @@ are set with the admin route below.
   or collect interest.
 - Human review of grades is **not** part of launch: there is no review queue.
   Unreadable pages come back as `NEEDS_RETAKE`; ask for a clearer photo.
+
+### Chrome extension upload
+
+1. The popup (signed in with Firebase) calls `POST /uploads` and gets `uploadUrl`.
+2. It `PUT`s the captured image bytes (JPEG, PNG or WebP, one page) to `API_URL + uploadUrl`.
+   The link works once, for 15 minutes, and needs no sign-in header.
+3. The response is the submission. Call `POST /submissions/{id}/process`, then show the result
+   link; poll `GET /submissions/{id}` for `status` if you process in the background.
+
+The same checks apply as on the website (size, sharpness score from `lib/imageQuality.ts`,
+duplicate photo, plan limit, name blurring).
 
 ### Shared vocabulary
 
@@ -262,8 +276,9 @@ These are real responses from the local backend with the fake model (section 5).
 |---|---|---|
 | done | Plans, usage and the 402 limit (section "Plans" above) | Paywall and upgrade screens |
 | ~~Wed Nov 18~~ done | Profile, classes and join codes, delete my data (in the table above) | Account and settings screens (Thu Nov 19) |
-| Fri Nov 27 | Signed-URL upload + status for the Chrome extension | Chrome extension (Mon Nov 30) |
-| Mon Dec 7 | Worksheet PDF download links | PDF buttons (Tue Dec 8) |
+| done | Extension upload link + status (section "Chrome extension upload") | Chrome extension (Mon Nov 30) |
+| done | Worksheet PDF: `api.worksheetPdf` | PDF buttons (Tue Dec 8) |
+| done | Privacy policy and terms text: `docs/legal/` | Legal pages + consent (Tue Dec 8) |
 | Wed Dec 30 | Reports (class overview, progress over time) | Report screens |
 
 Build those screens against mock data first if the API is not there yet.
