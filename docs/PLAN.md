@@ -39,7 +39,7 @@ Counts: 65 tasks. Maalik 28, Claude 14, Gemini 13, Freelancer 10. The freelancer
 
 ## Week 2 (Nov 20 to 26): AI accuracy, plans and limits
 
-- [ ] **Fri Nov 20** · **Gemini:** Student and parent dashboards on real data. Loading, empty (no uploads yet) and error states; mobile layout; the 16 codes in plain words with the pillar colours.
+- [x] **Fri Nov 20** · **Gemini:** Student and parent dashboards on real data. Loading, empty (no uploads yet) and error states; mobile layout; the 16 codes in plain words with the pillar colours.
 - [ ] **Fri Nov 20** · **Freelancer:** Check the context cache, tracing and cost per upload. Confirm the 24 h CachedContent is created and used on Vertex, pick where MLflow traces go, and log real cost per submission for Free (Flash) and Pro (Pro + thinking + mood) against the ~$0.0045 target. This sets the Free cap.
 - [ ] **Sat Nov 21** · **Maalik:** Gold set: 15 more samples (25 total). Same format as Nov 15. Mix grades and topics; include at least 3 'step skipped' vs 'math fact slip' pairs (PRC-01 vs FAC-01).
 - [ ] **Sun Nov 22** · **Maalik:** Create a Stripe account (only if paying at launch). Only if you chose paid Pro: create a Stripe account in test mode, add the Pro product and monthly price, and give Claude test keys through Cloud Shell secrets (not in chat). Skip otherwise.
