@@ -13,23 +13,61 @@ import {
   Link2,
   Loader2,
   LogOut,
+  Sparkles,
   Trash2,
   UserCheck,
   Users,
 } from 'lucide-react';
-import rawMocks from '@/mocks/birdBrainsMockData.json';
-import { parentSummary as demoParentSummary } from '@/lib/mockData';
+import { demoPersonas, parentSummary as demoParentSummary } from '@/lib/mockData';
 import { api, ApiError } from '@/lib/api';
 import { useRole } from '@/lib/roleContext';
 import { useSession } from '@/lib/session';
 import { Loading, SignInNotice } from '@/components/DashboardStates';
-import type { ApiClass, UserProfile } from '@/types/birdBrains';
+import type { ApiClass, ApiUsage, UserProfile } from '@/types/birdBrains';
 
-const DEMO_PROFILES = rawMocks.demoProfiles as {
-  student: UserProfile;
-  parent: UserProfile;
+const DEMO_PROFILES: { student: UserProfile; parent: UserProfile } = {
+  student: {
+    uid: demoPersonas.student.id,
+    role: 'student',
+    name: demoPersonas.student.name,
+    studentId: demoPersonas.student.id,
+    course: demoParentSummary.course,
+    linkCode: 'DBLE7QA2',
+    childStudentIds: [],
+    plan: 'free',
+    classIds: ['cls_mpm2d_p2'],
+  },
+  parent: {
+    uid: demoPersonas.parent.id,
+    role: 'parent',
+    name: demoPersonas.parent.name,
+    studentId: null,
+    course: null,
+    linkCode: null,
+    childStudentIds: [demoPersonas.student.id],
+    plan: 'free',
+    classIds: [],
+  },
 };
-const DEMO_CLASSES = rawMocks.demoClasses as ApiClass[];
+
+const DEMO_CLASSES: ApiClass[] = [
+  {
+    classId: 'cls_mpm2d_p2',
+    className: 'MPM2D · Period 2',
+    gradeLevel: 10,
+    schoolId: 'sch_oakridge_01',
+    schoolName: 'Oakridge Secondary School',
+  },
+];
+
+const DEMO_USAGE: ApiUsage = {
+  studentId: demoPersonas.student.id,
+  plan: 'free',
+  monthlyLimit: 10,
+  usedThisMonth: 3,
+  remaining: 7,
+  resetsAt: '2026-12-01T00:00:00Z',
+};
 
 function formatApiError(err: unknown, fallback404?: string, fallback403?: string): string {
   if (err instanceof ApiError) {
@@ -58,6 +96,10 @@ export default function AccountSettings() {
   } = useSession();
 
   const [copied, setCopied] = useState(false);
+
+  // Plan & monthly usage state
+  const [usage, setUsage] = useState<ApiUsage | null>(null);
+  const [usageLoading, setUsageLoading] = useState(false);
 
   // Parent: link another child state
   const [childCode, setChildCode] = useState('');
@@ -105,6 +147,30 @@ export default function AccountSettings() {
   }, [role, live, profile?.uid]);
 
   useEffect(() => {
+    if (!live || !activeStudentId) {
+      setUsage(null);
+      setUsageLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setUsageLoading(true);
+    getToken()
+      .then((token) => api.usage(token, activeStudentId))
+      .then((u) => {
+        if (!cancelled) setUsage(u);
+      })
+      .catch(() => {
+        if (!cancelled) setUsage(null);
+      })
+      .finally(() => {
+        if (!cancelled) setUsageLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [live, activeStudentId, getToken]);
+
+  useEffect(() => {
     if (!live || !profile || profile.role !== 'student') {
       setClasses([]);
       setClassesLoading(false);
@@ -144,6 +210,8 @@ export default function AccountSettings() {
 
   const isStudent = activeProfile.role === 'student';
   const displayedClasses = live ? classes : isStudent ? DEMO_CLASSES : [];
+  const displayedUsage = live ? usage : DEMO_USAGE;
+  const effectivePlan = displayedUsage?.plan ?? activeProfile.plan ?? 'free';
 
   const handleCopyCode = async () => {
     if (!activeProfile.linkCode) return;
@@ -364,6 +432,87 @@ export default function AccountSettings() {
             </div>
           )}
         </dl>
+      </section>
+
+      {/* Plan and monthly uploads */}
+      <section className="card p-5 sm:p-6" aria-labelledby="plan-heading">
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5 text-indigo-600" aria-hidden />
+            <h2 id="plan-heading" className="text-lg font-semibold text-slate-900">
+              Plan &amp; monthly uploads
+            </h2>
+          </div>
+          <span
+            className={`rounded-full px-3 py-1 text-xs font-semibold ring-1 ${
+              effectivePlan === 'pro'
+                ? 'bg-indigo-50 text-indigo-700 ring-indigo-200'
+                : 'bg-slate-100 text-slate-700 ring-slate-200'
+            }`}
+          >
+            {effectivePlan === 'pro' ? 'Pro plan' : 'Free plan'}
+          </span>
+        </div>
+
+        {usageLoading ? (
+          <p className="mt-3 flex items-center gap-2 text-sm text-slate-500" role="status">
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+            Checking upload allowance…
+          </p>
+        ) : displayedUsage ? (
+          <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50/70 p-4">
+            {displayedUsage.monthlyLimit !== null && displayedUsage.remaining !== null ? (
+              <>
+                <div className="flex flex-wrap items-baseline justify-between gap-2">
+                  <p className="text-sm font-semibold text-slate-900">
+                    {displayedUsage.remaining} of {displayedUsage.monthlyLimit} uploads left this month
+                  </p>
+                  <span className="text-xs tabular-nums text-slate-500">
+                    {displayedUsage.usedThisMonth} used
+                  </span>
+                </div>
+                <div
+                  className="mt-2.5 h-2 overflow-hidden rounded-full bg-slate-200"
+                  role="progressbar"
+                  aria-valuenow={displayedUsage.usedThisMonth}
+                  aria-valuemin={0}
+                  aria-valuemax={displayedUsage.monthlyLimit}
+                  aria-label="Uploads used this month"
+                >
+                  <div
+                    className={`h-full rounded-full ${
+                      displayedUsage.remaining === 0 ? 'bg-rose-500' : 'bg-indigo-600'
+                    }`}
+                    style={{
+                      width: `${Math.min(
+                        100,
+                        Math.round((displayedUsage.usedThisMonth / displayedUsage.monthlyLimit) * 100),
+                      )}%`,
+                    }}
+                  />
+                </div>
+                <p className="mt-2 text-xs text-slate-500">
+                  Allowance resets at the start of next month. Pro adds unlimited uploads, mood and friction insights, and nightly practice worksheets.
+                </p>
+              </>
+            ) : (
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <p className="text-sm font-semibold text-slate-900">
+                  Unlimited uploads on Pro
+                </p>
+                <span className="text-xs tabular-nums text-slate-500">
+                  {displayedUsage.usedThisMonth} uploaded this month
+                </span>
+              </div>
+            )}
+          </div>
+        ) : (
+          <p className="mt-3 text-sm text-slate-600">
+            {isStudent
+              ? 'Free accounts include 10 uploads per calendar month.'
+              : 'Link a child account below to view their monthly upload allowance.'}
+          </p>
+        )}
       </section>
 
       {/* Student: Parent link code */}
