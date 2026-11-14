@@ -53,7 +53,7 @@ Counts: 65 tasks. Maalik 28, Claude 14, Gemini 13, Freelancer 10. The freelancer
 
 ## Week 3 (Nov 27 to Dec 3): Upgrades, extension and Classroom (Pro)
 
-- [ ] **Fri Nov 27** · **Claude:** Extension upload endpoint + Classroom sign-in. Signed-URL upload and status endpoints for the Chrome extension (Phase 3.1). Google Classroom OAuth on the backend, if Classroom is in for launch.
+- [ ] **Fri Nov 27** · **Claude:** Extension upload endpoint + Classroom sign-in. (Extension upload link and status: done Nov 14. Classroom sign-in still open, waiting on the Nov 16 decision.) Signed-URL upload and status endpoints for the Chrome extension (Phase 3.1). Google Classroom OAuth on the backend, if Classroom is in for launch.
 - [ ] **Fri Nov 27** · **Freelancer:** Free-plan pipeline mode. A cheaper Free path: Flash transcription and 4-pillar error codes with standard feedback, no mood tracking or thinking budget. Run the gold set on it so Free accuracy is known, and report cost per upload.
 - [ ] **Sat Nov 28** · **Maalik:** Gold set: 15 more (40 total) + extension code. Label 15 more. Send the existing Chrome extension code to Gemini (the roadmap says one exists), or say there is none.
 - [ ] **Mon Nov 30** · **Maalik:** Make a test Google Classroom. A test class with a test student account. Skip if Classroom moved to after launch.
@@ -71,9 +71,9 @@ Counts: 65 tasks. Maalik 28, Claude 14, Gemini 13, Freelancer 10. The freelancer
 - [ ] **Fri Dec 4** · **Freelancer:** Run the nightly worksheet batch for real (Pro). Vertex Batch API job in Montréal for flagged Pro students only, 3 stages: Diagnostic Mirror, Faded Scaffolding, Independent Transfer, with KaTeX syntax checks on the output.
 - [ ] **Sat Dec 5** · **Maalik:** Review 5 generated worksheets. Read 5 real worksheets as a tutor: right level, right error, good scaffolding? Note fixes for the freelancer (or Claude).
 - [ ] **Sun Dec 6** · **Maalik:** Gold set: 20 more (60 total). Fill the gaps the accuracy report shows (weak codes or grades).
-- [ ] **Mon Dec 7** · **Claude:** PDF worksheets job. WeasyPrint on Cloud Run Jobs renders Gemini's print template to PDF each night; download links in the API (Phase 4.3).
+- [x] **Mon Dec 7** · **Claude:** PDF worksheets job. WeasyPrint on Cloud Run Jobs renders Gemini's print template to PDF each night; download links in the API (Phase 4.3).
 - [ ] **Tue Dec 8** · **Maalik:** Gold set: last 20 (80 total). Finish the 80-sample set across grades 3 to 12 (Phase 5.1).
-- [ ] **Tue Dec 8** · **Claude:** Draft privacy policy and terms. Plain-language privacy policy (PIPEDA, Canadian data residency, what is stored, mood data only on Pro, 90-day photo deletion, parental consent for minors) and terms of use, including plan, cap, billing and cancellation terms. Text for Gemini's pages.
+- [x] **Tue Dec 8** · **Claude:** Draft privacy policy and terms. Plain-language privacy policy (PIPEDA, Canadian data residency, what is stored, mood data only on Pro, 90-day photo deletion, parental consent for minors) and terms of use, including plan, cap, billing and cancellation terms. Text for Gemini's pages.
 - [ ] **Tue Dec 8** · **Gemini:** Legal pages + consent at sign-up. Privacy and terms pages from Claude's text, a consent checkbox at sign-up (parent consent for under-13s), PDF download buttons on worksheets.
 - [ ] **Wed Dec 9** · **Maalik:** Week 4 exit check + merges. A flagged Pro student gets a print-ready PDF worksheet the next morning (E2E-03); a Free student does not. Merge week-4 PRs.
 
