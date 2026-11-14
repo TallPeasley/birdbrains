@@ -1,5 +1,6 @@
 import type {
   ApiClass,
+  ApiUploadTicket,
   ApiUsage,
   ParentProjectionSummary,
   Stage2GradingAndAffectOutput,
@@ -72,6 +73,22 @@ export const api = {
   worksheet: (t: string, gradingId: string) => request<WS_3STAGE_V1>(`/gradings/${gradingId}/worksheet`, t),
   parentSummary: (t: string, studentId: string) =>
     request<ParentProjectionSummary>(`/students/${studentId}/parent-summary`, t),
+  /**
+   * Chrome extension upload, step 1: a one-time link (15 minutes). Step 2: PUT the raw image
+   * bytes to API_URL + uploadUrl with no Authorization header; the response is the submission.
+   */
+  createUpload: (
+    t: string,
+    body: { studentId: string; course: string; unitTopic: string; sharpnessScore: number },
+  ) => request<ApiUploadTicket>('/uploads', t, json(body)),
+  /** The worksheet as a PDF (Pro, once the worksheet is ready). Use URL.createObjectURL to download. */
+  worksheetPdf: async (t: string, gradingId: string): Promise<Blob> => {
+    const res = await fetch(`${API_URL}/gradings/${gradingId}/worksheet.pdf`, {
+      headers: { Authorization: `Bearer ${t}` },
+    });
+    if (!res.ok) throw new ApiError(res.status, 'The worksheet PDF is not available yet.');
+    return res.blob();
+  },
   /** Plan and uploads left this month. A 402 FREE_LIMIT_REACHED on upload means remaining hit 0. */
   usage: (t: string, studentId: string) => request<ApiUsage>(`/students/${studentId}/usage`, t),
   updateProfile: (t: string, name: string) => request<UserProfile>('/me', t, { ...json({ name }), method: 'PATCH' }),

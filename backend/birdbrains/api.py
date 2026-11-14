@@ -8,10 +8,11 @@ import os
 import secrets
 import string
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Annotated, Optional
 
-from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, Response, UploadFile
+from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, Request, Response, UploadFile
+from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image
 
@@ -25,7 +26,9 @@ from .schemas import (
     STUDENT_ID_PATTERN,
     ApiGrading,
     ApiClass,
+    ApiUploadTicket,
     ApiUsage,
+    CreateUploadRequest,
     ApiParentSummary,
     ApiWorksheet,
     CreateClassRequest,
@@ -55,6 +58,7 @@ MAX_FILES = 6
 MAX_FILE_BYTES = 12 * 1024 * 1024
 ALLOWED_TYPES = {"JPEG": "image/jpeg", "PNG": "image/png", "WEBP": "image/webp"}
 MAX_WORKSHEET_ATTEMPTS = 2
+UPLOAD_LINK_SECONDS = 15 * 60
 _ALNUM = string.ascii_letters + string.digits
 # Every self-sign-up family lives in one consumer tenant; schools get their own.
 CONSUMER_TENANT = "ten_consumer00"
@@ -151,7 +155,7 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=list(d.cors_origins),
-        allow_methods=["GET", "POST", "PATCH", "DELETE"],
+        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
         allow_headers=["Authorization", "Content-Type"],
     )
 
@@ -339,14 +343,20 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         files: Annotated[list[UploadFile], File()],
     ):
         require_student_access(user, studentId)
-        if usage(studentId).remaining == 0:
-            raise HTTPException(402, "FREE_LIMIT_REACHED")
         if not 1 <= len(files) <= MAX_FILES:
             raise HTTPException(422, f"Attach between 1 and {MAX_FILES} photos")
+        blobs = [upload.file.read(MAX_FILE_BYTES + 1) for upload in files]
+        return ingest(user["uid"], tenant_of(user), studentId, course, unitTopic, sharpnessScore, blobs)
+
+    def ingest(uid: str, tenant_id: str, studentId: str, course: CourseEnum, unitTopic: str,
+               sharpnessScore: float, blobs: list[bytes], source: str = "web") -> SubmissionIngestionPayload:
+        """Shared by the web upload and the extension's one-time upload link: plan
+        limit, image checks, duplicate check, privacy scrub, then storage."""
+        if usage(studentId).remaining == 0:
+            raise HTTPException(402, "FREE_LIMIT_REACHED")
         submission_id = new_id("sub")
         stored, smallest = [], None
-        for i, upload in enumerate(files):
-            data = upload.file.read(MAX_FILE_BYTES + 1)
+        for i, data in enumerate(blobs):
             if len(data) > MAX_FILE_BYTES:
                 raise HTTPException(413, "Each photo must be 12 MB or smaller")
             try:
@@ -395,17 +405,56 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
             "files": file_records,
             "status": "UPLOADED",
             "gradingId": None,
-            "uploadedBy": user["uid"],
-            "tenantId": tenant_of(user),
+            "uploadedBy": uid,
+            "tenantId": tenant_id,
+            "source": source,
         }
         d.store.put("submissions", submission_id, record)
         for *_, sha in stored:
             d.store.put("imagehashes", f"{studentId}_{sha}", {"studentId": studentId, "submissionId": submission_id})
         return submission_payload(record)
 
+    # ------------------------------------- one-time upload links (Chrome extension)
+    @app.post("/uploads", response_model=ApiUploadTicket, status_code=201)
+    def create_upload_ticket(body: CreateUploadRequest, user: User):
+        """Step 1 for the extension: get a link that accepts one photo for 15 minutes
+        without the sign-in token (so a content script never has to hold it)."""
+        require_student_access(user, body.studentId)
+        if usage(body.studentId).remaining == 0:
+            raise HTTPException(402, "FREE_LIMIT_REACHED")
+        upload_id, token = new_id("upl"), secrets.token_urlsafe(32)
+        expires = datetime.now(timezone.utc) + timedelta(seconds=UPLOAD_LINK_SECONDS)
+        d.store.put("uploadtickets", upload_id, {
+            "uploadId": upload_id, "tokenHash": hashlib.sha256(token.encode()).hexdigest(),
+            "expiresAt": expires.isoformat(), "uid": user["uid"], "tenantId": tenant_of(user),
+            "studentId": body.studentId, "course": body.course.value, "unitTopic": body.unitTopic.strip(),
+            "sharpnessScore": body.sharpnessScore, "submissionId": None,
+        })
+        return ApiUploadTicket(uploadId=upload_id, uploadUrl=f"/uploads/{upload_id}/file?token={token}",
+                               method="PUT", expiresAt=expires.isoformat(), maxBytes=MAX_FILE_BYTES)
+
+    @app.put("/uploads/{upload_id}/file", response_model=SubmissionIngestionPayload, status_code=201)
+    async def put_upload(upload_id: str, token: str, request: Request):
+        """Step 2: PUT the raw image bytes. The link works once."""
+        ticket = d.store.get("uploadtickets", upload_id)
+        if (not ticket or ticket["submissionId"]
+                or not hmac.compare_digest(ticket["tokenHash"], hashlib.sha256(token.encode()).hexdigest())):
+            raise HTTPException(404, "Not found")
+        if datetime.fromisoformat(ticket["expiresAt"]) < datetime.now(timezone.utc):
+            raise HTTPException(410, "UPLOAD_LINK_EXPIRED")
+        if int(request.headers.get("content-length") or 0) > MAX_FILE_BYTES:
+            raise HTTPException(413, "Each photo must be 12 MB or smaller")
+        data = await request.body()
+        payload = await run_in_threadpool(
+            ingest, ticket["uid"], ticket["tenantId"], ticket["studentId"], CourseEnum(ticket["course"]),
+            ticket["unitTopic"], ticket["sharpnessScore"], [data], "extension")
+        ticket["submissionId"] = payload.submissionId
+        d.store.put("uploadtickets", upload_id, ticket)
+        return payload
+
     def submission_payload(record: dict) -> SubmissionIngestionPayload:
         urls = [f"/submissions/{record['submissionId']}/files/{i}" for i in range(len(record["files"]))]
-        return SubmissionIngestionPayload(**{k: v for k, v in record.items() if k not in ("files", "uploadedBy", "tenantId")},
+        return SubmissionIngestionPayload(**{k: v for k, v in record.items() if k not in ("files", "uploadedBy", "tenantId", "source")},
                                           fileUrls=urls)
 
     @app.get("/submissions/{submission_id}", response_model=SubmissionIngestionPayload)
@@ -529,6 +578,16 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
             # QUEUED / PENDING: generated overnight. NOT_NEEDED: no errors. FAILED.
             raise HTTPException(404, f"WORKSHEET_{grading['worksheetStatus']}")
         return to_api_worksheet(d.store.get("worksheets", grading_id))
+
+    @app.get("/gradings/{grading_id}/worksheet.pdf")
+    def get_worksheet_pdf(grading_id: str, user: User):
+        """The 3-stage worksheet as a printable PDF (rendered on request)."""
+        from .worksheet_pdf import render_pdf
+
+        ws = get_worksheet(grading_id, user)
+        return Response(render_pdf(ws), media_type="application/pdf", headers={
+            "Content-Disposition": f'attachment; filename="birdbrains-worksheet-{grading_id}.pdf"',
+            "Cache-Control": "private, max-age=900"})
 
     # -------------------------------------------------------- parent dashboard
     @app.get("/students/{student_id}/parent-summary", response_model=ApiParentSummary)
