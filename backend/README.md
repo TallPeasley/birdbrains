@@ -12,7 +12,7 @@ birdbrains/
   batch_engine.py            Nightly worksheet generation through the Vertex AI Batch API
   projections.py             Stored records -> grading, worksheet and parent-summary payloads
   api.py                     FastAPI routes, upload checks, access control, classes, delete-my-data
-  privacy.py                 Photo scrubbing before storage: EXIF removed, header band masked, Cloud DLP redaction
+  privacy.py                 Photo scrubbing before storage: EXIF removed, name/date/class fields found with Cloud DLP and blurred
   store.py / storage.py      Firestore + Cloud Storage, with in-memory / local-disk twins
   auth.py                    Firebase ID-token verification (dev tokens for local use only)
   fake.py                    Deterministic stand-in for Gemini (local runs and tests)
@@ -65,8 +65,10 @@ To exercise real Gemini from your machine, keep `BIRDBRAINS_BACKEND=local`, set
 | `GET /students/{id}/parent-summary` | same | `ParentProjectionSummary` |
 | `PATCH /me`, `DELETE /me` | signed-in | Change name; delete the account (a student's account takes all their data with it) |
 | `GET/POST /me/classes`, `DELETE /me/classes/{id}` | student | List, join with a class code, leave |
+| `GET /students/{id}/usage` | owner | Plan and uploads left this month (Free: 402 `FREE_LIMIT_REACHED` when 0) |
+| `POST /internal/users/{uid}/plan` | `X-Batch-Token` | Set `free` / `pro` until billing exists |
 | `DELETE /students/{id}` | student, linked parent | Delete every record and photo for that student |
-| `POST /internal/schools`, `POST /internal/schools/{id}/classes` | `X-Batch-Token` | Create a school (and tenant) and a class with a join code, until teachers can |
+| `POST /internal/schools`, `POST /internal/schools/{id}/classes` | `X-Batch-Token` | Create a school (and tenant) and a class with a join code |
 | `POST /internal/batch/worksheets/{submit,collect}` | Cloud Scheduler (`X-Batch-Token`) | Nightly worksheet batch |
 
 ## Configuration
@@ -80,7 +82,9 @@ To exercise real Gemini from your machine, keep `BIRDBRAINS_BACKEND=local`, set
 | `BIRDBRAINS_CORS_ORIGINS` | Netlify site + localhost:3000 | Comma-separated origins allowed to call the API |
 | `BIRDBRAINS_BATCH_TOKEN` | unset (batch routes off) | Shared secret for the scheduler |
 | `BIRDBRAINS_STAGE1_MODEL`, `BIRDBRAINS_STAGE2_MODEL`, `BIRDBRAINS_WORKSHEET_MODEL` | spec models | Override when Google retires a model |
-| `BIRDBRAINS_HEADER_MASK` | `0.12` | Share of the page, from the top, blacked out before storage (names usually sit there). `0` turns it off |
+| `BIRDBRAINS_HEADER_MASK` | `0` | Optional backstop: share of the page, from the top, blacked out before storage. Detected name/date/class fields are blurred regardless |
+| `BIRDBRAINS_FREE_MONTHLY_SUBMISSIONS` | `10` | Uploads per student per calendar month on the Free plan |
+| `BIRDBRAINS_FREE_WORKSHEETS` | `0` | `1` gives Free gradings nightly worksheets too |
 | `MLFLOW_TRACKING_URI` | unset (tracing off) | Where `@mlflow.trace` spans go |
 
 The Vertex AI location is fixed to `northamerica-northeast1` in code.

@@ -85,7 +85,9 @@ own or their linked children's data; anything else is a 404.
 | `GET /gradings/{id}/worksheet` | owner | `WS_3STAGE_V1` | 404 `WORKSHEET_QUEUED` / `WORKSHEET_PENDING` (made overnight), `WORKSHEET_NOT_NEEDED` (no errors), `WORKSHEET_FAILED` |
 | `GET /students/{id}/parent-summary` | linked parent (or the student) | `ParentProjectionSummary` | 404 `NO_GRADED_WORK` |
 | `POST /internal/batch/worksheets/{submit,collect}` | Cloud Scheduler only | | not for the UI |
-| `POST /internal/schools`, `POST /internal/schools/{id}/classes` | admin token only | school, class with `joinCode` | not for the UI; teachers get this on Nov 23 |
+| `POST /internal/schools`, `POST /internal/schools/{id}/classes` | admin token only | school, class with `joinCode` | not for the UI |
+| `GET /students/{id}/usage` | owner | `ApiUsage` | |
+| `POST /internal/users/{uid}/plan` `{plan}` | admin token only | `UserProfile` | not for the UI; replaced by billing later |
 
 Upload form fields for `POST /submissions`: `studentId`, `course` (`MTH1W` or
 `MPM2D`), `unitTopic` (1 to 200 characters), `sharpnessScore` (0 to 100, from
@@ -96,11 +98,37 @@ Upload form fields for `POST /submissions`: `studentId`, `course` (`MTH1W` or
 `UserProfile` now also has `tenantId` and `classIds`. `ApiClass` is
 `{classId, className, gradeLevel (3 to 12), schoolId, schoolName}`.
 
-**Privacy, for UI copy:** before a photo is stored, the top 12% of the page is
-blacked out (where names usually go), names, emails and phone numbers found
-anywhere else are blacked out, and location data is removed. Tell students to
-write their name at the top or not at all. Photos are deleted after 90 days;
-diagnostics stay until the family deletes them.
+**Privacy, for UI copy:** before a photo is stored or analysed, BirdBrains
+finds the name, date, class, period, teacher and student-number fields on the
+page and blurs what is written in them, blurs any other names, dates, emails or
+phone numbers it finds, and removes location data from the photo. Photos are
+deleted after 90 days; diagnostics stay until the family deletes them.
+
+### Plans (Free and Pro)
+
+Every account has `plan`: `free` (default) or `pro`. A student is on Pro if
+their own account or any linked parent's account is Pro. No billing yet: plans
+are set with the admin route below.
+
+| | Free | Pro |
+|---|---|---|
+| Uploads | 10 per student per calendar month (server setting) | unlimited |
+| Diagnosis: steps, 4 pillars, error codes, feedback message | yes | yes |
+| Mood / friction (`affectState`, parent friction alerts) | no: `affectState` is `null`, alerts are `[]` | yes |
+| Scaffolding mode (speed bump, de-escalation) | no: `scaffoldingMode` is `null` | yes |
+| Nightly 3-stage worksheet | no: worksheet route returns 404 `WORKSHEET_PRO_ONLY` | yes |
+| Mastery chart, EQAO forecast, error distribution | yes | yes |
+
+- `GET /students/{id}/usage` → `ApiUsage {studentId, plan, monthlyLimit, usedThisMonth, remaining, resetsAt}`
+  (`monthlyLimit`/`remaining` are `null` on Pro). Show "3 of 10 uploads left this month".
+- Upload when nothing is left: **402 `FREE_LIMIT_REACHED`**. Show the upgrade screen.
+- Each grading has `plan` (the plan it was graded under), so old Free results stay
+  without mood even after upgrading.
+- Paywall screens: show what Pro adds (mood and friction insights, worksheets,
+  unlimited uploads). There is no checkout yet; "Upgrade" can say "coming soon"
+  or collect interest.
+- Human review of grades is **not** part of launch: there is no review queue.
+  Unreadable pages come back as `NEEDS_RETAKE`; ask for a clearer photo.
 
 ### Shared vocabulary
 
@@ -231,8 +259,8 @@ These are real responses from the local backend with the fake model (section 5).
 
 | Due | Endpoints | For Gemini's task |
 |---|---|---|
+| done | Plans, usage and the 402 limit (section "Plans" above) | Paywall and upgrade screens |
 | ~~Wed Nov 18~~ done | Profile, classes and join codes, delete my data (in the table above) | Account and settings screens (Thu Nov 19) |
-| Mon Nov 23 | Teacher role; review queue: list, approve, fix grade, request rescan | Teacher review queue screens (Wed Nov 25) |
 | Fri Nov 27 | Signed-URL upload + status for the Chrome extension | Chrome extension (Mon Nov 30) |
 | Mon Dec 7 | Worksheet PDF download links | PDF buttons (Tue Dec 8) |
 | Wed Dec 30 | Reports (class overview, progress over time) | Report screens |

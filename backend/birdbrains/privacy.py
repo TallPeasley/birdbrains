@@ -1,84 +1,145 @@
-"""Pre-storage PII scrubbing for uploaded photos (spec 3.2).
+"""Pre-storage PII scrubbing for uploaded photos (spec 3.2, as changed by Maalik
+on 2026-11-13: find the name / date / class fields and blur them, rather than
+blacking out a fixed strip).
 
 Every photo goes through ``PhotoScrubber.scrub`` before it is written to storage
 or shown to Gemini:
 
 1. EXIF is dropped (phone photos carry GPS location and device ids) and the image
-   is turned upright, so "top of the page" means the top the student sees.
-2. Edge masking: the header band (top 12% by default, where names, student numbers
-   and teacher signatures usually sit) is painted solid black.
-3. Deterministic redaction: Cloud DLP finds names, emails and phone numbers
-   anywhere else on the page and paints them black. Runs in
-   northamerica-northeast1. If DLP fails the upload fails: nothing unscrubbed is
-   stored.
+   is turned upright.
+2. Detection: Cloud DLP reads the page (in northamerica-northeast1) and reports
+   - printed header labels such as "Name:", "Date:", "Class", "Period",
+     "Teacher", "Student #". Whatever is written after the label, on that line,
+     is treated as private: the box runs from the label to the right edge.
+   - names, dates, emails and phone numbers anywhere on the page.
+3. Every detected box is padded and heavily blurred (Gaussian blur over a
+   pixelated copy, so handwriting cannot be recovered).
+If DLP fails the upload fails: nothing unscrubbed is stored.
 
-Locally and in tests the DLP step is skipped (``NoDlp``); masking still runs.
+``BIRDBRAINS_HEADER_MASK`` can still black out a fixed top strip as a backstop
+(off by default). Locally and in tests there is no DLP, so nothing is detected
+unless a test supplies a detector.
 """
 from __future__ import annotations
 
 import io
 import logging
+from dataclasses import dataclass
 from typing import Optional, Protocol
 
-from PIL import Image, ImageDraw, ImageOps
+from PIL import Image, ImageDraw, ImageFilter, ImageOps
 
 log = logging.getLogger(__name__)
 
 REGION = "northamerica-northeast1"
-DEFAULT_HEADER_FRACTION = 0.12
-DLP_INFO_TYPES = ("PERSON_NAME", "FIRST_NAME", "LAST_NAME", "EMAIL_ADDRESS", "PHONE_NUMBER")
+LABEL = "HEADER_FIELD_LABEL"
+# Printed labels on worksheets and tests. The value written after them is private.
+LABEL_REGEX = (
+    r"(?i)\b(name|nom|first name|last name|date|class|classe|period|block|section|teacher|"
+    r"enseignant|student\s*(?:no|number|#|id)|homeroom|school|[ée]cole)\b"
+)
+DLP_INFO_TYPES = ("PERSON_NAME", "FIRST_NAME", "LAST_NAME", "DATE", "EMAIL_ADDRESS", "PHONE_NUMBER")
 
 _SAVE = {"JPEG": {"quality": 92}, "PNG": {}, "WEBP": {"quality": 92}}
 
 
-class Redactor(Protocol):
-    def redact(self, data: bytes, fmt: str) -> bytes:
-        """Return the image with detected PII painted over (same format)."""
+@dataclass
+class Box:
+    kind: str  # LABEL, or the DLP info type
+    left: int
+    top: int
+    width: int
+    height: int
 
 
-class NoDlp:
-    def redact(self, data: bytes, fmt: str) -> bytes:
-        return data
+class Detector(Protocol):
+    def detect(self, data: bytes, fmt: str) -> list[Box]:
+        """Boxes of private text on the image, in pixels."""
 
 
-class CloudDlp:
+class NoDetector:
+    def detect(self, data: bytes, fmt: str) -> list[Box]:
+        return []
+
+
+class CloudDlpDetector:
     def __init__(self, project: str) -> None:
         from google.cloud import dlp_v2
 
         self._dlp = dlp_v2
-        # A regional parent keeps processing in northamerica-northeast1.
         self._client = dlp_v2.DlpServiceClient()
-        self._parent = f"projects/{project}/locations/{REGION}"
+        self._parent = f"projects/{project}/locations/{REGION}"  # processed in Montréal
 
-    def redact(self, data: bytes, fmt: str) -> bytes:
+    def detect(self, data: bytes, fmt: str) -> list[Box]:
         bt = self._dlp.ByteContentItem.BytesType
         byte_type = {"JPEG": bt.IMAGE_JPEG, "PNG": bt.IMAGE_PNG}.get(fmt, bt.IMAGE)
-        info_types = [{"name": n} for n in DLP_INFO_TYPES]
-        resp = self._client.redact_image(request={
+        resp = self._client.inspect_content(request={
             "parent": self._parent,
-            "inspect_config": {"info_types": info_types, "min_likelihood": "POSSIBLE"},
-            "image_redaction_configs": [{"info_type": t, "redaction_color": {"red": 0, "green": 0, "blue": 0}}
-                                        for t in info_types],
-            "byte_item": {"type_": byte_type, "data": data},
+            "inspect_config": {
+                "info_types": [{"name": n} for n in DLP_INFO_TYPES],
+                "custom_info_types": [{"info_type": {"name": LABEL}, "regex": {"pattern": LABEL_REGEX}}],
+                "min_likelihood": "POSSIBLE",
+                "include_quote": False,  # we never want the private text back
+                "limits": {"max_findings_per_request": 0},
+            },
+            "item": {"byte_item": {"type_": byte_type, "data": data}},
         })
-        return resp.redacted_image
+        boxes = []
+        for f in resp.result.findings:
+            for loc in f.location.content_locations:
+                for b in loc.image_location.bounding_boxes:
+                    boxes.append(Box(f.info_type.name, b.left, b.top, b.width, b.height))
+        return boxes
+
+
+def _regions(boxes: list[Box], width: int, height: int) -> list[tuple[int, int, int, int]]:
+    out = []
+    for b in boxes:
+        pad = max(6, b.height // 2)
+        top, bottom = max(0, b.top - pad), min(height, b.top + b.height + pad)
+        left = max(0, b.left - pad)
+        # A label's value is written after it on the same line: blur to the right edge.
+        right = width if b.kind == LABEL else min(width, b.left + b.width + pad)
+        out.append((left, top, right, bottom))
+    return out
+
+
+def blur_region(img: Image.Image, region: tuple[int, int, int, int]) -> None:
+    left, top, right, bottom = region
+    if right <= left or bottom <= top:
+        return
+    patch = img.crop(region)
+    w, h = patch.size
+    block = max(8, h // 4)
+    small = patch.resize((max(1, w // block), max(1, h // block)), Image.Resampling.BILINEAR)
+    patch = small.resize((w, h), Image.Resampling.NEAREST).filter(ImageFilter.GaussianBlur(max(6, h // 3)))
+    img.paste(patch, region[:2])
 
 
 class PhotoScrubber:
-    def __init__(self, redactor: Optional[Redactor] = None, header_fraction: float = DEFAULT_HEADER_FRACTION):
+    def __init__(self, detector: Optional[Detector] = None, header_fraction: float = 0.0):
         if not 0 <= header_fraction < 0.5:
             raise ValueError("header_fraction must be between 0 and 0.5")
-        self.redactor = redactor or NoDlp()
+        self.detector = detector or NoDetector()
         self.header_fraction = header_fraction
+
+    def _encode(self, img: Image.Image, fmt: str) -> bytes:
+        out = io.BytesIO()
+        img.save(out, fmt, **_SAVE.get(fmt, {}))  # fresh encode: no EXIF, no XMP, no GPS
+        return out.getvalue()
 
     def scrub(self, data: bytes, fmt: str) -> bytes:
         with Image.open(io.BytesIO(data)) as src:
             img = ImageOps.exif_transpose(src)
             if img.mode not in ("RGB", "L"):
                 img = img.convert("RGB")
-            band = round(img.height * self.header_fraction)
-            if band:
-                ImageDraw.Draw(img).rectangle((0, 0, img.width, band), fill=0)
-            out = io.BytesIO()
-            img.save(out, fmt, **_SAVE.get(fmt, {}))  # fresh encode: no EXIF, no XMP, no GPS
-        return self.redactor.redact(out.getvalue(), fmt)
+            img.load()
+        boxes = self.detector.detect(self._encode(img, fmt), fmt)  # coordinates match the upright image
+        for region in _regions(boxes, img.width, img.height):
+            blur_region(img, region)
+        band = round(img.height * self.header_fraction)
+        if band:
+            ImageDraw.Draw(img).rectangle((0, 0, img.width, band), fill=0)
+        if boxes:
+            log.info("Blurred %d private regions (%s)", len(boxes), sorted({b.kind for b in boxes}))
+        return self._encode(img, fmt)

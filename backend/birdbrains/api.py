@@ -18,18 +18,20 @@ from PIL import Image
 from . import mastery_affect_ledger as ledger_engine
 from .auth import Authenticator
 from .batch_engine import BatchEngine, FlaggedGrading, is_flagged
-from .privacy import CloudDlp, PhotoScrubber
+from .privacy import CloudDlpDetector, PhotoScrubber
 from .pipeline import ImageRef, PipelineEngine, SubmissionContext, configure_tracing
 from .projections import parent_summary, to_api_grading, to_api_worksheet
 from .schemas import (
     STUDENT_ID_PATTERN,
     ApiGrading,
     ApiClass,
+    ApiUsage,
     ApiParentSummary,
     ApiWorksheet,
     CreateClassRequest,
     CreateSchoolRequest,
     JoinClassRequest,
+    SetPlanRequest,
     UpdateProfileRequest,
     CourseEnum,
     LinkChildRequest,
@@ -78,6 +80,8 @@ class Deps:
     cors_origins: tuple[str, ...] = ("https://birdbrains.netlify.app", "http://localhost:3000")
     inline_images: bool = False  # local mode: send image bytes to the model, there is no gs:// URI
     scrubber: PhotoScrubber = field(default_factory=PhotoScrubber)
+    free_monthly_limit: int = 10  # uploads per student per calendar month on the Free plan
+    free_worksheets: bool = False  # nightly 3-stage worksheets are a Pro feature
 
 
 def deps_from_env() -> Deps:
@@ -121,8 +125,8 @@ def deps_from_env() -> Deps:
 
         auth = DevAuthenticator()
 
-    header = float(os.environ.get("BIRDBRAINS_HEADER_MASK", "0.12"))
-    scrubber = PhotoScrubber(CloudDlp(project) if backend == "gcp" else None, header_fraction=header)
+    header = float(os.environ.get("BIRDBRAINS_HEADER_MASK", "0"))
+    scrubber = PhotoScrubber(CloudDlpDetector(project) if backend == "gcp" else None, header_fraction=header)
 
     origins = os.environ.get("BIRDBRAINS_CORS_ORIGINS")
     return Deps(
@@ -135,6 +139,8 @@ def deps_from_env() -> Deps:
         cors_origins=tuple(o.strip() for o in origins.split(",")) if origins else Deps.cors_origins,
         inline_images=backend != "gcp",
         scrubber=scrubber,
+        free_monthly_limit=int(os.environ.get("BIRDBRAINS_FREE_MONTHLY_SUBMISSIONS", "10")),
+        free_worksheets=os.environ.get("BIRDBRAINS_FREE_WORKSHEETS", "0") == "1",
     )
 
 
@@ -196,7 +202,7 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         if existing:
             return existing  # role is fixed once chosen
         profile = {"uid": uid, "role": body.role, "name": body.name.strip(), "childStudentIds": [],
-                   "tenantId": CONSUMER_TENANT, "classIds": []}
+                   "tenantId": CONSUMER_TENANT, "classIds": [], "plan": "free"}
         if body.role == "student":
             if not body.course:
                 raise HTTPException(422, "Students must choose a course")
@@ -229,6 +235,29 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         user["name"] = body.name.strip()
         d.store.put("users", user["uid"], user)
         return user
+
+    # ------------------------------------------------------------ plans + usage
+    def effective_plan(student_id: str) -> str:
+        """Pro if the student, or any parent linked to them, is on Pro."""
+        accounts = d.store.query("users", "studentId", student_id) + \
+            d.store.query_contains("users", "childStudentIds", student_id)
+        return "pro" if any(a.get("plan") == "pro" for a in accounts) else "free"
+
+    def usage(student_id: str) -> ApiUsage:
+        now = datetime.now(timezone.utc)
+        month = now.strftime("%Y-%m")
+        used = sum(1 for s in d.store.query("submissions", "studentId", student_id)
+                   if s["uploadedAt"].startswith(month))
+        plan = effective_plan(student_id)
+        limit = d.free_monthly_limit if plan == "free" else None
+        nxt = datetime(now.year + (now.month == 12), now.month % 12 + 1, 1, tzinfo=timezone.utc)
+        return ApiUsage(studentId=student_id, plan=plan, monthlyLimit=limit, usedThisMonth=used,
+                        remaining=None if limit is None else max(limit - used, 0), resetsAt=nxt.isoformat())
+
+    @app.get("/students/{student_id}/usage", response_model=ApiUsage)
+    def get_usage(student_id: str, user: User):
+        require_student_access(user, student_id)
+        return usage(student_id)
 
     # ------------------------------------------------------- classes (students)
     def class_view(cls: dict) -> ApiClass:
@@ -310,6 +339,8 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         files: Annotated[list[UploadFile], File()],
     ):
         require_student_access(user, studentId)
+        if usage(studentId).remaining == 0:
+            raise HTTPException(402, "FREE_LIMIT_REACHED")
         if not 1 <= len(files) <= MAX_FILES:
             raise HTTPException(422, f"Attach between 1 and {MAX_FILES} photos")
         submission_id = new_id("sub")
@@ -434,10 +465,18 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
             raise HTTPException(502, "The diagnostic could not be completed. Please try again.")
 
         student_id = record["studentId"]
+        plan = effective_plan(student_id)
         strand = strand_for(ctx.course, ctx.unit_topic)
         stored_ledger = d.store.get("ledgers", student_id)
-        ledger = StudentLedger.model_validate(stored_ledger) if stored_ledger else StudentLedger(student_id=student_id)
-        ledger = ledger_engine.apply_observation(ledger, stage2, strand)
+        before = StudentLedger.model_validate(stored_ledger) if stored_ledger else StudentLedger(student_id=student_id)
+        if plan == "free":
+            # Free plan: no affect telemetry is kept, and mood never changes the scaffolding mode.
+            stage2 = stage2.model_copy(update={"sentiment_entities": [], "aggregate_valence": 0.0,
+                                               "aggregate_friction": 0.0})
+        ledger = ledger_engine.apply_observation(before, stage2, strand)
+        if plan == "free":
+            ledger = ledger.model_copy(update={"valence_ewma": before.valence_ewma,
+                                               "scaffolding_mode": before.scaffolding_mode})
         d.store.put("ledgers", student_id, ledger.model_dump(mode="json"))
 
         grading_id = new_id("grd")
@@ -450,9 +489,11 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
             "strand": strand,
             "gradedAt": now_iso(),
             # The ledger's mode (history-aware) wins over the model's single-submission suggestion.
-            "scaffoldingMode": ledger.scaffolding_mode.value,
+            "scaffoldingMode": ledger.scaffolding_mode.value if plan == "pro" else "STANDARD_PROGRESSIVE_FADE",
+            "plan": plan,
             "stage2": stage2.model_dump(mode="json"),
-            "worksheetStatus": "QUEUED" if is_flagged(stage2) else "NOT_NEEDED",
+            "worksheetStatus": ("NOT_NEEDED" if not is_flagged(stage2)
+                                else "QUEUED" if plan == "pro" or d.free_worksheets else "PRO_ONLY"),
             "worksheetAttempts": 0,
             "tenantId": tenant_of(record),
         }
@@ -495,7 +536,8 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         require_student_access(user, student_id)
         stored = d.store.get("ledgers", student_id)
         ledger = StudentLedger.model_validate(stored) if stored else StudentLedger(student_id=student_id)
-        summary = parent_summary(student_profile(student_id), ledger, student_gradings(student_id))
+        summary = parent_summary(student_profile(student_id), ledger, student_gradings(student_id),
+                                 include_affect=effective_plan(student_id) == "pro")
         if summary is None:
             raise HTTPException(404, "NO_GRADED_WORK")
         return summary
@@ -562,7 +604,7 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
             d.store.put("batchjobs", job["name"].replace("/", "_"), job)
         return {"ready": ready, "failed": failed, "jobsStillRunning": running}
 
-    # --------------------------- schools and classes (internal until teachers, Nov 23)
+    # --------------------------- schools and classes (internal; no teacher accounts at launch)
     @app.post("/internal/schools", status_code=201, dependencies=[Depends(require_batch_token)])
     def create_school(body: CreateSchoolRequest):
         tenant_id = body.tenantId
@@ -589,6 +631,16 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         d.store.put("classes", cls["classId"], cls)
         d.store.put("joincodes", code, {"classId": cls["classId"]})
         return cls
+
+    @app.post("/internal/users/{uid}/plan", response_model=UserProfile, dependencies=[Depends(require_batch_token)])
+    def set_plan(uid: str, body: SetPlanRequest):
+        """Admin only until billing exists. A parent on Pro covers every linked child."""
+        profile = d.store.get("users", uid)
+        if not profile:
+            raise HTTPException(404, "Unknown user")
+        profile["plan"] = body.plan
+        d.store.put("users", uid, profile)
+        return profile
 
     return app
 

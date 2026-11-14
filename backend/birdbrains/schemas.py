@@ -248,6 +248,9 @@ class ApiEntityExtraction(Api):
     severity: SeverityEnum
 
 
+PlanTier = Literal["free", "pro"]
+
+
 class ApiGrading(Api):
     """Frontend ``Stage2GradingAndAffectOutput``."""
 
@@ -257,13 +260,14 @@ class ApiGrading(Api):
     topic: str
     totalScore: float
     maxPossibleScore: float
-    affectState: AffectStateEnum
+    affectState: Optional[AffectStateEnum]  # null on the Free plan
     supportiveFramingMessage: str
     pillarBreakdowns: List[ApiPillarBreakdown]
     stepDiagnostics: List[ApiStepDiagnostic]
     entityExtractions: List[ApiEntityExtraction]
-    scaffoldingMode: ScaffoldingModeEnum
+    scaffoldingMode: Optional[ScaffoldingModeEnum]  # null on the Free plan
     gradedAt: str
+    plan: PlanTier = "pro"  # the plan the work was graded under
 
 
 class ApiDiagnosticMirrorItem(Api):
@@ -345,6 +349,7 @@ class UserProfile(Api):
     linkCode: Optional[str] = None  # students: share with a parent to link accounts
     childStudentIds: List[str] = Field(default_factory=list)
     tenantId: Optional[str] = None
+    plan: PlanTier = "free"
     classIds: List[str] = Field(default_factory=list)  # students: classes joined with a code
 
 
@@ -375,7 +380,7 @@ class ApiClass(Api):
 
 
 class CreateSchoolRequest(Api):
-    """Internal until the teacher role lands (Nov 23)."""
+    """Admin only: there are no teacher accounts at launch."""
 
     schoolName: str = Field(..., min_length=1, max_length=255)
     tenantId: Optional[str] = Field(default=None, pattern=TENANT_ID_PATTERN)  # omit to create a new tenant
@@ -386,3 +391,18 @@ class CreateSchoolRequest(Api):
 class CreateClassRequest(Api):
     className: str = Field(..., min_length=1, max_length=128)
     gradeLevel: int = Field(..., ge=3, le=12)
+
+
+class SetPlanRequest(Api):
+    plan: PlanTier
+
+
+class ApiUsage(Api):
+    """Upload allowance for one student this calendar month (UTC)."""
+
+    studentId: str
+    plan: PlanTier
+    monthlyLimit: Optional[int]  # null = unlimited
+    usedThisMonth: int
+    remaining: Optional[int]
+    resetsAt: str  # first moment of next month, ISO 8601

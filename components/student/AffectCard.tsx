@@ -3,9 +3,10 @@ import type { Stage2GradingAndAffectOutput } from '@/types/birdBrains';
 import { AFFECT_META } from '@/lib/pillars';
 
 export default function AffectCard({ grading }: { grading: Stage2GradingAndAffectOutput }) {
-  const affect = AFFECT_META[grading.affectState];
+  // affectState is null on the Free plan: no mood or friction panel then.
+  const affect = grading.affectState ? AFFECT_META[grading.affectState] : null;
   const pct = Math.round((grading.totalScore / grading.maxPossibleScore) * 100);
-  const highFriction = affect.level >= 2;
+  const highFriction = affect !== null && affect.level >= 2;
 
   return (
     <section className="card overflow-hidden">
@@ -22,7 +23,7 @@ export default function AffectCard({ grading }: { grading: Stage2GradingAndAffec
           <p className="mt-4 text-lg font-medium leading-relaxed text-slate-800">{grading.supportiveFramingMessage}</p>
           <p className="mt-2 text-sm text-slate-500">{grading.topic}</p>
 
-          {highFriction && (
+          {affect && highFriction && (
             <div className={`mt-5 flex gap-3 rounded-xl p-3 text-sm ring-1 ${affect.badge}`} role="status">
               <HeartHandshake className="mt-0.5 h-5 w-5 shrink-0" aria-hidden />
               <div>

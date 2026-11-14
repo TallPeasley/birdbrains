@@ -1,5 +1,6 @@
 import type {
   ApiClass,
+  ApiUsage,
   ParentProjectionSummary,
   Stage2GradingAndAffectOutput,
   SubmissionIngestionPayload,
@@ -71,6 +72,8 @@ export const api = {
   worksheet: (t: string, gradingId: string) => request<WS_3STAGE_V1>(`/gradings/${gradingId}/worksheet`, t),
   parentSummary: (t: string, studentId: string) =>
     request<ParentProjectionSummary>(`/students/${studentId}/parent-summary`, t),
+  /** Plan and uploads left this month. A 402 FREE_LIMIT_REACHED on upload means remaining hit 0. */
+  usage: (t: string, studentId: string) => request<ApiUsage>(`/students/${studentId}/usage`, t),
   updateProfile: (t: string, name: string) => request<UserProfile>('/me', t, { ...json({ name }), method: 'PATCH' }),
   myClasses: (t: string) => request<ApiClass[]>('/me/classes', t),
   joinClass: (t: string, joinCode: string) => request<ApiClass[]>('/me/classes', t, json({ joinCode })),

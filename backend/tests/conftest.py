@@ -37,7 +37,9 @@ def photo(width=1600, height=1200, fmt="JPEG"):
     """A blank page. Each call differs slightly so the duplicate check (UT-06) does not fire."""
     n = next(_photo_count)
     img = Image.new("RGB", (width, height), "white")
-    img.paste((n % 256, (n // 256) % 256, 0), (0, 0, 8, 8))
+    for bit in range(16):  # n as a row of black squares, coarse enough to survive JPEG
+        if n >> bit & 1:
+            img.paste((0, 0, 0), (16 * bit, 600, 16 * bit + 16, 616))
     buf = io.BytesIO()
     img.save(buf, fmt)
     return buf.getvalue()

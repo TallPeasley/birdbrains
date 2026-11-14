@@ -3,42 +3,70 @@ import io
 from PIL import Image
 
 from conftest import auth, photo, upload
-from birdbrains.privacy import PhotoScrubber
+from birdbrains.privacy import Box, PhotoScrubber
 
 
-def _jpeg_with_gps():
+def _page_with_header(exif=True):
+    """White page; a 'handwritten' header line (thin stripes) at y 40..70, and a body line at y 600..630."""
     img = Image.new("RGB", (1600, 1200), "white")
-    exif = Image.Exif()
-    exif[0x8825] = {2: (43.0, 39.0, 0.0)}  # GPSInfo
-    exif[0x0110] = "Pixel 9"  # camera model
+    for x in range(100, 1500, 4):
+        img.paste((0, 0, 0), (x, 40, x + 2, 70))
+        img.paste((0, 0, 0), (x, 600, x + 2, 630))
+    ex = Image.Exif()
+    if exif:
+        ex[0x8825] = {2: (43.0, 39.0, 0.0)}  # GPSInfo
+        ex[0x0110] = "Pixel 9"
     buf = io.BytesIO()
-    img.save(buf, "JPEG", exif=exif)
+    img.save(buf, "PNG", exif=ex)
     return buf.getvalue()
 
 
-def test_scrubber_masks_header_and_drops_exif():
-    out = PhotoScrubber().scrub(_jpeg_with_gps(), "JPEG")
+class FakeDlp:
+    """Finds a printed "Name:" label at the left of the header line."""
+
+    def __init__(self):
+        self.calls = 0
+
+    def detect(self, data, fmt):
+        self.calls += 1
+        return [Box("HEADER_FIELD_LABEL", 100, 42, 60, 26)]
+
+
+def _stripes_visible(img, y):
+    row = [img.getpixel((x, y))[0] for x in range(600, 700)]
+    return max(row) - min(row) > 200
+
+
+def test_scrubber_blurs_detected_fields_and_drops_exif():
+    out = PhotoScrubber(FakeDlp()).scrub(_page_with_header(), "PNG")
     with Image.open(io.BytesIO(out)) as img:
         assert not img.getexif()
-        assert img.getpixel((800, 50)) < (20, 20, 20)        # inside the top 12%: black
-        assert img.getpixel((800, 600)) > (235, 235, 235)    # body of the page untouched
+        assert not _stripes_visible(img, 55)   # header value after the label: blurred to the right edge
+        assert _stripes_visible(img, 615)      # the maths further down is untouched
 
 
-def test_stored_photo_is_scrubbed(client, family):
+def test_no_detector_leaves_page_alone_but_strips_exif():
+    out = PhotoScrubber().scrub(_page_with_header(), "PNG")
+    with Image.open(io.BytesIO(out)) as img:
+        assert not img.getexif() and _stripes_visible(img, 55)
+
+
+def test_stored_photo_is_scrubbed(client, family, deps):
+    deps.scrubber.detector = FakeDlp()
     sid = family["studentId"]
-    sub = upload(client, sid, files=[("files", ("p.jpg", _jpeg_with_gps(), "image/jpeg"))]).json()
+    sub = upload(client, sid, files=[("files", ("p.png", _page_with_header(), "image/png"))]).json()
     r = client.get(sub["fileUrls"][0], headers=auth("alex"))
     assert r.headers["cache-control"] == "private, max-age=900"
     with Image.open(io.BytesIO(r.content)) as img:
-        assert not img.getexif() and img.getpixel((800, 50)) < (20, 20, 20)
+        assert not img.getexif() and not _stripes_visible(img, 55) and _stripes_visible(img, 615)
 
 
 def test_dlp_failure_stores_nothing(client, family, deps):
     class Broken:
-        def redact(self, data, fmt):
+        def detect(self, data, fmt):
             raise RuntimeError("DLP down")
 
-    deps.scrubber.redactor = Broken()
+    deps.scrubber.detector = Broken()
     assert upload(client, family["studentId"]).status_code == 503
     assert deps.store.query("submissions", "studentId", family["studentId"]) == []
 

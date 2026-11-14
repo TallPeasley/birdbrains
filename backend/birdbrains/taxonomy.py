@@ -65,7 +65,7 @@ ERROR_CODES: dict[str, tuple[str, str, str]] = {
                "Prerequisite baseline probe."),
     "TST-04": ("Distractor Trap / Illegible Work",
                "Falls for an intermediate-value trap or misreads own handwriting.",
-               "Grid workspace; human review if OCR confidence is under 0.85."),
+               "Grid workspace; ask for a clearer retake if the page is hard to read."),
 }
 
 
