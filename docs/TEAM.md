@@ -2,15 +2,16 @@
 
 Who owns what, how we branch and review, the API the UI is built against, and
 how to run everything on your own machine with no cloud account. Launch is
-**Mon Dec 14, 2026**. The day-by-day plan is in TickTick (list 🐦BirdBrains)
-and in `BirdBrains Plan.md`; task titles start with the owner.
+**Mon Dec 14, 2026**. The day-by-day plan is in TickTick (list 🐦BirdBrains),
+with a copy in this repo at [`docs/PLAN.md`](PLAN.md); task titles start with the owner.
+Gemini (Antigravity) picks up its `Gemini:` tasks from `docs/PLAN.md`.
 
 ## 1. People and folders
 
 | Owner | Owns | Does not touch |
 |---|---|---|
-| **Gemini** (UI, via Jules or Gemini CLI) | `app/`, `components/`, `extension/` (Chrome extension), page styles, `public/` | `backend/`, `lib/api.ts`, `types/birdBrains.ts` |
-| **Claude** (API, infrastructure, privacy) | `backend/` except the AI pipeline files below, `backend/deploy.sh`, `lib/api.ts`, `lib/session.tsx`, `types/birdBrains.ts`, `docs/TEAM.md` | UI layout and visual design |
+| **Gemini** (UI, via Google Antigravity) | `app/`, `components/`, `extension/` (Chrome extension), page styles, `public/` | `backend/`, `lib/api.ts`, `types/birdBrains.ts` |
+| **Claude** (API, infrastructure, privacy) | `backend/` except the AI pipeline files below, `backend/deploy.sh`, `lib/api.ts`, `lib/session.tsx`, `types/birdBrains.ts`, `docs/TEAM.md`, `docs/PLAN.md` (except ticking your own task) | UI layout and visual design |
 | **Freelancer** (AI pipeline) | `backend/birdbrains/pipeline.py`, `taxonomy.py`, `batch_engine.py`, `backend/eval/` (accuracy harness, gold set) | API routes, storage, auth |
 | **Maalik** | Product decisions, merging Gemini and freelancer PRs, GCP/Netlify/Firebase consoles, test photos and grading reviews | |
 
