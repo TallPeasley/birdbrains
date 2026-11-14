@@ -9,3 +9,4 @@ google-cloud-storage>=2.17
 firebase-admin>=6.5
 mlflow-skinny>=3.1
 google-cloud-dlp>=3.20
+weasyprint>=62
