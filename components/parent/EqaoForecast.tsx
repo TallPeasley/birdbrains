@@ -7,7 +7,7 @@ const LEVEL_DESC = ['Limited', 'Approaching standard', 'Provincial standard', 'E
 export default function EqaoForecast({ summary }: { summary: ParentProjectionSummary }) {
   const dist = eqaoDistribution(summary.overallEqaoForecast, summary.eqaoForecastConfidence);
   return (
-    <section className="card p-6">
+    <section className="card min-w-0 p-4 sm:p-6">
       <h2 className="text-lg font-semibold text-slate-900">EQAO achievement forecast</h2>
       <p className="text-sm text-slate-500">Likely level, based on diagnostic history.</p>
 

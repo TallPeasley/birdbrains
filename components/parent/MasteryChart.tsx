@@ -24,7 +24,7 @@ export default function MasteryChart({ strands }: { strands: StrandMastery[] }) 
     .sort((a, b) => Number(b.replace(/\D+/g, '')) - Number(a.replace(/\D+/g, '')))[0];
 
   return (
-    <section className="card p-6">
+    <section className="card min-w-0 p-4 sm:p-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold text-slate-900">Mastery over time</h2>
@@ -39,10 +39,10 @@ export default function MasteryChart({ strands }: { strands: StrandMastery[] }) 
         {strands.map((s, i) => {
           const pct = Math.round(s.currentEWMAMastery * 100);
           return (
-            <div key={s.strandName} className="rounded-xl border border-slate-200 p-3">
+            <div key={s.strandName} className="min-w-0 rounded-xl border border-slate-200 p-3">
               <div className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: STRAND_COLORS[i % STRAND_COLORS.length] }} />
-                <span className="text-sm font-medium text-slate-700">{s.strandName}</span>
+                <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: STRAND_COLORS[i % STRAND_COLORS.length] }} />
+                <span className="truncate text-sm font-medium text-slate-700">{s.strandName}</span>
               </div>
               <p className="mt-1 text-2xl font-bold tabular-nums text-slate-900">{pct}%</p>
               <p className={`text-xs font-medium ${pct >= 85 ? 'text-emerald-700' : pct >= 70 ? 'text-slate-500' : 'text-rose-600'}`}>
@@ -53,7 +53,7 @@ export default function MasteryChart({ strands }: { strands: StrandMastery[] }) 
         })}
       </div>
 
-      <div className="mt-6 h-72">
+      <div className="mt-6 h-64 w-full min-w-0 sm:h-72">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={rows} margin={{ top: 24, right: 16, bottom: 0, left: -16 }}>
             <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" vertical={false} />
