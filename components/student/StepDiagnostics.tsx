@@ -1,6 +1,7 @@
 import { AlertCircle, CheckCircle2, ShieldCheck } from 'lucide-react';
 import type { Stage2GradingAndAffectOutput } from '@/types/birdBrains';
 import { PILLARS } from '@/lib/pillars';
+import { errorCodeName } from '@/lib/errorCodes';
 
 export default function StepDiagnostics({ grading }: { grading: Stage2GradingAndAffectOutput }) {
   const firstError = grading.stepDiagnostics.find((s) => !s.isCorrect);
@@ -83,7 +84,11 @@ export default function StepDiagnostics({ grading }: { grading: Stage2GradingAnd
                   {m.severity}
                 </span>
                 <span className="text-slate-700">
-                  {m.description} <span className="font-mono text-xs text-slate-400">{m.misconceptionId}</span>
+                  {m.description}{' '}
+                  <span className="font-mono text-xs text-slate-400">
+                    {m.misconceptionId}
+                    {errorCodeName(m.misconceptionId) ? ` · ${errorCodeName(m.misconceptionId)}` : ''}
+                  </span>
                 </span>
               </li>
             ))}

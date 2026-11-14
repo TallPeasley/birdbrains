@@ -1,58 +1,98 @@
 """Four-Pillar Taxonomy and Curriculum Registry.
 
-This text is what gets placed in the 24-hour Gemini context cache. The error-code
-registry is a first draft: edit the codes here and every stage picks them up.
+This text is what gets placed in the 24-hour Gemini context cache. The 16 error
+codes are the official list from the Freelancer Specification and Pipeline
+Manual, section 2.1. Keep ``lib/errorCodes.ts`` in the frontend in step with
+``ERROR_CODES`` below.
 """
 from __future__ import annotations
 
 from .schemas import CourseEnum
 
-FOUR_PILLAR_TAXONOMY = """\
-# BirdBrains Four-Pillar Error Taxonomy
+PILLAR_NAMES = {
+    "CON": "Conceptual Errors",
+    "PRC": "Procedural Errors",
+    "FAC": "Factual & Calculation Fluency",
+    "TST": "Test-Taking & Communication Habits",
+}
 
-Every root-cause error is assigned exactly one pillar and one error code of the
-form PILLAR-NN.
+# code -> (short name, what it means, remediation trigger)
+ERROR_CODES: dict[str, tuple[str, str, str]] = {
+    "CON-01": ("Foundational Misconception",
+               "Flawed mental model (e.g. adding denominators directly).",
+               "Tier 1: concrete visual or area diagram."),
+    "CON-02": ("Formula/Law Misselection",
+               "Applies a theorem or formula that is not valid for the problem's conditions.",
+               "Tier 1: boundary discrimination comparison."),
+    "CON-03": ("Representation / Variable Confusion",
+               "Mismaps word-problem constraints or a graph to the equation.",
+               "Tier 1: dimensional analysis table."),
+    "CON-04": ("Sign / Vector Direction Misconception",
+               "Misassigns a coordinate frame, direction or the meaning of a sign.",
+               "Tier 1: reference frame sketch."),
+    "PRC-01": ("Algorithmic Step Omission",
+               "Skips a mandatory step of the procedure.",
+               "Tier 2: faded worked example (80% completed)."),
+    "PRC-02": ("Order of Operations / Sequencing",
+               "Applies valid rules in an invalid order.",
+               "Tier 2: Parsons problem (reorder the steps)."),
+    "PRC-03": ("Algebraic Manipulation / Sign Failure",
+               "Drops a sign or factor while distributing, or fails to flip an inequality.",
+               "Tier 2: sign-tracking highlight checkpoints."),
+    "PRC-04": ("Incomplete Simplification",
+               "Stops before reaching the simplified or requested form.",
+               "Tier 2: completion checklist."),
+    "FAC-01": ("Basic Arithmetic / Math Fact Slip",
+               "Isolated arithmetic error with a sound procedure.",
+               "Tier 3: 5-item rapid micro-drill."),
+    "FAC-02": ("Transcription / Copy Error",
+               "Miscopies a digit or sign between consecutive lines.",
+               "Tier 3: given-data check habit."),
+    "FAC-03": ("Unit Conversion / Constant Recall",
+               "Unit conversion slip or misremembered constant or formula value.",
+               "Tier 3: dimensional conversion bridge."),
+    "FAC-04": ("Rounding / Significant Figures",
+               "Rounds too early or breaks a precision rule.",
+               "Tier 3: precision constraint rules."),
+    "TST-01": ("Prompt Constraint Misread",
+               "Answers a different target than asked (solves for x instead of 2x+5).",
+               "Tier 4: pre-submission prompt deconstruction box."),
+    "TST-02": ("Missing Units / Communication Gap",
+               "Omits final units or the required concluding statement.",
+               "Tier 4: concluding statement and unit slot."),
+    "TST-03": ("Unanswered / Time-Attrition Blank",
+               "Leaves a question blank from time pressure or a frustration block.",
+               "Prerequisite baseline probe."),
+    "TST-04": ("Distractor Trap / Illegible Work",
+               "Falls for an intermediate-value trap or misreads own handwriting.",
+               "Grid workspace; ask for a clearer retake if the page is hard to read."),
+}
 
-## CON: Conceptual Errors
-The student misunderstands what a mathematical object is or why a method works.
-- CON-01 Misreads the structure of an expression or equation (e.g. treats a quadratic as linear).
-- CON-02 Breaks equation equivalence (does something to one side only).
-- CON-03 Chooses a method that does not fit the problem type.
-- CON-04 Misinterprets what the answer represents (vertex vs. intercept, slope vs. rate).
-- CON-05 Confuses related concepts (area/perimeter, sine/cosine ratio, expand/factor).
-- CON-06 Misapplies a property outside its domain (e.g. distributes an exponent over a sum).
 
-## PRC: Procedural Errors
-The student knows the idea but executes the algorithm's steps incorrectly.
-- PRC-01 Fails to distribute a factor to every term (including terms leaving a bracket).
-- PRC-02 Skips or reorders a required step of a standard algorithm.
-- PRC-03 Sign error while moving, distributing or collecting terms.
-- PRC-04 Incorrect factoring or expanding procedure.
-- PRC-05 Incorrect isolation of a variable (inverse operations out of order).
-- PRC-06 Substitution carried out incorrectly.
+def _taxonomy_text() -> str:
+    lines = [
+        "# BirdBrains Four-Pillar Error Taxonomy",
+        "",
+        "Every root-cause error is assigned exactly one pillar and exactly one of the 16",
+        "error codes below. Never invent a code outside this list.",
+    ]
+    for pillar, title in PILLAR_NAMES.items():
+        lines += ["", f"## {pillar}: {title}"]
+        for code, (name, meaning, trigger) in ERROR_CODES.items():
+            if code.startswith(pillar):
+                lines.append(f"- {code} {name}: {meaning} Remediation: {trigger}")
+    lines += [
+        "",
+        "## Carry-forward protection",
+        "If an error in step N makes step N+1 wrong even though step N+1 applies valid",
+        "logic to step N's result, step N+1 is a cascading consequence",
+        "(is_cascading_consequence = true). It is never penalised and never counted as a",
+        "new root cause. Credit the reasoning the student showed on that line.",
+    ]
+    return "\n".join(lines) + "\n"
 
-## FAC: Factual & Calculation Fluency
-A recall or arithmetic slip, not a gap in method.
-- FAC-01 Basic arithmetic error with integers.
-- FAC-02 Fraction or decimal arithmetic error.
-- FAC-03 Misremembered formula or constant.
-- FAC-04 Exponent or square-root fact error.
-- FAC-05 Transcription error: copies a number or sign wrongly between lines.
 
-## TST: Test-Taking & Communication Habits
-The mathematics may be sound, but the way the work is done or presented loses marks.
-- TST-01 Final answer not stated, or not in the requested form.
-- TST-02 Missing units, labels or a concluding statement.
-- TST-03 Steps skipped so reasoning cannot be followed.
-- TST-04 Did not answer the question that was asked, or answered only part.
-- TST-05 Work abandoned or left incomplete.
-- TST-06 Notation misuse (dangling equals signs, missing brackets) that obscures meaning.
-
-## Carry-forward protection
-When a line is wrong only because it correctly continues from an earlier error, it
-is a cascading consequence. It is never penalised and never counted as a new root
-cause. Credit the reasoning the student showed on that line.
-"""
+FOUR_PILLAR_TAXONOMY = _taxonomy_text()
 
 # course -> strand -> units. Strand names follow the Ontario curriculum
 # (MTH1W, 2021; MPM2D, 2005 revised).

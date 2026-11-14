@@ -1,12 +1,13 @@
 """HTTP API (FastAPI). Run locally with ``uvicorn birdbrains.api:app``."""
 
+import hashlib
 import hmac
 import io
 import logging
 import os
 import secrets
 import string
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Annotated, Optional
 
@@ -17,13 +18,21 @@ from PIL import Image
 from . import mastery_affect_ledger as ledger_engine
 from .auth import Authenticator
 from .batch_engine import BatchEngine, FlaggedGrading, is_flagged
+from .privacy import CloudDlpDetector, PhotoScrubber
 from .pipeline import ImageRef, PipelineEngine, SubmissionContext, configure_tracing
 from .projections import parent_summary, to_api_grading, to_api_worksheet
 from .schemas import (
     STUDENT_ID_PATTERN,
     ApiGrading,
+    ApiClass,
+    ApiUsage,
     ApiParentSummary,
     ApiWorksheet,
+    CreateClassRequest,
+    CreateSchoolRequest,
+    JoinClassRequest,
+    SetPlanRequest,
+    UpdateProfileRequest,
     CourseEnum,
     LinkChildRequest,
     RegisterRequest,
@@ -47,6 +56,8 @@ MAX_FILE_BYTES = 12 * 1024 * 1024
 ALLOWED_TYPES = {"JPEG": "image/jpeg", "PNG": "image/png", "WEBP": "image/webp"}
 MAX_WORKSHEET_ATTEMPTS = 2
 _ALNUM = string.ascii_letters + string.digits
+# Every self-sign-up family lives in one consumer tenant; schools get their own.
+CONSUMER_TENANT = "ten_consumer00"
 _CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"  # no look-alikes
 
 
@@ -68,6 +79,9 @@ class Deps:
     batch_token: Optional[str] = None
     cors_origins: tuple[str, ...] = ("https://birdbrains.netlify.app", "http://localhost:3000")
     inline_images: bool = False  # local mode: send image bytes to the model, there is no gs:// URI
+    scrubber: PhotoScrubber = field(default_factory=PhotoScrubber)
+    free_monthly_limit: int = 10  # uploads per student per calendar month on the Free plan
+    free_worksheets: bool = False  # nightly 3-stage worksheets are a Pro feature
 
 
 def deps_from_env() -> Deps:
@@ -111,6 +125,9 @@ def deps_from_env() -> Deps:
 
         auth = DevAuthenticator()
 
+    header = float(os.environ.get("BIRDBRAINS_HEADER_MASK", "0"))
+    scrubber = PhotoScrubber(CloudDlpDetector(project) if backend == "gcp" else None, header_fraction=header)
+
     origins = os.environ.get("BIRDBRAINS_CORS_ORIGINS")
     return Deps(
         store=store,
@@ -121,6 +138,9 @@ def deps_from_env() -> Deps:
         batch_token=os.environ.get("BIRDBRAINS_BATCH_TOKEN") or None,
         cors_origins=tuple(o.strip() for o in origins.split(",")) if origins else Deps.cors_origins,
         inline_images=backend != "gcp",
+        scrubber=scrubber,
+        free_monthly_limit=int(os.environ.get("BIRDBRAINS_FREE_MONTHLY_SUBMISSIONS", "10")),
+        free_worksheets=os.environ.get("BIRDBRAINS_FREE_WORKSHEETS", "0") == "1",
     )
 
 
@@ -131,7 +151,7 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=list(d.cors_origins),
-        allow_methods=["GET", "POST"],
+        allow_methods=["GET", "POST", "PATCH", "DELETE"],
         allow_headers=["Authorization", "Content-Type"],
     )
 
@@ -156,9 +176,12 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         if student_id not in allowed:
             raise HTTPException(404, "Not found")
 
+    def tenant_of(doc: dict) -> str:
+        return doc.get("tenantId") or CONSUMER_TENANT
+
     def owned(collection: str, doc_id: str, user: dict) -> dict:
         doc = d.store.get(collection, doc_id)
-        if not doc:
+        if not doc or tenant_of(doc) != tenant_of(user):  # tenant check on every record read
             raise HTTPException(404, "Not found")
         require_student_access(user, doc["studentId"])
         return doc
@@ -178,7 +201,8 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         existing = d.store.get("users", uid)
         if existing:
             return existing  # role is fixed once chosen
-        profile = {"uid": uid, "role": body.role, "name": body.name.strip(), "childStudentIds": []}
+        profile = {"uid": uid, "role": body.role, "name": body.name.strip(), "childStudentIds": [],
+                   "tenantId": CONSUMER_TENANT, "classIds": [], "plan": "free"}
         if body.role == "student":
             if not body.course:
                 raise HTTPException(422, "Students must choose a course")
@@ -206,6 +230,104 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
             raise HTTPException(404, "Not found")
         return found[0]
 
+    @app.patch("/me", response_model=UserProfile)
+    def update_profile(body: UpdateProfileRequest, user: User):
+        user["name"] = body.name.strip()
+        d.store.put("users", user["uid"], user)
+        return user
+
+    # ------------------------------------------------------------ plans + usage
+    def effective_plan(student_id: str) -> str:
+        """Pro if the student, or any parent linked to them, is on Pro."""
+        accounts = d.store.query("users", "studentId", student_id) + \
+            d.store.query_contains("users", "childStudentIds", student_id)
+        return "pro" if any(a.get("plan") == "pro" for a in accounts) else "free"
+
+    def usage(student_id: str) -> ApiUsage:
+        now = datetime.now(timezone.utc)
+        month = now.strftime("%Y-%m")
+        used = sum(1 for s in d.store.query("submissions", "studentId", student_id)
+                   if s["uploadedAt"].startswith(month))
+        plan = effective_plan(student_id)
+        limit = d.free_monthly_limit if plan == "free" else None
+        nxt = datetime(now.year + (now.month == 12), now.month % 12 + 1, 1, tzinfo=timezone.utc)
+        return ApiUsage(studentId=student_id, plan=plan, monthlyLimit=limit, usedThisMonth=used,
+                        remaining=None if limit is None else max(limit - used, 0), resetsAt=nxt.isoformat())
+
+    @app.get("/students/{student_id}/usage", response_model=ApiUsage)
+    def get_usage(student_id: str, user: User):
+        require_student_access(user, student_id)
+        return usage(student_id)
+
+    # ------------------------------------------------------- classes (students)
+    def class_view(cls: dict) -> ApiClass:
+        school = d.store.get("schools", cls["schoolId"]) or {}
+        return ApiClass(classId=cls["classId"], className=cls["className"], gradeLevel=cls["gradeLevel"],
+                        schoolId=cls["schoolId"], schoolName=school.get("schoolName", ""))
+
+    @app.get("/me/classes", response_model=list[ApiClass])
+    def my_classes(user: User):
+        return [class_view(c) for cid in user.get("classIds", []) if (c := d.store.get("classes", cid))]
+
+    @app.post("/me/classes", response_model=list[ApiClass])
+    def join_class(body: JoinClassRequest, user: User):
+        if user["role"] != "student":
+            raise HTTPException(403, "Only student accounts can join a class")
+        link = d.store.get("joincodes", body.joinCode.strip().upper())
+        cls = link and d.store.get("classes", link["classId"])
+        if not cls:
+            raise HTTPException(404, "That class code was not recognised")
+        if cls["classId"] not in user.setdefault("classIds", []):
+            user["classIds"].append(cls["classId"])
+            d.store.put("users", user["uid"], user)
+        return my_classes(user)
+
+    @app.delete("/me/classes/{class_id}", response_model=list[ApiClass])
+    def leave_class(class_id: str, user: User):
+        if class_id in user.get("classIds", []):
+            user["classIds"].remove(class_id)
+            d.store.put("users", user["uid"], user)
+        return my_classes(user)
+
+    # ------------------------------------------------------- delete my data
+    def purge_student(student_id: str) -> None:
+        """Remove every record and photo for one student, their account and links."""
+        for sub in d.store.query("submissions", "studentId", student_id):
+            for f in sub.get("files", []):
+                if f.get("sha256"):
+                    d.store.delete("imagehashes", f"{student_id}_{f['sha256']}")
+            d.store.delete("transcriptions", sub["submissionId"])
+            d.store.delete("submissions", sub["submissionId"])
+        d.storage.delete_prefix(f"submissions/{student_id}/")
+        for g in d.store.query("gradings", "studentId", student_id):
+            d.store.delete("worksheets", g["gradingId"])
+            d.store.delete("gradings", g["gradingId"])
+        d.store.delete("ledgers", student_id)
+        for parent in d.store.query_contains("users", "childStudentIds", student_id):
+            parent["childStudentIds"].remove(student_id)
+            d.store.put("users", parent["uid"], parent)
+        for profile in d.store.query("users", "studentId", student_id):
+            if profile.get("linkCode"):
+                d.store.delete("linkcodes", profile["linkCode"])
+            d.store.delete("users", profile["uid"])
+            d.auth.delete_user(profile["uid"])
+
+    @app.delete("/students/{student_id}", status_code=204)
+    def delete_student_data(student_id: str, user: User):
+        """A student deletes themselves, or a linked parent deletes their child."""
+        require_student_access(user, student_id)
+        purge_student(student_id)
+        return Response(status_code=204)
+
+    @app.delete("/me", status_code=204)
+    def delete_me(user: User):
+        if user["role"] == "student":
+            purge_student(user["studentId"])
+        else:
+            d.store.delete("users", user["uid"])
+            d.auth.delete_user(user["uid"])
+        return Response(status_code=204)
+
     # -------------------------------------------------------------- submissions
     @app.post("/submissions", response_model=SubmissionIngestionPayload, status_code=201)
     def create_submission(
@@ -217,6 +339,8 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         files: Annotated[list[UploadFile], File()],
     ):
         require_student_access(user, studentId)
+        if usage(studentId).remaining == 0:
+            raise HTTPException(402, "FREE_LIMIT_REACHED")
         if not 1 <= len(files) <= MAX_FILES:
             raise HTTPException(422, f"Attach between 1 and {MAX_FILES} photos")
         submission_id = new_id("sub")
@@ -237,15 +361,28 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
                 raise HTTPException(422, f"Photo {i + 1} is below 1080p ({w}x{h}). Please retake it.")
             if smallest is None or min(w, h) < min(smallest):
                 smallest = (w, h)
-            stored.append((i, data, ALLOWED_TYPES[fmt], fmt.lower()))
+            stored.append((i, data, ALLOWED_TYPES[fmt], fmt.lower(), hashlib.sha256(data).hexdigest()))
         if sharpnessScore < MIN_SHARPNESS_SCORE:
             raise HTTPException(422, "The photo is too blurry. Please retake it.")
+        # UT-06: the exact same photo uploaded again for this student is a 409, and
+        # the pipeline is not run a second time. Location points at the original.
+        for i, *_, sha in stored:
+            seen = d.store.get("imagehashes", f"{studentId}_{sha}")
+            if seen:
+                raise HTTPException(
+                    409, f"Photo {i + 1} was already uploaded. Open your earlier diagnostic instead.",
+                    headers={"Location": f"/submissions/{seen['submissionId']}"})
 
         file_records = []
-        for i, data, mime, ext in stored:
+        for i, data, mime, ext, sha in stored:
+            try:
+                data = d.scrubber.scrub(data, ext.upper())  # names and EXIF removed before storage
+            except Exception:
+                log.exception("Photo scrubbing failed")
+                raise HTTPException(503, "We could not check the photo for names. Please try again.")
             path = f"submissions/{studentId}/{submission_id}/{i}.{ext}"
             uri = d.storage.write_bytes(path, data, mime)
-            file_records.append({"path": path, "uri": uri, "mimeType": mime})
+            file_records.append({"path": path, "uri": uri, "mimeType": mime, "sha256": sha})
         record = {
             "submissionId": submission_id,
             "studentId": studentId,
@@ -259,13 +396,16 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
             "status": "UPLOADED",
             "gradingId": None,
             "uploadedBy": user["uid"],
+            "tenantId": tenant_of(user),
         }
         d.store.put("submissions", submission_id, record)
+        for *_, sha in stored:
+            d.store.put("imagehashes", f"{studentId}_{sha}", {"studentId": studentId, "submissionId": submission_id})
         return submission_payload(record)
 
     def submission_payload(record: dict) -> SubmissionIngestionPayload:
         urls = [f"/submissions/{record['submissionId']}/files/{i}" for i in range(len(record["files"]))]
-        return SubmissionIngestionPayload(**{k: v for k, v in record.items() if k not in ("files", "uploadedBy")},
+        return SubmissionIngestionPayload(**{k: v for k, v in record.items() if k not in ("files", "uploadedBy", "tenantId")},
                                           fileUrls=urls)
 
     @app.get("/submissions/{submission_id}", response_model=SubmissionIngestionPayload)
@@ -278,8 +418,12 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         if not 0 <= index < len(record["files"]):
             raise HTTPException(404, "Not found")
         f = record["files"][index]
-        return Response(d.storage.read_bytes(f["path"]), media_type=f["mimeType"],
-                        headers={"Cache-Control": "private, max-age=3600"})
+        try:
+            data = d.storage.read_bytes(f["path"])
+        except Exception:
+            raise HTTPException(410, "PHOTO_EXPIRED")  # raw photos are deleted after 90 days
+        # Photos are only served through this signed-in route; browsers keep them 15 minutes at most.
+        return Response(data, media_type=f["mimeType"], headers={"Cache-Control": "private, max-age=900"})
 
     @app.post("/submissions/{submission_id}/process")
     def process_submission(submission_id: str, user: User):
@@ -321,10 +465,18 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
             raise HTTPException(502, "The diagnostic could not be completed. Please try again.")
 
         student_id = record["studentId"]
+        plan = effective_plan(student_id)
         strand = strand_for(ctx.course, ctx.unit_topic)
         stored_ledger = d.store.get("ledgers", student_id)
-        ledger = StudentLedger.model_validate(stored_ledger) if stored_ledger else StudentLedger(student_id=student_id)
-        ledger = ledger_engine.apply_observation(ledger, stage2, strand)
+        before = StudentLedger.model_validate(stored_ledger) if stored_ledger else StudentLedger(student_id=student_id)
+        if plan == "free":
+            # Free plan: no affect telemetry is kept, and mood never changes the scaffolding mode.
+            stage2 = stage2.model_copy(update={"sentiment_entities": [], "aggregate_valence": 0.0,
+                                               "aggregate_friction": 0.0})
+        ledger = ledger_engine.apply_observation(before, stage2, strand)
+        if plan == "free":
+            ledger = ledger.model_copy(update={"valence_ewma": before.valence_ewma,
+                                               "scaffolding_mode": before.scaffolding_mode})
         d.store.put("ledgers", student_id, ledger.model_dump(mode="json"))
 
         grading_id = new_id("grd")
@@ -337,10 +489,13 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
             "strand": strand,
             "gradedAt": now_iso(),
             # The ledger's mode (history-aware) wins over the model's single-submission suggestion.
-            "scaffoldingMode": ledger.scaffolding_mode.value,
+            "scaffoldingMode": ledger.scaffolding_mode.value if plan == "pro" else "STANDARD_PROGRESSIVE_FADE",
+            "plan": plan,
             "stage2": stage2.model_dump(mode="json"),
-            "worksheetStatus": "QUEUED" if is_flagged(stage2) else "NOT_NEEDED",
+            "worksheetStatus": ("NOT_NEEDED" if not is_flagged(stage2)
+                                else "QUEUED" if plan == "pro" or d.free_worksheets else "PRO_ONLY"),
             "worksheetAttempts": 0,
+            "tenantId": tenant_of(record),
         }
         d.store.put("gradings", grading_id, grading)
         set_status("GRADED", gradingId=grading_id)
@@ -381,7 +536,8 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         require_student_access(user, student_id)
         stored = d.store.get("ledgers", student_id)
         ledger = StudentLedger.model_validate(stored) if stored else StudentLedger(student_id=student_id)
-        summary = parent_summary(student_profile(student_id), ledger, student_gradings(student_id))
+        summary = parent_summary(student_profile(student_id), ledger, student_gradings(student_id),
+                                 include_affect=effective_plan(student_id) == "pro")
         if summary is None:
             raise HTTPException(404, "NO_GRADED_WORK")
         return summary
@@ -431,6 +587,7 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
                 d.store.put("worksheets", grading_id, {
                     "worksheetId": new_id("wks"), "gradingId": grading_id, "studentId": g["studentId"],
                     "createdAt": now_iso(), "content": content.model_dump(mode="json"),
+                    "tenantId": tenant_of(g),
                 })
                 g["worksheetStatus"] = "READY"
                 d.store.put("gradings", grading_id, g)
@@ -446,6 +603,44 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
             job["state"] = "COLLECTED"
             d.store.put("batchjobs", job["name"].replace("/", "_"), job)
         return {"ready": ready, "failed": failed, "jobsStillRunning": running}
+
+    # --------------------------- schools and classes (internal; no teacher accounts at launch)
+    @app.post("/internal/schools", status_code=201, dependencies=[Depends(require_batch_token)])
+    def create_school(body: CreateSchoolRequest):
+        tenant_id = body.tenantId
+        if tenant_id is None:
+            tenant_id = "ten_" + "".join(secrets.choice(_ALNUM) for _ in range(10))
+            d.store.put("tenants", tenant_id, {"tenantId": tenant_id, "createdAt": now_iso(),
+                                               "organizationName": body.organizationName or body.schoolName})
+        elif not d.store.get("tenants", tenant_id):
+            raise HTTPException(404, "Unknown tenant")
+        school = {"schoolId": new_id("sch"), "tenantId": tenant_id, "schoolName": body.schoolName.strip(),
+                  "districtCode": body.districtCode, "createdAt": now_iso()}
+        d.store.put("schools", school["schoolId"], school)
+        return school
+
+    @app.post("/internal/schools/{school_id}/classes", status_code=201, dependencies=[Depends(require_batch_token)])
+    def create_class(school_id: str, body: CreateClassRequest):
+        school = d.store.get("schools", school_id)
+        if not school:
+            raise HTTPException(404, "Unknown school")
+        code = "".join(secrets.choice(_CODE_CHARS) for _ in range(6))
+        cls = {"classId": new_id("cls"), "schoolId": school_id, "tenantId": school["tenantId"],
+               "className": body.className.strip(), "gradeLevel": body.gradeLevel, "joinCode": code,
+               "createdAt": now_iso()}
+        d.store.put("classes", cls["classId"], cls)
+        d.store.put("joincodes", code, {"classId": cls["classId"]})
+        return cls
+
+    @app.post("/internal/users/{uid}/plan", response_model=UserProfile, dependencies=[Depends(require_batch_token)])
+    def set_plan(uid: str, body: SetPlanRequest):
+        """Admin only until billing exists. A parent on Pro covers every linked child."""
+        profile = d.store.get("users", uid)
+        if not profile:
+            raise HTTPException(404, "Unknown user")
+        profile["plan"] = body.plan
+        d.store.put("users", uid, profile)
+        return profile
 
     return app
 

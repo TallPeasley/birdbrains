@@ -1,4 +1,6 @@
 import type {
+  ApiClass,
+  ApiUsage,
   ParentProjectionSummary,
   Stage2GradingAndAffectOutput,
   SubmissionIngestionPayload,
@@ -40,6 +42,7 @@ async function request<T>(path: string, token: string, init?: RequestInit): Prom
     }
     throw new ApiError(res.status, detail);
   }
+  if (res.status === 204) return undefined as T;
   return res.json() as Promise<T>;
 }
 
@@ -69,4 +72,15 @@ export const api = {
   worksheet: (t: string, gradingId: string) => request<WS_3STAGE_V1>(`/gradings/${gradingId}/worksheet`, t),
   parentSummary: (t: string, studentId: string) =>
     request<ParentProjectionSummary>(`/students/${studentId}/parent-summary`, t),
+  /** Plan and uploads left this month. A 402 FREE_LIMIT_REACHED on upload means remaining hit 0. */
+  usage: (t: string, studentId: string) => request<ApiUsage>(`/students/${studentId}/usage`, t),
+  updateProfile: (t: string, name: string) => request<UserProfile>('/me', t, { ...json({ name }), method: 'PATCH' }),
+  myClasses: (t: string) => request<ApiClass[]>('/me/classes', t),
+  joinClass: (t: string, joinCode: string) => request<ApiClass[]>('/me/classes', t, json({ joinCode })),
+  leaveClass: (t: string, classId: string) => request<ApiClass[]>(`/me/classes/${classId}`, t, { method: 'DELETE' }),
+  /** Deletes the account; for a student, all of their data too. Confirm first, then sign out. */
+  deleteMe: (t: string) => request<void>('/me', t, { method: 'DELETE' }),
+  /** A student or a linked parent deletes everything stored for that student. */
+  deleteStudentData: (t: string, studentId: string) =>
+    request<void>(`/students/${studentId}`, t, { method: 'DELETE' }),
 };

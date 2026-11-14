@@ -6,12 +6,13 @@ serves the JSON contracts in `../types/birdBrains.ts`.
 ```
 birdbrains/
   schemas.py                 Pydantic v2 contracts (pipeline: strict snake_case; API: camelCase)
-  taxonomy.py                Four-Pillar error codes + Ontario curriculum registry (the cached context)
+  taxonomy.py                the 16 official error codes + Ontario curriculum registry (the cached context)
   pipeline.py                Stage 1 (gemini-2.5-flash) and Stage 2 (gemini-2.5-pro, thinking 2048), 24h context cache, MLflow traces
   mastery_affect_ledger.py   Dual EWMA (mastery 0.30, valence 0.35) + scaffolding-mode state machine
   batch_engine.py            Nightly worksheet generation through the Vertex AI Batch API
   projections.py             Stored records -> grading, worksheet and parent-summary payloads
-  api.py                     FastAPI routes, upload checks, access control
+  api.py                     FastAPI routes, upload checks, access control, classes, delete-my-data
+  privacy.py                 Photo scrubbing before storage: EXIF removed, name/date/class fields found with Cloud DLP and blurred
   store.py / storage.py      Firestore + Cloud Storage, with in-memory / local-disk twins
   auth.py                    Firebase ID-token verification (dev tokens for local use only)
   fake.py                    Deterministic stand-in for Gemini (local runs and tests)
@@ -57,11 +58,17 @@ To exercise real Gemini from your machine, keep `BIRDBRAINS_BACKEND=local`, set
 |---|---|---|
 | `POST /me` | signed-in | Create profile (`student` gets a `stu_` id and a link code; `parent`) |
 | `POST /me/children` | parent | Link to a student with their link code |
-| `POST /submissions` | student, linked parent | Multipart photo upload. Re-checks type, size, 1080p and sharpness. Returns `SubmissionIngestionPayload` |
+| `POST /submissions` | student, linked parent | Multipart photo upload. Re-checks type, size, 1080p and sharpness; 409 if the same photo was already uploaded for this student. Returns `SubmissionIngestionPayload` |
 | `POST /submissions/{id}/process` | same | Runs Stage 1 + Stage 2, updates the ledger, returns the grading. Idempotent |
 | `GET /students/{id}/gradings/latest`, `GET /gradings/{id}` | same | `Stage2GradingAndAffectOutput` (frontend shape) |
 | `GET /gradings/{id}/worksheet` | same | `WS_3STAGE_V1`, or 404 `WORKSHEET_QUEUED` until the nightly batch has run |
 | `GET /students/{id}/parent-summary` | same | `ParentProjectionSummary` |
+| `PATCH /me`, `DELETE /me` | signed-in | Change name; delete the account (a student's account takes all their data with it) |
+| `GET/POST /me/classes`, `DELETE /me/classes/{id}` | student | List, join with a class code, leave |
+| `GET /students/{id}/usage` | owner | Plan and uploads left this month (Free: 402 `FREE_LIMIT_REACHED` when 0) |
+| `POST /internal/users/{uid}/plan` | `X-Batch-Token` | Set `free` / `pro` until billing exists |
+| `DELETE /students/{id}` | student, linked parent | Delete every record and photo for that student |
+| `POST /internal/schools`, `POST /internal/schools/{id}/classes` | `X-Batch-Token` | Create a school (and tenant) and a class with a join code |
 | `POST /internal/batch/worksheets/{submit,collect}` | Cloud Scheduler (`X-Batch-Token`) | Nightly worksheet batch |
 
 ## Configuration
@@ -75,6 +82,9 @@ To exercise real Gemini from your machine, keep `BIRDBRAINS_BACKEND=local`, set
 | `BIRDBRAINS_CORS_ORIGINS` | Netlify site + localhost:3000 | Comma-separated origins allowed to call the API |
 | `BIRDBRAINS_BATCH_TOKEN` | unset (batch routes off) | Shared secret for the scheduler |
 | `BIRDBRAINS_STAGE1_MODEL`, `BIRDBRAINS_STAGE2_MODEL`, `BIRDBRAINS_WORKSHEET_MODEL` | spec models | Override when Google retires a model |
+| `BIRDBRAINS_HEADER_MASK` | `0` | Optional backstop: share of the page, from the top, blacked out before storage. Detected name/date/class fields are blurred regardless |
+| `BIRDBRAINS_FREE_MONTHLY_SUBMISSIONS` | `10` | Uploads per student per calendar month on the Free plan |
+| `BIRDBRAINS_FREE_WORKSHEETS` | `0` | `1` gives Free gradings nightly worksheets too |
 | `MLFLOW_TRACKING_URI` | unset (tracing off) | Where `@mlflow.trace` spans go |
 
 The Vertex AI location is fixed to `northamerica-northeast1` in code.

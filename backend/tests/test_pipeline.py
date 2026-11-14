@@ -81,7 +81,7 @@ def test_stage2_falls_back_to_inline_taxonomy():
     pipe.run_stage2(CTX, S1)
     pipe.run_stage2(CTX, S1)
     _, contents, config = client.calls[0]
-    assert config.cached_content is None and "PRC-01" in contents and config.system_instruction
+    assert config.cached_content is None and "PRC-03" in contents and config.system_instruction
     assert client.cache_creates == 1  # not retried on every request
 
 
@@ -92,7 +92,7 @@ def test_batch_round_trip(tmp_path):
     line = json.loads(B.build_jsonl([item]).strip())
     assert line["grading_id"] == "grd_abcdefghijkl"
     prompt = line["request"]["contents"][0]["parts"][0]["text"]
-    assert "PRC-01" in prompt and "vertex form constant" not in prompt  # cascading errors are left out
+    assert "PRC-03" in prompt and "vertex form constant" not in prompt  # cascading errors are left out
 
     storage, client = LocalStorage(str(tmp_path)), StubClient()
     engine = B.GeminiBatchEngine(storage, client=client)

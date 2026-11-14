@@ -31,7 +31,10 @@ def test_upload_quality_gates(client, family):
 
 
 def test_full_flow(client, family):
+    """Pro plan (set on the parent, which covers the linked child)."""
     sid = family["studentId"]
+    assert client.post("/internal/users/jordan/plan", json={"plan": "pro"},
+                       headers={"X-Batch-Token": "s3cret"}).json()["plan"] == "pro"
     r = upload(client, sid)
     assert r.status_code == 201, r.text
     sub = r.json()
@@ -46,7 +49,7 @@ def test_full_flow(client, family):
     assert [p["pillar"] for p in grading["pillarBreakdowns"]] == ["CON", "PRC", "FAC", "TST"]
     # Carry-forward: step 5 is protected and only one root cause is reported.
     assert grading["stepDiagnostics"][4]["isCarryForwardProtected"] is True
-    assert [e["misconceptionId"] for e in grading["entityExtractions"]] == ["PRC-01"]
+    assert [e["misconceptionId"] for e in grading["entityExtractions"]] == ["PRC-03"]
     assert grading["pillarBreakdowns"][1]["errorCount"] == 1
 
     # Idempotent.
@@ -112,3 +115,50 @@ def test_pipeline_failure_is_reported(client, family, deps):
     sub = upload(client, family["studentId"]).json()
     assert client.post(f"/submissions/{sub['submissionId']}/process", headers=auth("alex")).status_code == 502
     assert client.get(f"/submissions/{sub['submissionId']}", headers=auth("alex")).json()["status"] == "FAILED"
+
+
+def test_duplicate_photo_is_rejected(client, family):
+    """UT-06: the same image bytes again is a 409 that points at the first submission."""
+    sid = family["studentId"]
+    page = photo()
+    files = lambda: [("files", ("p.jpg", page, "image/jpeg"))]
+    first = upload(client, sid, files=files())
+    assert first.status_code == 201
+    again = upload(client, sid, files=files())
+    assert again.status_code == 409
+    assert again.headers["location"] == f"/submissions/{first.json()['submissionId']}"
+    # A different photo still goes through.
+    assert upload(client, sid).status_code == 201
+
+
+def test_free_plan(client, family, deps):
+    sid = family["studentId"]
+    assert client.get("/me", headers=auth("alex")).json()["plan"] == "free"
+    assert client.post("/internal/users/alex/plan", json={"plan": "pro"}).status_code == 401
+    sub = upload(client, sid).json()
+    grading = client.post(f"/submissions/{sub['submissionId']}/process", headers=auth("alex")).json()["grading"]
+    # Diagnosis and feedback yes; mood, scaffolding mode and worksheets no.
+    assert grading["plan"] == "free" and grading["affectState"] is None and grading["scaffoldingMode"] is None
+    assert grading["entityExtractions"][0]["misconceptionId"] == "PRC-03"
+    assert grading["supportiveFramingMessage"]
+    stored = deps.store.get("gradings", grading["gradingId"])
+    assert stored["stage2"]["sentiment_entities"] == []  # no affect telemetry kept
+    assert deps.store.get("ledgers", sid)["valence_ewma"] is None
+    ws = client.get(f"/gradings/{grading['gradingId']}/worksheet", headers=auth("alex")).json()
+    assert ws["detail"] == "WORKSHEET_PRO_ONLY"
+    summary = client.get(f"/students/{sid}/parent-summary", headers=auth("jordan")).json()
+    assert summary["cognitiveFrictionAlerts"] == [] and summary["strandMasteries"]
+
+
+def test_free_monthly_cap(client, family, deps):
+    sid = family["studentId"]
+    deps.free_monthly_limit = 2
+    assert upload(client, sid).status_code == 201
+    u = client.get(f"/students/{sid}/usage", headers=auth("jordan")).json()
+    assert (u["plan"], u["monthlyLimit"], u["usedThisMonth"], u["remaining"]) == ("free", 2, 1, 1)
+    assert upload(client, sid).status_code == 201
+    r = upload(client, sid)
+    assert r.status_code == 402 and r.json()["detail"] == "FREE_LIMIT_REACHED"
+    client.post("/internal/users/alex/plan", json={"plan": "pro"}, headers={"X-Batch-Token": "s3cret"})
+    assert client.get(f"/students/{sid}/usage", headers=auth("alex")).json()["monthlyLimit"] is None
+    assert upload(client, sid).status_code == 201

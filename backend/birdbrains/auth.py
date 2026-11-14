@@ -16,6 +16,9 @@ class Authenticator(Protocol):
     def verify(self, token: str) -> str:
         """Return the caller's uid or raise HTTPException(401)."""
 
+    def delete_user(self, uid: str) -> None:
+        """Remove the sign-in account (used by delete-my-data)."""
+
 
 class DevAuthenticator:
     _UID = re.compile(r"^dev:([A-Za-z0-9_-]{1,64})$")
@@ -25,6 +28,9 @@ class DevAuthenticator:
         if not m:
             raise HTTPException(401, "Invalid dev token")
         return m.group(1)
+
+    def delete_user(self, uid: str) -> None:
+        pass
 
 
 class FirebaseAuthenticator:
@@ -43,3 +49,11 @@ class FirebaseAuthenticator:
             return auth.verify_id_token(token, app=self._app)["uid"]
         except Exception:
             raise HTTPException(401, "Invalid or expired sign-in token")
+
+    def delete_user(self, uid: str) -> None:
+        from firebase_admin import auth
+
+        try:
+            auth.delete_user(uid, app=self._app)
+        except auth.UserNotFoundError:
+            pass

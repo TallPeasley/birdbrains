@@ -43,6 +43,7 @@ def to_api_grading(record: dict) -> ApiGrading:
     stage2 = Stage2GradingAndAffectOutput.model_validate(record["stage2"])
     roots = [e for e in stage2.identified_errors if not e.is_cascading_consequence]
     per_pillar = Counter(e.pillar for e in roots)
+    pro = record.get("plan", "pro") == "pro"  # gradings made before plans existed count as pro
     return ApiGrading(
         gradingId=record["gradingId"],
         submissionId=record["submissionId"],
@@ -50,7 +51,7 @@ def to_api_grading(record: dict) -> ApiGrading:
         topic=record["unitTopic"],
         totalScore=round(sum(min(p.earned_score, p.max_score) for p in stage2.pillar_scores), 2),
         maxPossibleScore=round(sum(p.max_score for p in stage2.pillar_scores), 2),
-        affectState=dominant_affect(stage2),
+        affectState=dominant_affect(stage2) if pro else None,  # mood is a Pro feature
         supportiveFramingMessage=stage2.supportive_framing_message,
         pillarBreakdowns=[
             dict(pillar=p.pillar, maxScore=p.max_score, earnedScore=min(p.earned_score, p.max_score),
@@ -66,8 +67,9 @@ def to_api_grading(record: dict) -> ApiGrading:
         entityExtractions=[
             dict(misconceptionId=e.error_code, description=e.description, severity=e.severity) for e in roots
         ],
-        scaffoldingMode=record["scaffoldingMode"],
+        scaffoldingMode=record["scaffoldingMode"] if pro else None,
         gradedAt=record["gradedAt"],
+        plan="pro" if pro else "free",
     )
 
 
@@ -131,8 +133,10 @@ def _trajectories(ledger: StudentLedger) -> dict[str, list[dict]]:
     }
 
 
-def parent_summary(profile: dict, ledger: StudentLedger, gradings: list[dict]) -> Optional[ApiParentSummary]:
-    """None when the student has no graded work yet."""
+def parent_summary(profile: dict, ledger: StudentLedger, gradings: list[dict],
+                   include_affect: bool = True) -> Optional[ApiParentSummary]:
+    """None when the student has no graded work yet. Friction alerts are a Pro
+    feature: only shown when ``include_affect`` and only from Pro gradings."""
     if not ledger.history:
         return None
     level, confidence = eqao_forecast(ledger)
@@ -144,7 +148,9 @@ def parent_summary(profile: dict, ledger: StudentLedger, gradings: list[dict]) -
         stage2 = Stage2GradingAndAffectOutput.model_validate(g["stage2"])
         error_counts.update(e.pillar for e in stage2.identified_errors if not e.is_cascading_consequence)
         affect = dominant_affect(stage2)
-        if affect in FRICTION_ALERT_STATES and stage2.parent_insight and len(alerts) < MAX_ALERTS:
+        pro_grading = g.get("plan", "pro") == "pro"
+        if (include_affect and pro_grading and affect in FRICTION_ALERT_STATES and stage2.parent_insight
+                and len(alerts) < MAX_ALERTS):
             alerts.append(
                 dict(detectedDate=g["gradedAt"][:10], frictionLevel=affect, topicContext=g["unitTopic"],
                      actionableParentInsight=stage2.parent_insight)

@@ -20,19 +20,26 @@ echo "== Enabling APIs"
 gcloud services enable run.googleapis.com cloudbuild.googleapis.com artifactregistry.googleapis.com \
   aiplatform.googleapis.com firestore.googleapis.com storage.googleapis.com \
   secretmanager.googleapis.com cloudscheduler.googleapis.com identitytoolkit.googleapis.com \
-  compute.googleapis.com
+  compute.googleapis.com dlp.googleapis.com
 
 echo "== Storage bucket and Firestore (both in $REGION)"
 gcloud storage buckets describe "gs://$BUCKET" >/dev/null 2>&1 || \
   gcloud storage buckets create "gs://$BUCKET" --location="$REGION" \
     --uniform-bucket-level-access --public-access-prevention
+# Raw photos are deleted 90 days after upload (spec 3.2).
+LIFECYCLE="$(mktemp)"
+cat > "$LIFECYCLE" <<'JSON'
+{"rule": [{"action": {"type": "Delete"}, "condition": {"age": 90, "matchesPrefix": ["submissions/"]}}]}
+JSON
+gcloud storage buckets update "gs://$BUCKET" --lifecycle-file="$LIFECYCLE" >/dev/null
+rm -f "$LIFECYCLE"
 gcloud firestore databases describe --database="(default)" >/dev/null 2>&1 || \
   gcloud firestore databases create --database="(default)" --location="$REGION" --type=firestore-native
 
 echo "== Service account"
 gcloud iam service-accounts describe "$SA" >/dev/null 2>&1 || \
   gcloud iam service-accounts create birdbrains-api --display-name="BirdBrains API"
-for role in roles/aiplatform.user roles/datastore.user; do
+for role in roles/aiplatform.user roles/datastore.user roles/dlp.user; do
   gcloud projects add-iam-policy-binding "$PROJECT" --member="serviceAccount:$SA" --role="$role" \
     --condition=None >/dev/null
 done

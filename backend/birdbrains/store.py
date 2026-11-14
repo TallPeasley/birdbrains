@@ -1,7 +1,8 @@
 """Record persistence: Firestore in production, in-memory for local runs and tests.
 
 A deliberately small document interface. Collections used: users, linkcodes,
-submissions, transcriptions, gradings, worksheets, ledgers, batchjobs.
+submissions, imagehashes, transcriptions, gradings, worksheets, ledgers,
+batchjobs, tenants, schools, classes, joincodes.
 """
 from __future__ import annotations
 
@@ -15,6 +16,11 @@ class Store(Protocol):
     def put(self, collection: str, doc_id: str, doc: dict) -> None: ...
 
     def query(self, collection: str, field: str, value: Any) -> list[dict]: ...
+
+    def query_contains(self, collection: str, field: str, value: Any) -> list[dict]:
+        """Documents whose list ``field`` contains ``value``."""
+
+    def delete(self, collection: str, doc_id: str) -> None: ...
 
 
 class MemoryStore:
@@ -30,6 +36,12 @@ class MemoryStore:
 
     def query(self, collection: str, field: str, value: Any) -> list[dict]:
         return [copy.deepcopy(d) for d in self._data.get(collection, {}).values() if d.get(field) == value]
+
+    def query_contains(self, collection: str, field: str, value: Any) -> list[dict]:
+        return [copy.deepcopy(d) for d in self._data.get(collection, {}).values() if value in (d.get(field) or [])]
+
+    def delete(self, collection: str, doc_id: str) -> None:
+        self._data.get(collection, {}).pop(doc_id, None)
 
 
 class FirestoreStore:
@@ -52,3 +64,12 @@ class FirestoreStore:
 
         q = self._db.collection(collection).where(filter=FieldFilter(field, "==", value))
         return [s.to_dict() for s in q.stream()]
+
+    def query_contains(self, collection: str, field: str, value: Any) -> list[dict]:
+        from google.cloud.firestore_v1.base_query import FieldFilter
+
+        q = self._db.collection(collection).where(filter=FieldFilter(field, "array_contains", value))
+        return [s.to_dict() for s in q.stream()]
+
+    def delete(self, collection: str, doc_id: str) -> None:
+        self._db.collection(collection).document(doc_id).delete()

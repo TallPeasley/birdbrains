@@ -1,3 +1,4 @@
+import itertools
 import io
 import os
 
@@ -29,9 +30,18 @@ def auth(uid):
     return {"Authorization": f"Bearer dev:{uid}"}
 
 
+_photo_count = itertools.count(1)
+
+
 def photo(width=1600, height=1200, fmt="JPEG"):
+    """A blank page. Each call differs slightly so the duplicate check (UT-06) does not fire."""
+    n = next(_photo_count)
+    img = Image.new("RGB", (width, height), "white")
+    for bit in range(16):  # n as a row of black squares, coarse enough to survive JPEG
+        if n >> bit & 1:
+            img.paste((0, 0, 0), (16 * bit, 600, 16 * bit + 16, 616))
     buf = io.BytesIO()
-    Image.new("RGB", (width, height), "white").save(buf, fmt)
+    img.save(buf, fmt)
     return buf.getvalue()
 
 

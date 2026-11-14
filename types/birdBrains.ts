@@ -58,7 +58,8 @@ export interface Stage2GradingAndAffectOutput {
   topic: string;
   totalScore: number;
   maxPossibleScore: number;
-  affectState: AffectState;
+  /** null on the Free plan (mood is a Pro feature). */
+  affectState: AffectState | null;
   supportiveFramingMessage: string;
   pillarBreakdowns: PillarBreakdown[];
   stepDiagnostics: StepDiagnostic[];
@@ -68,7 +69,10 @@ export interface Stage2GradingAndAffectOutput {
     severity: 'LOW' | 'MEDIUM' | 'HIGH';
   }[];
   /** Set by the backend. */
-  scaffoldingMode?: ScaffoldingMode;
+  /** null on the Free plan. */
+  scaffoldingMode?: ScaffoldingMode | null;
+  /** The plan the work was graded under. */
+  plan?: PlanTier;
   gradedAt?: string;
 }
 
@@ -141,4 +145,30 @@ export interface UserProfile {
   /** Students: share with a parent so they can link their account. */
   linkCode?: string | null;
   childStudentIds: string[];
+  tenantId?: string | null;
+  /** Free by default. A parent on Pro covers every linked child. */
+  plan?: PlanTier;
+  /** Students: classes joined with a class code. */
+  classIds?: string[];
+}
+
+/** A class a student joined with a code (GET /me/classes). */
+export interface ApiClass {
+  classId: string;
+  className: string;
+  gradeLevel: number; // 3 to 12
+  schoolId: string;
+  schoolName: string;
+}
+
+export type PlanTier = 'free' | 'pro';
+
+/** Upload allowance for one student this calendar month (GET /students/{id}/usage). */
+export interface ApiUsage {
+  studentId: string;
+  plan: PlanTier;
+  monthlyLimit: number | null; // null = unlimited (Pro)
+  usedThisMonth: number;
+  remaining: number | null;
+  resetsAt: string; // ISO 8601, first moment of next month (UTC)
 }
