@@ -2,40 +2,40 @@
   "stage2GradingAndAffectOutput": {
     "gradingId": "grd_mpm2d_001",
     "submissionId": "sub_8839201",
-    "studentId": "std_alex_99",
-    "topic": "Grade 10 Completing the Square (PRC-01)",
-    "totalScore": 7.5,
+    "studentId": "stu_alexmercer99",
+    "topic": "Completing the Square \u00b7 vertex form",
+    "totalScore": 8.0,
     "maxPossibleScore": 10.0,
     "affectState": "HIGH_FRICTION_FRUSTRATION",
     "supportiveFramingMessage": "Great persistence! You executed the core algebraic steps correctly. A minor procedural slip on step 4 created downstream errors, but your conceptual understanding of quadratic structures shines through.",
     "pillarBreakdowns": [
       {
-        "pillar": "CONCEPTUAL",
+        "pillar": "CON",
         "maxScore": 3.0,
         "earnedScore": 3.0,
         "errorCount": 0,
         "feedback": "Flawless grasp of vertex form conversion logic and maintaining equation equivalence."
       },
       {
-        "pillar": "PROCEDURAL",
+        "pillar": "PRC",
         "maxScore": 3.0,
         "earnedScore": 1.5,
         "errorCount": 1,
         "feedback": "Forgot to distribute the leading coefficient when extracting the constant in Step 4."
       },
       {
-        "pillar": "REPRESENTATION",
+        "pillar": "FAC",
         "maxScore": 2.0,
-        "earnedScore": 1.5,
+        "earnedScore": 2.0,
         "errorCount": 0,
-        "feedback": "Clear progression of algebraic lines, minor formatting inconsistency."
+        "feedback": "Arithmetic and number facts were accurate throughout; (6/2)^2 = 9 recalled correctly."
       },
       {
-        "pillar": "COMMUNICATION",
+        "pillar": "TST",
         "maxScore": 2.0,
         "earnedScore": 1.5,
         "errorCount": 0,
-        "feedback": "Final vertex stated clearly, though step reasoning could be explicitly labeled."
+        "feedback": "Final vertex form stated clearly, though the vertex was not written as a point and step reasoning could be labeled."
       }
     ],
     "stepDiagnostics": [
@@ -43,7 +43,6 @@
         "stepNumber": 1,
         "studentInput": "y = 2x^2 + 12x + 5",
         "isCorrect": true,
-        "pillarImpacted": "CONCEPTUAL",
         "isCarryForwardProtected": false,
         "explanation": "Original equation correctly written."
       },
@@ -51,7 +50,6 @@
         "stepNumber": 2,
         "studentInput": "y = 2(x^2 + 6x) + 5",
         "isCorrect": true,
-        "pillarImpacted": "PROCEDURAL",
         "isCarryForwardProtected": false,
         "explanation": "Factored out coefficient 2 from the first two terms accurately."
       },
@@ -59,7 +57,6 @@
         "stepNumber": 3,
         "studentInput": "y = 2(x^2 + 6x + 9 - 9) + 5",
         "isCorrect": true,
-        "pillarImpacted": "PROCEDURAL",
         "isCarryForwardProtected": false,
         "explanation": "Correctly completed square inside parenthesis using (6/2)^2 = 9."
       },
@@ -67,7 +64,7 @@
         "stepNumber": 4,
         "studentInput": "y = 2(x + 3)^2 - 9 + 5",
         "isCorrect": false,
-        "pillarImpacted": "PROCEDURAL",
+        "pillarImpacted": "PRC",
         "isCarryForwardProtected": false,
         "explanation": "Procedural Slip: Forgot to multiply -9 by the outer factor of 2 when removing it from parentheses. Should be -18."
       },
@@ -75,14 +72,14 @@
         "stepNumber": 5,
         "studentInput": "y = 2(x + 3)^2 - 4",
         "isCorrect": true,
-        "pillarImpacted": "CONCEPTUAL",
+        "pillarImpacted": "PRC",
         "isCarryForwardProtected": true,
         "explanation": "Carry-Forward Protection Applied: The calculation -9 + 5 = -4 is mathematically consistent with Step 4's error. Conceptual vertex conversion logic praised."
       }
     ],
     "entityExtractions": [
       {
-        "misconceptionId": "MISC_COEFF_DISTRIB_04",
+        "misconceptionId": "PRC-01",
         "description": "Failure to distribute leading coefficient to subtracted square term when extracting from bracket.",
         "severity": "HIGH"
       }
@@ -135,7 +132,7 @@
     "sectionC_IndependentTransfer": {
       "problemId": "tp_quad_99",
       "problemStatement": "Convert y = -4x^2 + 24x - 7 into vertex form y = a(x - h)^2 + k and state the maximum point.",
-      "targetPillarFocus": "PROCEDURAL",
+      "targetPillarFocus": "PRC",
       "metacognitiveChecklist": [
         "I factored out the negative coefficient (-4) correctly in step 1.",
         "I multiplied the value removed from the bracket by -4.",
@@ -144,14 +141,14 @@
     }
   },
   "parentProjectionSummary": {
-    "studentId": "std_alex_99",
+    "studentId": "stu_alexmercer99",
     "studentName": "Alex Mercer",
     "course": "MPM2D",
     "overallEqaoForecast": "LEVEL_3",
     "eqaoForecastConfidence": 88,
     "strandMasteries": [
       {
-        "strandName": "Linear Relations",
+        "strandName": "Analytic Geometry",
         "currentEWMAMastery": 0.92,
         "historicalTrajectory": [
           {
@@ -177,7 +174,7 @@
         ]
       },
       {
-        "strandName": "Quadratics",
+        "strandName": "Quadratic Relations",
         "currentEWMAMastery": 0.76,
         "historicalTrajectory": [
           {
@@ -231,19 +228,19 @@
     ],
     "pillarErrorDistribution": [
       {
-        "pillar": "PROCEDURAL",
+        "pillar": "PRC",
         "percentageOfTotalErrors": 55
       },
       {
-        "pillar": "COMMUNICATION",
+        "pillar": "TST",
         "percentageOfTotalErrors": 25
       },
       {
-        "pillar": "REPRESENTATION",
+        "pillar": "FAC",
         "percentageOfTotalErrors": 12
       },
       {
-        "pillar": "CONCEPTUAL",
+        "pillar": "CON",
         "percentageOfTotalErrors": 8
       }
     ],

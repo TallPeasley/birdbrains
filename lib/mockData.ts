@@ -12,7 +12,7 @@ export const parentSummary = raw.parentProjectionSummary as ParentProjectionSumm
 
 export const demoPersonas = {
   student: {
-    id: 'std_alex_99',
+    id: 'stu_alexmercer99',
     name: 'Alex Mercer',
     detail: 'Grade 10 · MPM2D',
     initials: 'AM',

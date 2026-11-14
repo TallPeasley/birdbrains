@@ -1,16 +1,18 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { ArrowRight, Brain, Calculator, LineChart, MessageSquareText } from 'lucide-react';
+import { ArrowRight, Brain, Calculator, Sigma, MessageSquareText } from 'lucide-react';
 import { useRole, type Role } from '@/lib/roleContext';
 import { demoPersonas } from '@/lib/mockData';
 import { PILLARS, PILLAR_ORDER } from '@/lib/pillars';
+import { IS_LIVE } from '@/lib/api';
+import AccountCard from '@/components/AccountCard';
 
 const PILLAR_ICONS = {
-  CONCEPTUAL: Brain,
-  PROCEDURAL: Calculator,
-  REPRESENTATION: LineChart,
-  COMMUNICATION: MessageSquareText,
+  CON: Brain,
+  PRC: Calculator,
+  FAC: Sigma,
+  TST: MessageSquareText,
 } as const;
 
 export default function HomePage() {
@@ -64,9 +66,12 @@ export default function HomePage() {
 
       {/* Right: quick auth */}
       <section className="lg:pt-8">
+        {IS_LIVE ? (
+          <AccountCard />
+        ) : (
         <div className="card p-6">
           <h2 className="text-lg font-semibold text-slate-900">Sign in</h2>
-          <p className="text-sm text-slate-500">Choose a demo persona to explore.</p>
+          <p className="text-sm text-slate-500">Choose a demo persona to explore with sample data.</p>
 
           <div className="mt-5 space-y-3">
             {(['student', 'parent'] as Role[]).map((r) => {
@@ -109,34 +114,8 @@ export default function HomePage() {
             })}
           </div>
 
-          <div className="mt-6 border-t border-slate-200 pt-5">
-            <p className="text-xs font-medium text-slate-500">Or sign in with an account</p>
-            <form
-              className="mt-3 space-y-2"
-              onSubmit={(e) => {
-                e.preventDefault();
-                signIn(role);
-              }}
-            >
-              <input
-                type="email"
-                placeholder="Email"
-                autoComplete="email"
-                className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
-              />
-              <input
-                type="password"
-                placeholder="Password"
-                autoComplete="current-password"
-                className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
-              />
-              <button className="w-full rounded-xl border border-slate-300 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
-                Sign in as {role === 'student' ? 'Student' : 'Parent'}
-              </button>
-              <p className="text-[11px] text-slate-400">Demo only: credentials aren&apos;t checked yet.</p>
-            </form>
-          </div>
         </div>
+        )}
       </section>
     </div>
   );

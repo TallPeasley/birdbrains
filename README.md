@@ -1,6 +1,8 @@
 # BirdBrains web
 
-Next.js 15 (App Router) + React 19 + Tailwind CSS 3 frontend built from the BirdBrains UI/UX spec. All data comes from `mocks/birdBrainsMockData.json`.
+Next.js 15 (App Router) + React 19 + Tailwind CSS 3 frontend built from the BirdBrains UI/UX spec, plus a Python backend in [`backend/`](backend/README.md).
+
+With no environment variables set the site runs on demo data from `mocks/birdBrainsMockData.json`. Set `NEXT_PUBLIC_API_URL` (see `.env.example`) and it switches to real sign-in, real uploads and live dashboards.
 
 ## Run it
 
@@ -30,13 +32,26 @@ components/parent/   MasteryChart, EqaoForecast, PillarErrorChart, FrictionAlert
 components/          Navbar, CaptureFab, CaptureModal
 lib/imageQuality.ts  resolution + Laplacian-variance blur check
 lib/projections.ts   EWMA trend projection, EQAO probability spread
-lib/mockData.ts      typed access to the mock payloads (swap for API calls)
-types/birdBrains.ts  interfaces from the spec, unchanged
-mocks/               mock payload pack from the spec, unchanged
+lib/mockData.ts      typed access to the mock payloads (demo mode)
+lib/api.ts           API client
+lib/session.tsx      sign-in state (Firebase), active student
+backend/             Python API + AI pipeline (see backend/README.md)
+types/birdBrains.ts  interfaces from the UI spec, with the pipeline spec's pillar and affect names
+mocks/               mock payload pack from the spec, renamed to match
 ```
 
-## Not wired up yet
+## Demo mode vs live mode
 
-- No backend: upload pipeline stages are simulated with timers, and sign-in isn't checked.
+| | Demo (no `NEXT_PUBLIC_API_URL`) | Live |
+|---|---|---|
+| Sign-in | Demo personas | Email + password (Firebase Auth), student or parent. Students get a link code; parents enter it to follow their child |
+| Upload | Simulated with timers | Photos go to the API, which re-checks quality, then runs the two-stage diagnostic |
+| Dashboards | Mock payloads | Latest grading, worksheet (built overnight) and parent summary from the API |
+
+Pillars and affect states use the AI pipeline spec's names: `CON`, `PRC`, `FAC`, `TST` and the five affect states.
+
+## Known gaps
+
 - Blur thresholds (`BLURRY_BELOW`, `EXCELLENT_ABOVE` in `lib/imageQuality.ts`) are first guesses and should be tuned on real phone photos.
 - The parent payload only has a single EQAO level + confidence, so the Level 1–4 bars spread the remaining probability by distance from the forecast. The EWMA projection is also computed client-side from history.
+- The student dashboard shows the latest diagnostic only; there is no history view yet.

@@ -15,6 +15,8 @@ import {
 import { useRole } from '@/lib/roleContext';
 import { analyzeImage, MIN_SHORT_EDGE, type ImageQualityResult } from '@/lib/imageQuality';
 import { demoPersonas } from '@/lib/mockData';
+import { api, ApiError } from '@/lib/api';
+import { useSession } from '@/lib/session';
 import type { GradeCourse, SubmissionIngestionPayload } from '@/types/birdBrains';
 
 const UNITS: Record<GradeCourse, string[]> = {
@@ -22,7 +24,7 @@ const UNITS: Record<GradeCourse, string[]> = {
   MPM2D: ['Linear Systems', 'Analytic Geometry', 'Quadratic Relations', 'Completing the Square', 'Trigonometry'],
 };
 
-type Stage = 'IDLE' | 'UPLOADING' | 'PRE_CHECKING' | 'INGESTING' | 'PROCESSING' | 'DONE';
+type Stage = 'IDLE' | 'UPLOADING' | 'PRE_CHECKING' | 'INGESTING' | 'PROCESSING' | 'DONE' | 'ERROR';
 const PIPELINE: { stage: Stage; label: string }[] = [
   { stage: 'UPLOADING', label: 'Uploading' },
   { stage: 'PRE_CHECKING', label: 'Pre-Checking Sharpness' },
@@ -46,6 +48,9 @@ const TIER_STYLE = {
 
 export default function CaptureModal() {
   const { isCaptureOpen, closeCapture } = useRole();
+  const { live, profile, activeStudentId, getToken, bumpData } = useSession();
+  const [problem, setProblem] = useState<{ message: string; failedAt: number } | null>(null);
+  const runId = useRef(0);
   const [studentId, setStudentId] = useState<string>(demoPersonas.student.id);
   const [course, setCourse] = useState<GradeCourse>('MPM2D');
   const [unit, setUnit] = useState(UNITS.MPM2D[3]);
@@ -61,6 +66,8 @@ export default function CaptureModal() {
   const reset = useCallback(() => {
     timers.current.forEach(clearTimeout);
     timers.current = [];
+    runId.current++;
+    setProblem(null);
     setFiles((prev) => {
       prev.forEach((f) => URL.revokeObjectURL(f.previewUrl));
       return [];
@@ -120,7 +127,9 @@ export default function CaptureModal() {
 
   const analyzing = files.some((f) => !f.quality && !f.error);
   const allPassed = files.length > 0 && files.every((f) => f.quality?.passed);
-  const canSubmit = allPassed && !analyzing && studentId.trim() !== '' && stage === 'IDLE';
+  // Live: the upload goes to the signed-in student (or the parent's selected child).
+  const targetStudentId = live ? (activeStudentId ?? '') : studentId.trim();
+  const canSubmit = allPassed && !analyzing && targetStudentId !== '' && stage === 'IDLE';
 
   const submit = () => {
     if (!canSubmit) return;
@@ -129,18 +138,23 @@ export default function CaptureModal() {
     const smallest = qualities.reduce((a, b) =>
       Math.min(a.width, a.height) <= Math.min(b.width, b.height) ? a : b,
     );
+    const unitTopic = [unit, ...tags].join(' · ');
+    if (live) {
+      void submitLive(unitTopic, weakest.sharpnessScore);
+      return;
+    }
     const p: SubmissionIngestionPayload = {
       submissionId: `sub_${Date.now().toString().slice(-7)}`,
-      studentId: studentId.trim(),
+      studentId: targetStudentId,
       course,
-      unitTopic: [unit, ...tags].join(' · '),
+      unitTopic,
       imageResolution: { width: smallest.width, height: smallest.height },
       sharpnessScore: weakest.sharpnessScore,
       isQualityPassed: true,
       uploadedAt: new Date().toISOString(),
-      fileUrls: files.map((f) => f.previewUrl), // replace with storage URLs once wired to a backend
+      fileUrls: files.map((f) => f.previewUrl),
     };
-    // Simulated pipeline. Replace each step with the real upload / ingestion calls.
+    // Demo mode (no backend configured): simulated pipeline.
     const steps: Stage[] = ['UPLOADING', 'PRE_CHECKING', 'INGESTING', 'PROCESSING', 'DONE'];
     steps.forEach((s, i) =>
       timers.current.push(
@@ -152,8 +166,61 @@ export default function CaptureModal() {
     );
   };
 
+  const submitLive = async (unitTopic: string, sharpnessScore: number) => {
+    const run = ++runId.current;
+    const alive = () => run === runId.current;
+    let reached = 0;
+    const go = (s: Stage) => {
+      if (!alive()) return;
+      reached = Math.max(reached, PIPELINE.findIndex((p) => p.stage === s));
+      setStage(s);
+    };
+    let poll: ReturnType<typeof setInterval> | undefined;
+    try {
+      const token = await getToken();
+      go('UPLOADING');
+      const form = new FormData();
+      form.set('studentId', targetStudentId);
+      form.set('course', course);
+      form.set('unitTopic', unitTopic);
+      form.set('sharpnessScore', String(sharpnessScore));
+      files.forEach((f) => form.append('files', f.file));
+      // The server re-checks type, resolution and sharpness as part of this call.
+      const created = await api.createSubmission(token, form);
+      go('PRE_CHECKING');
+      // Stage 1 (transcription) then Stage 2 (diagnostic) run inside one request;
+      // poll the submission's status to show which one is in flight.
+      poll = setInterval(() => {
+        api
+          .getSubmission(token, created.submissionId)
+          .then((sub) => {
+            if (sub.status === 'TRANSCRIBING') go('INGESTING');
+            else if (sub.status === 'GRADING') go('PROCESSING');
+          })
+          .catch(() => {});
+      }, 1500);
+      const result = await api.processSubmission(token, created.submissionId);
+      if (!alive()) return;
+      if (result.submission.status === 'NEEDS_RETAKE') {
+        throw new ApiError(422, 'We couldn’t read the handwriting clearly enough. Please retake the photo in good light and try again.');
+      }
+      setPayload(result.submission);
+      setStage('DONE');
+      bumpData();
+    } catch (err) {
+      if (!alive()) return;
+      setProblem({
+        message: err instanceof Error ? err.message : 'Something went wrong. Please try again.',
+        failedAt: reached,
+      });
+      setStage('ERROR');
+    } finally {
+      clearInterval(poll);
+    }
+  };
+
   if (!isCaptureOpen) return null;
-  const activeIndex = PIPELINE.findIndex((p) => p.stage === stage);
+  const activeIndex = stage === 'ERROR' ? (problem?.failedAt ?? 0) : PIPELINE.findIndex((p) => p.stage === stage);
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/50 p-0 backdrop-blur-sm sm:items-center sm:p-6">
@@ -184,9 +251,10 @@ export default function CaptureModal() {
                 <label className="block">
                   <span className="mb-1 block text-sm font-medium text-slate-700">Student ID</span>
                   <input
-                    value={studentId}
+                    value={live ? targetStudentId : studentId}
+                    readOnly={live}
                     onChange={(e) => setStudentId(e.target.value)}
-                    className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm read-only:bg-slate-50 read-only:text-slate-500 focus:border-indigo-500 focus:ring-indigo-500"
                   />
                 </label>
                 <fieldset>
@@ -300,14 +368,28 @@ export default function CaptureModal() {
               )}
             </>
           ) : (
-            <PipelineView stage={stage} activeIndex={activeIndex} payload={payload} onClose={close} />
+            <PipelineView
+              stage={stage}
+              activeIndex={activeIndex}
+              payload={payload}
+              problem={problem?.message}
+              onRetry={() => {
+                setProblem(null);
+                setStage('IDLE');
+              }}
+              onClose={close}
+            />
           )}
         </div>
 
         {stage === 'IDLE' && (
           <div className="flex items-center justify-between gap-3 border-t border-slate-200 bg-slate-50 px-6 py-4">
             <p className="text-xs text-slate-500">
-              {files.length === 0
+              {live && !targetStudentId
+                ? profile
+                  ? 'Link a student on the parent dashboard before uploading.'
+                  : 'Sign in on the home page before uploading.'
+                : files.length === 0
                 ? 'Add at least one photo.'
                 : analyzing
                   ? 'Checking image quality…'
@@ -381,11 +463,15 @@ function PipelineView({
   stage,
   activeIndex,
   payload,
+  problem,
+  onRetry,
   onClose,
 }: {
   stage: Stage;
   activeIndex: number;
   payload: SubmissionIngestionPayload | null;
+  problem?: string;
+  onRetry: () => void;
   onClose: () => void;
 }) {
   const done = stage === 'DONE';
@@ -394,23 +480,36 @@ function PipelineView({
       <ol className="space-y-3" aria-live="polite">
         {PIPELINE.map((p, i) => {
           const complete = done || i < activeIndex;
-          const active = !done && i === activeIndex;
+          const failed = stage === 'ERROR' && i === activeIndex;
+          const active = !done && !failed && i === activeIndex;
           return (
             <li key={p.stage} className="flex items-center gap-3">
               <span
                 className={`grid h-8 w-8 place-items-center rounded-full text-xs font-semibold ${
-                  complete ? 'bg-emerald-500 text-white' : active ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-400'
+                  complete ? 'bg-emerald-500 text-white' : failed ? 'bg-rose-500 text-white' : active ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-400'
                 }`}
               >
-                {complete ? <CheckCircle2 className="h-4 w-4" /> : active ? <Loader2 className="h-4 w-4 animate-spin" /> : i + 1}
+                {complete ? <CheckCircle2 className="h-4 w-4" /> : failed ? <AlertTriangle className="h-4 w-4" /> : active ? <Loader2 className="h-4 w-4 animate-spin" /> : i + 1}
               </span>
-              <span className={`text-sm ${complete || active ? 'font-semibold text-slate-900' : 'text-slate-400'}`}>
+              <span className={`text-sm ${complete || active || failed ? 'font-semibold text-slate-900' : 'text-slate-400'}`}>
                 {p.label}
               </span>
             </li>
           );
         })}
       </ol>
+      {stage === 'ERROR' && (
+        <div className="space-y-4">
+          <div role="alert" className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
+            {problem}
+          </div>
+          <div className="flex justify-end">
+            <button onClick={onRetry} className="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700">
+              Back to photos
+            </button>
+          </div>
+        </div>
+      )}
       {done && payload && (
         <div className="space-y-4">
           <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">

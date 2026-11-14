@@ -66,7 +66,7 @@ export default function PillarErrorChart({ data }: { data: ParentProjectionSumma
       {top && (
         <p className="mt-5 rounded-xl bg-slate-50 p-3 text-sm text-slate-600 ring-1 ring-slate-200">
           Most mistakes are <strong className="text-slate-900">{PILLARS[top.pillar].short.toLowerCase()}</strong>
-          {top.pillar === 'PROCEDURAL'
+          {top.pillar === 'PRC' || top.pillar === 'FAC'
             ? ': slips in carrying out steps, not gaps in understanding. Slowing down and checking each line helps most.'
             : '.'}
         </p>

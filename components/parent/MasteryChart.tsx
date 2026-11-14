@@ -18,7 +18,10 @@ const STRAND_COLORS = ['#4f46e5', '#0ea5e9', '#8b5cf6', '#14b8a6'];
 
 export default function MasteryChart({ strands }: { strands: StrandMastery[] }) {
   const rows = buildTrajectoryRows(strands);
-  const lastActual = strands[0]?.historicalTrajectory.at(-1)?.weekLabel;
+  const lastActual = strands
+    .map((s) => s.historicalTrajectory.at(-1)?.weekLabel)
+    .filter((w): w is string => !!w)
+    .sort((a, b) => Number(b.replace(/\D+/g, '')) - Number(a.replace(/\D+/g, '')))[0];
 
   return (
     <section className="card p-6">
@@ -75,7 +78,7 @@ export default function MasteryChart({ strands }: { strands: StrandMastery[] }) 
                 stroke={STRAND_COLORS[i % STRAND_COLORS.length]}
                 strokeWidth={2.5}
                 dot={{ r: 3 }}
-                connectNulls={false}
+                connectNulls
                 isAnimationActive={false}
               />
             ))}

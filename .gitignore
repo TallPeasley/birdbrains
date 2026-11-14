@@ -5,3 +5,10 @@ next-env.d.ts
 *.tsbuildinfo
 .env*.local
 .netlify
+
+# backend
+.venv
+__pycache__
+.pytest_cache
+.birdbrains-data
+mlruns
