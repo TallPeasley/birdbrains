@@ -19,6 +19,6 @@
     @apply text-xs font-semibold uppercase tracking-wider text-slate-500;
   }
   .math {
-    @apply font-mono text-[0.95em];
+    @apply break-words font-mono text-[0.95em] [overflow-wrap:anywhere];
   }
 }

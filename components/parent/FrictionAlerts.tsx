@@ -4,7 +4,7 @@ import { AFFECT_META } from '@/lib/pillars';
 
 export default function FrictionAlerts({ alerts }: { alerts: ParentProjectionSummary['cognitiveFrictionAlerts'] }) {
   return (
-    <section className="card p-6">
+    <section className="card min-w-0 p-4 sm:p-6">
       <h2 className="text-lg font-semibold text-slate-900">Frustration & anxiety signals</h2>
       <p className="text-sm text-slate-500">Moments where the work got hard, with something you can try at home.</p>
       {alerts.length === 0 ? (

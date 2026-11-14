@@ -18,7 +18,7 @@ export default function WorksheetViewer({ worksheet }: { worksheet: WS_3STAGE_V1
 
   return (
     <section className="card overflow-hidden">
-      <div className="border-b border-slate-200 p-6 pb-0">
+      <div className="border-b border-slate-200 p-4 pb-0 sm:p-6 sm:pb-0">
         <p className="eyebrow">Your remedial worksheet</p>
         <h2 className="mt-1 text-xl font-semibold text-slate-900">{worksheet.title}</h2>
         <p className="mt-1 text-sm text-slate-500">Target concept: {worksheet.targetConcept}</p>
@@ -32,14 +32,14 @@ export default function WorksheetViewer({ worksheet }: { worksheet: WS_3STAGE_V1
               aria-selected={active === s.key}
               aria-controls={`panel-${s.key}`}
               onClick={() => setActive(s.key)}
-              className={`-mb-px border-b-2 px-2 pb-3 text-left transition ${
+              className={`-mb-px min-w-0 border-b-2 px-1.5 pb-3 text-left transition sm:px-2 ${
                 active === s.key ? 'border-indigo-600' : 'border-transparent hover:border-slate-300'
               }`}
             >
               <span className={`block text-xs font-bold ${active === s.key ? 'text-indigo-600' : 'text-slate-400'}`}>
                 Section {s.key}
               </span>
-              <span className={`block text-sm font-semibold ${active === s.key ? 'text-slate-900' : 'text-slate-600'}`}>
+              <span className={`block break-words text-xs font-semibold sm:text-sm ${active === s.key ? 'text-slate-900' : 'text-slate-600'}`}>
                 {s.title}
               </span>
               <span className="hidden text-xs text-slate-500 sm:block">{s.sub}</span>
@@ -48,7 +48,7 @@ export default function WorksheetViewer({ worksheet }: { worksheet: WS_3STAGE_V1
         </div>
       </div>
 
-      <div className="p-6" role="tabpanel" id={`panel-${active}`} aria-labelledby={`tab-${active}`}>
+      <div className="p-4 sm:p-6" role="tabpanel" id={`panel-${active}`} aria-labelledby={`tab-${active}`}>
         {active === 'A' && <DiagnosticMirror worksheet={worksheet} />}
         {active === 'B' && <FadedScaffolding steps={worksheet.sectionB_FadedScaffolding} />}
         {active === 'C' && <IndependentTransfer worksheet={worksheet} />}
@@ -63,15 +63,15 @@ function DiagnosticMirror({ worksheet }: { worksheet: WS_3STAGE_V1 }) {
       {worksheet.sectionA_DiagnosticMirror.map((item, i) => (
         <div key={i} className="space-y-3">
           <div className="grid gap-3 md:grid-cols-2">
-            <div className="rounded-xl border border-rose-200 bg-rose-50/50 p-4">
+            <div className="min-w-0 rounded-xl border border-rose-200 bg-rose-50/50 p-4">
               <p className="text-xs font-semibold uppercase tracking-wider text-rose-700">What you wrote</p>
-              <p className="math mt-3 text-lg text-slate-800 underline decoration-rose-400 decoration-wavy underline-offset-4">
+              <p className="math mt-3 break-words text-base text-slate-800 underline decoration-rose-400 decoration-wavy underline-offset-4 sm:text-lg [overflow-wrap:anywhere]">
                 {item.originalStepText}
               </p>
             </div>
-            <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-4">
+            <div className="min-w-0 rounded-xl border border-emerald-200 bg-emerald-50/50 p-4">
               <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">Annotated breakdown</p>
-              <div className="math mt-3 space-y-1 text-lg text-slate-800">
+              <div className="math mt-3 space-y-1 break-words text-base text-slate-800 sm:text-lg [overflow-wrap:anywhere]">
                 {item.annotatedCorrection.split('=>').map((line, j) => (
                   <p key={j}>
                     {j > 0 && <span className="mr-2 text-emerald-600">⇒</span>}
@@ -101,7 +101,7 @@ function FadedScaffolding({ steps }: { steps: FadedScaffoldingStep[] }) {
   return (
     <div>
       {problem && (
-        <p className="mb-5 rounded-xl bg-slate-100 p-4 text-sm text-slate-800">
+        <p className="mb-5 break-words rounded-xl bg-slate-100 p-4 text-sm text-slate-800">
           <strong>Problem:</strong> <span className="math">{problem}</span>
         </p>
       )}
@@ -135,22 +135,22 @@ function ScaffoldStep({ step }: { step: FadedScaffoldingStep }) {
   }[step.scaffoldingType];
 
   return (
-    <li className="rounded-xl border border-slate-200 p-4">
+    <li className="min-w-0 rounded-xl border border-slate-200 p-3.5 sm:p-4">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="grid h-6 w-6 place-items-center rounded-full bg-slate-900 text-xs font-bold text-white">
+        <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-slate-900 text-xs font-bold text-white">
           {step.stepNumber}
         </span>
-        <p className="font-medium text-slate-900">{step.stepNumber === 1 ? 'Set up' : step.prompt}</p>
+        <p className="min-w-0 flex-1 break-words font-medium text-slate-900">{step.stepNumber === 1 ? 'Set up' : step.prompt}</p>
         <span className={`ml-auto rounded-full px-2 py-0.5 text-[11px] font-semibold ${label.cls}`}>{label.text}</span>
       </div>
 
-      <div className="mt-3 pl-8">
+      <div className="mt-3 sm:pl-8">
         {step.scaffoldingType === 'GIVEN' && (
-          <p className="math rounded-lg bg-slate-50 p-3 text-slate-800">{step.givenContent}</p>
+          <p className="math break-words rounded-lg bg-slate-50 p-3 text-slate-800 [overflow-wrap:anywhere]">{step.givenContent}</p>
         )}
 
         {step.scaffoldingType === 'PARTIAL_BLANK' && (
-          <p className="math flex flex-wrap items-center gap-1 rounded-lg bg-slate-50 p-3 text-slate-800">
+          <p className="math flex flex-wrap items-center gap-1 break-words rounded-lg bg-slate-50 p-3 text-slate-800 [overflow-wrap:anywhere]">
             {parts.map((part, i) => (
               <span key={i} className="inline-flex items-center gap-1">
                 <span>{part}</span>
