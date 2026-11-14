@@ -66,7 +66,7 @@ export default function AccountCard() {
           </p>
         )}
         <button
-          onClick={() => go(profile.role)}
+          onClick={() => go(profile.role === 'teacher' ? 'parent' : profile.role)}
           className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"
         >
           Open my dashboard <ArrowRight className="h-4 w-4" aria-hidden />

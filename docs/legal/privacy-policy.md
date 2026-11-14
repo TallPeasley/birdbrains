@@ -148,4 +148,8 @@ Privacy contact: [name], [email address], [mailing address].
 4. "Ask us for a copy": there is no export button yet; requests would be handled by hand.
 5. Under-13 flow: the product does not yet ask for age or record parental consent
    (Gemini's Dec 8 consent task).
-6. Lawyer review, especially if schools (MFIPPA) or US users (COPPA, FERPA) come in.
+6. Now built and not yet reflected above: Stripe payments (remove the brackets around the Stripe
+   sentence, add Stripe to the provider table) and Google Classroom import by teachers (BirdBrains
+   then stores each imported student's name and their handed-in photos under the teacher's
+   account, without that student having an account; say so, and say who consents).
+7. Lawyer review, especially if schools (MFIPPA) or US users (COPPA, FERPA) come in.

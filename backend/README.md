@@ -68,6 +68,8 @@ To exercise real Gemini from your machine, keep `BIRDBRAINS_BACKEND=local`, set
 | `POST /uploads`, `PUT /uploads/{id}/file?token=` | owner; link holder | One-time 15-minute upload link for the Chrome extension, then the raw photo |
 | `GET /gradings/{id}/worksheet.pdf` | owner | Worksheet PDF (WeasyPrint, template in `worksheet_pdf.py`) |
 | `GET /students/{id}/usage` | owner | Plan and uploads left this month (Free: 402 `FREE_LIMIT_REACHED` when 0) |
+| `POST /billing/checkout`, `/billing/portal`, `/billing/webhook` | signed-in; Stripe | Stripe Checkout and portal links; the signed webhook sets the plan (`billing.py`) |
+| `/classroom/*`, `GET /teacher/students` | Pro teacher | Google Classroom connect, courses, assignments, import handed-in photos (`classroom.py`) |
 | `POST /internal/users/{uid}/plan` | `X-Batch-Token` | Set `free` / `pro` until billing exists |
 | `DELETE /students/{id}` | student, linked parent | Delete every record and photo for that student |
 | `POST /internal/schools`, `POST /internal/schools/{id}/classes` | `X-Batch-Token` | Create a school (and tenant) and a class with a join code |
@@ -87,6 +89,9 @@ To exercise real Gemini from your machine, keep `BIRDBRAINS_BACKEND=local`, set
 | `BIRDBRAINS_HEADER_MASK` | `0` | Optional backstop: share of the page, from the top, blacked out before storage. Detected name/date/class fields are blurred regardless |
 | `BIRDBRAINS_FREE_MONTHLY_SUBMISSIONS` | `10` | Uploads per student per calendar month on the Free plan |
 | `BIRDBRAINS_FREE_WORKSHEETS` | `0` | `1` gives Free gradings nightly worksheets too |
+| `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID` | unset (upgrades off) | Stripe key, webhook signing secret and the Pro price id. `deploy.sh` reads them from Secret Manager |
+| `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, `BIRDBRAINS_PUBLIC_URL` | unset (Classroom off) | Google OAuth web client and the API's own URL (for the redirect) |
+| `BIRDBRAINS_SITE_URL` | Netlify site | Where Stripe and Google send people back to |
 | `MLFLOW_TRACKING_URI` | unset (tracing off) | Where `@mlflow.trace` spans go |
 
 The Vertex AI location is fixed to `northamerica-northeast1` in code.
@@ -106,3 +111,35 @@ These are defaults picked during the build; each is one constant or one file.
 Everything is tested against a stubbed Gemini client. Calls to real Vertex AI
 (structured output with these schemas, context-cache minimum size, the batch
 JSONL format) and `deploy.sh` have not been run against a real project.
+
+## Turning on Stripe and Google Classroom
+
+Both stay off until their secrets exist; `deploy.sh` picks them up on the next run.
+Create each secret in Cloud Shell (values never go in chat or in git):
+
+```bash
+mk() { printf '%s' "$2" | gcloud secrets create "$1" --data-file=- \
+  --replication-policy=user-managed --locations=northamerica-northeast1; }
+```
+
+**Stripe** (start in test mode)
+1. Stripe dashboard > Product catalog: product "BirdBrains Pro" with a monthly recurring price. Copy the price id (`price_...`).
+2. Developers > API keys: copy the secret key (`sk_test_...`).
+3. Developers > Webhooks > Add endpoint: URL `<API URL>/billing/webhook`, events
+   `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`,
+   `customer.subscription.deleted`. Copy the signing secret (`whsec_...`).
+4. Settings > Billing > Customer portal: turn it on (lets people cancel).
+5. `mk birdbrains-stripe-price-id price_...`, `mk birdbrains-stripe-secret-key sk_test_...`,
+   `mk birdbrains-stripe-webhook-secret whsec_...`, then rerun `deploy.sh`.
+
+**Google Classroom**
+1. Cloud console (project `birdbrain-514606`) > APIs & Services > OAuth consent screen: External,
+   app name BirdBrains, add the four scopes listed in `birdbrains/classroom.py`, and add your test
+   teacher account under Test users.
+2. Credentials > Create credentials > OAuth client ID > Web application. Authorized redirect URI:
+   `<API URL>/classroom/callback`. Copy the client id and secret.
+3. `mk birdbrains-google-oauth-client-id ...`, `mk birdbrains-google-oauth-client-secret ...`, rerun `deploy.sh`.
+
+While the consent screen is in "Testing", only the listed test users can connect (up to 100) and
+their connection expires after 7 days. Going public needs Google's verification; `drive.readonly`
+is a restricted scope, which also needs a yearly third-party security assessment.

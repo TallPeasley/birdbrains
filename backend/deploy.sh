@@ -20,7 +20,7 @@ echo "== Enabling APIs"
 gcloud services enable run.googleapis.com cloudbuild.googleapis.com artifactregistry.googleapis.com \
   aiplatform.googleapis.com firestore.googleapis.com storage.googleapis.com \
   secretmanager.googleapis.com cloudscheduler.googleapis.com identitytoolkit.googleapis.com \
-  compute.googleapis.com dlp.googleapis.com
+  compute.googleapis.com dlp.googleapis.com classroom.googleapis.com drive.googleapis.com
 
 echo "== Storage bucket and Firestore (both in $REGION)"
 gcloud storage buckets describe "gs://$BUCKET" >/dev/null 2>&1 || \
@@ -54,6 +54,27 @@ fi
 gcloud secrets add-iam-policy-binding birdbrains-batch-token --member="serviceAccount:$SA" \
   --role=roles/secretmanager.secretAccessor >/dev/null
 
+echo "== Optional secrets (Stripe, Google Classroom)"
+# Each is wired in only if it exists in Secret Manager. Create one with:
+#   printf '%s' 'VALUE' | gcloud secrets create NAME --data-file=- \
+#     --replication-policy=user-managed --locations=northamerica-northeast1
+SECRETS="BIRDBRAINS_BATCH_TOKEN=birdbrains-batch-token:latest"
+optional_secret() {  # ENV_NAME secret-name
+  if gcloud secrets describe "$2" >/dev/null 2>&1; then
+    gcloud secrets add-iam-policy-binding "$2" --member="serviceAccount:$SA" \
+      --role=roles/secretmanager.secretAccessor >/dev/null
+    SECRETS="$SECRETS,$1=$2:latest"
+    echo "   $2: found"
+  else
+    echo "   $2: not set (feature stays off)"
+  fi
+}
+optional_secret STRIPE_SECRET_KEY          birdbrains-stripe-secret-key
+optional_secret STRIPE_WEBHOOK_SECRET      birdbrains-stripe-webhook-secret
+optional_secret STRIPE_PRICE_ID            birdbrains-stripe-price-id
+optional_secret GOOGLE_OAUTH_CLIENT_ID     birdbrains-google-oauth-client-id
+optional_secret GOOGLE_OAUTH_CLIENT_SECRET birdbrains-google-oauth-client-secret
+
 echo "== Build permissions"
 # New projects build source deploys as the default compute service account, which
 # starts without build rights. Grant them, then give IAM a minute to propagate.
@@ -68,9 +89,11 @@ echo "== Deploying to Cloud Run"
 # /health checks a Firebase sign-in token (or the batch token) itself.
 gcloud run deploy "$SERVICE" --source . --region "$REGION" --service-account "$SA" \
   --allow-unauthenticated --memory 1Gi --timeout 300 --max-instances 5 \
-  --set-env-vars "GOOGLE_CLOUD_PROJECT=$PROJECT,BIRDBRAINS_BUCKET=$BUCKET,BIRDBRAINS_CORS_ORIGINS=$ORIGIN" \
-  --set-secrets "BIRDBRAINS_BATCH_TOKEN=birdbrains-batch-token:latest"
+  --set-env-vars "GOOGLE_CLOUD_PROJECT=$PROJECT,BIRDBRAINS_BUCKET=$BUCKET,BIRDBRAINS_CORS_ORIGINS=$ORIGIN,BIRDBRAINS_SITE_URL=$ORIGIN" \
+  --set-secrets "$SECRETS"
 URL="$(gcloud run services describe "$SERVICE" --region "$REGION" --format='value(status.url)')"
+# The API needs its own public address for the Google sign-in return link.
+gcloud run services update "$SERVICE" --region "$REGION" --update-env-vars "BIRDBRAINS_PUBLIC_URL=$URL" >/dev/null
 
 echo "== Nightly worksheet jobs (Cloud Scheduler)"
 TOKEN="$(gcloud secrets versions access latest --secret=birdbrains-batch-token)"
@@ -86,4 +109,6 @@ schedule birdbrains-worksheets-collect "*/30 2-8 * * *" /internal/batch/workshee
 
 echo
 echo "API is live at: $URL"
+echo "Stripe webhook endpoint:        $URL/billing/webhook"
+echo "Google OAuth redirect URI:      $URL/classroom/callback"
 echo "Set NEXT_PUBLIC_API_URL=$URL in Netlify, then finish the Firebase steps in backend/README.md."

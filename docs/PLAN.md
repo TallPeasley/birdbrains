@@ -53,13 +53,13 @@ Counts: 65 tasks. Maalik 28, Claude 14, Gemini 13, Freelancer 10. The freelancer
 
 ## Week 3 (Nov 27 to Dec 3): Upgrades, extension and Classroom (Pro)
 
-- [ ] **Fri Nov 27** · **Claude:** Extension upload endpoint + Classroom sign-in. (Extension upload link and status: done Nov 14. Classroom sign-in still open, waiting on the Nov 16 decision.) Signed-URL upload and status endpoints for the Chrome extension (Phase 3.1). Google Classroom OAuth on the backend, if Classroom is in for launch.
+- [x] **Fri Nov 27** · **Claude:** Extension upload endpoint + Classroom sign-in. Signed-URL upload and status endpoints for the Chrome extension (Phase 3.1). Google Classroom OAuth on the backend, if Classroom is in for launch.
 - [ ] **Fri Nov 27** · **Freelancer:** Free-plan pipeline mode. A cheaper Free path: Flash transcription and 4-pillar error codes with standard feedback, no mood tracking or thinking budget. Run the gold set on it so Free accuracy is known, and report cost per upload.
 - [ ] **Sat Nov 28** · **Maalik:** Gold set: 15 more (40 total) + extension code. Label 15 more. Send the existing Chrome extension code to Gemini (the roadmap says one exists), or say there is none.
 - [ ] **Mon Nov 30** · **Maalik:** Make a test Google Classroom. A test class with a test student account. Skip if Classroom moved to after launch.
-- [ ] **Mon Nov 30** · **Claude:** Upgrades: Stripe or invite codes. Build what Maalik chose on Nov 18: Stripe Checkout plus a webhook that sets the plan (test mode first), or Pro invite codes, or nothing for an all-Pro pilot. Plan changes take effect on the next upload.
+- [x] **Mon Nov 30** · **Claude:** Upgrades: Stripe or invite codes. Build what Maalik chose on Nov 18: Stripe Checkout plus a webhook that sets the plan (test mode first), or Pro invite codes, or nothing for an all-Pro pilot. Plan changes take effect on the next upload.
 - [ ] **Mon Nov 30** · **Gemini:** Chrome extension. Capture or pick a page, upload through Claude's signed-URL endpoint, show status and a link to the result. Build a minimal one if none exists.
-- [ ] **Tue Dec 1** · **Claude:** Google Classroom import (backend). Read assignments and student submissions from the test class into the pipeline. Canvas and Brightspace (LTI 1.3) are after launch; they need school developer accounts.
+- [x] **Tue Dec 1** · **Claude:** Google Classroom import (backend). Read assignments and student submissions from the test class into the pipeline. Canvas and Brightspace (LTI 1.3) are after launch; they need school developer accounts.
 - [ ] **Tue Dec 1** · **Gemini:** Classroom connect screens (Pro). Pro teachers connect Google Classroom, pick a class and an assignment, and see imported work and results in the class view. Free accounts see an upgrade prompt.
 - [ ] **Wed Dec 2** · **Maalik:** Test Free vs Pro (30 min). On a Free account: upload until the cap blocks you and check the upgrade prompt; no mood card shown. On a Pro account: mood tracking and speed bumps appear, the extension uploads, the test Classroom connects. Report issues.
 - [ ] **Wed Dec 2** · **Gemini:** Checkout and manage-plan screens. Upgrade button to Stripe Checkout (or an invite-code box), success and cancel pages, and a manage-plan section in settings. Skip if the pilot is all-Pro.
