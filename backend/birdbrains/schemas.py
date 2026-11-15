@@ -451,3 +451,67 @@ class ApiSkippedWork(Api):
 class ApiClassroomImport(Api):
     imported: List[ApiImportedWork]
     skipped: List[ApiSkippedWork]
+
+
+# ------------------------------------------------------------ progress + class reports
+class ApiProgressPoint(Api):
+    date: str  # ISO 8601
+    strand: str
+    scoreFraction: float
+    masteryAfter: float
+    rootErrors: int
+    valence: Optional[float] = None  # Pro only
+
+
+class ApiErrorCodeCount(Api):
+    code: str
+    name: str
+    pillar: PillarEnum
+    count: int
+    students: int = 1  # class report: how many students made this error
+    lastSeen: str
+
+
+class ApiStrandLevel(Api):
+    strandName: str
+    mastery: float
+
+
+class ApiProgressReport(Api):
+    """One student's results over time (longitudinal)."""
+
+    studentId: str
+    studentName: str
+    course: CourseEnum
+    plan: PlanTier
+    uploads: int
+    firstUploadAt: Optional[str] = None
+    lastUploadAt: Optional[str] = None
+    averageMastery: Optional[float] = None
+    masteryByStrand: List[ApiStrandLevel]
+    timeline: List[ApiProgressPoint]
+    errorCodes: List[ApiErrorCodeCount]
+    recurringCodes: List[str]  # given on two or more uploads
+    pillarErrorDistribution: List[ApiPillarErrorShare]
+
+
+class ApiCohortStudent(Api):
+    studentId: str
+    studentName: str
+    uploads: int
+    lastUploadAt: Optional[str] = None
+    averageMastery: Optional[float] = None
+    topCode: Optional[str] = None
+    recurringCodes: List[str]
+    needsAttention: bool
+
+
+class ApiCohortReport(Api):
+    """A teacher's class at a glance (cohort)."""
+
+    googleCourseId: Optional[str] = None
+    students: List[ApiCohortStudent]
+    uploads: int
+    masteryByStrand: List[ApiStrandLevel]
+    errorCodes: List[ApiErrorCodeCount]
+    pillarErrorDistribution: List[ApiPillarErrorShare]

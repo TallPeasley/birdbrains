@@ -70,6 +70,8 @@ To exercise real Gemini from your machine, keep `BIRDBRAINS_BACKEND=local`, set
 | `GET /students/{id}/usage` | owner | Plan and uploads left this month (Free: 402 `FREE_LIMIT_REACHED` when 0) |
 | `POST /billing/checkout`, `/billing/portal`, `/billing/webhook` | signed-in; Stripe | Stripe Checkout and portal links; the signed webhook sets the plan (`billing.py`) |
 | `/classroom/*`, `GET /teacher/students` | Pro teacher | Google Classroom connect, courses, assignments, import handed-in photos (`classroom.py`) |
+| `GET /students/{id}/progress` | owner | Results over time: mastery per strand, timeline, recurring error codes (`reports.py`) |
+| `GET /teacher/report` | Pro teacher | Class overview across imported students |
 | `POST /internal/users/{uid}/plan` | `X-Batch-Token` | Set `free` / `pro` until billing exists |
 | `DELETE /students/{id}` | student, linked parent | Delete every record and photo for that student |
 | `POST /internal/schools`, `POST /internal/schools/{id}/classes` | `X-Batch-Token` | Create a school (and tenant) and a class with a join code |
@@ -106,11 +108,39 @@ These are defaults picked during the build; each is one constant or one file.
 - **EQAO forecast** (`projections.py`): level from the observation-weighted mean mastery against Ontario's 60/70/80 bands. The confidence figure is a heuristic, not a statistical interval.
 - **Low-confidence OCR**: below 0.60 overall confidence, Stage 2 is skipped and the student is asked to retake the photo.
 
+## Free and Pro pipelines
+
+| | Free | Pro |
+|---|---|---|
+| Stage 1 (read the handwriting) | `gemini-2.5-flash` | `gemini-2.5-flash` |
+| Stage 2 (grade) | `gemini-2.5-flash`, no thinking budget, no mood analysis | `gemini-2.5-pro`, 2048-token thinking budget, mood analysis |
+| Context cache | its own 24 h cache | its own 24 h cache |
+
+The plan is decided per upload from the student's effective plan. On Free the model is
+told to skip mood analysis and anything it returns for mood is discarded. Models are
+set with `BIRDBRAINS_STAGE1_MODEL`, `BIRDBRAINS_STAGE2_MODEL`, `BIRDBRAINS_STAGE2_FREE_MODEL`
+and `BIRDBRAINS_STAGE2_FREE_THINKING`.
+
+Every graded upload stores its token counts, time and estimated cost on the grading
+record (`cost`, never returned by the API) and prints one `pipeline_done` JSON line.
+Prices per million tokens are in `pipeline.DEFAULT_PRICES`; override with
+`BIRDBRAINS_PRICES_JSON` (`{"model": [input, cached input, output]}`) when Google changes them.
+
+## Accuracy, load and monitoring tools
+
+- `python -m ai_eval ...`: accuracy harness and gold-set format, see [`ai_eval/README.md`](ai_eval/README.md).
+- `python tools/load_test.py --url ... --token ... --student-id ...`: 30 uploads at once (E2E-02).
+- `./monitoring.sh <project> <email>`: uptime check, cost and speed metrics by plan, four alerts, a dashboard.
+- `birdbrains/math_lint.py`: generated worksheets with unbalanced brackets, broken LaTeX or
+  a wrong blank structure are rejected and retried the next night.
+- Launch checklist and runbook: [`docs/LAUNCH.md`](../docs/LAUNCH.md).
+
 ## Not verified yet
 
 Everything is tested against a stubbed Gemini client. Calls to real Vertex AI
 (structured output with these schemas, context-cache minimum size, the batch
-JSONL format) and `deploy.sh` have not been run against a real project.
+JSONL format, real token costs and speed), `deploy.sh` since Nov 13 and
+`monitoring.sh` have not been run against the real project.
 
 ## Turning on Stripe and Google Classroom
 

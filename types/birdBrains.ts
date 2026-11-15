@@ -206,3 +206,67 @@ export interface ClassroomImportResult {
   imported: { studentId: string; studentName: string; submissionId: string }[];
   skipped: { studentName: string; reason: string }[];
 }
+
+/** GET /students/{id}/progress: one student's results over time. */
+export interface ProgressPoint {
+  date: string;
+  strand: string;
+  scoreFraction: number;
+  masteryAfter: number;
+  rootErrors: number;
+  /** Mood trend, -1 to 1. Null on the Free plan. */
+  valence: number | null;
+}
+
+export interface ErrorCodeCount {
+  code: string;
+  name: string;
+  pillar: PillarCategory;
+  count: number;
+  /** Class report: how many students made this error. */
+  students: number;
+  lastSeen: string;
+}
+
+export interface StrandLevel {
+  strandName: string;
+  mastery: number;
+}
+
+export interface ProgressReport {
+  studentId: string;
+  studentName: string;
+  course: GradeCourse;
+  plan: PlanTier;
+  uploads: number;
+  firstUploadAt: string | null;
+  lastUploadAt: string | null;
+  averageMastery: number | null;
+  masteryByStrand: StrandLevel[];
+  timeline: ProgressPoint[];
+  errorCodes: ErrorCodeCount[];
+  /** Codes given on two or more uploads. */
+  recurringCodes: string[];
+  pillarErrorDistribution: { pillar: PillarCategory; percentageOfTotalErrors: number }[];
+}
+
+/** GET /teacher/report: a Pro teacher's class at a glance. */
+export interface CohortStudent {
+  studentId: string;
+  studentName: string;
+  uploads: number;
+  lastUploadAt: string | null;
+  averageMastery: number | null;
+  topCode: string | null;
+  recurringCodes: string[];
+  needsAttention: boolean;
+}
+
+export interface CohortReport {
+  googleCourseId: string | null;
+  students: CohortStudent[];
+  uploads: number;
+  masteryByStrand: StrandLevel[];
+  errorCodes: ErrorCodeCount[];
+  pillarErrorDistribution: { pillar: PillarCategory; percentageOfTotalErrors: number }[];
+}

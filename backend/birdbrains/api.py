@@ -2,6 +2,7 @@
 
 import hashlib
 import hmac
+import json
 import io
 import logging
 import os
@@ -23,13 +24,15 @@ from .classroom import Classroom, ClassroomError
 from .auth import Authenticator
 from .batch_engine import BatchEngine, FlaggedGrading, is_flagged
 from .privacy import CloudDlpDetector, PhotoScrubber
-from .pipeline import ImageRef, PipelineEngine, SubmissionContext, configure_tracing
+from .pipeline import ImageRef, Meter, PipelineEngine, SubmissionContext, configure_tracing
 from .projections import parent_summary, to_api_grading, to_api_worksheet
 from .schemas import (
     STUDENT_ID_PATTERN,
     ApiGrading,
     ApiClass,
     ApiClassroomImport,
+    ApiCohortReport,
+    ApiProgressReport,
     ApiRosterStudent,
     ClassroomImportRequest,
     ApiUploadTicket,
@@ -532,6 +535,9 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
             d.store.put("submissions", submission_id, record)
 
         ctx = SubmissionContext(submission_id, CourseEnum(record["course"]), record["unitTopic"])
+        student_id = record["studentId"]
+        plan = effective_plan(student_id)
+        meter = Meter()
         try:
             cached = d.store.get("transcriptions", submission_id)
             if cached:
@@ -542,14 +548,14 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
                     ImageRef(f["uri"], f["mimeType"], d.storage.read_bytes(f["path"]) if d.inline_images else None)
                     for f in record["files"]
                 ]
-                stage1 = d.pipeline.run_stage1(ctx, images)
+                stage1 = d.pipeline.run_stage1(ctx, images, meter=meter)
                 d.store.put("transcriptions", submission_id, stage1.model_dump(mode="json"))
             if stage1.requires_hitl:
                 set_status("NEEDS_RETAKE")
                 return {"submission": submission_payload(record), "grading": None}
 
             set_status("GRADING")
-            stage2 = d.pipeline.run_stage2(ctx, stage1)
+            stage2 = d.pipeline.run_stage2(ctx, stage1, plan=plan, meter=meter)
         except HTTPException:
             raise
         except Exception:
@@ -557,8 +563,6 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
             set_status("FAILED")
             raise HTTPException(502, "The diagnostic could not be completed. Please try again.")
 
-        student_id = record["studentId"]
-        plan = effective_plan(student_id)
         strand = strand_for(ctx.course, ctx.unit_topic)
         stored_ledger = d.store.get("ledgers", student_id)
         before = StudentLedger.model_validate(stored_ledger) if stored_ledger else StudentLedger(student_id=student_id)
@@ -589,9 +593,15 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
                                 else "QUEUED" if plan == "pro" or d.free_worksheets else "PRO_ONLY"),
             "worksheetAttempts": 0,
             "tenantId": tenant_of(record),
+            "cost": meter.summary(),  # internal: never returned by the API
         }
         d.store.put("gradings", grading_id, grading)
         set_status("GRADED", gradingId=grading_id)
+        # One JSON line per graded upload on stdout, which Cloud Run stores as a
+        # structured log entry. The cost and speed charts and alerts are built from
+        # it (backend/monitoring.sh). Ids only, never names.
+        print(json.dumps({"severity": "INFO", "event": "pipeline_done", "plan": plan, "submissionId": submission_id,
+                          "usd": grading["cost"]["usd"], "seconds": grading["cost"]["seconds"]}), flush=True)
         return {"submission": submission_payload(record), "grading": to_api_grading(grading)}
 
     # ------------------------------------------------------- student dashboard
@@ -822,6 +832,35 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         if user["role"] != "teacher":
             raise HTTPException(403, "Only teacher accounts have a class list")
         return sorted(d.store.query("rosters", "teacherUid", user["uid"]), key=lambda r: r["name"])
+
+    # ------------------------------------------------------------------ reports
+    def build_progress(student_id: str):
+        from .reports import progress_report
+
+        stored = d.store.get("ledgers", student_id)
+        return progress_report(student_profile(student_id), effective_plan(student_id),
+                               StudentLedger.model_validate(stored) if stored else None,
+                               d.store.query("gradings", "studentId", student_id))
+
+    @app.get("/students/{student_id}/progress", response_model=ApiProgressReport)
+    def student_progress(student_id: str, user: User):
+        """Results over time: mastery per strand, every graded upload, and which
+        error codes keep coming back."""
+        require_student_access(user, student_id)
+        return build_progress(student_id)
+
+    @app.get("/teacher/report", response_model=ApiCohortReport)
+    def teacher_report(user: User, googleCourseId: Optional[str] = None):
+        """The teacher's class at a glance (Pro). Optionally one Classroom course."""
+        from .reports import cohort_report
+
+        if user["role"] != "teacher":
+            raise HTTPException(403, "Only teacher accounts have a class report")
+        if user.get("plan") != "pro":
+            raise HTTPException(402, "PRO_ONLY")
+        roster = [r for r in d.store.query("rosters", "teacherUid", user["uid"])
+                  if googleCourseId is None or r.get("googleCourseId") == googleCourseId]
+        return cohort_report([build_progress(r["studentId"]) for r in roster], googleCourseId)
 
     # ------------------------------------------------- nightly batch (internal)
     def require_batch_token(x_batch_token: Annotated[Optional[str], Header()] = None) -> None:
