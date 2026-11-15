@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Monitoring for the BirdBrains API: uptime check, cost and speed metrics, alerts
-# and a dashboard. Run after deploy.sh, in Cloud Shell:
+# Monitoring for the BirdBrains API: uptime check, cost and speed metrics, alerts,
+# a monthly budget alert and a dashboard. Run after deploy.sh, in Cloud Shell:
 #
 #   ./monitoring.sh <gcp-project-id> <alert-email>
 #
@@ -112,6 +112,23 @@ policy "BirdBrains: model spend is high" '{
                       "groupByFields": ["metric.label.plan"]}],
     "comparison": "COMPARISON_GT", "thresholdValue": '"$HOURLY_USD_ALERT"', "duration": "0s"}}'
 
+echo "== Monthly budget alert (total spend on the project)"
+BUDGET="${MONTHLY_BUDGET:-25}"   # in the billing account's currency
+BILLING="$(gcloud billing projects describe "$PROJECT" --format='value(billingAccountName)' 2>/dev/null)"
+BILLING="${BILLING#billingAccounts/}"
+if [ -z "$BILLING" ]; then
+  warn "budget alert: no billing account found"
+elif gcloud billing budgets list --billing-account="$BILLING" --format='value(displayName)' 2>/dev/null | grep -qx "BirdBrains monthly"; then
+  echo "   budget already exists"
+else
+  gcloud services enable billingbudgets.googleapis.com >/dev/null 2>&1
+  gcloud billing budgets create --billing-account="$BILLING" --display-name="BirdBrains monthly" \
+    --budget-amount="$BUDGET" --filter-projects="projects/$PROJECT" \
+    --threshold-rule=percent=0.5 --threshold-rule=percent=0.9 --threshold-rule=percent=1.0 >/dev/null \
+    && echo "   budget of $BUDGET per month created (emails the billing admins at 50, 90 and 100%)" \
+    || warn "budget alert (create it by hand: Billing > Budgets & alerts)"
+fi
+
 echo "== Dashboard"
 chart() {  # title, metric filter, aligner, reducer, group-by JSON, period
   cat <<JSON
@@ -143,4 +160,3 @@ fi
 echo
 echo "Done. Dashboard: https://console.cloud.google.com/monitoring/dashboards?project=$PROJECT"
 echo "Alerts go to $EMAIL. Google sends that address a confirmation link the first time."
-echo "Total spend is covered separately by the billing budget alert (Billing > Budgets)."
