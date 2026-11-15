@@ -5,6 +5,8 @@ import type {
   ClassroomImportResult,
   PlanTier,
   RosterStudent,
+  ProgressReport,
+  CohortReport,
   ApiUploadTicket,
   ApiUsage,
   ParentProjectionSummary,
@@ -111,6 +113,11 @@ export const api = {
   classroomImport: (t: string, courseId: string, workId: string, body: { course: string; unitTopic: string }) =>
     request<ClassroomImportResult>(`/classroom/courses/${courseId}/coursework/${workId}/import`, t, json(body)),
   teacherStudents: (t: string) => request<RosterStudent[]>('/teacher/students', t),
+  /** Results over time for one student (student, linked parent or their teacher). */
+  progress: (t: string, studentId: string) => request<ProgressReport>(`/students/${studentId}/progress`, t),
+  /** Class overview for a Pro teacher. 402 PRO_ONLY on Free. */
+  teacherReport: (t: string, googleCourseId?: string) =>
+    request<CohortReport>(`/teacher/report${googleCourseId ? `?googleCourseId=${encodeURIComponent(googleCourseId)}` : ''}`, t),
   /** Plan and uploads left this month. A 402 FREE_LIMIT_REACHED on upload means remaining hit 0. */
   usage: (t: string, studentId: string) => request<ApiUsage>(`/students/${studentId}/usage`, t),
   updateProfile: (t: string, name: string) => request<UserProfile>('/me', t, { ...json({ name }), method: 'PATCH' }),

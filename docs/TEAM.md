@@ -12,11 +12,11 @@ Gemini (Antigravity) picks up its `Gemini:` tasks from `docs/PLAN.md`.
 |---|---|---|
 | **Gemini** (UI, via Google Antigravity) | `app/`, `components/`, `extension/` (Chrome extension), page styles, `public/` | `backend/`, `lib/api.ts`, `types/birdBrains.ts` |
 | **Claude** (API, infrastructure, privacy) | `backend/` except the AI pipeline files below, `backend/deploy.sh`, `lib/api.ts`, `lib/session.tsx`, `types/birdBrains.ts`, `docs/TEAM.md`, `docs/PLAN.md` (except ticking your own task) | UI layout and visual design |
-| **Freelancer** (AI pipeline) | `backend/birdbrains/pipeline.py`, `taxonomy.py`, `batch_engine.py`, `backend/eval/` (accuracy harness, gold set) | API routes, storage, auth |
+| **Freelancer** (AI pipeline) | `backend/birdbrains/pipeline.py`, `taxonomy.py`, `batch_engine.py`, `backend/ai_eval/` (accuracy harness, gold set) | API routes, storage, auth |
 | **Maalik** | Product decisions, merging Gemini and freelancer PRs, GCP/Netlify/Firebase consoles, test photos and grading reviews | |
 
-Until the freelancer is confirmed (decision due **Tue Nov 17**), Claude covers
-the pipeline files too.
+Since Nov 15 Claude does the Freelancer tasks (Maalik's call, ahead of the Nov 17
+decision). If a freelancer joins later, they take over the pipeline files from there.
 
 Shared files, changed only with the owner's review:
 - `types/birdBrains.ts` is the contract between UI and API. Gemini may ask for
@@ -167,6 +167,25 @@ Teachers need Pro; everyone they import is treated as Pro.
 
 There is no teacher dashboard yet: `/teacher` is a new page to build.
 
+### Reports (progress over time, class overview)
+
+- `GET /students/{id}/progress` (`api.progress`) → `ProgressReport`, for the student, a linked
+  parent or the teacher who imported them. Works on Free and Pro.
+  `{studentId, studentName, course, plan, uploads, firstUploadAt, lastUploadAt, averageMastery,
+  masteryByStrand: [{strandName, mastery}], timeline: [{date, strand, scoreFraction, masteryAfter,
+  rootErrors, valence}], errorCodes: [{code, name, pillar, count, students, lastSeen}],
+  recurringCodes: ["PRC-03"], pillarErrorDistribution}`.
+  `timeline` has one point per graded upload, oldest first: plot `masteryAfter` (0 to 1) per strand.
+  `valence` (-1 to 1, mood trend) is `null` on Free: show the locked Pro card instead.
+  `recurringCodes` are codes given on two or more uploads. With no uploads yet, `uploads` is 0,
+  the lists are empty and `averageMastery` is `null`.
+- `GET /teacher/report?googleCourseId=` (`api.teacherReport`) → `CohortReport`, Pro teachers only
+  (403 for other roles, 402 `PRO_ONLY` on Free). Leave out `googleCourseId` for all classes.
+  `{students: [{studentId, studentName, uploads, lastUploadAt, averageMastery, topCode,
+  recurringCodes, needsAttention}], uploads, masteryByStrand, errorCodes, pillarErrorDistribution}`.
+  `students` lists those needing attention first (average mastery under 0.5, or a recurring code).
+  In `errorCodes`, `students` is how many students made that error and `count` how many times.
+
 ### Chrome extension upload
 
 1. The popup (signed in with Firebase) calls `POST /uploads` and gets `uploadUrl`.
@@ -312,7 +331,7 @@ These are real responses from the local backend with the fake model (section 5).
 | done | Extension upload link + status (section "Chrome extension upload") | Chrome extension (Mon Nov 30) |
 | done | Worksheet PDF: `api.worksheetPdf` | PDF buttons (Tue Dec 8) |
 | done | Privacy policy and terms text: `docs/legal/` | Legal pages + consent (Tue Dec 8) |
-| Wed Dec 30 | Reports (class overview, progress over time) | Report screens |
+| done | Reports: `api.progress`, `api.teacherReport` (section "Reports") | Report screens (Wed Dec 30) |
 
 Build those screens against mock data first if the API is not there yet.
 

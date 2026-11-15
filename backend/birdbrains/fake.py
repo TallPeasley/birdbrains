@@ -6,7 +6,7 @@ from __future__ import annotations
 from typing import Optional, Sequence
 
 from .batch_engine import FlaggedGrading
-from .pipeline import ImageRef, SubmissionContext
+from .pipeline import ImageRef, Meter, SubmissionContext
 from .schemas import (
     Stage1TranscriptionOutput,
     Stage2GradingAndAffectOutput,
@@ -23,7 +23,12 @@ _LINES = [
 
 
 class FakePipeline:
-    def run_stage1(self, ctx: SubmissionContext, images: Sequence[ImageRef]) -> Stage1TranscriptionOutput:
+    def run_stage1(self, ctx: SubmissionContext, images: Sequence[ImageRef],
+                   meter: Optional[Meter] = None) -> Stage1TranscriptionOutput:
+        import time
+
+        if meter is not None:
+            meter.record("stage1", "fake", time.monotonic())
         n = len(_LINES)
         return Stage1TranscriptionOutput.model_validate(
             {
@@ -43,7 +48,13 @@ class FakePipeline:
             }
         )
 
-    def run_stage2(self, ctx: SubmissionContext, stage1: Stage1TranscriptionOutput) -> Stage2GradingAndAffectOutput:
+    def run_stage2(self, ctx: SubmissionContext, stage1: Stage1TranscriptionOutput, plan: str = "pro",
+                   meter: Optional[Meter] = None) -> Stage2GradingAndAffectOutput:
+        import time
+
+        if meter is not None:
+            meter.record("stage2", "fake", time.monotonic())
+        free = plan == "free"
         def step(n, ok, cf, pillar, code, why):
             return {
                 "step_number": n,
@@ -85,14 +96,14 @@ class FakePipeline:
                         "severity": "LOW",
                     },
                 ],
-                "sentiment_entities": [
+                "sentiment_entities": [] if free else [
                     {"entity_name": "completing the square", "valence_score": 0.4,
                      "friction_intensity": 0.3, "affect_state": "PRODUCTIVE_STRUGGLE"},
                     {"entity_name": "distributing a leading coefficient", "valence_score": -0.6,
                      "friction_intensity": 0.8, "affect_state": "HIGH_FRICTION_FRUSTRATION"},
                 ],
-                "aggregate_valence": -0.3,
-                "aggregate_friction": 0.6,
+                "aggregate_valence": 0.0 if free else -0.3,
+                "aggregate_friction": 0.0 if free else 0.6,
                 "recommended_scaffolding_mode": "STANDARD_PROGRESSIVE_FADE",
                 "pillar_scores": [
                     {"pillar": "CON", "max_score": 3, "earned_score": 3,

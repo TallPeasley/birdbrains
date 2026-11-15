@@ -101,14 +101,14 @@ def test_other_families_cannot_see_data(client, family):
 
 def test_unreadable_page_asks_for_retake(client, family, deps):
     real = deps.pipeline.run_stage1
-    deps.pipeline.run_stage1 = lambda ctx, images: real(ctx, images).model_copy(update={"requires_hitl": True})
+    deps.pipeline.run_stage1 = lambda ctx, images, meter=None: real(ctx, images).model_copy(update={"requires_hitl": True})
     sub = upload(client, family["studentId"]).json()
     out = client.post(f"/submissions/{sub['submissionId']}/process", headers=auth("alex")).json()
     assert out["grading"] is None and out["submission"]["status"] == "NEEDS_RETAKE"
 
 
 def test_pipeline_failure_is_reported(client, family, deps):
-    def boom(ctx, stage1):
+    def boom(ctx, stage1, **kw):
         raise RuntimeError("vertex down")
 
     deps.pipeline.run_stage2 = boom

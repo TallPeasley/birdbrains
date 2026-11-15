@@ -25,7 +25,7 @@ class StubClient:
 
     def _generate(self, model, contents, config):
         self.calls.append((model, contents, config))
-        body = S1 if model == P.STAGE1_MODEL else S2
+        body = S1 if config.response_schema.__name__.startswith("Stage1") else S2
         return SimpleNamespace(text=body.model_copy(update={"submission_id": "model-made-this-up"}).model_dump_json())
 
     def _cache(self, model, config):
