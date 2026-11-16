@@ -72,6 +72,7 @@ To exercise real Gemini from your machine, keep `BIRDBRAINS_BACKEND=local`, set
 | `/classroom/*`, `GET /teacher/students` | Pro teacher | Google Classroom connect, courses, assignments, import handed-in photos (`classroom.py`) |
 | `GET /students/{id}/progress` | owner | Results over time: mastery per strand, timeline, recurring error codes (`reports.py`) |
 | `GET /teacher/report` | Pro teacher | Class overview across imported students |
+| `GET /internal/stats?days=1` | `X-Batch-Token` | Counts for the daily pilot summary (no names or ids) |
 | `POST /internal/users/{uid}/plan` | `X-Batch-Token` | Set `free` / `pro` until billing exists |
 | `DELETE /students/{id}` | student, linked parent | Delete every record and photo for that student |
 | `POST /internal/schools`, `POST /internal/schools/{id}/classes` | `X-Batch-Token` | Create a school (and tenant) and a class with a join code |
@@ -129,11 +130,19 @@ Prices per million tokens are in `pipeline.DEFAULT_PRICES`; override with
 ## Accuracy, load and monitoring tools
 
 - `python -m ai_eval ...`: accuracy harness and gold-set format, see [`ai_eval/README.md`](ai_eval/README.md).
+- `python tools/smoke_test.py --url ... --firebase-key ... --batch-token ...`: the week 1 exit check and the Free vs Pro test as a script (25 checks, makes and deletes its own accounts; `--dev` for a local server).
+- `python tools/pilot_summary.py --url ... --batch-token ...`: daily pilot summary from `GET /internal/stats`.
 - `python tools/load_test.py --url ... --token ... --student-id ...`: 30 uploads at once (E2E-02).
 - `./monitoring.sh <project> <email>`: uptime check, cost and speed metrics by plan, four alerts, a dashboard.
 - `birdbrains/math_lint.py`: generated worksheets with unbalanced brackets, broken LaTeX or
   a wrong blank structure are rejected and retried the next night.
 - Launch checklist and runbook: [`docs/LAUNCH.md`](../docs/LAUNCH.md).
+
+## Known gap
+
+The Free monthly cap is checked before each upload without a lock, so uploads sent at
+the same instant can slip a few past the cap (seen in the load test: 12 at once on a
+cap of 10). One student uploading by hand cannot trigger it.
 
 ## Not verified yet
 

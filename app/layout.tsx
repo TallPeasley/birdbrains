@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
+import 'katex/dist/katex.min.css'; // fonts for MathText, served from our own site
 import './globals.css';
 import { RoleProvider } from '@/lib/roleContext';
 import { SessionProvider } from '@/lib/session';

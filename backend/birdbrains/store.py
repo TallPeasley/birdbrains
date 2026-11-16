@@ -20,6 +20,9 @@ class Store(Protocol):
     def query_contains(self, collection: str, field: str, value: Any) -> list[dict]:
         """Documents whose list ``field`` contains ``value``."""
 
+    def query_since(self, collection: str, field: str, value: str) -> list[dict]:
+        """Documents whose ISO-8601 time ``field`` is at or after ``value``."""
+
     def delete(self, collection: str, doc_id: str) -> None: ...
 
 
@@ -39,6 +42,9 @@ class MemoryStore:
 
     def query_contains(self, collection: str, field: str, value: Any) -> list[dict]:
         return [copy.deepcopy(d) for d in self._data.get(collection, {}).values() if value in (d.get(field) or [])]
+
+    def query_since(self, collection: str, field: str, value: str) -> list[dict]:
+        return [copy.deepcopy(d) for d in self._data.get(collection, {}).values() if (d.get(field) or "") >= value]
 
     def delete(self, collection: str, doc_id: str) -> None:
         self._data.get(collection, {}).pop(doc_id, None)
@@ -69,6 +75,12 @@ class FirestoreStore:
         from google.cloud.firestore_v1.base_query import FieldFilter
 
         q = self._db.collection(collection).where(filter=FieldFilter(field, "array_contains", value))
+        return [s.to_dict() for s in q.stream()]
+
+    def query_since(self, collection: str, field: str, value: str) -> list[dict]:
+        from google.cloud.firestore_v1.base_query import FieldFilter
+
+        q = self._db.collection(collection).where(filter=FieldFilter(field, ">=", value))
         return [s.to_dict() for s in q.stream()]
 
     def delete(self, collection: str, doc_id: str) -> None:
