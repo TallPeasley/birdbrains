@@ -5,8 +5,8 @@ import { BRAND_STAGE } from '@/lib/aero/stage';
 export interface AeroLogoProps {
   brand: AeroBrandKey;
   /**
-   * kinetic: Series A, the 2.6px monoline mark for navigation and favicons (default).
-   * isometric: Series B, the 30° axonometric sculpture for hero graphics and empty states.
+   * kinetic: Series A, the 2.6px monoline mark (kept in the kit, no longer used).
+   * isometric: Series B, the 30° axonometric sculpture. Used everywhere (default).
    */
   variant?: AeroLogoVariant;
   /** Width and height in px. Leave unset to let the surrounding CSS size it (28px by default). */
@@ -20,7 +20,7 @@ export interface AeroLogoProps {
  * The locked Aero master logos (48x48 viewBox). The vector coordinates come from aero-kit/brands.json
  * through lib/aero/brands.ts and are never redrawn here.
  */
-export default function AeroLogo({ brand, variant = 'kinetic', size, title, className }: AeroLogoProps) {
+export default function AeroLogo({ brand, variant = 'isometric', size, title, className }: AeroLogoProps) {
   const art = aeroLogo(brand, variant, BRAND_STAGE);
   return (
     <svg
