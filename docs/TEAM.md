@@ -11,12 +11,10 @@ Gemini (Antigravity) picks up its `Gemini:` tasks from `docs/PLAN.md`.
 | Owner | Owns | Does not touch |
 |---|---|---|
 | **Gemini** (UI, via Google Antigravity) | `app/`, `components/`, `extension/` (Chrome extension), page styles, `public/` | `backend/`, `lib/api.ts`, `types/birdBrains.ts` |
-| **Claude** (API, infrastructure, privacy) | `backend/` except the AI pipeline files below, `backend/deploy.sh`, `lib/api.ts`, `lib/session.tsx`, `types/birdBrains.ts`, `docs/TEAM.md`, `docs/PLAN.md` (except ticking your own task) | UI layout and visual design |
-| **Freelancer** (AI pipeline) | `backend/birdbrains/pipeline.py`, `taxonomy.py`, `batch_engine.py`, `backend/ai_eval/` (accuracy harness, gold set) | API routes, storage, auth |
-| **Maalik** | Product decisions, merging Gemini and freelancer PRs, GCP/Firebase consoles, test photos and grading reviews | |
+| **Claude** (API, AI pipeline, infrastructure, privacy) | all of `backend/` including the AI pipeline (`pipeline.py`, `taxonomy.py`, `batch_engine.py`, `ai_eval/`), `backend/deploy.sh`, `lib/api.ts`, `lib/session.tsx`, `types/birdBrains.ts`, `docs/TEAM.md`, `docs/PLAN.md` (except ticking your own task) | UI layout and visual design |
+| **Maalik** | Product decisions, GCP/Firebase consoles, test photos and grading reviews | |
 
-Since Nov 15 Claude does the Freelancer tasks (Maalik's call, ahead of the Nov 17
-decision). If a freelancer joins later, they take over the pipeline files from there.
+There is no freelancer (Maalik, Nov 16). Claude owns the AI pipeline, prompts and accuracy work.
 
 Shared files, changed only with the owner's review:
 - `types/birdBrains.ts` is the contract between UI and API. Gemini may ask for
@@ -31,7 +29,7 @@ Shared files, changed only with the owner's review:
 
 - `main` is what ships. Nobody pushes to it directly. Claude merges its own PRs once the build and tests pass (Maalik, Nov 13), and **merges Gemini's PRs once they pass the review below** (Maalik, Nov 15). Anything that fails the review stays open with a comment saying what to fix.
 - **Gemini pushes only to `gemini/*` branches** (e.g. `gemini/upload-states`).
-  Claude uses `claude/*`, the freelancer `luca/*`.
+  Claude uses `claude/*`.
 - One task per PR, titled like the TickTick task. Say in the description which
   task it closes and paste a screenshot for UI changes.
 - Before asking for a merge: `npm run build` passes (static export), and for

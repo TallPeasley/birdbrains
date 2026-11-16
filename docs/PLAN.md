@@ -13,7 +13,7 @@ Launch: **Mon Dec 14, 2026**. Who owns which folders, the branch rules and the A
 5. Before opening the PR: `npm run build` passes and demo mode (no `NEXT_PUBLIC_API_URL`) still works.
 6. Dates are targets. You may start a later Gemini task early when its API is ready (TEAM.md section 8 lists which endpoints are done).
 
-Counts: 65 tasks. Maalik 28, Claude 24, Gemini 13. On Nov 15 Maalik gave the 10 Freelancer tasks (AI pipeline and accuracy) to Claude. Human review (a teacher review queue) is out for launch.
+Counts: 65 tasks. Maalik 28, Claude 24, Gemini 13. There is no freelancer (Maalik, Nov 16): the 10 AI pipeline and accuracy tasks are Claude's. Human review (a teacher review queue) is out for launch.
 
 ## Week 1 (Nov 13 to 19): Set up the team, make what's built real
 
@@ -29,7 +29,7 @@ Counts: 65 tasks. Maalik 28, Claude 24, Gemini 13. On Nov 15 Maalik gave the 10 
 - [ ] **Mon Nov 16** · **Maalik:** Decide: Google Classroom before launch? Classroom is Pro-only in the pricing brief. Its API scopes need Google OAuth verification, which can take weeks. If yes, create the OAuth consent screen in birdbrain-514606 now (Claude can walk you through it). If no, the Classroom tasks move after launch.
 - [ ] **Mon Nov 16** · **Claude:** Tune blur cutoffs + duplicate upload check. Use Maalik's 12 photos to set the sharpness and size limits (spec: Laplacian variance at least 100, at least 800x600) on server and phone. Add the SHA-256 duplicate check (UT-06, HTTP 409). Run UT-01 to UT-07.
 - [ ] **Tue Nov 17** · **Maalik:** Review and merge week-1 PRs. Claude's backend PR and Gemini's upload-states PR. Merge Claude's first, then rerun backend/deploy.sh in Cloud Shell (it now enables the DLP API). *(Nov 15: Claude merged Gemini's four open PRs after checking them. Only the deploy rerun is left.)*
-- [ ] **Tue Nov 17** · **Maalik:** Confirm the freelancer: yes or no. Tell Claude whether the freelancer (Gemini's manual names Luca Trinchini) is joining. If yes: send him docs/TEAM.md and the Drive manual, and give him repo access. If no: every 'Freelancer:' task goes to Claude on the same date. No other dates change.
+- [x] **Tue Nov 17** · **Maalik:** Confirm the freelancer: yes or no. Tell Claude whether the freelancer (Gemini's manual names Luca Trinchini) is joining. If yes: send him docs/TEAM.md and the Drive manual, and give him repo access. If no: every 'Freelancer:' task goes to Claude on the same date. No other dates change. *(Decided Nov 16: no freelancer. Claude does all the AI pipeline work.)*
 - [x] **Tue Nov 17** · **Claude:** Privacy: hide names before storage and Gemini. Spec 3.2: crop or redact the top 12% header and run Cloud DLP redaction before saving to Cloud Storage; 15-minute signed URLs; 90-day lifecycle on raw photos; check no names reach Vertex logs or traces.
 - [ ] **Wed Nov 18** · **Maalik:** Decide how people get Pro, the price and the Free cap. Billing isn't in the pricing brief. Choose: (a) paid Pro at launch through Stripe subscriptions, (b) Pro by invite code for the pilot, payments later, or (c) everyone on Pro free during the pilot. Also set the Free monthly upload cap (Freelancer's Nov 20 cost numbers help) and the Pro price. Tell Claude.
 - [x] **Wed Nov 18** · **Claude:** Schools, classes and data deletion (API). Spec 5.3 and 3.3: tenants, schools, classrooms (grades 3 to 12) in Firestore, tenant checks on every query, delete-my-data endpoint, class join codes. Endpoints added to docs/TEAM.md for Gemini.
@@ -45,11 +45,11 @@ Counts: 65 tasks. Maalik 28, Claude 24, Gemini 13. On Nov 15 Maalik gave the 10 
 - [ ] **Sun Nov 22** · **Maalik:** Create a Stripe account (only if paying at launch). Only if you chose paid Pro: create a Stripe account in test mode, add the Pro product and monthly price, and give Claude test keys through Cloud Shell secrets (not in chat). Skip otherwise.
 - [x] **Mon Nov 23** · **Claude:** Plans and monthly limits in the backend. Per the pricing brief: a plan on every account (Free or Pro), a monthly upload counter with a hard Free cap (number from Maalik's Nov 18 decision), clear 'limit reached' and 'Pro only' errors, and feature gates: Free gets Flash transcription, 4-pillar error codes and standard feedback; Pro adds mood tracking (valence and friction), speed bumps and de-escalation, gemini-2.5-pro with thinking, nightly worksheets, LMS and analytics. Mood data is not stored for Free accounts. Contract in docs/TEAM.md. (Human review queue is out for launch.)
 - [x] **Mon Nov 23** · **Claude:** Build the accuracy test harness. ai_eval: runs the gold set through the live pipeline and reports schema pass rate, pillar F1, error-code F1, cascading-error accuracy and P95 latency, saved as a report. Done Nov 15: `backend/ai_eval/`, with 22 typed practice samples.
-- [ ] **Tue Nov 24** · **Maalik:** Review 5 misgraded samples (30 min). The freelancer (or Claude) sends the cases the AI got wrong. Say which grade is right; these become exemplars.
+- [ ] **Tue Nov 24** · **Maalik:** Review 5 misgraded samples (30 min). Claude sends the cases the AI got wrong. Say which grade is right; these become exemplars.
 - [ ] **Tue Nov 24** · **Claude:** Prompt tuning round 1 (target 85% on 25). Tune Stage 1 and 2 prompts and few-shot exemplars until the 25-sample gold set reaches 85% (Phase 2 exit gate).
 - [x] **Wed Nov 25** · **Gemini:** Plans, usage and upgrade screens. Pricing page (Free vs Pro from the pricing brief), plan badge, uploads-left meter, an upgrade prompt when the Free cap is hit, and locked Pro cards (mood tracking, worksheets) with an upgrade button on Free dashboards. Built against Claude's Nov 23 contract.
 - [ ] **Wed Nov 25** · **Claude:** Speed: diagnostic under 14 s. E2E-01: P95 from upload to diagnostic under 14 s. Profile Stage 1 and 2; Claude helps move work onto Cloud Tasks if needed.
-- [ ] **Thu Nov 26** · **Maalik:** Week 2 exit check: accuracy + merges. Read the accuracy report; go or no-go on 85% for the 25 samples. Merge the week-2 PRs (freelancer/Claude pipeline, Gemini screens).
+- [ ] **Thu Nov 26** · **Maalik:** Week 2 exit check: accuracy + merges. Read the accuracy report; go or no-go on 85% for the 25 samples. Claude merges the week-2 PRs as they pass.
 
 ## Week 3 (Nov 27 to Dec 3): Upgrades, extension and Classroom (Pro)
 
@@ -69,7 +69,7 @@ Counts: 65 tasks. Maalik 28, Claude 24, Gemini 13. On Nov 15 Maalik gave the 10 
 
 - [ ] **Fri Dec 4** · **Gemini:** Worksheet viewer and print layout. On-screen worksheet for students (3 stages, answer boxes) and an HTML print template Claude's PDF job will render.
 - [ ] **Fri Dec 4** · **Claude:** Run the nightly worksheet batch for real (Pro). Vertex Batch API job in Montréal for flagged Pro students only, 3 stages: Diagnostic Mirror, Faded Scaffolding, Independent Transfer, with KaTeX syntax checks on the output. *(Nov 15: the syntax and structure checks are built; the real batch run is left.)*
-- [ ] **Sat Dec 5** · **Maalik:** Review 5 generated worksheets. Read 5 real worksheets as a tutor: right level, right error, good scaffolding? Note fixes for the freelancer (or Claude).
+- [ ] **Sat Dec 5** · **Maalik:** Review 5 generated worksheets. Read 5 real worksheets as a tutor: right level, right error, good scaffolding? Note fixes for Claude.
 - [ ] **Sun Dec 6** · **Maalik:** Gold set: 20 more (60 total). Fill the gaps the accuracy report shows (weak codes or grades).
 - [x] **Mon Dec 7** · **Claude:** PDF worksheets job. WeasyPrint on Cloud Run Jobs renders Gemini's print template to PDF each night; download links in the API (Phase 4.3).
 - [ ] **Tue Dec 8** · **Maalik:** Gold set: last 20 (80 total). Finish the 80-sample set across grades 3 to 12 (Phase 5.1).
