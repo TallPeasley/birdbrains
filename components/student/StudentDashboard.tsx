@@ -1,17 +1,23 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { CalendarClock, UploadCloud } from 'lucide-react';
+import Link from 'next/link';
+import { CalendarClock, Sparkles, UploadCloud } from 'lucide-react';
 import { useRole } from '@/lib/roleContext';
 import AffectCard from '@/components/student/AffectCard';
 import PillarCards from '@/components/student/PillarCards';
 import StepDiagnostics from '@/components/student/StepDiagnostics';
 import WorksheetViewer from '@/components/student/WorksheetViewer';
 import { LoadError, Loading, NoWorkNotice, useDashboardGate } from '@/components/DashboardStates';
+import {
+  DEMO_PRO_USAGE,
+  LockedProCard,
+  UploadsLeftMeter,
+} from '@/components/PlanUsageBanner';
 import { api, ApiError } from '@/lib/api';
 import { demoPersonas, gradingOutput, worksheet as demoWorksheet } from '@/lib/mockData';
 import { useSession } from '@/lib/session';
-import type { Stage2GradingAndAffectOutput, WS_3STAGE_V1 } from '@/types/birdBrains';
+import type { ApiUsage, Stage2GradingAndAffectOutput, WS_3STAGE_V1 } from '@/types/birdBrains';
 
 const WORKSHEET_NOTES: Record<string, string> = {
   WORKSHEET_QUEUED: 'Your practice worksheet is built overnight. Check back tomorrow morning.',
@@ -22,9 +28,16 @@ const WORKSHEET_NOTES: Record<string, string> = {
 
 type State =
   | { kind: 'loading' }
-  | { kind: 'empty' }
+  | { kind: 'empty'; usage: ApiUsage | null }
   | { kind: 'error'; message: string }
-  | { kind: 'data'; grading: Stage2GradingAndAffectOutput; worksheet: WS_3STAGE_V1 | null; worksheetNote: string };
+  | {
+      kind: 'data';
+      grading: Stage2GradingAndAffectOutput;
+      worksheet: WS_3STAGE_V1 | null;
+      worksheetNote: string;
+      worksheetProOnly: boolean;
+      usage: ApiUsage | null;
+    };
 
 export default function StudentDashboard() {
   const { live, profile, activeStudentId, getToken, dataVersion } = useSession();
@@ -38,20 +51,38 @@ export default function StudentDashboard() {
     setState({ kind: 'loading' });
     (async () => {
       const token = await getToken();
-      const grading = await api.latestGrading(token, activeStudentId);
+      const usagePromise = api.usage(token, activeStudentId).catch(() => null);
+      let grading: Stage2GradingAndAffectOutput;
+      try {
+        grading = await api.latestGrading(token, activeStudentId);
+      } catch (err) {
+        if (err instanceof ApiError && err.status === 404) {
+          const usage = await usagePromise;
+          if (!cancelled) setState({ kind: 'empty', usage });
+          return;
+        }
+        throw err;
+      }
       let worksheet: WS_3STAGE_V1 | null = null;
       let worksheetNote = '';
+      let worksheetProOnly = false;
       try {
         worksheet = await api.worksheet(token, grading.gradingId);
       } catch (err) {
         if (!(err instanceof ApiError) || err.status !== 404) throw err;
-        worksheetNote = WORKSHEET_NOTES[err.detail] ?? WORKSHEET_NOTES.WORKSHEET_QUEUED;
+        if (err.detail === 'WORKSHEET_PRO_ONLY') {
+          worksheetProOnly = true;
+        } else {
+          worksheetNote = WORKSHEET_NOTES[err.detail] ?? WORKSHEET_NOTES.WORKSHEET_QUEUED;
+        }
       }
-      if (!cancelled) setState({ kind: 'data', grading, worksheet, worksheetNote });
+      const usage = await usagePromise;
+      if (!cancelled) {
+        setState({ kind: 'data', grading, worksheet, worksheetNote, worksheetProOnly, usage });
+      }
     })().catch((err) => {
       if (cancelled) return;
-      if (err instanceof ApiError && err.status === 404) setState({ kind: 'empty' });
-      else setState({ kind: 'error', message: err instanceof Error ? err.message : 'Something went wrong.' });
+      setState({ kind: 'error', message: err instanceof Error ? err.message : 'Something went wrong.' });
     });
     return () => {
       cancelled = true;
@@ -60,12 +91,27 @@ export default function StudentDashboard() {
 
   if (!live) {
     return (
-      <View name={demoPersonas.student.name} own grading={gradingOutput} worksheet={demoWorksheet} worksheetNote="" />
+      <View
+        name={demoPersonas.student.name}
+        own
+        grading={gradingOutput}
+        worksheet={demoWorksheet}
+        worksheetNote=""
+        worksheetProOnly={false}
+        usage={DEMO_PRO_USAGE}
+      />
     );
   }
   if (gate) return gate;
   if (state.kind === 'loading') return <Loading variant="student" />;
-  if (state.kind === 'empty') return <NoWorkNotice />;
+  if (state.kind === 'empty') {
+    return (
+      <div className="space-y-6">
+        {state.usage && <UploadsLeftMeter usage={state.usage} />}
+        <NoWorkNotice />
+      </div>
+    );
+  }
   if (state.kind === 'error') {
     return <LoadError title="We couldn’t load your results" message={state.message} onRetry={() => setAttempt((n) => n + 1)} />;
   }
@@ -78,14 +124,20 @@ function View({
   grading,
   worksheet,
   worksheetNote,
+  worksheetProOnly,
+  usage,
 }: {
   name: string;
   own: boolean;
   grading: Stage2GradingAndAffectOutput;
   worksheet: WS_3STAGE_V1 | null;
   worksheetNote: string;
+  worksheetProOnly: boolean;
+  usage: ApiUsage | null;
 }) {
   const { openCapture } = useRole();
+  const limitReached = usage !== null && usage.plan === 'free' && usage.remaining === 0;
+
   return (
     <div className="space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-3">
@@ -95,18 +147,41 @@ function View({
             {own ? `Hi ${name.split(' ')[0]}, here’s your latest diagnostic` : 'Latest diagnostic'}
           </h1>
         </div>
-        <button
-          onClick={openCapture}
-          className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"
-        >
-          <UploadCloud className="h-4 w-4" aria-hidden /> Upload new work
-        </button>
+        {limitReached ? (
+          <Link
+            href="/plans"
+            className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"
+          >
+            <Sparkles className="h-4 w-4" aria-hidden /> Upgrade for more uploads
+          </Link>
+        ) : (
+          <button
+            onClick={openCapture}
+            className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"
+          >
+            <UploadCloud className="h-4 w-4" aria-hidden /> Upload new work
+          </button>
+        )}
       </header>
+
+      {usage && <UploadsLeftMeter usage={usage} compact />}
+
       <AffectCard grading={grading} />
       <PillarCards pillars={grading.pillarBreakdowns} />
       <StepDiagnostics grading={grading} />
+
       {worksheet ? (
         <WorksheetViewer worksheet={worksheet} />
+      ) : worksheetProOnly || grading.plan === 'free' ? (
+        <LockedProCard
+          title="Nightly 3-stage practice worksheet"
+          description="Pro builds a custom practice worksheet overnight whenever your work has a mistake to practise."
+          features={[
+            'Stage A · Diagnostic Mirror: your line side-by-side with the corrected step.',
+            'Stage B · Faded Scaffolding: guided practice with fill-in-the-blank checkpoints.',
+            'Stage C · Independent Transfer: a fresh problem with a self-check list.',
+          ]}
+        />
       ) : (
         <section className="card flex items-start gap-3 p-6">
           <CalendarClock className="mt-0.5 h-5 w-5 shrink-0 text-indigo-600" aria-hidden />
