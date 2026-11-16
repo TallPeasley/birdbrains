@@ -7,7 +7,7 @@ import { useSession } from '@/lib/session';
 import { useRole } from '@/lib/roleContext';
 import type { GradeCourse } from '@/types/birdBrains';
 
-const input = 'w-full rounded-xl border border-slate-300 px-3 py-2 text-sm';
+const input = 'w-full rounded-md border border-slate-300 px-3 py-2 text-sm';
 
 /** Real sign-in / create-account card, shown on the home page when a backend is configured. */
 export default function AccountCard() {
@@ -58,7 +58,7 @@ export default function AccountCard() {
         <p className="eyebrow">{profile.role === 'student' ? 'Student' : 'Parent'}</p>
         <h2 className="mt-1 text-lg font-semibold text-slate-900">Welcome back, {profile.name.split(' ')[0]}</h2>
         {profile.linkCode && (
-          <p className="mt-3 rounded-xl bg-slate-50 p-3 text-sm text-slate-600 ring-1 ring-slate-200">
+          <p className="mt-3 rounded-md bg-slate-50 p-3 text-sm text-slate-600 ring-1 ring-line">
             Parent link code: <span className="font-mono font-semibold text-slate-900">{profile.linkCode}</span>
             <span className="block text-xs text-slate-500">
               A parent enters this on their dashboard to follow your progress.
@@ -67,7 +67,7 @@ export default function AccountCard() {
         )}
         <button
           onClick={() => go(profile.role === 'teacher' ? 'parent' : profile.role)}
-          className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"
+          className="mt-4 flex w-full items-center justify-center gap-2 rounded-md bg-brand-3 py-2.5 text-sm font-semibold text-white hover:bg-brand-deep"
         >
           Open my dashboard <ArrowRight className="h-4 w-4" aria-hidden />
         </button>
@@ -113,8 +113,8 @@ export default function AccountCard() {
             <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="I am a">
               {(['student', 'parent'] as const).map((r) => (
                 <button key={r} type="button" role="radio" aria-checked={role === r} onClick={() => setLocalRole(r)}
-                  className={`rounded-xl border py-2 text-sm font-semibold ${
-                    role === r ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-slate-300 text-slate-600'
+                  className={`rounded-md border py-2 text-sm font-semibold ${
+                    role === r ? 'border-brand bg-brand-soft text-brand-3' : 'border-slate-300 text-slate-600'
                   }`}>
                   {r === 'student' ? 'I’m a student' : 'I’m a parent'}
                 </button>
@@ -129,9 +129,9 @@ export default function AccountCard() {
             )}
           </>
         )}
-        {error && <p role="alert" className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}
+        {error && <p role="alert" className="rounded-sm bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}
         <button disabled={busy}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60">
+          className="flex w-full items-center justify-center gap-2 rounded-md bg-brand-3 py-2.5 text-sm font-semibold text-white hover:bg-brand-deep disabled:opacity-60">
           {busy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
           {needsProfile ? 'Finish' : mode === 'signup' ? 'Create account' : 'Sign in'}
         </button>
@@ -142,7 +142,7 @@ export default function AccountCard() {
         </button>
       ) : (
         <button onClick={() => { setMode(mode === 'signup' ? 'signin' : 'signup'); setError(''); }}
-          className="mt-3 text-sm font-medium text-indigo-700 hover:text-indigo-900">
+          className="mt-3 text-sm font-medium text-brand-3 hover:text-brand-3">
           {mode === 'signup' ? 'I already have an account' : 'New here? Create an account'}
         </button>
       )}

@@ -33,9 +33,9 @@ export default function EqaoForecast({ summary }: { summary: ParentProjectionSum
                 </span>
                 <MathNumber value={d.probability} suffix="%" className="text-slate-500" />
               </div>
-              <div className="mt-1 h-2.5 overflow-hidden rounded-full bg-slate-100">
+              <div className="mt-1 h-2.5 overflow-hidden rounded-sm bg-slate-100">
                 <div
-                  className={`h-full rounded-full ${isForecast ? 'bg-indigo-600' : 'bg-slate-300'}`}
+                  className={`h-full rounded-sm ${isForecast ? 'bg-brand' : 'bg-slate-300'}`}
                   style={{ width: `${d.probability}%` }}
                 />
               </div>

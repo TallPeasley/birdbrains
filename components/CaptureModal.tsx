@@ -333,9 +333,9 @@ export default function CaptureModal() {
         role="dialog"
         aria-modal="true"
         aria-labelledby="capture-title"
-        className="flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl sm:rounded-3xl"
+        className="flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-lg bg-white sm:rounded-lg"
       >
-        <div className="flex items-start justify-between border-b border-slate-200 px-4 py-4 sm:px-6">
+        <div className="flex items-start justify-between border-b border-line px-4 py-4 sm:px-6">
           <div>
             <h2 id="capture-title" className="text-lg font-semibold text-slate-900">
               Upload student work
@@ -346,7 +346,7 @@ export default function CaptureModal() {
           </div>
           <button
             onClick={close}
-            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+            className="rounded-sm p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
             aria-label="Close"
           >
             <X className="h-5 w-5" />
@@ -363,7 +363,7 @@ export default function CaptureModal() {
                     value={live ? targetStudentId : studentId}
                     readOnly={live}
                     onChange={(e) => setStudentId(e.target.value)}
-                    className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm read-only:bg-slate-50 read-only:text-slate-500 focus:border-indigo-500 focus:ring-indigo-500"
+                    className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm read-only:bg-slate-50 read-only:text-slate-500 focus:border-brand focus:ring-brand"
                   />
                 </label>
                 <fieldset>
@@ -378,9 +378,9 @@ export default function CaptureModal() {
                           setUnit(UNITS[c][0]);
                         }}
                         aria-pressed={course === c}
-                        className={`rounded-xl border px-3 py-2 text-left text-sm transition ${
+                        className={`rounded-md border px-3 py-2 text-left text-sm transition ${
                           course === c
-                            ? 'border-indigo-500 bg-indigo-50 text-indigo-800 ring-1 ring-indigo-500'
+                            ? 'border-brand bg-brand-soft text-brand-3 ring-1 ring-brand'
                             : 'border-slate-300 text-slate-700 hover:border-slate-400'
                         }`}
                       >
@@ -398,7 +398,7 @@ export default function CaptureModal() {
                   <select
                     value={unit}
                     onChange={(e) => setUnit(e.target.value)}
-                    className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-indigo-500"
+                    className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-brand focus:ring-brand"
                   >
                     {UNITS[course].map((u) => (
                       <option key={u}>{u}</option>
@@ -407,11 +407,11 @@ export default function CaptureModal() {
                 </label>
                 <div>
                   <span className="mb-1 block text-sm font-medium text-slate-700">Topic tags</span>
-                  <div className="flex flex-wrap items-center gap-1.5 rounded-xl border border-slate-300 px-2 py-1.5 focus-within:border-indigo-500">
+                  <div className="flex flex-wrap items-center gap-1.5 rounded-md border border-slate-300 px-2 py-1.5 focus-within:border-brand">
                     {tags.map((t) => (
                       <span
                         key={t}
-                        className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700"
+                        className="inline-flex items-center gap-1 rounded-sm bg-brand-soft px-2 py-0.5 text-xs font-medium text-brand-3"
                       >
                         <Tag className="h-3 w-3" aria-hidden />
                         {t}
@@ -449,11 +449,11 @@ export default function CaptureModal() {
                   addFiles(e.dataTransfer.files);
                 }}
                 onClick={() => inputRef.current?.click()}
-                className={`flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed px-4 py-7 text-center transition sm:px-6 sm:py-8 ${
-                  dragging ? 'border-indigo-500 bg-indigo-50' : 'border-slate-300 hover:border-indigo-400 hover:bg-slate-50'
+                className={`flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed px-4 py-7 text-center transition sm:px-6 sm:py-8 ${
+                  dragging ? 'border-brand bg-brand-soft' : 'border-slate-300 hover:border-brand-line hover:bg-slate-50'
                 }`}
               >
-                <UploadCloud className="h-9 w-9 text-indigo-500" aria-hidden />
+                <UploadCloud className="h-9 w-9 text-brand" aria-hidden />
                 <p className="mt-2 text-sm font-semibold text-slate-800">Drag photos here, or tap to choose</p>
                 <p className="text-xs text-slate-500">
                   JPEG, PNG or WebP · at least 1080p (shorter side ≥ {MIN_SHORT_EDGE}px) · up to {MAX_FILES} pages (12 MB each).
@@ -471,8 +471,8 @@ export default function CaptureModal() {
                 />
               </div>
 
-              <p className="flex items-start gap-2 rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-600 ring-1 ring-slate-200">
-                <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600" aria-hidden />
+              <p className="flex items-start gap-2 rounded-md bg-slate-50 px-3 py-2 text-xs text-slate-600 ring-1 ring-line">
+                <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-brand-3" aria-hidden />
                 <span>
                   Before a photo is saved, BirdBrains blurs names, dates, class and student-number fields and removes location data.
                 </span>
@@ -523,7 +523,7 @@ export default function CaptureModal() {
         </div>
 
         {stage === 'IDLE' && (
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 bg-slate-50 px-4 py-4 sm:px-6">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line bg-slate-50 px-4 py-4 sm:px-6">
             <p className="text-xs text-slate-500">
               {live && !targetStudentId
                 ? profile
@@ -540,7 +540,7 @@ export default function CaptureModal() {
             <button
               onClick={() => submit()}
               disabled={!canSubmit}
-              className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+              className="inline-flex items-center gap-2 rounded-md bg-brand-3 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-deep disabled:cursor-not-allowed disabled:bg-slate-300"
             >
               <ImagePlus className="h-4 w-4" aria-hidden />
               Submit for diagnosis
@@ -562,7 +562,7 @@ function RetakeTipsCard({
   onRetake: () => void;
 }) {
   return (
-    <div role="alert" className="flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+    <div role="alert" className="flex gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4">
       <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" aria-hidden />
       <div className="min-w-0 space-y-2 text-sm text-amber-900">
         <p className="font-semibold">{title}</p>
@@ -575,7 +575,7 @@ function RetakeTipsCard({
         <button
           type="button"
           onClick={onRetake}
-          className="inline-flex items-center gap-2 rounded-xl border border-amber-300 bg-white px-3 py-1.5 text-sm font-semibold text-amber-900 hover:bg-amber-100"
+          className="inline-flex items-center gap-2 rounded-md border border-amber-300 bg-white px-3 py-1.5 text-sm font-semibold text-amber-900 hover:bg-amber-100"
         >
           <Camera className="h-4 w-4" aria-hidden /> Retake photo
         </button>
@@ -589,9 +589,9 @@ function FileRow({ item, onRemove }: { item: QueuedFile; onRemove: () => void })
   const tier = q ? TIER_STYLE[q.tier] : null;
   const passed = !item.error && Boolean(q?.passed);
   return (
-    <li className="flex items-center gap-3 rounded-xl border border-slate-200 p-2.5">
+    <li className="flex items-center gap-3 rounded-md border border-line p-2.5">
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={item.previewUrl} alt="" className="h-14 w-14 shrink-0 rounded-lg bg-slate-100 object-cover" />
+      <img src={item.previewUrl} alt="" className="h-14 w-14 shrink-0 rounded-sm bg-slate-100 object-cover" />
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium text-slate-800">{item.file.name}</p>
         {item.error ? (
@@ -604,20 +604,20 @@ function FileRow({ item, onRemove }: { item: QueuedFile; onRemove: () => void })
           <div className="mt-1 space-y-1">
             <div className="flex flex-wrap items-center gap-1.5 text-xs">
               <span
-                className={`rounded-full px-2 py-0.5 font-medium ring-1 ${
+                className={`rounded-sm px-2 py-0.5 font-medium ring-1 ${
                   q.resolutionOk
-                    ? 'bg-slate-100 text-slate-700 ring-slate-200'
+                    ? 'bg-slate-100 text-slate-700 ring-line'
                     : 'bg-rose-50 text-rose-700 ring-rose-200'
                 }`}
               >
                 {q.width}×{q.height}
                 {!q.resolutionOk && ' · below 1080p'}
               </span>
-              <span className={`rounded-full px-2 py-0.5 font-medium ring-1 ${tier!.cls}`}>{tier!.label}</span>
+              <span className={`rounded-sm px-2 py-0.5 font-medium ring-1 ${tier!.cls}`}>{tier!.label}</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-slate-100">
-                <div className={`h-full rounded-full ${tier!.bar}`} style={{ width: `${q.sharpnessScore}%` }} />
+              <div className="h-1.5 flex-1 overflow-hidden rounded-sm bg-slate-100">
+                <div className={`h-full rounded-sm ${tier!.bar}`} style={{ width: `${q.sharpnessScore}%` }} />
               </div>
               <span className="w-24 text-right text-[11px] tabular-nums text-slate-500">
                 sharpness {q.sharpnessScore}/100
@@ -634,7 +634,7 @@ function FileRow({ item, onRemove }: { item: QueuedFile; onRemove: () => void })
         ))}
       <button
         onClick={onRemove}
-        className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-rose-600"
+        className="rounded-sm p-1.5 text-slate-400 hover:bg-slate-100 hover:text-rose-600"
         aria-label={`Remove ${item.file.name}`}
       >
         <Trash2 className="h-4 w-4" />
@@ -673,7 +673,7 @@ function PipelineView({
     return (
       <div className="space-y-5 py-2">
         <div className="text-center">
-          <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-amber-50 text-amber-600">
+          <span className="mx-auto grid h-14 w-14 place-items-center rounded-sm bg-amber-50 text-amber-600">
             <CopyCheck className="h-7 w-7" aria-hidden />
           </span>
           <h3 className="mt-3 text-lg font-semibold text-slate-900">Same photo already uploaded</h3>
@@ -686,14 +686,14 @@ function PipelineView({
           <button
             type="button"
             onClick={onRetake}
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
           >
             <Camera className="h-4 w-4" aria-hidden /> Choose a different photo
           </button>
           <Link
             href="/student"
             onClick={onClose}
-            className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"
+            className="inline-flex items-center gap-2 rounded-md bg-brand-3 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-deep"
           >
             Open earlier diagnostic
           </Link>
@@ -706,7 +706,7 @@ function PipelineView({
     return (
       <div className="space-y-5 py-2">
         <div className="text-center">
-          <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-amber-50 text-amber-600">
+          <span className="mx-auto grid h-14 w-14 place-items-center rounded-sm bg-amber-50 text-amber-600">
             <Camera className="h-7 w-7" aria-hidden />
           </span>
           <h3 className="mt-3 text-lg font-semibold text-slate-900">Please retake a clearer photo</h3>
@@ -725,7 +725,7 @@ function PipelineView({
           <button
             type="button"
             onClick={onBack}
-            className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
           >
             Back to photos
           </button>
@@ -738,14 +738,14 @@ function PipelineView({
     <div className="space-y-6 py-2">
       {done ? (
         <div className="text-center">
-          <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-emerald-50 text-emerald-600">
+          <span className="mx-auto grid h-14 w-14 place-items-center rounded-sm bg-emerald-50 text-emerald-600">
             <CheckCircle2 className="h-7 w-7" aria-hidden />
           </span>
           <h3 className="mt-3 text-lg font-semibold text-slate-900">All done!</h3>
         </div>
       ) : errored ? (
         <div className="text-center">
-          <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-rose-50 text-rose-600">
+          <span className="mx-auto grid h-14 w-14 place-items-center rounded-sm bg-rose-50 text-rose-600">
             <AlertTriangle className="h-7 w-7" aria-hidden />
           </span>
           <h3 className="mt-3 text-lg font-semibold text-slate-900">
@@ -771,13 +771,13 @@ function PipelineView({
           return (
             <li key={p.stage} className="flex items-start gap-3">
               <span
-                className={`mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-semibold ${
+                className={`mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-sm text-xs font-semibold ${
                   complete
                     ? 'bg-emerald-500 text-white'
                     : failed
                       ? 'bg-rose-500 text-white'
                       : active
-                        ? 'bg-indigo-600 text-white'
+                        ? 'bg-brand-3 text-white'
                         : 'bg-slate-100 text-slate-400'
                 }`}
               >
@@ -808,14 +808,14 @@ function PipelineView({
 
       {errored && (
         <div className="space-y-4">
-          <div role="alert" className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
+          <div role="alert" className="rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
             {problem?.message ?? 'Something went wrong. Please try again.'}
           </div>
           <div className="flex flex-wrap justify-end gap-2">
             <button
               type="button"
               onClick={onBack}
-              className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+              className="rounded-md border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
             >
               Back to photos
             </button>
@@ -823,7 +823,7 @@ function PipelineView({
               <button
                 type="button"
                 onClick={onRetry}
-                className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"
+                className="inline-flex items-center gap-2 rounded-md bg-brand-3 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-deep"
               >
                 <RotateCcw className="h-4 w-4" aria-hidden /> Try again
               </button>
@@ -834,12 +834,12 @@ function PipelineView({
 
       {done && payload && (
         <div className="space-y-4">
-          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+          <div className="rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
             Your work has been checked. See which steps went well and where you got stuck on the student dashboard.
           </div>
 
           {grading && grading.entityExtractions.length > 0 && (
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <div className="rounded-lg border border-line bg-slate-50 p-4">
               <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
                 Error codes spotted
               </p>
@@ -851,7 +851,7 @@ function PipelineView({
                   return (
                     <li key={`${m.misconceptionId}-${idx}`} className="flex flex-wrap items-center gap-2 text-xs">
                       <span
-                        className="rounded-full px-2 py-0.5 font-mono font-semibold text-white"
+                        className="rounded-sm px-2 py-0.5 font-mono font-semibold text-white"
                         style={{ backgroundColor: pillar?.color ?? '#64748b' }}
                       >
                         {m.misconceptionId}
@@ -867,7 +867,7 @@ function PipelineView({
             </div>
           )}
 
-          <details className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs">
+          <details className="rounded-md border border-line bg-slate-50 p-3 text-xs">
             <summary className="cursor-pointer font-medium text-slate-600">
               Submission details <span className="font-mono">{payload.submissionId}</span>
             </summary>
@@ -877,7 +877,7 @@ function PipelineView({
             <Link
               href="/student"
               onClick={onClose}
-              className="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"
+              className="rounded-md bg-brand-3 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-deep"
             >
               See the results
             </Link>

@@ -2,31 +2,35 @@ import type { AffectState, EQAOLevel, PillarCategory } from '@/types/birdBrains'
 
 export const PILLARS: Record<
   PillarCategory,
-  { label: string; short: string; description: string; color: string }
+  { label: string; short: string; description: string; /** Swatch, bars and chart fills. */ color: string; /** Text on white (AA). */ ink: string }
 > = {
   CON: {
     label: 'Conceptual Understanding',
     short: 'Conceptual',
     description: 'Grasp of the underlying mathematical ideas and why methods work.',
-    color: '#6366f1',
+    color: '#6366F1',
+    ink: '#3730A3',
   },
   PRC: {
     label: 'Procedural Accuracy',
     short: 'Procedural',
     description: 'Carrying out the steps of a method in the right order, without dropping any.',
-    color: '#8b5cf6',
+    color: '#A855F7',
+    ink: '#7E22CE',
   },
   FAC: {
     label: 'Factual & Calculation Fluency',
     short: 'Calculation',
     description: 'Recalling facts and formulas and doing the arithmetic accurately.',
-    color: '#0ea5e9',
+    color: '#0EA5E9',
+    ink: '#0369A1',
   },
   TST: {
     label: 'Test-Taking & Communication',
     short: 'Communication',
     description: 'Answering what was asked and showing clear, labelled, complete work.',
-    color: '#64748b',
+    color: '#64748B',
+    ink: '#334155',
   },
 };
 
@@ -46,7 +50,7 @@ export const AFFECT_META: Record<
   PRODUCTIVE_STRUGGLE: {
     label: 'Productive Struggle',
     tone: 'Working hard and getting there',
-    badge: 'bg-indigo-50 text-indigo-700 ring-indigo-200',
+    badge: 'bg-brand-soft text-brand-3 ring-brand-line',
     level: 1,
   },
   RUSHED_CARELESSNESS: {

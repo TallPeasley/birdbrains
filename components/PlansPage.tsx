@@ -124,7 +124,7 @@ export default function PlansPage() {
         </div>
         <Link
           href={`/${role}`}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+          className="inline-flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden />
           Back to dashboard
@@ -132,11 +132,11 @@ export default function PlansPage() {
       </header>
 
       {demo && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50/70 px-4 py-3 text-xs text-amber-900">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-amber-200 bg-amber-50/70 px-4 py-3 text-xs text-amber-900">
           <span>
             <strong>Demo preview:</strong> switch between sample Free and Pro states to see how the usage meter respond.
           </span>
-          <div className="inline-flex rounded-xl bg-white p-1 ring-1 ring-amber-200" role="radiogroup" aria-label="Preview plan">
+          <div className="inline-flex rounded-md bg-white p-1 ring-1 ring-amber-200" role="radiogroup" aria-label="Preview plan">
             {(['free', 'pro'] as const).map((tier) => (
               <button
                 key={tier}
@@ -144,9 +144,9 @@ export default function PlansPage() {
                 role="radio"
                 aria-checked={demoTier === tier}
                 onClick={() => setDemoTier(tier)}
-                className={`rounded-lg px-2.5 py-1 text-xs font-semibold capitalize ${
+                className={`rounded-sm px-2.5 py-1 text-xs font-semibold capitalize ${
                   demoTier === tier
-                    ? 'bg-indigo-600 text-white'
+                    ? 'bg-brand-3 text-white'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
@@ -199,15 +199,15 @@ export default function PlansPage() {
             </ul>
           </div>
 
-          <div className="mt-6 border-t border-slate-200 pt-4">
-            <span className="inline-flex w-full items-center justify-center rounded-xl border border-slate-200 bg-slate-50 py-2.5 text-sm font-semibold text-slate-700">
+          <div className="mt-6 border-t border-line pt-4">
+            <span className="inline-flex w-full items-center justify-center rounded-md border border-line bg-slate-50 py-2.5 text-sm font-semibold text-slate-700">
               {currentPlan === 'free' ? 'Current plan' : 'Included on every account'}
             </span>
           </div>
         </section>
 
         <section
-          className="card flex flex-col justify-between border-indigo-300 bg-gradient-to-b from-indigo-50/50 via-white to-white p-5 ring-1 ring-indigo-200 sm:p-6"
+          className="card flex flex-col justify-between border-brand-line bg-gradient-to-b from-brand-soft via-white to-white p-5 ring-1 ring-brand-line sm:p-6"
           aria-labelledby="pro-plan-heading"
         >
           <div>
@@ -226,33 +226,33 @@ export default function PlansPage() {
 
             <ul className="mt-5 space-y-2.5 text-sm text-slate-700">
               <li className="flex items-start gap-2">
-                <Check className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600" aria-hidden />
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-3" aria-hidden />
                 <span>Everything in Free, with no monthly upload cap</span>
               </li>
               <li className="flex items-start gap-2">
-                <Check className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600" aria-hidden />
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-3" aria-hidden />
                 <span>Mood &amp; friction signals on student work and parent home-support alerts</span>
               </li>
               <li className="flex items-start gap-2">
-                <Check className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600" aria-hidden />
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-3" aria-hidden />
                 <span>Adaptive scaffolding modes (speed bumps &amp; high-support de-escalation)</span>
               </li>
               <li className="flex items-start gap-2">
-                <Check className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600" aria-hidden />
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-brand-3" aria-hidden />
                 <span>Nightly 3-stage practice worksheet built from each flagged diagnostic</span>
               </li>
             </ul>
           </div>
 
-          <div className="mt-6 border-t border-indigo-100 pt-4">
+          <div className="mt-6 border-t border-brand-line pt-4">
             {currentPlan === 'pro' ? (
-              <span className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-emerald-50 py-2.5 text-sm font-semibold text-emerald-800 ring-1 ring-emerald-200">
+              <span className="inline-flex w-full items-center justify-center gap-1.5 rounded-md bg-emerald-50 py-2.5 text-sm font-semibold text-emerald-800 ring-1 ring-emerald-200">
                 <Check className="h-4 w-4" aria-hidden /> Active on your account
               </span>
             ) : interestSubmitted ? (
               <p
                 role="status"
-                className="rounded-xl bg-emerald-50 p-3 text-center text-sm font-medium text-emerald-800 ring-1 ring-emerald-200"
+                className="rounded-md bg-emerald-50 p-3 text-center text-sm font-medium text-emerald-800 ring-1 ring-emerald-200"
               >
                 Pro checkout is coming soon. Thanks for letting us know you&apos;re interested!
               </p>
@@ -271,11 +271,11 @@ export default function PlansPage() {
                     onChange={(e) => setInterestEmail(e.target.value)}
                     placeholder="Email for Pro pilot access (optional)"
                     aria-label="Email for Pro pilot access"
-                    className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
+                    className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm"
                   />
                   <button
                     type="submit"
-                    className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"
+                    className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-md bg-brand-3 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-deep"
                   >
                     <Sparkles className="h-4 w-4" aria-hidden />
                     Upgrade · Coming soon
@@ -292,7 +292,7 @@ export default function PlansPage() {
 
       {/* Detailed comparison */}
       <section className="card overflow-hidden" aria-labelledby="compare-heading">
-        <div className="border-b border-slate-200 p-4 sm:p-6">
+        <div className="border-b border-line p-4 sm:p-6">
           <h2 id="compare-heading" className="text-lg font-semibold text-slate-900">
             What each plan includes
           </h2>
@@ -301,7 +301,7 @@ export default function PlansPage() {
           </p>
         </div>
 
-        <ul className="divide-y divide-slate-200">
+        <ul className="divide-y divide-line">
           {COMPARISON_ROWS.map((row) => (
             <li key={row.feature} className="grid gap-3 p-4 sm:grid-cols-[1fr_auto_auto] sm:items-center sm:gap-6 sm:px-6">
               <div className="min-w-0">
@@ -319,12 +319,12 @@ export default function PlansPage() {
                     <Minus className="h-4 w-4 text-slate-300" aria-label="Not in Free" />
                   )}
                 </div>
-                <div className="flex items-center gap-1.5 text-xs font-semibold text-indigo-700 sm:w-28 sm:justify-center">
-                  <span className="text-indigo-400 sm:hidden">Pro:</span>
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-brand-3 sm:w-28 sm:justify-center">
+                  <span className="text-brand sm:hidden">Pro:</span>
                   {typeof row.pro === 'string' ? (
                     <span>{row.pro}</span>
                   ) : row.pro ? (
-                    <Check className="h-4 w-4 text-indigo-600" aria-label="Included in Pro" />
+                    <Check className="h-4 w-4 text-brand-3" aria-label="Included in Pro" />
                   ) : (
                     <Minus className="h-4 w-4 text-slate-300" aria-label="Not in Pro" />
                   )}

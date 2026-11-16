@@ -36,7 +36,7 @@ export default function PillarErrorChart({ data }: { data: ParentProjectionSumma
               </Pie>
               <Tooltip
                 formatter={(v: number, n: string) => [`${v}%`, PILLARS[n as keyof typeof PILLARS]?.short ?? n]}
-                contentStyle={{ borderRadius: 12, border: '1px solid #e2e8f0', fontSize: 12, fontFamily: LATEX_FONT }}
+                contentStyle={{ borderRadius: 4, border: '1px solid #e2e8f0', fontSize: 12, fontFamily: LATEX_FONT }}
               />
             </PieChart>
           </ResponsiveContainer>
@@ -58,8 +58,8 @@ export default function PillarErrorChart({ data }: { data: ParentProjectionSumma
                 </span>
                 <MathNumber value={d.percentageOfTotalErrors} suffix="%" className="shrink-0 font-semibold text-slate-900" />
               </div>
-              <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-slate-100">
-                <div className="h-full rounded-full" style={{ width: `${d.percentageOfTotalErrors}%`, backgroundColor: PILLARS[d.pillar].color }} />
+              <div className="mt-1 h-1.5 overflow-hidden rounded-sm bg-slate-100">
+                <div className="h-full rounded-sm" style={{ width: `${d.percentageOfTotalErrors}%`, backgroundColor: PILLARS[d.pillar].color }} />
               </div>
             </li>
           ))}
@@ -67,7 +67,7 @@ export default function PillarErrorChart({ data }: { data: ParentProjectionSumma
       </div>
 
       {top && (
-        <p className="mt-5 rounded-xl bg-slate-50 p-3 text-sm text-slate-600 ring-1 ring-slate-200">
+        <p className="mt-5 rounded-md bg-slate-50 p-3 text-sm text-slate-600 ring-1 ring-line">
           Most mistakes are <strong className="text-slate-900">{PILLARS[top.pillar].short.toLowerCase()}</strong>
           {top.pillar === 'PRC' || top.pillar === 'FAC'
             ? ': slips in carrying out steps, not gaps in understanding. Slowing down and checking each line helps most.'

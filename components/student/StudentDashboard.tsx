@@ -150,14 +150,14 @@ function View({
         {limitReached ? (
           <Link
             href="/plans"
-            className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"
+            className="inline-flex items-center gap-2 rounded-md bg-brand-3 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-deep"
           >
             <Sparkles className="h-4 w-4" aria-hidden /> Upgrade for more uploads
           </Link>
         ) : (
           <button
             onClick={openCapture}
-            className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"
+            className="inline-flex items-center gap-2 rounded-md bg-brand-3 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-deep"
           >
             <UploadCloud className="h-4 w-4" aria-hidden /> Upload new work
           </button>
@@ -184,7 +184,7 @@ function View({
         />
       ) : (
         <section className="card flex items-start gap-3 p-6">
-          <CalendarClock className="mt-0.5 h-5 w-5 shrink-0 text-indigo-600" aria-hidden />
+          <CalendarClock className="mt-0.5 h-5 w-5 shrink-0 text-brand-3" aria-hidden />
           <div>
             <h2 className="font-semibold text-slate-900">Practice worksheet</h2>
             <p className="mt-1 text-sm text-slate-600">{worksheetNote}</p>

@@ -384,7 +384,7 @@ export default function AccountSettings() {
         </div>
         <Link
           href={`/${activeProfile.role}`}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+          className="inline-flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden />
           Back to dashboard
@@ -402,7 +402,7 @@ export default function AccountSettings() {
               Your account details are read-only. Your role is set when you sign up and cannot be changed.
             </p>
           </div>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 ring-1 ring-indigo-200">
+          <span className="inline-flex items-center gap-1.5 rounded-sm bg-brand-soft px-3 py-1 text-xs font-semibold text-brand-3 ring-1 ring-brand-line">
             {isStudent ? (
               <GraduationCap className="h-3.5 w-3.5" aria-hidden />
             ) : (
@@ -413,12 +413,12 @@ export default function AccountSettings() {
         </div>
 
         <dl className="mt-4 grid gap-3 sm:grid-cols-2">
-          <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3.5">
+          <div className="rounded-md border border-line bg-slate-50/70 p-3.5">
             <dt className="text-xs font-semibold uppercase tracking-wider text-slate-500">Name</dt>
             <dd className="mt-1 text-base font-semibold text-slate-900">{activeProfile.name}</dd>
           </div>
 
-          <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3.5">
+          <div className="rounded-md border border-line bg-slate-50/70 p-3.5">
             <dt className="text-xs font-semibold uppercase tracking-wider text-slate-500">Role</dt>
             <dd className="mt-1 text-base font-semibold capitalize text-slate-900">
               {activeProfile.role}
@@ -426,7 +426,7 @@ export default function AccountSettings() {
           </div>
 
           {isStudent && (
-            <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3.5 sm:col-span-2">
+            <div className="rounded-md border border-line bg-slate-50/70 p-3.5 sm:col-span-2">
               <dt className="text-xs font-semibold uppercase tracking-wider text-slate-500">Course</dt>
               <dd className="mt-1 text-base font-semibold text-slate-900">{courseDisplay}</dd>
             </div>
@@ -438,16 +438,16 @@ export default function AccountSettings() {
       <section className="card p-5 sm:p-6" aria-labelledby="plan-heading">
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-indigo-600" aria-hidden />
+            <Sparkles className="h-5 w-5 text-brand-3" aria-hidden />
             <h2 id="plan-heading" className="text-lg font-semibold text-slate-900">
               Plan &amp; monthly uploads
             </h2>
           </div>
           <span
-            className={`rounded-full px-3 py-1 text-xs font-semibold ring-1 ${
+            className={`rounded-sm px-3 py-1 text-xs font-semibold ring-1 ${
               effectivePlan === 'pro'
-                ? 'bg-indigo-50 text-indigo-700 ring-indigo-200'
-                : 'bg-slate-100 text-slate-700 ring-slate-200'
+                ? 'bg-brand-soft text-brand-3 ring-brand-line'
+                : 'bg-slate-100 text-slate-700 ring-line'
             }`}
           >
             {effectivePlan === 'pro' ? 'Pro plan' : 'Free plan'}
@@ -460,7 +460,7 @@ export default function AccountSettings() {
             Checking upload allowance…
           </p>
         ) : displayedUsage ? (
-          <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50/70 p-4">
+          <div className="mt-4 rounded-md border border-line bg-slate-50/70 p-4">
             {displayedUsage.monthlyLimit !== null && displayedUsage.remaining !== null ? (
               <>
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -472,7 +472,7 @@ export default function AccountSettings() {
                   </span>
                 </div>
                 <div
-                  className="mt-2.5 h-2 overflow-hidden rounded-full bg-slate-200"
+                  className="mt-2.5 h-2 overflow-hidden rounded-sm bg-slate-200"
                   role="progressbar"
                   aria-valuenow={displayedUsage.usedThisMonth}
                   aria-valuemin={0}
@@ -480,8 +480,8 @@ export default function AccountSettings() {
                   aria-label="Uploads used this month"
                 >
                   <div
-                    className={`h-full rounded-full ${
-                      displayedUsage.remaining === 0 ? 'bg-rose-500' : 'bg-indigo-600'
+                    className={`h-full rounded-sm ${
+                      displayedUsage.remaining === 0 ? 'bg-rose-500' : 'bg-brand'
                     }`}
                     style={{
                       width: `${Math.min(
@@ -519,7 +519,7 @@ export default function AccountSettings() {
       {isStudent && activeProfile.linkCode && (
         <section className="card p-5 sm:p-6" aria-labelledby="link-code-heading">
           <div className="flex items-center gap-2">
-            <Link2 className="h-5 w-5 text-indigo-600" aria-hidden />
+            <Link2 className="h-5 w-5 text-brand-3" aria-hidden />
             <h2 id="link-code-heading" className="text-lg font-semibold text-slate-900">
               Parent link code
             </h2>
@@ -528,7 +528,7 @@ export default function AccountSettings() {
             A parent enters this on their dashboard to follow your progress.
           </p>
 
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-slate-50 p-4 ring-1 ring-slate-200">
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-md bg-slate-50 p-4 ring-1 ring-line">
             <div>
               <span className="block text-xs font-semibold uppercase tracking-wider text-slate-500">
                 Your code
@@ -540,7 +540,7 @@ export default function AccountSettings() {
             <button
               type="button"
               onClick={() => void handleCopyCode()}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-100"
+              className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-100"
             >
               {copied ? (
                 <>
@@ -562,7 +562,7 @@ export default function AccountSettings() {
       {!isStudent && (
         <section className="card p-5 sm:p-6" aria-labelledby="children-heading">
           <div className="flex items-center gap-2">
-            <Users className="h-5 w-5 text-indigo-600" aria-hidden />
+            <Users className="h-5 w-5 text-brand-3" aria-hidden />
             <h2 id="children-heading" className="text-lg font-semibold text-slate-900">
               Linked children
             </h2>
@@ -572,7 +572,7 @@ export default function AccountSettings() {
           </p>
 
           {activeProfile.childStudentIds.length === 0 ? (
-            <p className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+            <p className="mt-4 rounded-md border border-line bg-slate-50 p-4 text-sm text-slate-600">
               No children linked yet. Ask your child for the parent link code from their account page.
             </p>
           ) : (
@@ -583,7 +583,7 @@ export default function AccountSettings() {
                 return (
                   <li
                     key={childId}
-                    className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50/70 px-4 py-3"
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-line bg-slate-50/70 px-4 py-3"
                   >
                     <div className="min-w-0">
                       <p className="font-semibold text-slate-900">
@@ -598,16 +598,16 @@ export default function AccountSettings() {
                       <button
                         type="button"
                         onClick={() => setActiveStudentId(childId)}
-                        className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${
+                        className={`rounded-sm px-3 py-1.5 text-xs font-semibold ${
                           isSelected
-                            ? 'bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200'
+                            ? 'bg-brand-soft text-brand-3 ring-1 ring-brand-line'
                             : 'border border-slate-300 bg-white text-slate-700 hover:bg-slate-100'
                         }`}
                       >
                         {isSelected ? 'Showing on dashboard' : 'Show on dashboard'}
                       </button>
                     ) : (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">
+                      <span className="inline-flex items-center gap-1 rounded-sm bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">
                         <UserCheck className="h-3.5 w-3.5" aria-hidden />
                         Linked
                       </span>
@@ -618,7 +618,7 @@ export default function AccountSettings() {
             </ul>
           )}
 
-          <form onSubmit={(e) => void handleLinkChild(e)} className="mt-5 border-t border-slate-200 pt-4">
+          <form onSubmit={(e) => void handleLinkChild(e)} className="mt-5 border-t border-line pt-4">
             <label htmlFor="link-child-code" className="block text-sm font-semibold text-slate-900">
               Link another child
             </label>
@@ -635,24 +635,24 @@ export default function AccountSettings() {
                 onChange={(e) => setChildCode(e.target.value.toUpperCase())}
                 placeholder="e.g. DBLE7QA2"
                 aria-label="Parent link code"
-                className="w-full rounded-xl border border-slate-300 px-3 py-2 font-mono text-sm uppercase tracking-wider sm:max-w-xs"
+                className="w-full rounded-md border border-slate-300 px-3 py-2 font-mono text-sm uppercase tracking-wider sm:max-w-xs"
               />
               <button
                 type="submit"
                 disabled={linkBusy || childCode.trim() === ''}
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center justify-center gap-2 rounded-md bg-brand-3 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-deep disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {linkBusy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
                 Link child
               </button>
             </div>
             {linkError && (
-              <p role="alert" className="mt-2 rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-700">
+              <p role="alert" className="mt-2 rounded-md bg-rose-50 px-3 py-2 text-sm text-rose-700">
                 {linkError}
               </p>
             )}
             {linkSuccess && (
-              <p role="status" className="mt-2 rounded-xl bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+              <p role="status" className="mt-2 rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
                 {linkSuccess}
               </p>
             )}
@@ -663,7 +663,7 @@ export default function AccountSettings() {
       {/* Join a class */}
       <section className="card p-5 sm:p-6" aria-labelledby="classes-heading">
         <div className="flex items-center gap-2">
-          <BookOpen className="h-5 w-5 text-indigo-600" aria-hidden />
+          <BookOpen className="h-5 w-5 text-brand-3" aria-hidden />
           <h2 id="classes-heading" className="text-lg font-semibold text-slate-900">
             Join a class
           </h2>
@@ -681,7 +681,7 @@ export default function AccountSettings() {
                 Loading your classes…
               </p>
             ) : classesLoadError ? (
-              <p role="alert" className="mt-4 rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-700">
+              <p role="alert" className="mt-4 rounded-md bg-rose-50 px-3 py-2 text-sm text-rose-700">
                 {classesLoadError}
               </p>
             ) : displayedClasses.length > 0 ? (
@@ -689,7 +689,7 @@ export default function AccountSettings() {
                 {displayedClasses.map((cls) => (
                   <li
                     key={cls.classId}
-                    className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50/70 px-4 py-3"
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-line bg-slate-50/70 px-4 py-3"
                   >
                     <div className="min-w-0">
                       <p className="font-semibold text-slate-900">{cls.className}</p>
@@ -702,7 +702,7 @@ export default function AccountSettings() {
                       type="button"
                       disabled={leavingId === cls.classId}
                       onClick={() => void handleLeaveClass(cls.classId)}
-                      className="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 disabled:opacity-60"
+                      className="rounded-sm border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 disabled:opacity-60"
                     >
                       {leavingId === cls.classId ? 'Leaving…' : 'Leave class'}
                     </button>
@@ -710,7 +710,7 @@ export default function AccountSettings() {
                 ))}
               </ul>
             ) : (
-              <p className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-3.5 text-sm text-slate-600">
+              <p className="mt-4 rounded-md border border-line bg-slate-50 p-3.5 text-sm text-slate-600">
                 You haven&apos;t joined a class yet.
               </p>
             )}
@@ -728,12 +728,12 @@ export default function AccountSettings() {
                 onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
                 placeholder="6-letter code"
                 aria-label="Class code"
-                className="w-full rounded-xl border border-slate-300 px-3 py-2 font-mono text-sm uppercase tracking-wider sm:max-w-xs"
+                className="w-full rounded-md border border-slate-300 px-3 py-2 font-mono text-sm uppercase tracking-wider sm:max-w-xs"
               />
               <button
                 type="submit"
                 disabled={joinBusy || joinCode.trim() === ''}
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center justify-center gap-2 rounded-md bg-brand-3 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-deep disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {joinBusy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
                 Join class
@@ -741,12 +741,12 @@ export default function AccountSettings() {
             </form>
 
             {joinError && (
-              <p role="alert" className="mt-2 rounded-xl bg-rose-50 px-3 py-2 text-sm text-rose-700">
+              <p role="alert" className="mt-2 rounded-md bg-rose-50 px-3 py-2 text-sm text-rose-700">
                 {joinError}
               </p>
             )}
             {joinNotice && (
-              <p role="status" className="mt-2 rounded-xl bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+              <p role="status" className="mt-2 rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
                 {joinNotice}
               </p>
             )}
@@ -773,7 +773,7 @@ export default function AccountSettings() {
         </p>
 
         {deleteDemoNotice && (
-          <p role="status" className="mt-3 rounded-xl bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
+          <p role="status" className="mt-3 rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
             {deleteDemoNotice}
           </p>
         )}
@@ -788,7 +788,7 @@ export default function AccountSettings() {
                 setDeleteError('');
                 setDeleteDemoNotice('');
               }}
-              className="inline-flex items-center gap-2 rounded-xl border border-rose-300 bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-700 hover:bg-rose-100"
+              className="inline-flex items-center gap-2 rounded-md border border-rose-300 bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-700 hover:bg-rose-100"
             >
               <Trash2 className="h-4 w-4" aria-hidden />
               Delete my data
@@ -797,7 +797,7 @@ export default function AccountSettings() {
         ) : (
           <form
             onSubmit={(e) => void handleDeleteConfirm(e)}
-            className="mt-4 space-y-3 rounded-2xl border border-rose-200 bg-rose-50/60 p-4"
+            className="mt-4 space-y-3 rounded-lg border border-rose-200 bg-rose-50/60 p-4"
           >
             <div className="flex items-start gap-2.5 text-sm text-rose-900">
               <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-rose-600" aria-hidden />
@@ -818,7 +818,7 @@ export default function AccountSettings() {
                   id="delete-target"
                   value={deleteTarget}
                   onChange={(e) => setDeleteTarget(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-rose-300 bg-white px-3 py-2 text-sm text-slate-900 sm:max-w-sm"
+                  className="mt-1 w-full rounded-md border border-rose-300 bg-white px-3 py-2 text-sm text-slate-900 sm:max-w-sm"
                 >
                   <option value="me">My parent account only</option>
                   {activeProfile.childStudentIds.map((id, i) => (
@@ -841,12 +841,12 @@ export default function AccountSettings() {
                 onChange={(e) => setDeleteInput(e.target.value)}
                 placeholder="DELETE"
                 autoComplete="off"
-                className="mt-1 w-full rounded-xl border border-rose-300 bg-white px-3 py-2 font-mono text-sm text-slate-900 sm:max-w-xs"
+                className="mt-1 w-full rounded-md border border-rose-300 bg-white px-3 py-2 font-mono text-sm text-slate-900 sm:max-w-xs"
               />
             </div>
 
             {deleteError && (
-              <p role="alert" className="rounded-xl bg-white px-3 py-2 text-sm text-rose-700 ring-1 ring-rose-200">
+              <p role="alert" className="rounded-md bg-white px-3 py-2 text-sm text-rose-700 ring-1 ring-rose-200">
                 {deleteError}
               </p>
             )}
@@ -855,7 +855,7 @@ export default function AccountSettings() {
               <button
                 type="submit"
                 disabled={deleteBusy || deleteInput !== 'DELETE'}
-                className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex items-center gap-2 rounded-md bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {deleteBusy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
                 Permanently delete
@@ -868,7 +868,7 @@ export default function AccountSettings() {
                   setDeleteInput('');
                   setDeleteError('');
                 }}
-                className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                className="rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
               >
                 Cancel
               </button>
@@ -893,7 +893,7 @@ export default function AccountSettings() {
           type="button"
           disabled={signOutBusy}
           onClick={() => void handleSignOut()}
-          className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-100 disabled:opacity-60"
+          className="inline-flex items-center gap-2 rounded-md border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-100 disabled:opacity-60"
         >
           {signOutBusy ? (
             <Loader2 className="h-4 w-4 animate-spin" aria-hidden />

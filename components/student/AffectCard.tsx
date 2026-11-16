@@ -15,10 +15,10 @@ export default function AffectCard({ grading }: { grading: Stage2GradingAndAffec
       <div className="grid gap-0 md:grid-cols-[1fr_auto]">
         <div className="p-6">
           <div className="flex flex-wrap gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-2.5 py-1 text-xs font-semibold text-indigo-700 ring-1 ring-indigo-200">
+            <span className="inline-flex items-center gap-1.5 rounded-sm bg-brand-soft px-2.5 py-1 text-xs font-semibold text-brand-3 ring-1 ring-brand-line">
               <Flame className="h-3.5 w-3.5" aria-hidden /> High Effort Detected
             </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">
+            <span className="inline-flex items-center gap-1.5 rounded-sm bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">
               <Sprout className="h-3.5 w-3.5" aria-hidden /> Growth-Mindset Tone
             </span>
           </div>
@@ -30,7 +30,7 @@ export default function AffectCard({ grading }: { grading: Stage2GradingAndAffec
           </p>
 
           {affect && highFriction && (
-            <div className={`mt-5 flex gap-3 rounded-xl p-3 text-sm ring-1 ${affect.badge}`} role="status">
+            <div className={`mt-5 flex gap-3 rounded-md p-3 text-sm ring-1 ${affect.badge}`} role="status">
               <HeartHandshake className="mt-0.5 h-5 w-5 shrink-0" aria-hidden />
               <div>
                 <p className="font-semibold">Friction level: {affect.label}</p>
@@ -43,10 +43,10 @@ export default function AffectCard({ grading }: { grading: Stage2GradingAndAffec
           )}
 
           {!affect && (
-            <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-indigo-200 bg-indigo-50/50 p-3.5 text-sm">
+            <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-md border border-brand-line bg-brand-soft p-3.5 text-sm">
               <div className="min-w-0 flex-1">
                 <p className="flex items-center gap-1.5 font-semibold text-slate-900">
-                  <Lock className="h-3.5 w-3.5 text-indigo-600" aria-hidden />
+                  <Lock className="h-3.5 w-3.5 text-brand-3" aria-hidden />
                   Mood &amp; friction insights (Pro)
                 </p>
                 <p className="mt-0.5 text-xs text-slate-600">
@@ -55,7 +55,7 @@ export default function AffectCard({ grading }: { grading: Stage2GradingAndAffec
               </div>
               <Link
                 href="/plans"
-                className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-700"
+                className="inline-flex shrink-0 items-center gap-1 rounded-sm bg-brand-3 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-deep"
               >
                 <Sparkles className="h-3.5 w-3.5" aria-hidden />
                 Upgrade
@@ -63,7 +63,7 @@ export default function AffectCard({ grading }: { grading: Stage2GradingAndAffec
             </div>
           )}
         </div>
-        <div className="flex items-center justify-center border-t border-slate-200 bg-slate-50 p-6 md:border-l md:border-t-0">
+        <div className="flex items-center justify-center border-t border-line bg-slate-50 p-6 md:border-l md:border-t-0">
           <ScoreRing value={grading.totalScore} max={grading.maxPossibleScore} pct={pct} />
         </div>
       </div>
@@ -83,7 +83,7 @@ function ScoreRing({ value, max, pct }: { value: number; max: number; pct: numbe
           cy="60"
           r={r}
           fill="none"
-          stroke="#4f46e5"
+          stroke="#6366F1"
           strokeWidth="10"
           strokeLinecap="round"
           strokeDasharray={c}

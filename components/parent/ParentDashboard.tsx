@@ -81,7 +81,7 @@ export default function ParentDashboard() {
           <select
             value={activeStudentId ?? ''}
             onChange={(e) => setActiveStudentId(e.target.value)}
-            className="rounded-lg border border-slate-300 px-2 py-1 text-sm"
+            className="rounded-sm border border-slate-300 px-2 py-1 text-sm"
           >
             {children.map((id, i) => (
               <option key={id} value={id}>
@@ -107,7 +107,7 @@ function View({ s, usage }: { s: ParentProjectionSummary; usage: ApiUsage | null
             How {s.studentName.split(' ')[0]} is doing in <MathText text={s.course} />
           </h1>
         </div>
-        <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200">
+        <span className="rounded-sm bg-white px-3 py-1 text-xs font-medium text-slate-600 ring-1 ring-line">
           {s.studentName} · <MathText text={s.course === 'MPM2D' ? 'Grade 10' : 'Grade 9'} />
         </span>
       </header>

@@ -15,7 +15,7 @@ import type { StrandMastery } from '@/types/birdBrains';
 import { buildTrajectoryRows } from '@/lib/projections';
 import { MathNumber } from '@/components/MathText';
 
-const STRAND_COLORS = ['#4f46e5', '#0ea5e9', '#8b5cf6', '#14b8a6'];
+const STRAND_COLORS = ['#6366F1', '#0ea5e9', '#A855F7', '#14b8a6'];
 const LATEX_FONT = "'KaTeX_Main', 'Latin Modern Math', 'Computer Modern', 'STIX Two Math', 'Cambria Math', 'Times New Roman', Georgia, serif";
 
 export default function MasteryChart({ strands }: { strands: StrandMastery[] }) {
@@ -41,9 +41,9 @@ export default function MasteryChart({ strands }: { strands: StrandMastery[] }) 
         {strands.map((s, i) => {
           const pct = Math.round(s.currentEWMAMastery * 100);
           return (
-            <div key={s.strandName} className="min-w-0 rounded-xl border border-slate-200 p-3">
+            <div key={s.strandName} className="min-w-0 rounded-md border border-line p-3">
               <div className="flex items-center gap-2">
-                <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: STRAND_COLORS[i % STRAND_COLORS.length] }} />
+                <span className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ backgroundColor: STRAND_COLORS[i % STRAND_COLORS.length] }} />
                 <span className="truncate text-sm font-medium text-slate-700">{s.strandName}</span>
               </div>
               <p className="mt-1 text-2xl font-bold text-slate-900">
@@ -67,7 +67,7 @@ export default function MasteryChart({ strands }: { strands: StrandMastery[] }) 
               <ReferenceLine x={lastActual} stroke="#94a3b8" strokeDasharray="2 4" label={{ value: 'Today', position: 'top', fontSize: 11, fill: '#64748b' }} />
             )}
             <Tooltip
-              contentStyle={{ borderRadius: 12, border: '1px solid #e2e8f0', fontSize: 12, fontFamily: LATEX_FONT }}
+              contentStyle={{ borderRadius: 4, border: '1px solid #e2e8f0', fontSize: 12, fontFamily: LATEX_FONT }}
               formatter={(value: number, name: string) => [`${value}`, name.replace('__proj', ' (projected)')]}
             />
             <Legend

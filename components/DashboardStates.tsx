@@ -26,12 +26,12 @@ export function Notice({
 
 /** Grey placeholder blocks shaped like the dashboard that is about to load. */
 export function Loading({ variant = 'student' }: { variant?: 'student' | 'parent' }) {
-  const block = 'rounded-2xl border border-slate-200 bg-slate-100';
+  const block = 'rounded-lg border border-line bg-slate-100';
   return (
     <div className="animate-pulse space-y-6" role="status" aria-label="Loading dashboard">
       <div className="space-y-2">
-        <div className="h-3 w-28 rounded bg-slate-200" />
-        <div className="h-8 w-2/3 max-w-md rounded-lg bg-slate-200" />
+        <div className="h-3 w-28 rounded-sm bg-slate-200" />
+        <div className="h-8 w-2/3 max-w-md rounded-sm bg-slate-200" />
       </div>
       {variant === 'student' ? (
         <>
@@ -64,7 +64,7 @@ export function LoadError({ title, message, onRetry }: { title: string; message:
     <Notice
       title={title}
       icon={
-        <span className="grid h-14 w-14 place-items-center rounded-full bg-rose-50 text-rose-600">
+        <span className="grid h-14 w-14 place-items-center rounded-sm bg-rose-50 text-rose-600">
           <AlertCircle className="h-7 w-7" aria-hidden />
         </span>
       }
@@ -78,9 +78,9 @@ export function LoadError({ title, message, onRetry }: { title: string; message:
 }
 
 const primary =
-  'inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700';
+  'inline-flex items-center gap-2 rounded-md bg-brand-3 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-deep';
 const dark =
-  'inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800';
+  'inline-flex items-center gap-2 rounded-md bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800';
 
 export function SignInNotice() {
   return (
@@ -99,7 +99,7 @@ export function NoWorkNotice({ variant = 'student' }: { variant?: 'student' | 'p
     <Notice
       title={parent ? 'Nothing to show yet' : 'No graded work yet'}
       icon={
-        <span className="grid h-14 w-14 place-items-center rounded-full bg-indigo-50 text-indigo-600">
+        <span className="grid h-14 w-14 place-items-center rounded-sm bg-brand-soft text-brand-3">
           <FileQuestion className="h-7 w-7" aria-hidden />
         </span>
       }
@@ -143,7 +143,7 @@ export function LinkChildForm() {
           placeholder="Link code"
           aria-label="Link code"
           maxLength={12}
-          className="w-full rounded-xl border border-slate-300 px-3 py-2 text-center font-mono text-sm uppercase"
+          className="w-full rounded-md border border-slate-300 px-3 py-2 text-center font-mono text-sm uppercase"
         />
         <button disabled={busy} className={`${primary} disabled:opacity-60`}>
           Link

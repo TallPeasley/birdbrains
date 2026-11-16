@@ -8,7 +8,7 @@ export default function CaptureFab() {
   return (
     <button
       onClick={openCapture}
-      className="fixed bottom-6 right-6 z-30 flex items-center gap-2 rounded-full bg-indigo-600 px-5 py-3.5 text-sm font-semibold text-white shadow-lg shadow-indigo-600/30 transition hover:bg-indigo-700 active:scale-95"
+      className="fixed bottom-6 right-6 z-30 flex items-center gap-2 rounded-sm bg-brand-3 px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-brand-deep active:scale-95"
     >
       <Camera className="h-5 w-5" aria-hidden />
       Upload Work
