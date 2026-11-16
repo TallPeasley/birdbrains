@@ -5,11 +5,12 @@ import Link from 'next/link';
 import {
   ArrowLeft,
   Check,
+  CreditCard,
   Loader2,
   Minus,
   Sparkles,
 } from 'lucide-react';
-import { api } from '@/lib/api';
+import { api, ApiError } from '@/lib/api';
 import { useRole } from '@/lib/roleContext';
 import { useSession } from '@/lib/session';
 import {
@@ -76,8 +77,11 @@ export default function PlansPage() {
   const [usage, setUsage] = useState<ApiUsage | null>(null);
   const [loading, setLoading] = useState(false);
   const [demoTier, setDemoTier] = useState<PlanTier>('free');
-  const [interestSubmitted, setInterestSubmitted] = useState(false);
-  const [interestEmail, setInterestEmail] = useState('');
+  const [checkoutBusy, setCheckoutBusy] = useState(false);
+  const [portalBusy, setPortalBusy] = useState(false);
+  const [billingUnavailable, setBillingUnavailable] = useState(false);
+  const [billingError, setBillingError] = useState('');
+  const [demoNotice, setDemoNotice] = useState('');
 
   useEffect(() => {
     if (!live || !activeStudentId) {
@@ -109,6 +113,53 @@ export default function PlansPage() {
       ? DEMO_PRO_USAGE
       : DEMO_FREE_USAGE;
   const currentPlan: PlanTier = effectiveUsage?.plan ?? profile?.plan ?? demoTier;
+
+  async function handleStartCheckout() {
+    setBillingError('');
+    setDemoNotice('');
+    if (!live) {
+      setDemoTier('pro');
+      setDemoNotice('Demo mode: switched preview to Pro.');
+      return;
+    }
+    setCheckoutBusy(true);
+    try {
+      const token = await getToken();
+      const { url } = await api.startCheckout(token);
+      window.location.href = url;
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 503) {
+        setBillingUnavailable(true);
+      } else if (err instanceof ApiError && err.status === 409) {
+        setBillingError('Your account is already on Pro.');
+      } else {
+        setBillingError(err instanceof Error ? err.message : 'Could not start checkout.');
+      }
+      setCheckoutBusy(false);
+    }
+  }
+
+  async function handleOpenPortal() {
+    setBillingError('');
+    setDemoNotice('');
+    if (!live) {
+      setDemoNotice('Demo mode: Stripe billing portal opens here on a live account.');
+      return;
+    }
+    setPortalBusy(true);
+    try {
+      const token = await getToken();
+      const { url } = await api.billingPortal(token);
+      window.location.href = url;
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 404) {
+        setBillingError('No Stripe subscription was found for this account.');
+      } else {
+        setBillingError(err instanceof Error ? err.message : 'Could not open billing portal.');
+      }
+      setPortalBusy(false);
+    }
+  }
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
@@ -244,47 +295,52 @@ export default function PlansPage() {
             </ul>
           </div>
 
-          <div className="mt-6 border-t border-indigo-100 pt-4">
+          <div className="mt-6 space-y-2.5 border-t border-indigo-100 pt-4">
             {currentPlan === 'pro' ? (
-              <span className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-emerald-50 py-2.5 text-sm font-semibold text-emerald-800 ring-1 ring-emerald-200">
-                <Check className="h-4 w-4" aria-hidden /> Active on your account
-              </span>
-            ) : interestSubmitted ? (
-              <p
-                role="status"
-                className="rounded-xl bg-emerald-50 p-3 text-center text-sm font-medium text-emerald-800 ring-1 ring-emerald-200"
-              >
-                Pro checkout is coming soon. Thanks for letting us know you&apos;re interested!
+              <>
+                <span className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-emerald-50 py-2.5 text-sm font-semibold text-emerald-800 ring-1 ring-emerald-200">
+                  <Check className="h-4 w-4" aria-hidden /> Active on your account
+                </span>
+                <button
+                  type="button"
+                  onClick={handleOpenPortal}
+                  disabled={portalBusy}
+                  className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl border border-slate-300 bg-white py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+                >
+                  {portalBusy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <CreditCard className="h-4 w-4" aria-hidden />}
+                  Manage subscription
+                </button>
+              </>
+            ) : billingUnavailable ? (
+              <p className="rounded-xl bg-slate-50 p-3 text-center text-xs font-medium text-slate-600 ring-1 ring-slate-200">
+                Online checkout is not enabled on this server yet.
               </p>
             ) : (
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  setInterestSubmitted(true);
-                }}
-                className="space-y-2"
-              >
-                <div className="flex flex-col gap-2 sm:flex-row">
-                  <input
-                    type="email"
-                    value={interestEmail}
-                    onChange={(e) => setInterestEmail(e.target.value)}
-                    placeholder="Email for Pro pilot access (optional)"
-                    aria-label="Email for Pro pilot access"
-                    className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm"
-                  />
-                  <button
-                    type="submit"
-                    className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"
-                  >
-                    <Sparkles className="h-4 w-4" aria-hidden />
-                    Upgrade · Coming soon
-                  </button>
-                </div>
-                <p className="text-xs text-slate-500">
-                  Online checkout is coming soon. Tell us if your family wants early Pro access.
+              <>
+                <button
+                  type="button"
+                  onClick={handleStartCheckout}
+                  disabled={checkoutBusy}
+                  className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60"
+                >
+                  {checkoutBusy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Sparkles className="h-4 w-4" aria-hidden />}
+                  Upgrade to Pro
+                </button>
+                <p className="text-center text-xs text-slate-500">
+                  Monthly subscription via Stripe. Cancel anytime in Account settings.
                 </p>
-              </form>
+              </>
+            )}
+
+            {demoNotice && (
+              <p role="status" className="rounded-xl bg-amber-50 p-2.5 text-center text-xs font-medium text-amber-900">
+                {demoNotice}
+              </p>
+            )}
+            {billingError && (
+              <p role="alert" className="rounded-xl bg-rose-50 p-2.5 text-center text-xs font-medium text-rose-800">
+                {billingError}
+              </p>
             )}
           </div>
         </section>
