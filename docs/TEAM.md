@@ -13,7 +13,7 @@ Gemini (Antigravity) picks up its `Gemini:` tasks from `docs/PLAN.md`.
 | **Gemini** (UI, via Google Antigravity) | `app/`, `components/`, `extension/` (Chrome extension), page styles, `public/` | `backend/`, `lib/api.ts`, `types/birdBrains.ts` |
 | **Claude** (API, infrastructure, privacy) | `backend/` except the AI pipeline files below, `backend/deploy.sh`, `lib/api.ts`, `lib/session.tsx`, `types/birdBrains.ts`, `docs/TEAM.md`, `docs/PLAN.md` (except ticking your own task) | UI layout and visual design |
 | **Freelancer** (AI pipeline) | `backend/birdbrains/pipeline.py`, `taxonomy.py`, `batch_engine.py`, `backend/ai_eval/` (accuracy harness, gold set) | API routes, storage, auth |
-| **Maalik** | Product decisions, merging Gemini and freelancer PRs, GCP/Netlify/Firebase consoles, test photos and grading reviews | |
+| **Maalik** | Product decisions, merging Gemini and freelancer PRs, GCP/Firebase consoles, test photos and grading reviews | |
 
 Since Nov 15 Claude does the Freelancer tasks (Maalik's call, ahead of the Nov 17
 decision). If a freelancer joins later, they take over the pipeline files from there.
@@ -55,7 +55,7 @@ Shared files, changed only with the owner's review:
 - Errors arrive as `ApiError { status, detail }`. `detail` is a sentence you can
   show to the user, except the codes listed under each route below.
 - Live API: `https://birdbrains-api-28737473918.northamerica-northeast1.run.app`
-  (Cloud Run, Montréal). Live site: https://birdbrains.netlify.app.
+  (Cloud Run, Montréal). Live site: https://birdbrain-514606.web.app (Firebase Hosting, published with `./deploy-web.sh`).
 
 ## 4. API contract
 

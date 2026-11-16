@@ -46,11 +46,11 @@ To exercise real Gemini from your machine, keep `BIRDBRAINS_BACKEND=local`, set
 2. Firebase sign-in (console, one time): open https://console.firebase.google.com,
    "Add project" and pick the same Google Cloud project, then Authentication >
    Sign-in method > enable Email/Password, and Authentication > Settings >
-   Authorized domains > add `birdbrains.netlify.app`. Under Project settings >
-   Your apps, add a Web app and copy its config.
-3. In Netlify (Site configuration > Environment variables) set
-   `NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_FIREBASE_API_KEY`,
-   `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`, `NEXT_PUBLIC_FIREBASE_PROJECT_ID`, then redeploy the site.
+   Authorized domains > check `<project>.web.app` is listed (add any custom domain). Under
+   Project settings > Your apps, add a Web app (no need to copy its config).
+3. From the repo root, `./deploy-web.sh <gcp-project-id>` reads the API URL and the Firebase web
+   config, builds the site with them, and publishes it to Firebase Hosting at
+   `https://<project>.web.app`. Rerun it to publish a new version of the site.
 
 ## Routes
 
@@ -86,7 +86,7 @@ To exercise real Gemini from your machine, keep `BIRDBRAINS_BACKEND=local`, set
 | `BIRDBRAINS_MODEL` | `gemini` | `gemini` or `fake` |
 | `BIRDBRAINS_AUTH` | `firebase` | `firebase` or `dev`. `dev`/`local` are refused on Cloud Run |
 | `GOOGLE_CLOUD_PROJECT`, `BIRDBRAINS_BUCKET` | | Required with `gcp` |
-| `BIRDBRAINS_CORS_ORIGINS` | Netlify site + localhost:3000 | Comma-separated origins allowed to call the API |
+| `BIRDBRAINS_CORS_ORIGINS` | Firebase Hosting site (+ old Netlify address) + localhost:3000 | Comma-separated origins allowed to call the API |
 | `BIRDBRAINS_BATCH_TOKEN` | unset (batch routes off) | Shared secret for the scheduler |
 | `BIRDBRAINS_STAGE1_MODEL`, `BIRDBRAINS_STAGE2_MODEL`, `BIRDBRAINS_WORKSHEET_MODEL` | spec models | Override when Google retires a model |
 | `BIRDBRAINS_HEADER_MASK` | `0` | Optional backstop: share of the page, from the top, blacked out before storage. Detected name/date/class fields are blurred regardless |
@@ -94,7 +94,7 @@ To exercise real Gemini from your machine, keep `BIRDBRAINS_BACKEND=local`, set
 | `BIRDBRAINS_FREE_WORKSHEETS` | `0` | `1` gives Free gradings nightly worksheets too |
 | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID` | unset (upgrades off) | Stripe key, webhook signing secret and the Pro price id. `deploy.sh` reads them from Secret Manager |
 | `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, `BIRDBRAINS_PUBLIC_URL` | unset (Classroom off) | Google OAuth web client and the API's own URL (for the redirect) |
-| `BIRDBRAINS_SITE_URL` | Netlify site | Where Stripe and Google send people back to |
+| `BIRDBRAINS_SITE_URL` | Firebase Hosting site | Where Stripe and Google send people back to |
 | `MLFLOW_TRACKING_URI` | unset (tracing off) | Where `@mlflow.trace` spans go |
 
 The Vertex AI location is fixed to `northamerica-northeast1` in code.

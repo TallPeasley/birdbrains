@@ -8,8 +8,8 @@ Google Cloud Shell from the repo folder unless it says otherwise.
 ### Deploy and configuration
 - [ ] `main` is deployed: `git pull && ./backend/deploy.sh birdbrain-514606` finished without errors.
 - [ ] `curl https://birdbrains-api-28737473918.northamerica-northeast1.run.app/health` returns `{"ok":true}`.
-- [ ] Netlify has `NEXT_PUBLIC_API_URL` and the Firebase keys, and the live site is built from the latest `main`.
-- [ ] Firebase Auth: the Netlify domain is in Authorized domains; email sign-up works on a phone.
+- [ ] The live site (Firebase Hosting) was published by `./deploy-web.sh` from the latest `main`.
+- [ ] Firebase Auth: the site's domain is in Authorized domains (`web.app` is there by default; add any custom domain); email sign-up works on a phone.
 - [ ] `./backend/monitoring.sh birdbrain-514606 <your email>` has been run and the alert email is confirmed.
 - [ ] Billing budget alert exists (Billing > Budgets) for the project.
 - [ ] If Pro is paid at launch: the three Stripe secrets exist, the webhook points at `/billing/webhook`, and a test-card upgrade flips an account to Pro. Then switch Stripe to live keys and redeploy.
@@ -64,7 +64,7 @@ Add `--days 7` for the week.
 gcloud run revisions list --service birdbrains-api --region northamerica-northeast1 --limit 5
 gcloud run services update-traffic birdbrains-api --region northamerica-northeast1 --to-revisions <previous-revision>=100
 ```
-The site (Netlify): Deploys > pick the last good deploy > Publish deploy.
+The site (Firebase Hosting): Firebase console > Hosting > Release history > pick the last good release > Roll back.
 
 ### Pause grading (stops model spend, keeps sign-in and results working)
 ```bash
