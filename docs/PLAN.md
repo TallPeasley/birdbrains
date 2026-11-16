@@ -35,7 +35,7 @@ Counts: 65 tasks. Maalik 28, Claude 24, Gemini 13. On Nov 15 Maalik gave the 10 
 - [x] **Wed Nov 18** · **Claude:** Schools, classes and data deletion (API). Spec 5.3 and 3.3: tenants, schools, classrooms (grades 3 to 12) in Firestore, tenant checks on every query, delete-my-data endpoint, class join codes. Endpoints added to docs/TEAM.md for Gemini.
 - [ ] **Wed Nov 18** · **Claude:** Onboard: run the pipeline locally. Read the Drive manual and docs/TEAM.md, run backend tests and the fake-model flow, then one real Vertex call. Own from here: pipeline.py, taxonomy.py, prompts, ai_eval. *(Nov 15: local runs and tests done. The real Vertex call needs Google credentials.)*
 - [ ] **Thu Nov 19** · **Maalik:** Week 1 exit check (20 min). On your phone: sign up, upload a sharp photo (diagnostic arrives), a blurry one (rejected with tips), the same photo twice (rejected), a page with your name on it (name hidden). Report anything off.
-- [ ] **Thu Nov 19** · **Gemini:** Account and settings screens. Profile, current plan and uploads used this month, parent linking, join a class with a code, and 'Delete my data' (with confirm). Uses Claude's Nov 18 endpoints.
+- [x] **Thu Nov 19** · **Gemini:** Account and settings screens. Profile, current plan and uploads used this month, parent linking, join a class with a code, and 'Delete my data' (with confirm). Uses Claude's Nov 18 endpoints.
 
 ## Week 2 (Nov 20 to 26): AI accuracy, plans and limits
 
