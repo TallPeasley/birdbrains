@@ -1,9 +1,11 @@
-import { Flame, HeartHandshake, Sprout } from 'lucide-react';
+import Link from 'next/link';
+import { Flame, HeartHandshake, Lock, Sparkles, Sprout } from 'lucide-react';
 import type { Stage2GradingAndAffectOutput } from '@/types/birdBrains';
 import { AFFECT_META } from '@/lib/pillars';
+import { MathNumber, MathText } from '@/components/MathText';
 
 export default function AffectCard({ grading }: { grading: Stage2GradingAndAffectOutput }) {
-  // affectState is null on the Free plan: no mood or friction panel then.
+  // affectState is null on the Free plan: show locked Pro mood & friction callout.
   const affect = grading.affectState ? AFFECT_META[grading.affectState] : null;
   const pct = Math.round((grading.totalScore / grading.maxPossibleScore) * 100);
   const highFriction = affect !== null && affect.level >= 2;
@@ -20,8 +22,12 @@ export default function AffectCard({ grading }: { grading: Stage2GradingAndAffec
               <Sprout className="h-3.5 w-3.5" aria-hidden /> Growth-Mindset Tone
             </span>
           </div>
-          <p className="mt-4 text-lg font-medium leading-relaxed text-slate-800">{grading.supportiveFramingMessage}</p>
-          <p className="mt-2 text-sm text-slate-500">{grading.topic}</p>
+          <p className="mt-4 text-lg font-medium leading-relaxed text-slate-800">
+            <MathText text={grading.supportiveFramingMessage} />
+          </p>
+          <p className="mt-2 text-sm text-slate-500">
+            <MathText text={grading.topic} />
+          </p>
 
           {affect && highFriction && (
             <div className={`mt-5 flex gap-3 rounded-xl p-3 text-sm ring-1 ${affect.badge}`} role="status">
@@ -33,6 +39,27 @@ export default function AffectCard({ grading }: { grading: Stage2GradingAndAffec
                   you can rebuild confidence before going solo.
                 </p>
               </div>
+            </div>
+          )}
+
+          {!affect && (
+            <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-indigo-200 bg-indigo-50/50 p-3.5 text-sm">
+              <div className="min-w-0 flex-1">
+                <p className="flex items-center gap-1.5 font-semibold text-slate-900">
+                  <Lock className="h-3.5 w-3.5 text-indigo-600" aria-hidden />
+                  Mood &amp; friction insights (Pro)
+                </p>
+                <p className="mt-0.5 text-xs text-slate-600">
+                  Pro spots when a problem feels frustrating or rushed and adjusts practice steps to match.
+                </p>
+              </div>
+              <Link
+                href="/plans"
+                className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-700"
+              >
+                <Sparkles className="h-3.5 w-3.5" aria-hidden />
+                Upgrade
+              </Link>
             </div>
           )}
         </div>
@@ -64,8 +91,10 @@ function ScoreRing({ value, max, pct }: { value: number; max: number; pct: numbe
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-3xl font-bold tabular-nums text-slate-900">{value}</span>
-        <span className="text-xs text-slate-500">out of {max}</span>
+        <MathNumber value={value} className="text-3xl font-bold text-slate-900" />
+        <span className="text-xs text-slate-500">
+          out of <MathNumber value={max} />
+        </span>
       </div>
     </div>
   );

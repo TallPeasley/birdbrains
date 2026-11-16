@@ -6,9 +6,11 @@ import {
   AlertTriangle,
   Camera,
   CheckCircle2,
+  CopyCheck,
   ImagePlus,
   Loader2,
   RotateCcw,
+  ShieldCheck,
   Tag,
   Trash2,
   UploadCloud,
@@ -16,22 +18,41 @@ import {
 } from 'lucide-react';
 import { useRole } from '@/lib/roleContext';
 import { analyzeImage, MIN_SHORT_EDGE, type ImageQualityResult } from '@/lib/imageQuality';
-import { demoPersonas } from '@/lib/mockData';
+import { errorCodeName } from '@/lib/errorCodes';
+import { PILLARS } from '@/lib/pillars';
+import { demoPersonas, gradingOutput as demoGrading } from '@/lib/mockData';
 import { api, ApiError } from '@/lib/api';
 import { useSession } from '@/lib/session';
-import type { GradeCourse, SubmissionIngestionPayload } from '@/types/birdBrains';
+import type {
+  GradeCourse,
+  Stage2GradingAndAffectOutput,
+  SubmissionIngestionPayload,
+} from '@/types/birdBrains';
+
+const MAX_FILES = 6;
+const MAX_FILE_BYTES = 12 * 1024 * 1024;
 
 const UNITS: Record<GradeCourse, string[]> = {
   MTH1W: ['Number Sense', 'Algebra & Linear Relations', 'Data', 'Geometry & Measurement', 'Financial Literacy'],
   MPM2D: ['Linear Systems', 'Analytic Geometry', 'Quadratic Relations', 'Completing the Square', 'Trigonometry'],
 };
 
-type Stage = 'IDLE' | 'UPLOADING' | 'PRE_CHECKING' | 'INGESTING' | 'PROCESSING' | 'DONE' | 'ERROR';
-const PIPELINE: { stage: Stage; label: string }[] = [
-  { stage: 'UPLOADING', label: 'Uploading your photos' },
-  { stage: 'PRE_CHECKING', label: 'Checking the photos are clear' },
-  { stage: 'INGESTING', label: 'Reading your handwriting' },
-  { stage: 'PROCESSING', label: 'Checking each step of your work' },
+type Stage =
+  | 'IDLE'
+  | 'UPLOADING'
+  | 'PRE_CHECKING'
+  | 'INGESTING'
+  | 'PROCESSING'
+  | 'DONE'
+  | 'DUPLICATE'
+  | 'NEEDS_RETAKE'
+  | 'ERROR';
+
+const PIPELINE: { stage: Stage; label: string; detail: string }[] = [
+  { stage: 'UPLOADING', label: 'Uploading your photos', detail: 'Sending your pages and blurring any names or dates.' },
+  { stage: 'PRE_CHECKING', label: 'Checking the photos are clear', detail: 'Confirming size and sharpness.' },
+  { stage: 'INGESTING', label: 'Reading your handwriting', detail: 'Turning each handwritten line into math steps.' },
+  { stage: 'PROCESSING', label: 'Checking each step of your work', detail: 'Finding where steps went well or slipped.' },
 ];
 
 interface QueuedFile {
@@ -42,16 +63,22 @@ interface QueuedFile {
   error?: string;
 }
 
+interface ProblemState {
+  message: string;
+  failedAt: number;
+  status?: number;
+}
+
 const TIER_STYLE = {
-  EXCELLENT: { label: 'Excellent', cls: 'bg-emerald-50 text-emerald-700 ring-emerald-200', bar: 'bg-emerald-500' },
-  ACCEPTABLE: { label: 'Acceptable', cls: 'bg-amber-50 text-amber-800 ring-amber-200', bar: 'bg-amber-500' },
+  EXCELLENT: { label: 'Sharp', cls: 'bg-emerald-50 text-emerald-700 ring-emerald-200', bar: 'bg-emerald-500' },
+  ACCEPTABLE: { label: 'Readable', cls: 'bg-amber-50 text-amber-800 ring-amber-200', bar: 'bg-amber-500' },
   TOO_BLURRY: { label: 'Too Blurry', cls: 'bg-rose-50 text-rose-700 ring-rose-200', bar: 'bg-rose-500' },
 } as const;
 
 export default function CaptureModal() {
   const { isCaptureOpen, closeCapture } = useRole();
   const { live, profile, activeStudentId, getToken, bumpData } = useSession();
-  const [problem, setProblem] = useState<{ message: string; failedAt: number } | null>(null);
+  const [problem, setProblem] = useState<ProblemState | null>(null);
   const runId = useRef(0);
   const [studentId, setStudentId] = useState<string>(demoPersonas.student.id);
   const [course, setCourse] = useState<GradeCourse>('MPM2D');
@@ -62,6 +89,7 @@ export default function CaptureModal() {
   const [dragging, setDragging] = useState(false);
   const [stage, setStage] = useState<Stage>('IDLE');
   const [payload, setPayload] = useState<SubmissionIngestionPayload | null>(null);
+  const [grading, setGrading] = useState<Stage2GradingAndAffectOutput | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
@@ -76,6 +104,7 @@ export default function CaptureModal() {
     });
     setStage('IDLE');
     setPayload(null);
+    setGrading(null);
   }, []);
 
   const close = useCallback(() => {
@@ -97,15 +126,32 @@ export default function CaptureModal() {
       file,
       previewUrl: URL.createObjectURL(file),
     }));
-    setFiles((prev) => [...prev, ...incoming]);
+    setFiles((prev) => {
+      const existingSignatures = new Set(prev.map((f) => `${f.file.name}:${f.file.size}:${f.file.lastModified}`));
+      const annotated = incoming.map((q) => {
+        const sig = `${q.file.name}:${q.file.size}:${q.file.lastModified}`;
+        if (existingSignatures.has(sig)) {
+          return { ...q, error: 'Duplicate photo: this file is already in your upload list.' };
+        }
+        existingSignatures.add(sig);
+        if (q.file.size > MAX_FILE_BYTES) {
+          return { ...q, error: 'File is over 12 MB. Please choose a smaller photo.' };
+        }
+        if (!q.file.type.startsWith('image/')) {
+          return { ...q, error: 'Not an image file. Use a JPEG, PNG, or WebP photo.' };
+        }
+        return q;
+      });
+      return [...prev, ...annotated].slice(0, MAX_FILES);
+    });
+
     incoming.forEach(async (q) => {
-      if (!q.file.type.startsWith('image/')) {
-        setFiles((prev) => prev.map((f) => (f.id === q.id ? { ...f, error: 'Not an image file' } : f)));
-        return;
-      }
+      if (!q.file.type.startsWith('image/') || q.file.size > MAX_FILE_BYTES) return;
       try {
         const quality = await analyzeImage(q.file);
-        setFiles((prev) => prev.map((f) => (f.id === q.id ? { ...f, quality } : f)));
+        setFiles((prev) =>
+          prev.map((f) => (f.id === q.id && !f.error ? { ...f, quality } : f)),
+        );
       } catch (err) {
         setFiles((prev) =>
           prev.map((f) => (f.id === q.id ? { ...f, error: (err as Error).message } : f)),
@@ -128,8 +174,10 @@ export default function CaptureModal() {
   };
 
   const analyzing = files.some((f) => !f.quality && !f.error);
-  const allPassed = files.length > 0 && files.every((f) => f.quality?.passed);
-  // Live: the upload goes to the signed-in student (or the parent's selected child).
+  const allPassed =
+    files.length > 0 &&
+    files.length <= MAX_FILES &&
+    files.every((f) => !f.error && f.quality?.passed);
   const targetStudentId = live ? (activeStudentId ?? '') : studentId.trim();
   const canSubmit = allPassed && !analyzing && targetStudentId !== '' && stage === 'IDLE';
 
@@ -137,11 +185,14 @@ export default function CaptureModal() {
 
   /** Drop the photos that failed the check and open the picker for a new one. */
   const retake = () => {
-    files.filter((f) => f.error || (f.quality && !f.quality.passed)).forEach((f) => removeFile(f.id));
+    files
+      .filter((f) => f.error || (f.quality && !f.quality.passed))
+      .forEach((f) => removeFile(f.id));
+    setStage('IDLE');
+    setProblem(null);
     inputRef.current?.click();
   };
 
-  // `again` is set when retrying from the error screen, where stage is not IDLE yet.
   const submit = (again = false) => {
     if (again ? !(allPassed && !analyzing && targetStudentId !== '') : !canSubmit) return;
     const qualities = files.map((f) => f.quality!);
@@ -164,15 +215,19 @@ export default function CaptureModal() {
       isQualityPassed: true,
       uploadedAt: new Date().toISOString(),
       fileUrls: files.map((f) => f.previewUrl),
+      status: 'GRADED',
+      gradingId: demoGrading.gradingId,
     };
-    // Demo mode (no backend configured): simulated pipeline.
     const steps: Stage[] = ['UPLOADING', 'PRE_CHECKING', 'INGESTING', 'PROCESSING', 'DONE'];
     steps.forEach((s, i) =>
       timers.current.push(
         setTimeout(() => {
           setStage(s);
-          if (s === 'DONE') setPayload(p);
-        }, i * 1100),
+          if (s === 'DONE') {
+            setPayload(p);
+            setGrading(demoGrading);
+          }
+        }, i * 950),
       ),
     );
   };
@@ -183,7 +238,8 @@ export default function CaptureModal() {
     let reached = 0;
     const go = (s: Stage) => {
       if (!alive()) return;
-      reached = Math.max(reached, PIPELINE.findIndex((p) => p.stage === s));
+      const idx = PIPELINE.findIndex((p) => p.stage === s);
+      if (idx >= 0) reached = Math.max(reached, idx);
       setStage(s);
     };
     let poll: ReturnType<typeof setInterval> | undefined;
@@ -196,11 +252,10 @@ export default function CaptureModal() {
       form.set('unitTopic', unitTopic);
       form.set('sharpnessScore', String(sharpnessScore));
       files.forEach((f) => form.append('files', f.file));
-      // The server re-checks type, resolution and sharpness as part of this call.
+
       const created = await api.createSubmission(token, form);
       go('PRE_CHECKING');
-      // Stage 1 (transcription) then Stage 2 (diagnostic) run inside one request;
-      // poll the submission's status to show which one is in flight.
+
       poll = setInterval(() => {
         api
           .getSubmission(token, created.submissionId)
@@ -210,19 +265,55 @@ export default function CaptureModal() {
           })
           .catch(() => {});
       }, 1500);
+
       const result = await api.processSubmission(token, created.submissionId);
       if (!alive()) return;
       if (result.submission.status === 'NEEDS_RETAKE') {
-        throw new ApiError(422, 'We couldn’t read the handwriting clearly enough. Please retake the photo in good light and try again.');
+        setProblem({
+          message:
+            'We couldn’t read the handwriting clearly enough on this page. Please retake the photo in good light and try again.',
+          failedAt: 2,
+          status: 422,
+        });
+        setStage('NEEDS_RETAKE');
+        return;
       }
       setPayload(result.submission);
+      setGrading(result.grading);
       setStage('DONE');
       bumpData();
     } catch (err) {
       if (!alive()) return;
+      if (err instanceof ApiError && err.status === 409) {
+        setProblem({
+          message:
+            err.detail || 'This photo was already uploaded earlier. Open your student dashboard to see that diagnostic.',
+          failedAt: 0,
+          status: 409,
+        });
+        setStage('DUPLICATE');
+        return;
+      }
+      if (err instanceof ApiError && err.status === 422) {
+        setProblem({
+          message:
+            err.detail || 'The photo is too blurry or below 1080p. Please retake it in good light and try again.',
+          failedAt: 1,
+          status: 422,
+        });
+        setStage('NEEDS_RETAKE');
+        return;
+      }
+      const message =
+        err instanceof ApiError && err.detail === 'FREE_LIMIT_REACHED'
+          ? 'You have used all 10 Free uploads for this calendar month. Your allowance resets on the 1st of next month.'
+          : err instanceof Error
+            ? err.message
+            : 'Something went wrong. Please try again.';
       setProblem({
-        message: err instanceof Error ? err.message : 'Something went wrong. Please try again.',
+        message,
         failedAt: reached,
+        status: err instanceof ApiError ? err.status : undefined,
       });
       setStage('ERROR');
     } finally {
@@ -231,7 +322,10 @@ export default function CaptureModal() {
   };
 
   if (!isCaptureOpen) return null;
-  const activeIndex = stage === 'ERROR' ? (problem?.failedAt ?? 0) : PIPELINE.findIndex((p) => p.stage === stage);
+  const activeIndex =
+    stage === 'ERROR' || stage === 'DUPLICATE' || stage === 'NEEDS_RETAKE'
+      ? (problem?.failedAt ?? 0)
+      : PIPELINE.findIndex((p) => p.stage === stage);
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/50 p-0 backdrop-blur-sm sm:items-center sm:p-6">
@@ -241,7 +335,7 @@ export default function CaptureModal() {
         aria-labelledby="capture-title"
         className="flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl sm:rounded-3xl"
       >
-        <div className="flex items-start justify-between border-b border-slate-200 px-6 py-4">
+        <div className="flex items-start justify-between border-b border-slate-200 px-4 py-4 sm:px-6">
           <div>
             <h2 id="capture-title" className="text-lg font-semibold text-slate-900">
               Upload student work
@@ -250,12 +344,16 @@ export default function CaptureModal() {
               We check each photo is big and sharp enough to read before it is sent.
             </p>
           </div>
-          <button onClick={close} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label="Close">
+          <button
+            onClick={close}
+            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+            aria-label="Close"
+          >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="flex-1 space-y-5 overflow-y-auto px-6 py-5">
+        <div className="flex-1 space-y-5 overflow-y-auto px-4 py-5 sm:px-6">
           {stage === 'IDLE' ? (
             <>
               <div className="grid gap-4 sm:grid-cols-2">
@@ -311,7 +409,10 @@ export default function CaptureModal() {
                   <span className="mb-1 block text-sm font-medium text-slate-700">Topic tags</span>
                   <div className="flex flex-wrap items-center gap-1.5 rounded-xl border border-slate-300 px-2 py-1.5 focus-within:border-indigo-500">
                     {tags.map((t) => (
-                      <span key={t} className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700">
+                      <span
+                        key={t}
+                        className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700"
+                      >
                         <Tag className="h-3 w-3" aria-hidden />
                         {t}
                         <button onClick={() => setTags(tags.filter((x) => x !== t))} aria-label={`Remove ${t}`}>
@@ -348,19 +449,19 @@ export default function CaptureModal() {
                   addFiles(e.dataTransfer.files);
                 }}
                 onClick={() => inputRef.current?.click()}
-                className={`flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed px-6 py-8 text-center transition ${
+                className={`flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed px-4 py-7 text-center transition sm:px-6 sm:py-8 ${
                   dragging ? 'border-indigo-500 bg-indigo-50' : 'border-slate-300 hover:border-indigo-400 hover:bg-slate-50'
                 }`}
               >
                 <UploadCloud className="h-9 w-9 text-indigo-500" aria-hidden />
-                <p className="mt-2 text-sm font-semibold text-slate-800">Drag photos here, or click to browse</p>
+                <p className="mt-2 text-sm font-semibold text-slate-800">Drag photos here, or tap to choose</p>
                 <p className="text-xs text-slate-500">
-                  At least 1080p (shorter side ≥ {MIN_SHORT_EDGE}px). Multiple pages allowed.
+                  JPEG, PNG or WebP · at least 1080p (shorter side ≥ {MIN_SHORT_EDGE}px) · up to {MAX_FILES} pages (12 MB each).
                 </p>
                 <input
                   ref={inputRef}
                   type="file"
-                  accept="image/*"
+                  accept="image/jpeg,image/png,image/webp,image/*"
                   multiple
                   className="hidden"
                   onChange={(e) => {
@@ -369,6 +470,13 @@ export default function CaptureModal() {
                   }}
                 />
               </div>
+
+              <p className="flex items-start gap-2 rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-600 ring-1 ring-slate-200">
+                <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600" aria-hidden />
+                <span>
+                  Before a photo is saved, BirdBrains blurs names, dates, class and student-number fields and removes location data.
+                </span>
+              </p>
 
               {files.length > 0 && (
                 <ul className="space-y-2">
@@ -379,24 +487,14 @@ export default function CaptureModal() {
               )}
 
               {failedCount > 0 && !analyzing && (
-                <div role="alert" className="flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
-                  <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" aria-hidden />
-                  <div className="space-y-2 text-sm text-amber-900">
-                    <p className="font-semibold">
-                      {failedCount === 1 ? 'One photo is' : `${failedCount} photos are`} too blurry or too small to use
-                    </p>
-                    <p className="text-amber-800">
-                      Try again in good light, hold the camera still, and fill the frame with the page.
-                    </p>
-                    <button
-                      type="button"
-                      onClick={retake}
-                      className="inline-flex items-center gap-2 rounded-xl border border-amber-300 bg-white px-3 py-1.5 text-sm font-semibold text-amber-900 hover:bg-amber-100"
-                    >
-                      <Camera className="h-4 w-4" aria-hidden /> Retake photo
-                    </button>
-                  </div>
-                </div>
+                <RetakeTipsCard
+                  title={
+                    failedCount === 1
+                      ? 'One photo is too blurry, too small, or cannot be used'
+                      : `${failedCount} photos are too blurry, too small, or cannot be used`
+                  }
+                  onRetake={retake}
+                />
               )}
             </>
           ) : (
@@ -404,10 +502,16 @@ export default function CaptureModal() {
               stage={stage}
               activeIndex={activeIndex}
               payload={payload}
-              problem={problem?.message}
+              grading={grading}
+              problem={problem}
               onRetry={() => {
                 setProblem(null);
                 submit(true);
+              }}
+              onRetake={() => {
+                setProblem(null);
+                reset();
+                setTimeout(() => inputRef.current?.click(), 50);
               }}
               onBack={() => {
                 setProblem(null);
@@ -419,19 +523,19 @@ export default function CaptureModal() {
         </div>
 
         {stage === 'IDLE' && (
-          <div className="flex items-center justify-between gap-3 border-t border-slate-200 bg-slate-50 px-6 py-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 bg-slate-50 px-4 py-4 sm:px-6">
             <p className="text-xs text-slate-500">
               {live && !targetStudentId
                 ? profile
                   ? 'Link a student on the parent dashboard before uploading.'
                   : 'Sign in on the home page before uploading.'
                 : files.length === 0
-                ? 'Add at least one photo.'
-                : analyzing
-                  ? 'Checking image quality…'
-                  : allPassed
-                    ? `${files.length} photo${files.length > 1 ? 's' : ''} ready.`
-                    : 'Retake or remove the photos that are too blurry.'}
+                  ? 'Add at least one photo.'
+                  : analyzing
+                    ? 'Checking image quality…'
+                    : allPassed
+                      ? `${files.length} photo${files.length > 1 ? 's' : ''} ready.`
+                      : 'Retake or remove the photos that did not pass the check.'}
             </p>
             <button
               onClick={() => submit()}
@@ -448,9 +552,42 @@ export default function CaptureModal() {
   );
 }
 
+function RetakeTipsCard({
+  title,
+  message,
+  onRetake,
+}: {
+  title: string;
+  message?: string;
+  onRetake: () => void;
+}) {
+  return (
+    <div role="alert" className="flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+      <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" aria-hidden />
+      <div className="min-w-0 space-y-2 text-sm text-amber-900">
+        <p className="font-semibold">{title}</p>
+        {message && <p className="text-amber-800">{message}</p>}
+        <ul className="list-disc space-y-1 pl-4 text-xs text-amber-800">
+          <li>Place the page on a flat table in bright light with no shadows across your writing.</li>
+          <li>Hold the phone steady directly above the page so the lines aren&apos;t angled.</li>
+          <li>Fill the frame with the math work so every number and sign looks crisp.</li>
+        </ul>
+        <button
+          type="button"
+          onClick={onRetake}
+          className="inline-flex items-center gap-2 rounded-xl border border-amber-300 bg-white px-3 py-1.5 text-sm font-semibold text-amber-900 hover:bg-amber-100"
+        >
+          <Camera className="h-4 w-4" aria-hidden /> Retake photo
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function FileRow({ item, onRemove }: { item: QueuedFile; onRemove: () => void }) {
   const q = item.quality;
   const tier = q ? TIER_STYLE[q.tier] : null;
+  const passed = !item.error && Boolean(q?.passed);
   return (
     <li className="flex items-center gap-3 rounded-xl border border-slate-200 p-2.5">
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -461,14 +598,16 @@ function FileRow({ item, onRemove }: { item: QueuedFile; onRemove: () => void })
           <p className="text-xs text-rose-600">{item.error}</p>
         ) : !q ? (
           <p className="flex items-center gap-1 text-xs text-slate-500">
-            <Loader2 className="h-3 w-3 animate-spin" /> Analysing resolution and sharpness…
+            <Loader2 className="h-3 w-3 animate-spin" /> Checking resolution and sharpness…
           </p>
         ) : (
           <div className="mt-1 space-y-1">
             <div className="flex flex-wrap items-center gap-1.5 text-xs">
               <span
                 className={`rounded-full px-2 py-0.5 font-medium ring-1 ${
-                  q.resolutionOk ? 'bg-slate-100 text-slate-700 ring-slate-200' : 'bg-rose-50 text-rose-700 ring-rose-200'
+                  q.resolutionOk
+                    ? 'bg-slate-100 text-slate-700 ring-slate-200'
+                    : 'bg-rose-50 text-rose-700 ring-rose-200'
                 }`}
               >
                 {q.width}×{q.height}
@@ -487,8 +626,17 @@ function FileRow({ item, onRemove }: { item: QueuedFile; onRemove: () => void })
           </div>
         )}
       </div>
-      {q && (q.passed ? <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-500" aria-label="Passed" /> : <AlertTriangle className="h-5 w-5 shrink-0 text-rose-500" aria-label="Failed" />)}
-      <button onClick={onRemove} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-rose-600" aria-label={`Remove ${item.file.name}`}>
+      {(q || item.error) &&
+        (passed ? (
+          <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-500" aria-label="Passed" />
+        ) : (
+          <AlertTriangle className="h-5 w-5 shrink-0 text-rose-500" aria-label="Failed" />
+        ))}
+      <button
+        onClick={onRemove}
+        className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-rose-600"
+        aria-label={`Remove ${item.file.name}`}
+      >
         <Trash2 className="h-4 w-4" />
       </button>
     </li>
@@ -499,20 +647,93 @@ function PipelineView({
   stage,
   activeIndex,
   payload,
+  grading,
   problem,
   onRetry,
+  onRetake,
   onBack,
   onClose,
 }: {
   stage: Stage;
   activeIndex: number;
   payload: SubmissionIngestionPayload | null;
-  problem?: string;
+  grading: Stage2GradingAndAffectOutput | null;
+  problem: ProblemState | null;
   onRetry: () => void;
+  onRetake: () => void;
   onBack: () => void;
   onClose: () => void;
 }) {
   const done = stage === 'DONE';
+  const duplicate = stage === 'DUPLICATE';
+  const needsRetake = stage === 'NEEDS_RETAKE';
+  const errored = stage === 'ERROR';
+
+  if (duplicate) {
+    return (
+      <div className="space-y-5 py-2">
+        <div className="text-center">
+          <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-amber-50 text-amber-600">
+            <CopyCheck className="h-7 w-7" aria-hidden />
+          </span>
+          <h3 className="mt-3 text-lg font-semibold text-slate-900">Same photo already uploaded</h3>
+          <p className="mt-1 text-sm text-slate-600">
+            {problem?.message ?? 'This photo was already uploaded earlier. Open your earlier diagnostic instead.'}
+          </p>
+        </div>
+
+        <div className="flex flex-wrap justify-center gap-2">
+          <button
+            type="button"
+            onClick={onRetake}
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+          >
+            <Camera className="h-4 w-4" aria-hidden /> Choose a different photo
+          </button>
+          <Link
+            href="/student"
+            onClick={onClose}
+            className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"
+          >
+            Open earlier diagnostic
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (needsRetake) {
+    return (
+      <div className="space-y-5 py-2">
+        <div className="text-center">
+          <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-amber-50 text-amber-600">
+            <Camera className="h-7 w-7" aria-hidden />
+          </span>
+          <h3 className="mt-3 text-lg font-semibold text-slate-900">Please retake a clearer photo</h3>
+          <p className="mt-1 text-sm text-slate-600">
+            We couldn&apos;t read the handwriting clearly enough to grade each line fairly.
+          </p>
+        </div>
+
+        <RetakeTipsCard
+          title="How to get a clear photo"
+          message={problem?.message}
+          onRetake={onRetake}
+        />
+
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={onBack}
+            className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+          >
+            Back to photos
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 py-2">
       {done ? (
@@ -522,66 +743,130 @@ function PipelineView({
           </span>
           <h3 className="mt-3 text-lg font-semibold text-slate-900">All done!</h3>
         </div>
-      ) : stage === 'ERROR' ? (
+      ) : errored ? (
         <div className="text-center">
           <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-rose-50 text-rose-600">
             <AlertTriangle className="h-7 w-7" aria-hidden />
           </span>
-          <h3 className="mt-3 text-lg font-semibold text-slate-900">That didn’t work</h3>
+          <h3 className="mt-3 text-lg font-semibold text-slate-900">
+            {problem?.status === 503
+              ? 'Privacy check couldn’t finish'
+              : problem?.status === 402
+                ? 'Monthly Free upload limit reached'
+                : 'That didn’t work'}
+          </h3>
         </div>
       ) : (
         <div className="text-center">
-          <h3 className="text-lg font-semibold text-slate-900">Looking at your work…</h3>
+          <h3 className="text-lg font-semibold text-slate-900">Diagnosing your work…</h3>
           <p className="mt-1 text-sm text-slate-500">This can take a little while. Keep this window open.</p>
         </div>
       )}
+
       <ol className="space-y-3" aria-live="polite">
         {PIPELINE.map((p, i) => {
           const complete = done || i < activeIndex;
-          const failed = stage === 'ERROR' && i === activeIndex;
+          const failed = errored && i === activeIndex;
           const active = !done && !failed && i === activeIndex;
           return (
-            <li key={p.stage} className="flex items-center gap-3">
+            <li key={p.stage} className="flex items-start gap-3">
               <span
-                className={`grid h-8 w-8 place-items-center rounded-full text-xs font-semibold ${
-                  complete ? 'bg-emerald-500 text-white' : failed ? 'bg-rose-500 text-white' : active ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-400'
+                className={`mt-0.5 grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-semibold ${
+                  complete
+                    ? 'bg-emerald-500 text-white'
+                    : failed
+                      ? 'bg-rose-500 text-white'
+                      : active
+                        ? 'bg-indigo-600 text-white'
+                        : 'bg-slate-100 text-slate-400'
                 }`}
               >
-                {complete ? <CheckCircle2 className="h-4 w-4" /> : failed ? <AlertTriangle className="h-4 w-4" /> : active ? <Loader2 className="h-4 w-4 animate-spin" /> : i + 1}
+                {complete ? (
+                  <CheckCircle2 className="h-4 w-4" />
+                ) : failed ? (
+                  <AlertTriangle className="h-4 w-4" />
+                ) : active ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  i + 1
+                )}
               </span>
-              <span className={`text-sm ${complete || active || failed ? 'font-semibold text-slate-900' : 'text-slate-400'}`}>
-                {p.label}
-              </span>
+              <div className="min-w-0">
+                <p
+                  className={`text-sm ${
+                    complete || active || failed ? 'font-semibold text-slate-900' : 'text-slate-400'
+                  }`}
+                >
+                  {p.label}
+                </p>
+                {(active || failed) && <p className="text-xs text-slate-500">{p.detail}</p>}
+              </div>
             </li>
           );
         })}
       </ol>
-      {stage === 'ERROR' && (
+
+      {errored && (
         <div className="space-y-4">
           <div role="alert" className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
-            {problem}
+            {problem?.message ?? 'Something went wrong. Please try again.'}
           </div>
-          <div className="flex justify-end gap-2">
+          <div className="flex flex-wrap justify-end gap-2">
             <button
+              type="button"
               onClick={onBack}
               className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50"
             >
               Back to photos
             </button>
-            <button
-              onClick={onRetry}
-              className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"
-            >
-              <RotateCcw className="h-4 w-4" aria-hidden /> Try again
-            </button>
+            {problem?.status !== 402 && (
+              <button
+                type="button"
+                onClick={onRetry}
+                className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"
+              >
+                <RotateCcw className="h-4 w-4" aria-hidden /> Try again
+              </button>
+            )}
           </div>
         </div>
       )}
+
       {done && payload && (
         <div className="space-y-4">
           <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
             Your work has been checked. See which steps went well and where you got stuck on the student dashboard.
           </div>
+
+          {grading && grading.entityExtractions.length > 0 && (
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                Error codes spotted
+              </p>
+              <ul className="mt-2 space-y-2">
+                {grading.entityExtractions.map((m, idx) => {
+                  const prefix = m.misconceptionId.split('-')[0] as keyof typeof PILLARS;
+                  const pillar = PILLARS[prefix];
+                  const official = errorCodeName(m.misconceptionId);
+                  return (
+                    <li key={`${m.misconceptionId}-${idx}`} className="flex flex-wrap items-center gap-2 text-xs">
+                      <span
+                        className="rounded-full px-2 py-0.5 font-mono font-semibold text-white"
+                        style={{ backgroundColor: pillar?.color ?? '#64748b' }}
+                      >
+                        {m.misconceptionId}
+                      </span>
+                      <span className="font-semibold text-slate-800">
+                        {official ?? m.misconceptionId}
+                      </span>
+                      {pillar && <span className="text-slate-500">· {pillar.short}</span>}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          )}
+
           <details className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs">
             <summary className="cursor-pointer font-medium text-slate-600">
               Submission details <span className="font-mono">{payload.submissionId}</span>

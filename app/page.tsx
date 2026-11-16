@@ -8,6 +8,7 @@ import { PILLARS, PILLAR_ORDER } from '@/lib/pillars';
 import { IS_LIVE } from '@/lib/api';
 import AccountCard from '@/components/AccountCard';
 import { useSession } from '@/lib/session';
+import { MathNumber, MathText } from '@/components/MathText';
 
 const PILLAR_ICONS = {
   CON: Brain,
@@ -32,7 +33,7 @@ export default function HomePage() {
       {/* Left: hero */}
       <section>
         <span className="inline-flex items-center rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 ring-1 ring-indigo-200">
-          Ontario MTH1W · MPM2D
+          <MathText text="Ontario MTH1W · MPM2D" />
         </span>
         <h1 className="mt-4 text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
           See <span className="text-indigo-600">why</span> a math answer went wrong, not just that it did.
@@ -42,7 +43,9 @@ export default function HomePage() {
           worksheet that targets exactly what to practise next.
         </p>
 
-        <h2 className="eyebrow mt-10">The 4-Pillar Diagnostic Framework</h2>
+        <h2 className="eyebrow mt-10">
+          The <MathNumber value={4} />-Pillar Diagnostic Framework
+        </h2>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           {PILLAR_ORDER.map((p, i) => {
             const Icon = PILLAR_ICONS[p];
@@ -56,11 +59,15 @@ export default function HomePage() {
                     <Icon className="h-5 w-5" aria-hidden />
                   </span>
                   <div>
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Pillar {i + 1}</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                      Pillar <MathNumber value={i + 1} />
+                    </p>
                     <p className="font-semibold text-slate-900">{PILLARS[p].label}</p>
                   </div>
                 </div>
-                <p className="mt-2 text-sm text-slate-600">{PILLARS[p].description}</p>
+                <p className="mt-2 text-sm text-slate-600">
+                  <MathText text={PILLARS[p].description} />
+                </p>
               </div>
             );
           })}
@@ -102,7 +109,9 @@ export default function HomePage() {
                         {r === 'student' ? 'Student' : 'Parent'}
                       </span>
                       <span className="block font-semibold text-slate-900">{persona.name}</span>
-                      <span className="block text-sm text-slate-500">{persona.detail}</span>
+                      <span className="block text-sm text-slate-500">
+                        <MathText text={persona.detail} />
+                      </span>
                     </span>
                   </button>
                   {selected && (
