@@ -90,14 +90,19 @@ class Deps:
     batch: BatchEngine
     auth: Authenticator
     batch_token: Optional[str] = None
-    cors_origins: tuple[str, ...] = ("https://birdbrains.netlify.app", "http://localhost:3000")
+    cors_origins: tuple[str, ...] = (
+        "https://birdbrain-514606.web.app",
+        "https://birdbrain-514606.firebaseapp.com",
+        "https://birdbrains.netlify.app",  # old address, kept until Netlify is shut down
+        "http://localhost:3000",
+    )
     inline_images: bool = False  # local mode: send image bytes to the model, there is no gs:// URI
     scrubber: PhotoScrubber = field(default_factory=PhotoScrubber)
     free_monthly_limit: int = 10  # uploads per student per calendar month on the Free plan
     free_worksheets: bool = False  # nightly 3-stage worksheets are a Pro feature
     billing: Optional[Billing] = None  # Stripe; None = upgrades not configured
     classroom: Optional[Classroom] = None  # Google Classroom OAuth; None = not configured
-    site_url: str = "https://birdbrains.netlify.app"
+    site_url: str = "https://birdbrain-514606.web.app"
 
 
 def deps_from_env() -> Deps:

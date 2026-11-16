@@ -81,7 +81,7 @@ produced automatically and can be wrong; see the Terms of Use.
 |---|---|---|
 | Google Cloud (Cloud Run, Cloud Storage, Firestore, Vertex AI, Cloud DLP) | Running the service, storing photos and results, the AI analysis, finding and blurring personal details | Montréal, Canada |
 | Google Firebase Authentication | Sign-in (email address, password check) | [confirm: Firebase Authentication may process account data in the United States] |
-| Netlify | Delivering the website's pages (no student data is stored there) | Global network, based in the United States |
+| Google (Firebase Hosting) | Delivering the website's pages (no student data is stored there) | Global network, based in the United States |
 
 These providers act on our instructions and may not use the information for
 their own purposes. We may disclose information if the law requires it.

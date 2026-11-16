@@ -12,6 +12,16 @@ npm run dev      # http://localhost:3000
 npm run build && npm start
 ```
 
+## Publish it
+
+The live site is on Firebase Hosting (project `birdbrain-514606`, https://birdbrain-514606.web.app). From Google Cloud Shell, in the repo root:
+
+```bash
+./deploy-web.sh            # builds with the live API + Firebase config, then deploys
+```
+
+Roll back from Firebase console > Hosting > Release history.
+
 ## Routes
 
 | Route | What it is |

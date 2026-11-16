@@ -8,7 +8,9 @@
 set -euo pipefail
 
 PROJECT="${1:?usage: ./deploy.sh <gcp-project-id> [frontend-origin]}"
-ORIGIN="${2:-https://birdbrains.netlify.app}"
+ORIGIN="${2:-https://${PROJECT}.web.app}"
+# Also allowed: the firebaseapp.com twin and the old Netlify address (until it is shut down).
+CORS="$ORIGIN,https://${PROJECT}.firebaseapp.com,https://birdbrains.netlify.app"
 REGION="northamerica-northeast1"   # PIPEDA: everything stays in Montréal
 SERVICE="birdbrains-api"
 BUCKET="${PROJECT}-birdbrains"
@@ -89,7 +91,7 @@ echo "== Deploying to Cloud Run"
 # /health checks a Firebase sign-in token (or the batch token) itself.
 gcloud run deploy "$SERVICE" --source . --region "$REGION" --service-account "$SA" \
   --allow-unauthenticated --memory 1Gi --timeout 300 --max-instances 5 \
-  --set-env-vars "GOOGLE_CLOUD_PROJECT=$PROJECT,BIRDBRAINS_BUCKET=$BUCKET,BIRDBRAINS_CORS_ORIGINS=$ORIGIN,BIRDBRAINS_SITE_URL=$ORIGIN" \
+  --set-env-vars "^;^GOOGLE_CLOUD_PROJECT=$PROJECT;BIRDBRAINS_BUCKET=$BUCKET;BIRDBRAINS_CORS_ORIGINS=$CORS;BIRDBRAINS_SITE_URL=$ORIGIN" \
   --set-secrets "$SECRETS"
 URL="$(gcloud run services describe "$SERVICE" --region "$REGION" --format='value(status.url)')"
 # The API needs its own public address for the Google sign-in return link.
@@ -111,4 +113,4 @@ echo
 echo "API is live at: $URL"
 echo "Stripe webhook endpoint:        $URL/billing/webhook"
 echo "Google OAuth redirect URI:      $URL/classroom/callback"
-echo "Set NEXT_PUBLIC_API_URL=$URL in Netlify, then finish the Firebase steps in backend/README.md."
+echo "Publish the site with ../deploy-web.sh $PROJECT (it reads this URL itself)."
