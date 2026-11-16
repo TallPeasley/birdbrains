@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BirdBrains Math Capture</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <header class="header">
+        <div class="brand">
+          <span class="logo" aria-hidden="true">🦉</span>
+          <div>
+            <h1>BirdBrains</h1>
+            <p class="subtitle">Ontario Math Capture</p>
+          </div>
+        </div>
+        <button id="settings-toggle" class="icon-btn" type="button" title="Connection settings" aria-label="Connection settings">
+          ⚙
+        </button>
+      </header>
+
+      <section id="settings-panel" class="card hidden" aria-label="Connection settings">
+        <h2 class="card-title">Connection Settings</h2>
+        <label class="field">
+          <span>API URL</span>
+          <input id="cfg-api-url" type="url" placeholder="https://birdbrains-api-28737473918.northamerica-northeast1.run.app" />
+        </label>
+        <label class="field">
+          <span>Web App URL</span>
+          <input id="cfg-site-url" type="url" placeholder="https://birdbrain-514606.web.app" />
+        </label>
+        <label class="field">
+          <span>Firebase Web API Key</span>
+          <input id="cfg-firebase-key" type="password" placeholder="Optional for live Firebase sign-in" />
+        </label>
+        <div class="row">
+          <button id="cfg-save" class="btn btn-primary" type="button">Save</button>
+          <button id="cfg-reset" class="btn btn-ghost" type="button">Reset</button>
+        </div>
+      </section>
+
+      <!-- Auth view -->
+      <section id="auth-view" class="card">
+        <h2 class="card-title">Sign in to BirdBrains</h2>
+        <p class="muted">Sign in with your BirdBrains account or try a demo capture.</p>
+        <form id="login-form" class="stack">
+          <label class="field">
+            <span>Email</span>
+            <input id="login-email" type="email" required placeholder="student@example.com" />
+          </label>
+          <label class="field">
+            <span>Password</span>
+            <input id="login-password" type="password" required placeholder="••••••••" />
+          </label>
+          <button id="login-btn" class="btn btn-primary" type="submit">Sign In</button>
+        </form>
+        <div class="divider"><span>or</span></div>
+        <button id="demo-btn" class="btn btn-secondary" type="button">Try Demo Mode</button>
+        <p id="auth-error" class="alert alert-error hidden" role="alert"></p>
+      </section>
+
+      <!-- Main capture view -->
+      <section id="capture-view" class="stack hidden">
+        <div class="user-bar">
+          <div>
+            <strong id="user-name">Student</strong>
+            <span id="user-plan" class="badge">Free</span>
+          </div>
+          <button id="signout-btn" class="link-btn" type="button">Sign out</button>
+        </div>
+
+        <div class="card stack">
+          <div class="grid-2">
+            <label class="field">
+              <span>Course</span>
+              <select id="course-select">
+                <option value="MTH1W">MTH1W (Grade 9)</option>
+                <option value="MPM2D" selected>MPM2D (Grade 10)</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Student ID</span>
+              <input id="student-id-input" type="text" readonly />
+            </label>
+          </div>
+          <label class="field">
+            <span>Unit / Topic</span>
+            <input id="topic-input" type="text" maxlength="200" value="Completing the Square · vertex form" placeholder="e.g. Quadratic Relations · vertex form" />
+          </label>
+
+          <div class="row">
+            <button id="capture-tab-btn" class="btn btn-primary" type="button">Capture Tab</button>
+            <label class="btn btn-secondary file-label">
+              Pick Image
+              <input id="file-input" type="file" accept="image/jpeg,image/png,image/webp" hidden />
+            </label>
+          </div>
+        </div>
+
+        <!-- Preview & Quality -->
+        <div id="preview-card" class="card stack hidden">
+          <div class="preview-wrap">
+            <img id="preview-img" alt="Captured worksheet preview" />
+          </div>
+          <div id="quality-badge" class="quality-pill">Checking quality…</div>
+          <button id="upload-btn" class="btn btn-primary" type="button">Diagnose Work</button>
+        </div>
+
+        <!-- Status / Result -->
+        <div id="status-card" class="card stack hidden" aria-live="polite">
+          <div class="status-header">
+            <span id="status-dot" class="dot"></span>
+            <strong id="status-title">Uploading…</strong>
+          </div>
+          <p id="status-detail" class="muted"></p>
+          <div id="result-actions" class="stack hidden">
+            <a id="result-link" class="btn btn-primary" href="#" target="_blank" rel="noopener noreferrer">
+              View Full Diagnostic
+            </a>
+            <button id="reset-btn" class="btn btn-ghost" type="button">Capture Another Page</button>
+          </div>
+          <div id="upgrade-actions" class="stack hidden">
+            <a id="upgrade-link" class="btn btn-amber" href="#" target="_blank" rel="noopener noreferrer">
+              Upgrade to Pro for Unlimited Uploads
+            </a>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
