@@ -79,7 +79,7 @@ Counts: 65 tasks. Maalik 28, Claude 24, Gemini 13. On Nov 15 Maalik gave the 10 
 
 ## Week 5 (Dec 10 to 14): Benchmarks, load test, launch
 
-- [ ] **Thu Dec 10** · **Gemini:** Mobile and accessibility pass. Every screen at phone width, keyboard use, contrast, screen-reader labels, loading speed. Fix what fails.
+- [x] **Thu Dec 10** · **Gemini:** Mobile and accessibility pass. Every screen at phone width, keyboard use, contrast, screen-reader labels, loading speed. Fix what fails.
 - [ ] **Thu Dec 10** · **Claude:** Full accuracy run on 80 + tuning. ai_eval on all 80. Release gates: pillar F1 0.92, code F1 0.88, 100% schema pass, 95% cascading accuracy. Tune and report what passes.
 - [ ] **Fri Dec 11** · **Maalik:** Review the policy, terms and prices. Read the drafts, change anything, approve. Confirm the Free cap and Pro price. Pick the first pilot users (e.g. your tutoring students and parents) and who gets Pro.
 - [ ] **Fri Dec 11** · **Claude:** Load test, monitoring and alerts. E2E-02: 30 uploads at once finish under 45 s. Cloud Monitoring dashboard, error and cost alerts (cost per plan per day), uptime check on /health. *(Nov 15: `backend/tools/load_test.py` and `backend/monitoring.sh` are written; both still need a run against the live project.)*
