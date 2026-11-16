@@ -138,17 +138,11 @@ Prices per million tokens are in `pipeline.DEFAULT_PRICES`; override with
   a wrong blank structure are rejected and retried the next night.
 - Launch checklist and runbook: [`docs/LAUNCH.md`](../docs/LAUNCH.md).
 
-## Known gap
-
-The Free monthly cap is checked before each upload without a lock, so uploads sent at
-the same instant can slip a few past the cap (seen in the load test: 12 at once on a
-cap of 10). One student uploading by hand cannot trigger it.
-
 ## Not verified yet
 
 Everything is tested against a stubbed Gemini client. Calls to real Vertex AI
 (structured output with these schemas, context-cache minimum size, the batch
-JSONL format, real token costs and speed), `deploy.sh` since Nov 13 and
+JSONL format, real token costs and speed), the Firestore transaction behind the Free cap counter (`usagecounters`), `deploy.sh` since Nov 13 and
 `monitoring.sh` have not been run against the real project.
 
 ## Turning on Stripe and Google Classroom
