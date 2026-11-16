@@ -1,7 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { CheckCircle2, Eye, Lightbulb, RotateCcw, XCircle } from 'lucide-react';
+import { CheckCircle2, Eye, Lightbulb, Printer, RotateCcw, Send, XCircle } from 'lucide-react';
+import PillarBadge from '@/components/PillarBadge';
+import SectionIndex from '@/components/aero/SectionIndex';
+import { aeroBrand } from '@/lib/aero/brands';
+import { AERO_URLS, BRAND_STAGE } from '@/lib/aero/stage';
 import type { FadedScaffoldingStep, WS_3STAGE_V1 } from '@/types/birdBrains';
 import { PILLARS } from '@/lib/pillars';
 import { formatMathPlaceholder, MathNumber, MathText } from '@/components/MathText';
@@ -14,21 +18,74 @@ const SECTIONS = [
 
 type SectionKey = (typeof SECTIONS)[number]['key'];
 
+/**
+ * One-click hand-off to Chirp (the Aero daily task app): the practice drills travel in the link itself,
+ * as base64url JSON after #import=. Chirp adds them to today's tasks. Nothing is sent to a server.
+ */
+function chirpImportUrl(worksheet: WS_3STAGE_V1): string {
+  const base = (AERO_URLS.chirp || aeroBrand('chirp', BRAND_STAGE).url).replace(/\/$/, '');
+  const payload = {
+    v: 1,
+    src: 'birdbrains',
+    ref: worksheet.worksheetId,
+    title: worksheet.title,
+    tasks: [
+      `Practice drill A: review the diagnostic mirror for ${worksheet.targetConcept}`,
+      `Practice drill B: finish the ${worksheet.sectionB_FadedScaffolding.length} guided steps`,
+      `Practice drill C: solve the independent problem and tick the self-check`,
+    ],
+  };
+  const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(payload))))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+  return `${base}/#import=${b64}`;
+}
+
+function printWorksheet() {
+  document.body.dataset.print = 'worksheet';
+  const done = () => {
+    delete document.body.dataset.print;
+    window.removeEventListener('afterprint', done);
+  };
+  window.addEventListener('afterprint', done);
+  window.print();
+}
+
 export default function WorksheetViewer({ worksheet }: { worksheet: WS_3STAGE_V1 }) {
   const [active, setActive] = useState<SectionKey>('A');
 
   return (
-    <section className="card overflow-hidden">
+    <section className="card overflow-hidden" data-worksheet>
       <div className="border-b border-line p-4 pb-0 sm:p-6 sm:pb-0">
-        <p className="eyebrow">Your remedial worksheet</p>
-        <h2 className="mt-1 text-xl font-semibold text-slate-900">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="eyebrow flex items-center gap-2.5">
+            <SectionIndex n={4} />
+            Your remedial worksheet
+          </p>
+          <div className="no-print flex flex-wrap gap-2">
+            <a
+              href={chirpImportUrl(worksheet)}
+              target="_blank"
+              rel="noopener"
+              className="aero-btn aero-btn--sm"
+              title="Add these three practice drills to today's tasks in Chirp"
+            >
+              <Send className="h-3.5 w-3.5" aria-hidden /> Send to Chirp
+            </a>
+            <button type="button" onClick={printWorksheet} className="aero-btn aero-btn--sm">
+              <Printer className="h-3.5 w-3.5" aria-hidden /> Print
+            </button>
+          </div>
+        </div>
+        <h2 className="mt-2 text-xl font-bold text-slate-900">
           <MathText text={worksheet.title} />
         </h2>
         <p className="mt-1 text-sm text-slate-500">
           Target concept: <MathText text={worksheet.targetConcept} />
         </p>
 
-        <div role="tablist" aria-label="Worksheet sections" className="mt-5 grid grid-cols-3 gap-1">
+        <div role="tablist" aria-label="Worksheet sections" className="no-print mt-5 grid grid-cols-3 gap-1">
           {SECTIONS.map((s) => (
             <button
               key={s.key}
@@ -41,7 +98,7 @@ export default function WorksheetViewer({ worksheet }: { worksheet: WS_3STAGE_V1
                 active === s.key ? 'border-brand' : 'border-transparent hover:border-slate-300'
               }`}
             >
-              <span className={`block text-xs font-bold ${active === s.key ? 'text-brand-3' : 'text-slate-400'}`}>
+              <span className={`block font-mono text-[10.5px] font-semibold uppercase tracking-[0.08em] ${active === s.key ? 'text-brand-3' : 'text-slate-400'}`}>
                 Section {s.key}
               </span>
               <span className={`block break-words text-xs font-semibold sm:text-sm ${active === s.key ? 'text-slate-900' : 'text-slate-600'}`}>
@@ -53,11 +110,23 @@ export default function WorksheetViewer({ worksheet }: { worksheet: WS_3STAGE_V1
         </div>
       </div>
 
-      <div className="p-4 sm:p-6" role="tabpanel" id={`panel-${active}`} aria-labelledby={`tab-${active}`}>
-        {active === 'A' && <DiagnosticMirror worksheet={worksheet} />}
-        {active === 'B' && <FadedScaffolding steps={worksheet.sectionB_FadedScaffolding} />}
-        {active === 'C' && <IndependentTransfer worksheet={worksheet} />}
-      </div>
+      {/* All three panels stay mounted (answers survive a tab switch) and all three print. */}
+      {SECTIONS.map((s) => (
+        <div
+          key={s.key}
+          className={`p-4 sm:p-6 print:block print:break-inside-avoid ${active === s.key ? '' : 'hidden'}`}
+          role="tabpanel"
+          id={`panel-${s.key}`}
+          aria-labelledby={`tab-${s.key}`}
+        >
+          <p className="mb-3 hidden font-mono text-[11px] font-semibold uppercase tracking-[0.08em] text-slate-500 print:block">
+            Section {s.key} · {s.title}
+          </p>
+          {s.key === 'A' && <DiagnosticMirror worksheet={worksheet} />}
+          {s.key === 'B' && <FadedScaffolding steps={worksheet.sectionB_FadedScaffolding} />}
+          {s.key === 'C' && <IndependentTransfer worksheet={worksheet} />}
+        </div>
+      ))}
     </section>
   );
 }
@@ -137,21 +206,21 @@ function ScaffoldStep({ step }: { step: FadedScaffoldingStep }) {
   const correct = step.scaffoldingType === 'PARTIAL_BLANK' ? blanksCorrect : freeCorrect;
 
   const label = {
-    GIVEN: { text: 'Worked for you', cls: 'bg-slate-100 text-slate-600' },
-    PARTIAL_BLANK: { text: 'Fill the blanks', cls: 'bg-brand-tint text-brand-3' },
-    INDEPENDENT: { text: 'Your turn', cls: 'bg-brand-2/10 text-brand-3' },
+    GIVEN: { text: 'Worked for you', cls: '' },
+    PARTIAL_BLANK: { text: 'Fill the blanks', cls: 'aero-badge--accent' },
+    INDEPENDENT: { text: 'Your turn', cls: 'aero-badge--solid' },
   }[step.scaffoldingType];
 
   return (
     <li className="min-w-0 rounded-md border border-line p-3.5 sm:p-4">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="latex-num grid h-6 w-6 shrink-0 place-items-center rounded-sm bg-slate-900 text-xs font-bold text-white">
-          {step.stepNumber}
+        <span className="grid h-6 w-6 shrink-0 place-items-center rounded-sm bg-slate-900 font-mono text-[11px] font-semibold text-white">
+          {String(step.stepNumber).padStart(2, '0')}
         </span>
         <p className="min-w-0 flex-1 break-words font-medium text-slate-900">
           {step.stepNumber === 1 ? 'Set up' : <MathText text={step.prompt} />}
         </p>
-        <span className={`ml-auto rounded-sm px-2 py-0.5 text-[11px] font-semibold ${label.cls}`}>{label.text}</span>
+        <span className={`aero-badge ml-auto ${label.cls}`}>{label.text}</span>
       </div>
 
       <div className="mt-3 sm:pl-8">
@@ -272,9 +341,8 @@ function IndependentTransfer({ worksheet }: { worksheet: WS_3STAGE_V1 }) {
     <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
       <div>
         <div className="flex items-center gap-2">
-          <span className="rounded-sm bg-brand-2/10 px-2 py-0.5 text-[11px] font-semibold text-brand-3">
-            Focus: {PILLARS[t.targetPillarFocus].short}
-          </span>
+          <span className="eyebrow">Focus</span>
+          <PillarBadge pillar={t.targetPillarFocus} label />
           <span className="text-[11px] text-slate-400">
             <MathText text={t.problemId} />
           </span>

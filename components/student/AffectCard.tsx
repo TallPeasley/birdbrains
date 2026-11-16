@@ -3,6 +3,7 @@ import { Flame, HeartHandshake, Lock, Sparkles, Sprout } from 'lucide-react';
 import type { Stage2GradingAndAffectOutput } from '@/types/birdBrains';
 import { AFFECT_META } from '@/lib/pillars';
 import { MathNumber, MathText } from '@/components/MathText';
+import SectionIndex from '@/components/aero/SectionIndex';
 
 export default function AffectCard({ grading }: { grading: Stage2GradingAndAffectOutput }) {
   // affectState is null on the Free plan: show locked Pro mood & friction callout.
@@ -14,18 +15,19 @@ export default function AffectCard({ grading }: { grading: Stage2GradingAndAffec
     <section className="card overflow-hidden">
       <div className="grid gap-0 md:grid-cols-[1fr_auto]">
         <div className="p-6">
-          <div className="flex flex-wrap gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-sm bg-brand-soft px-2.5 py-1 text-xs font-semibold text-brand-3 ring-1 ring-brand-line">
-              <Flame className="h-3.5 w-3.5" aria-hidden /> High Effort Detected
+          <div className="flex flex-wrap items-center gap-2">
+            <SectionIndex n={1} className="mr-1" />
+            <span className="aero-badge aero-badge--accent">
+              <Flame className="h-3 w-3" aria-hidden /> High Effort Detected
             </span>
-            <span className="inline-flex items-center gap-1.5 rounded-sm bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">
-              <Sprout className="h-3.5 w-3.5" aria-hidden /> Growth-Mindset Tone
+            <span className="aero-badge aero-badge--ok">
+              <Sprout className="h-3 w-3" aria-hidden /> Growth-Mindset Tone
             </span>
           </div>
           <p className="mt-4 text-lg font-medium leading-relaxed text-slate-800">
             <MathText text={grading.supportiveFramingMessage} />
           </p>
-          <p className="mt-2 text-sm text-slate-500">
+          <p className="mt-3 font-mono text-xs uppercase tracking-[0.06em] text-slate-500">
             <MathText text={grading.topic} />
           </p>
 
@@ -63,7 +65,7 @@ export default function AffectCard({ grading }: { grading: Stage2GradingAndAffec
             </div>
           )}
         </div>
-        <div className="flex items-center justify-center border-t border-line bg-slate-50 p-6 md:border-l md:border-t-0">
+        <div className="aero-blueprint flex items-center justify-center border-t border-line p-6 md:border-l md:border-t-0">
           <ScoreRing value={grading.totalScore} max={grading.maxPossibleScore} pct={pct} />
         </div>
       </div>
@@ -77,22 +79,22 @@ function ScoreRing({ value, max, pct }: { value: number; max: number; pct: numbe
   return (
     <div className="relative h-36 w-36">
       <svg viewBox="0 0 120 120" className="h-full w-full -rotate-90">
-        <circle cx="60" cy="60" r={r} fill="none" stroke="#e2e8f0" strokeWidth="10" />
+        <circle cx="60" cy="60" r={r} fill="#fff" stroke="#e2e8f0" strokeWidth="6" />
         <circle
           cx="60"
           cy="60"
           r={r}
           fill="none"
-          stroke="#6366F1"
-          strokeWidth="10"
-          strokeLinecap="round"
+          style={{ stroke: 'var(--aero-primary)' }}
+          strokeWidth="6"
+          strokeLinecap="butt"
           strokeDasharray={c}
           strokeDashoffset={c * (1 - pct / 100)}
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <MathNumber value={value} className="text-3xl font-bold text-slate-900" />
-        <span className="text-xs text-slate-500">
+        <MathNumber value={value} className="text-3xl font-semibold text-slate-900" />
+        <span className="font-mono text-[10.5px] uppercase tracking-[0.06em] text-slate-500">
           out of <MathNumber value={max} />
         </span>
       </div>

@@ -100,14 +100,14 @@ function View({ s, usage }: { s: ParentProjectionSummary; usage: ApiUsage | null
   const isFree = usage?.plan === 'free';
   return (
     <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-3">
+      <header className="flex flex-wrap items-end justify-between gap-3 border-b border-line pb-5">
         <div>
           <p className="eyebrow">Parent dashboard</p>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+          <h1 className="mt-2 text-2xl font-extrabold text-slate-900 sm:text-3xl">
             How {s.studentName.split(' ')[0]} is doing in <MathText text={s.course} />
           </h1>
         </div>
-        <span className="rounded-sm bg-white px-3 py-1 text-xs font-medium text-slate-600 ring-1 ring-line">
+        <span className="aero-badge">
           {s.studentName} · <MathText text={s.course === 'MPM2D' ? 'Grade 10' : 'Grade 9'} />
         </span>
       </header>

@@ -139,11 +139,11 @@ function View({
   const limitReached = usage !== null && usage.plan === 'free' && usage.remaining === 0;
 
   return (
-    <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-3">
+    <div className="space-y-6" data-dashboard>
+      <header className="flex flex-wrap items-end justify-between gap-3 border-b border-line pb-5">
         <div>
           <p className="eyebrow">Student dashboard</p>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+          <h1 className="mt-2 text-2xl font-extrabold text-slate-900 sm:text-3xl">
             {own ? `Hi ${name.split(' ')[0]}, here’s your latest diagnostic` : 'Latest diagnostic'}
           </h1>
         </div>

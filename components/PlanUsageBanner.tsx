@@ -26,11 +26,7 @@ export const DEMO_PRO_USAGE: ApiUsage = {
 export function PlanBadge({ plan }: { plan: PlanTier }) {
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-sm px-2.5 py-0.5 text-xs font-semibold ring-1 ${
-        plan === 'pro'
-          ? 'bg-brand-soft text-brand-3 ring-brand-line'
-          : 'bg-slate-100 text-slate-700 ring-line'
-      }`}
+      className={`aero-badge ${plan === 'pro' ? 'aero-badge--accent' : ''}`}
     >
       {plan === 'pro' && <Sparkles className="h-3 w-3" aria-hidden />}
       {plan === 'pro' ? 'Pro' : 'Free'}
@@ -134,11 +130,11 @@ export function LockedProCard({
   features?: string[];
 }) {
   return (
-    <section className="card border-brand-line bg-gradient-to-br from-brand-soft via-white to-brand-soft p-5 sm:p-6">
+    <section className="card border-brand-line border-t-2 border-t-brand bg-brand-soft p-5 sm:p-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1 rounded-sm bg-brand-tint px-2.5 py-0.5 text-xs font-semibold text-brand-3">
+            <span className="aero-badge aero-badge--accent">
               <Lock className="h-3 w-3" aria-hidden /> Pro feature
             </span>
           </div>

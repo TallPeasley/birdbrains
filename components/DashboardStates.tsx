@@ -2,9 +2,10 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { AlertCircle, FileQuestion, RotateCcw, UploadCloud } from 'lucide-react';
+import { AlertCircle, RotateCcw, UploadCloud } from 'lucide-react';
 import { useSession } from '@/lib/session';
 import { useRole } from '@/lib/roleContext';
+import AeroLogo from '@/components/aero/AeroLogo';
 
 export function Notice({
   title,
@@ -99,8 +100,8 @@ export function NoWorkNotice({ variant = 'student' }: { variant?: 'student' | 'p
     <Notice
       title={parent ? 'Nothing to show yet' : 'No graded work yet'}
       icon={
-        <span className="grid h-14 w-14 place-items-center rounded-sm bg-brand-soft text-brand-3">
-          <FileQuestion className="h-7 w-7" aria-hidden />
+        <span className="aero-plate aero-blueprint w-24">
+          <AeroLogo brand="birdbrains" variant="isometric" />
         </span>
       }
     >

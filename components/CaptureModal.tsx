@@ -328,12 +328,12 @@ export default function CaptureModal() {
       : PIPELINE.findIndex((p) => p.stage === stage);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-slate-900/50 p-0 backdrop-blur-sm sm:items-center sm:p-6">
+    <div className="no-print fixed inset-0 z-50 flex items-end justify-center bg-slate-900/50 p-0 sm:items-center sm:p-6">
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="capture-title"
-        className="flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-lg bg-white sm:rounded-lg"
+        className="flex max-h-[92vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-lg border border-line-strong bg-white shadow-overlay sm:rounded-lg"
       >
         <div className="flex items-start justify-between border-b border-line px-4 py-4 sm:px-6">
           <div>

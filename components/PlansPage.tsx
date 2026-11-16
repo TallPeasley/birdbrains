@@ -115,7 +115,7 @@ export default function PlansPage() {
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="eyebrow">Plans &amp; monthly usage</p>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+          <h1 className="mt-2 text-2xl font-extrabold text-slate-900 sm:text-3xl">
             Free vs. Pro
           </h1>
           <p className="mt-1 max-w-2xl text-sm text-slate-600">
@@ -207,7 +207,7 @@ export default function PlansPage() {
         </section>
 
         <section
-          className="card flex flex-col justify-between border-brand-line bg-gradient-to-b from-brand-soft via-white to-white p-5 ring-1 ring-brand-line sm:p-6"
+          className="card flex flex-col justify-between border-brand-line border-t-2 border-t-brand p-5 sm:p-6"
           aria-labelledby="pro-plan-heading"
         >
           <div>

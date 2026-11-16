@@ -4,6 +4,9 @@ import { PILLARS } from '@/lib/pillars';
 import { errorCodeName } from '@/lib/errorCodes';
 import { errorCodeHelp, errorCodePillar } from '@/components/student/errorCodeHelp';
 import { MathNumber, MathText } from '@/components/MathText';
+import PillarBadge from '@/components/PillarBadge';
+import SectionIndex from '@/components/aero/SectionIndex';
+import type { PillarCategory } from '@/types/birdBrains';
 
 export default function StepDiagnostics({ grading }: { grading: Stage2GradingAndAffectOutput }) {
   const firstError = grading.stepDiagnostics.find((s) => !s.isCorrect);
@@ -13,7 +16,10 @@ export default function StepDiagnostics({ grading }: { grading: Stage2GradingAnd
     <section className="card p-4 sm:p-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold text-slate-900">Step-by-step error localization</h2>
+          <h2 className="flex flex-wrap items-baseline gap-x-2.5 text-lg font-bold text-slate-900">
+            <SectionIndex n={3} />
+            Step-by-step error localization
+          </h2>
           <p className="text-sm text-slate-500">Each line of your work, checked on its own and against what came before.</p>
         </div>
         {protectedSteps.length > 0 && firstError && (
@@ -35,12 +41,12 @@ export default function StepDiagnostics({ grading }: { grading: Stage2GradingAnd
             : s.isCorrect
               ? { dot: 'bg-emerald-500', card: 'border-line bg-white' }
               : { dot: 'bg-rose-500', card: 'border-rose-200 bg-rose-50/60' };
-          const stepPillar = s.pillarImpacted && PILLARS[s.pillarImpacted] ? PILLARS[s.pillarImpacted] : undefined;
+          const stepPillar: PillarCategory | undefined = s.pillarImpacted && PILLARS[s.pillarImpacted] ? s.pillarImpacted : undefined;
           return (
             <li key={s.stepNumber} className="relative flex gap-3 pb-4 sm:gap-4">
               {!last && <span className="absolute left-[15px] top-8 h-full w-px bg-slate-200" aria-hidden />}
-              <span className={`latex-num relative z-10 grid h-8 w-8 shrink-0 place-items-center rounded-sm text-xs font-bold text-white ${tone.dot}`}>
-                {s.stepNumber}
+              <span className={`relative z-10 grid h-8 w-8 shrink-0 place-items-center rounded-sm font-mono text-xs font-semibold text-white ${tone.dot}`}>
+                {String(s.stepNumber).padStart(2, '0')}
               </span>
               <div className={`min-w-0 flex-1 rounded-md border p-3 ${tone.card}`}>
                 <div className="flex flex-wrap items-center gap-2">
@@ -48,27 +54,20 @@ export default function StepDiagnostics({ grading }: { grading: Stage2GradingAnd
                     <MathText mode="math" text={s.studentInput} />
                   </span>
                   {s.isCarryForwardProtected ? (
-                    <span className="inline-flex items-center gap-1 rounded-sm bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800">
-                      <ShieldCheck className="h-3.5 w-3.5" aria-hidden /> Carry-Forward Protected
+                    <span className="aero-badge aero-badge--warn">
+                      <ShieldCheck className="h-3 w-3" aria-hidden /> Carry-Forward Protected
                     </span>
                   ) : s.isCorrect ? (
-                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700">
-                      <CheckCircle2 className="h-3.5 w-3.5" aria-hidden /> Correct
+                    <span className="aero-badge aero-badge--ok">
+                      <CheckCircle2 className="h-3 w-3" aria-hidden /> Correct
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1 rounded-sm bg-rose-100 px-2 py-0.5 text-[11px] font-semibold text-rose-700">
-                      <AlertCircle className="h-3.5 w-3.5" aria-hidden /> Error found here
+                    <span className="aero-badge aero-badge--bad">
+                      <AlertCircle className="h-3 w-3" aria-hidden /> Error found here
                     </span>
                   )}
                   {stepPillar && (
-                    <span className="ml-auto inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-500">
-                      <span
-                        className="h-2 w-2 rounded-sm"
-                        style={{ backgroundColor: stepPillar.color }}
-                        aria-hidden
-                      />
-                      {stepPillar.short}
-                    </span>
+                    <PillarBadge pillar={stepPillar} label className="ml-auto" />
                   )}
                 </div>
                 <p className="mt-2 break-words text-sm text-slate-600">
@@ -95,23 +94,18 @@ export default function StepDiagnostics({ grading }: { grading: Stage2GradingAnd
               return (
                 <li
                   key={`${code}-${idx}`}
-                  className="min-w-0 rounded-md border border-line border-l-4 bg-slate-50/70 p-3.5"
+                  className="min-w-0 rounded-md border border-l-[3px] border-line bg-white p-3.5"
                   style={{ borderLeftColor: pillarColor }}
                 >
                   <div className="flex flex-wrap items-center gap-2">
-                    <span
-                      className="inline-flex items-center gap-1.5 rounded-sm px-2.5 py-0.5 text-[11px] font-semibold text-white"
-                      style={{ backgroundColor: pillarColor }}
-                    >
-                      {pillar ? pillar.short : <MathText text={code} />}
+                    {/* Micro-mapping tags: pillar, official error code, severity. */}
+                    {pillarKey ? <PillarBadge pillar={pillarKey} label /> : null}
+                    <span className="aero-badge" style={{ color: pillar?.ink }}>
+                      {code}
                     </span>
                     <span
-                      className={`rounded-sm px-1.5 py-0.5 text-[10px] font-bold ${
-                        m.severity === 'HIGH'
-                          ? 'bg-rose-100 text-rose-700'
-                          : m.severity === 'MEDIUM'
-                            ? 'bg-amber-100 text-amber-800'
-                            : 'bg-slate-200 text-slate-700'
+                      className={`aero-badge ${
+                        m.severity === 'HIGH' ? 'aero-badge--bad' : m.severity === 'MEDIUM' ? 'aero-badge--warn' : ''
                       }`}
                     >
                       {m.severity}
@@ -128,19 +122,9 @@ export default function StepDiagnostics({ grading }: { grading: Stage2GradingAnd
                     </p>
                   )}
 
-                  <p className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
-                    <span className="font-semibold" style={{ color: pillarColor }}>
-                      <MathText text={code} />
-                    </span>
-                    {officialName && (
-                      <>
-                        <span aria-hidden>·</span>
-                        <span>
-                          <MathText text={officialName} />
-                        </span>
-                      </>
-                    )}
-                  </p>
+                  {officialName && (
+                    <p className="mt-1.5 font-mono text-[11px] uppercase tracking-[0.04em] text-slate-500">{officialName}</p>
+                  )}
                 </li>
               );
             })}
