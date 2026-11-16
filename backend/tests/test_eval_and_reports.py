@@ -281,3 +281,28 @@ def test_no_names_reach_the_model_the_batch_file_or_the_logs(client, family, dep
         assert private not in outbound, private
     assert P.VERTEX_LOCATION == "northamerica-northeast1"
     assert "Never transcribe people's names" in P.STAGE1_SYSTEM
+
+
+# ---------------------------------------------------------- daily pilot summary
+def test_internal_stats_has_numbers_but_no_names_or_ids(client, family, deps):
+    assert client.get("/internal/stats").status_code == 401
+    sid = family["studentId"]
+    sub = upload(client, sid).json()
+    client.post(f"/submissions/{sub['submissionId']}/process", headers=auth("alex"))
+    upload(client, sid)
+    s = client.get("/internal/stats?days=1", headers=TOKEN).json()
+    assert s["newAccounts"] == {"student": 1, "parent": 2}
+    assert s["uploads"] == 2 and s["uploadsByStatus"] == {"GRADED": 1, "UPLOADED": 1}
+    assert s["activeStudents"] == 1 and s["activeStudentsByPlan"] == {"free": 1} and s["freeStudentsAtCap"] == 0
+    assert s["graded"] == 1 and s["gradedByPlan"] == {"free": 1} and s["gradedWithNoErrors"] == 0
+    assert s["topErrorCodes"] == [{"code": "PRC-03", "count": 1}] and s["worksheets"] == {"PRO_ONLY": 1}
+    text = json.dumps(s)
+    for private in ("Alex", "Mercer", "Jordan", sid, sub["submissionId"]):
+        assert private not in text
+
+    from tools.pilot_summary import render
+    out = render(s)
+    assert "Uploads: 2 from 1 students (1 free)" in out and "1 x PRC-03 Algebraic Manipulation" in out
+    old = deps.store.get("submissions", sub["submissionId"]) | {"uploadedAt": "2026-01-01T00:00:00+00:00"}
+    deps.store.put("submissions", sub["submissionId"], old)
+    assert client.get("/internal/stats", headers=TOKEN).json()["uploads"] == 1

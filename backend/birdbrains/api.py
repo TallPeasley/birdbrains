@@ -238,7 +238,7 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         if existing:
             return existing  # role is fixed once chosen
         profile = {"uid": uid, "role": body.role, "name": body.name.strip(), "childStudentIds": [],
-                   "tenantId": CONSUMER_TENANT, "classIds": [], "plan": "free"}
+                   "tenantId": CONSUMER_TENANT, "classIds": [], "plan": "free", "createdAt": now_iso()}
         if body.role == "student":
             if not body.course:
                 raise HTTPException(422, "Students must choose a course")
@@ -961,6 +961,48 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         profile["plan"] = body.plan
         d.store.put("users", uid, profile)
         return profile
+
+    @app.get("/internal/stats", dependencies=[Depends(require_batch_token)])
+    def stats(days: int = 1):
+        """Numbers for the daily pilot summary. Counts and codes only: no names, no ids."""
+        from collections import Counter
+
+        days = max(1, min(days, 31))
+        since = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+        subs = d.store.query_since("submissions", "uploadedAt", since)
+        grads = d.store.query_since("gradings", "gradedAt", since)
+        codes: Counter = Counter()
+        cost: Counter = Counter()
+        seconds: list[float] = []
+        clean = 0
+        for g in grads:
+            roots = [e["error_code"] for e in g["stage2"]["identified_errors"] if not e["is_cascading_consequence"]]
+            codes.update(roots)
+            clean += not roots
+            cost[g.get("plan", "free")] += (g.get("cost") or {}).get("usd", 0.0)
+            if g.get("cost"):
+                seconds.append(g["cost"]["seconds"])
+        students = {s["studentId"] for s in subs}
+        plans = {sid: effective_plan(sid) for sid in students}
+        seconds.sort()
+        return {
+            "days": days, "since": since,
+            "newAccounts": dict(Counter(u["role"] for u in d.store.query_since("users", "createdAt", since))),
+            "uploads": len(subs),
+            "uploadsByStatus": dict(Counter(s["status"] for s in subs)),
+            "uploadsBySource": dict(Counter(s.get("source", "web") for s in subs)),
+            "activeStudents": len(students),
+            "activeStudentsByPlan": dict(Counter(plans.values())),
+            "freeStudentsAtCap": sum(1 for sid, p in plans.items() if p == "free" and usage(sid).remaining == 0),
+            "graded": len(grads),
+            "gradedByPlan": dict(Counter(g.get("plan", "free") for g in grads)),
+            "gradedWithNoErrors": clean,
+            "topErrorCodes": [{"code": c, "count": n} for c, n in codes.most_common(8)],
+            "modelCostUsdByPlan": {k: round(v, 4) for k, v in cost.items()},
+            "modelSecondsMedian": seconds[len(seconds) // 2] if seconds else None,
+            "modelSecondsP95": seconds[max(-(-95 * len(seconds) // 100) - 1, 0)] if seconds else None,
+            "worksheets": dict(Counter(g["worksheetStatus"] for g in grads)),
+        }
 
     return app
 

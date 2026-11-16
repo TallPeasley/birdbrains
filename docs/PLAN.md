@@ -7,7 +7,7 @@ Launch: **Mon Dec 14, 2026**. Who owns which folders, the branch rules and the A
 ## For Gemini (Antigravity): how to use this file
 
 1. Work only on tasks that start with **`Gemini:`**. Leave Maalik and Claude tasks alone; if your task needs something from one of them, say so in your PR.
-2. One task per PR, on a **`gemini/*` branch** (for example `gemini/plans-upgrade-screens`). Never push to `main`; Maalik merges your PRs after Claude checks them.
+2. One task per PR, on a **`gemini/*` branch** (for example `gemini/plans-upgrade-screens`). Never push to `main`; Claude checks your PRs and merges the ones that pass.
 3. In that PR, tick your task in this file (`- [ ]` becomes `- [x]`) and put the task title in the PR title.
 4. Stay inside your folders from TEAM.md (`app/`, `components/`, `extension/`, `public/`, styles). Build against `lib/api.ts` and `types/birdBrains.ts`; if an endpoint or field is missing, use mock data and list what's missing in the PR.
 5. Before opening the PR: `npm run build` passes and demo mode (no `NEXT_PUBLIC_API_URL`) still works.
@@ -28,13 +28,13 @@ Counts: 65 tasks. Maalik 28, Claude 24, Gemini 13. On Nov 15 Maalik gave the 10 
 - [x] **Sun Nov 15** · **Gemini:** Upload flow states. In the upload modal: clear screens for uploading, checking photo, too blurry (retake tips), duplicate photo, diagnosing (progress), and failed. Use the error codes in docs/TEAM.md. Mobile first.
 - [ ] **Mon Nov 16** · **Maalik:** Decide: Google Classroom before launch? Classroom is Pro-only in the pricing brief. Its API scopes need Google OAuth verification, which can take weeks. If yes, create the OAuth consent screen in birdbrain-514606 now (Claude can walk you through it). If no, the Classroom tasks move after launch.
 - [ ] **Mon Nov 16** · **Claude:** Tune blur cutoffs + duplicate upload check. Use Maalik's 12 photos to set the sharpness and size limits (spec: Laplacian variance at least 100, at least 800x600) on server and phone. Add the SHA-256 duplicate check (UT-06, HTTP 409). Run UT-01 to UT-07.
-- [ ] **Tue Nov 17** · **Maalik:** Review and merge week-1 PRs. Claude's backend PR and Gemini's upload-states PR. Merge Claude's first, then rerun backend/deploy.sh in Cloud Shell (it now enables the DLP API).
+- [ ] **Tue Nov 17** · **Maalik:** Review and merge week-1 PRs. Claude's backend PR and Gemini's upload-states PR. Merge Claude's first, then rerun backend/deploy.sh in Cloud Shell (it now enables the DLP API). *(Nov 15: Claude merged Gemini's four open PRs after checking them. Only the deploy rerun is left.)*
 - [ ] **Tue Nov 17** · **Maalik:** Confirm the freelancer: yes or no. Tell Claude whether the freelancer (Gemini's manual names Luca Trinchini) is joining. If yes: send him docs/TEAM.md and the Drive manual, and give him repo access. If no: every 'Freelancer:' task goes to Claude on the same date. No other dates change.
 - [x] **Tue Nov 17** · **Claude:** Privacy: hide names before storage and Gemini. Spec 3.2: crop or redact the top 12% header and run Cloud DLP redaction before saving to Cloud Storage; 15-minute signed URLs; 90-day lifecycle on raw photos; check no names reach Vertex logs or traces.
 - [ ] **Wed Nov 18** · **Maalik:** Decide how people get Pro, the price and the Free cap. Billing isn't in the pricing brief. Choose: (a) paid Pro at launch through Stripe subscriptions, (b) Pro by invite code for the pilot, payments later, or (c) everyone on Pro free during the pilot. Also set the Free monthly upload cap (Freelancer's Nov 20 cost numbers help) and the Pro price. Tell Claude.
 - [x] **Wed Nov 18** · **Claude:** Schools, classes and data deletion (API). Spec 5.3 and 3.3: tenants, schools, classrooms (grades 3 to 12) in Firestore, tenant checks on every query, delete-my-data endpoint, class join codes. Endpoints added to docs/TEAM.md for Gemini.
 - [ ] **Wed Nov 18** · **Claude:** Onboard: run the pipeline locally. Read the Drive manual and docs/TEAM.md, run backend tests and the fake-model flow, then one real Vertex call. Own from here: pipeline.py, taxonomy.py, prompts, ai_eval. *(Nov 15: local runs and tests done. The real Vertex call needs Google credentials.)*
-- [ ] **Thu Nov 19** · **Maalik:** Week 1 exit check (20 min). On your phone: sign up, upload a sharp photo (diagnostic arrives), a blurry one (rejected with tips), the same photo twice (rejected), a page with your name on it (name hidden). Report anything off.
+- [ ] **Thu Nov 19** · **Maalik:** Week 1 exit check (20 min). On your phone: sign up, upload a sharp photo (diagnostic arrives), a blurry one (rejected with tips), the same photo twice (rejected), a page with your name on it (name hidden). Report anything off. *(Nov 15: `backend/tools/smoke_test.py` runs these checks as a script; the look on your phone is still yours.)*
 - [x] **Thu Nov 19** · **Gemini:** Account and settings screens. Profile, current plan and uploads used this month, parent linking, join a class with a code, and 'Delete my data' (with confirm). Uses Claude's Nov 18 endpoints.
 
 ## Week 2 (Nov 20 to 26): AI accuracy, plans and limits
@@ -61,7 +61,7 @@ Counts: 65 tasks. Maalik 28, Claude 24, Gemini 13. On Nov 15 Maalik gave the 10 
 - [ ] **Mon Nov 30** · **Gemini:** Chrome extension. Capture or pick a page, upload through Claude's signed-URL endpoint, show status and a link to the result. Build a minimal one if none exists.
 - [x] **Tue Dec 1** · **Claude:** Google Classroom import (backend). Read assignments and student submissions from the test class into the pipeline. Canvas and Brightspace (LTI 1.3) are after launch; they need school developer accounts.
 - [ ] **Tue Dec 1** · **Gemini:** Classroom connect screens (Pro). Pro teachers connect Google Classroom, pick a class and an assignment, and see imported work and results in the class view. Free accounts see an upgrade prompt.
-- [ ] **Wed Dec 2** · **Maalik:** Test Free vs Pro (30 min). On a Free account: upload until the cap blocks you and check the upgrade prompt; no mood card shown. On a Pro account: mood tracking and speed bumps appear, the extension uploads, the test Classroom connects. Report issues.
+- [ ] **Wed Dec 2** · **Maalik:** Test Free vs Pro (30 min). On a Free account: upload until the cap blocks you and check the upgrade prompt; no mood card shown. On a Pro account: mood tracking and speed bumps appear, the extension uploads, the test Classroom connects. Report issues. *(Nov 15: the cap, upgrade signal and Pro features are covered by `backend/tools/smoke_test.py`; the extension and Classroom parts are still by hand.)*
 - [ ] **Wed Dec 2** · **Gemini:** Checkout and manage-plan screens. Upgrade button to Stripe Checkout (or an invite-code box), success and cancel pages, and a manage-plan section in settings. Skip if the pilot is all-Pro.
 - [ ] **Thu Dec 3** · **Maalik:** Week 3 exit check + merges. Free cap and Pro gates work end to end; uploads from the extension and the test Classroom reach grading for Pro. Merge week-3 PRs.
 
@@ -86,11 +86,11 @@ Counts: 65 tasks. Maalik 28, Claude 24, Gemini 13. On Nov 15 Maalik gave the 10 
 - [ ] **Sat Dec 12** · **Claude:** Privacy audit + launch checklist. No student names in Vertex logs, traces or batch files; deletion works; everything stays in northamerica-northeast1. Launch checklist and runbook. *(Nov 15: the no-names test and `docs/LAUNCH.md` are written; the live-project checks in LAUNCH.md section 3 are left.)*
 - [ ] **Sat Dec 12** · **Gemini:** Homepage polish for launch. Landing page copy and visuals for families and tutors, a Free vs Pro pricing section, sign-up call to action, screenshots of real (anonymised) results.
 - [ ] **Sun Dec 13** · **Maalik:** Go/no-go walkthrough (45 min). Full flow on your phone as a Free student, a Pro student and a parent: cap, upgrade, mood tracking, worksheet. Read the accuracy, cost and load reports. Decide: launch Monday or slip.
-- [ ] **Mon Dec 14** · **Maalik:** Launch: invite the first pilot users. Send the invites yourself and set who starts on Pro. Watch the first day's uploads and costs on the monitoring dashboard.
+- [ ] **Mon Dec 14** · **Maalik:** Launch: invite the first pilot users. Send the invites yourself and set who starts on Pro. Watch the first day's uploads and costs on the monitoring dashboard. *(Draft invite: `docs/pilot/invite.md`.)*
 
 ## After launch
 
-- [ ] **Wed Dec 16** · **Maalik:** Pilot week: spot-check results daily. Look at a few diagnoses each day and note any that are wrong (screenshot plus the right code), plus family feedback and how many hit the Free cap. Wrong ones feed v1.1.
+- [ ] **Wed Dec 16** · **Maalik:** Pilot week: spot-check results daily. Look at a few diagnoses each day and note any that are wrong (screenshot plus the right code), plus family feedback and how many hit the Free cap. Wrong ones feed v1.1. *(Daily numbers: `backend/tools/pilot_summary.py`.)*
 - [ ] **Sat Dec 19** · **Gemini:** Fix the UI issues from pilot feedback. Work through the pilot's UI complaints list, most common first.
 - [ ] **Sat Dec 19** · **Claude:** v1.1 exemplars from pilot mistakes. Turn the wrong diagnoses Maalik logged in pilot week into few-shot exemplars and rerun the accuracy suite on both Free and Pro modes.
 - [ ] **Wed Dec 23** · **Claude:** Cost tuning + science curriculum. Optimise cache TTL and token budgets; add Grade 11 and 12 physics, chemistry and biology micro-skills (Gemini Week 7).

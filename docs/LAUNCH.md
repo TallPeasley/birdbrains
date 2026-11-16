@@ -18,6 +18,7 @@ Google Cloud Shell from the repo folder unless it says otherwise.
 ### Quality gates
 - [ ] `cd backend && pytest` and `npm run build` pass on `main`.
 - [ ] Accuracy report (`python -m ai_eval --engine gemini`) passes the release gates on the 80-sample gold set, for Pro and for Free.
+- [ ] Smoke test passes (sign-up, upload checks, Free cap, Pro features, privacy, deletion): `python backend/tools/smoke_test.py --url <api> --firebase-key <web API key> --batch-token "$(gcloud secrets versions access latest --secret=birdbrains-batch-token)"`. It makes its own test accounts and deletes them.
 - [ ] Load test passes: `python backend/tools/load_test.py --url <api> --token <token> --student-id <id>` (30 uploads at once, all graded within 45 s).
 - [ ] Five generated worksheets were read by a tutor and are right.
 - [ ] The go/no-go walkthrough is done on a phone as a Free student, a Pro student and a parent.
@@ -29,7 +30,7 @@ Google Cloud Shell from the repo folder unless it says otherwise.
 
 ### People
 - [ ] Pilot users chosen; who starts on Pro is set (`POST /internal/users/{uid}/plan` or Stripe).
-- [ ] Invite message sent by Maalik.
+- [ ] Invite message sent by Maalik (draft: `docs/pilot/invite.md`).
 
 ## 2. Runbook
 
@@ -41,6 +42,14 @@ Google Cloud Shell from the repo folder unless it says otherwise.
 | One line per graded upload | Logs filter: `jsonPayload.event="pipeline_done"` |
 | Nightly worksheet jobs | Cloud Scheduler: `birdbrains-worksheets-submit` (1:00) and `-collect` (every 30 min, 2:00 to 8:00, Toronto time) |
 | Stripe events | Stripe dashboard > Developers > Webhooks |
+
+### Daily pilot summary
+```bash
+cd backend && python tools/pilot_summary.py --url <api> --batch-token "$(gcloud secrets versions access latest --secret=birdbrains-batch-token)"
+```
+Prints yesterday's sign-ups, uploads by plan and result, students who hit the Free cap, the most
+common error codes, model cost per plan and speed, and anything worth a look. Counts only, no names.
+Add `--days 7` for the week.
 
 ### Alerts and what to do
 | Alert | Likely cause | First step |
