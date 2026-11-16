@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowRight, Loader2 } from 'lucide-react';
 import { useSession } from '@/lib/session';
@@ -20,6 +21,8 @@ export default function AccountCard() {
   const [name, setName] = useState('');
   const [role, setLocalRole] = useState<'student' | 'parent'>('student');
   const [course, setCourse] = useState<GradeCourse>('MPM2D');
+  const [ageGroup, setAgeGroup] = useState<'13plus' | 'under13'>('13plus');
+  const [consentChecked, setConsentChecked] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -78,8 +81,15 @@ export default function AccountCard() {
     );
   }
 
+  const blockedUnder13 = showProfileFields && role === 'student' && ageGroup === 'under13';
+
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (blockedUnder13) return;
+    if (showProfileFields && !consentChecked) {
+      setError('Please agree to the Terms of Use and Privacy Policy to continue.');
+      return;
+    }
     const details = { role, name: name.trim(), course: role === 'student' ? course : undefined };
     void run(async () => {
       if (needsProfile) await createProfile(details);
@@ -121,16 +131,73 @@ export default function AccountCard() {
               ))}
             </div>
             {role === 'student' && (
-              <select value={course} onChange={(e) => setCourse(e.target.value as GradeCourse)} className={input}
-                aria-label="Course">
-                <option value="MTH1W">Grade 9 · MTH1W</option>
-                <option value="MPM2D">Grade 10 · MPM2D</option>
-              </select>
+              <>
+                <select value={course} onChange={(e) => setCourse(e.target.value as GradeCourse)} className={input}
+                  aria-label="Course">
+                  <option value="MTH1W">Grade 9 · MTH1W</option>
+                  <option value="MPM2D">Grade 10 · MPM2D</option>
+                </select>
+                <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Student age">
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={ageGroup === '13plus'}
+                    onClick={() => setAgeGroup('13plus')}
+                    className={`rounded-xl border py-1.5 text-xs font-semibold ${
+                      ageGroup === '13plus' ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-slate-300 text-slate-600'
+                    }`}
+                  >
+                    Age 13 or older
+                  </button>
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked={ageGroup === 'under13'}
+                    onClick={() => setAgeGroup('under13')}
+                    className={`rounded-xl border py-1.5 text-xs font-semibold ${
+                      ageGroup === 'under13' ? 'border-amber-500 bg-amber-50 text-amber-800' : 'border-slate-300 text-slate-600'
+                    }`}
+                  >
+                    Under 13
+                  </button>
+                </div>
+              </>
+            )}
+
+            {blockedUnder13 ? (
+              <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs leading-relaxed text-amber-900">
+                You need a parent or guardian to set up BirdBrains with you. Ask them to create a parent account and add you.
+              </p>
+            ) : (
+              <label className="flex items-start gap-2 rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-xs leading-relaxed text-slate-700">
+                <input
+                  type="checkbox"
+                  checked={consentChecked}
+                  onChange={(e) => setConsentChecked(e.target.checked)}
+                  required
+                  className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600"
+                />
+                <span>
+                  {role === 'parent' ? (
+                    <>
+                      I am this student&apos;s parent or guardian. I agree to the{' '}
+                      <Link href="/terms" className="font-semibold text-indigo-700 underline">Terms of Use</Link> and{' '}
+                      <Link href="/privacy" className="font-semibold text-indigo-700 underline">Privacy Policy</Link> on their behalf, and I consent to BirdBrains analysing photos of their math work.
+                    </>
+                  ) : (
+                    <>
+                      I have read and agree to the{' '}
+                      <Link href="/terms" className="font-semibold text-indigo-700 underline">Terms of Use</Link> and{' '}
+                      <Link href="/privacy" className="font-semibold text-indigo-700 underline">Privacy Policy</Link>.
+                    </>
+                  )}
+                </span>
+              </label>
             )}
           </>
         )}
         {error && <p role="alert" className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}
-        <button disabled={busy}
+        <button disabled={busy || blockedUnder13}
           className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60">
           {busy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
           {needsProfile ? 'Finish' : mode === 'signup' ? 'Create account' : 'Sign in'}
