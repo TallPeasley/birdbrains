@@ -200,3 +200,39 @@ def test_worksheet_pdf(client, family):
     r = client.get(url, headers=auth("jordan"))
     assert r.status_code == 200 and r.headers["content-type"] == "application/pdf" and r.content[:5] == b"%PDF-"
     assert client.get(url, headers=auth("stranger")).status_code == 404
+
+
+def test_free_cap_holds_when_uploads_arrive_at_once(client, family, deps):
+    """12 uploads sent together on a cap of 10: exactly 10 get in, even though every
+    request passed the first usage check before any of them was stored."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    sid = family["studentId"]
+    upload(client, sid)                                   # one earlier upload, before the counter existed
+    deps.store.delete("usagecounters", next(iter(deps.store._data["usagecounters"])))
+    real_usage_query = deps.store.query
+    pages = [[("files", (f"p{i}.jpg", photo(), "image/jpeg"))] for i in range(12)]
+    with ThreadPoolExecutor(12) as pool:
+        codes = list(pool.map(lambda files: upload(client, sid, files=files).status_code, pages))
+    assert sorted(codes) == [201] * 9 + [402] * 3
+    assert len(real_usage_query("submissions", "studentId", sid)) == 10
+    assert client.get(f"/students/{sid}/usage", headers=auth("alex")).json()["remaining"] == 0
+
+
+def test_failed_upload_gives_its_slot_back(client, family, deps):
+    sid = family["studentId"]
+
+    class Broken:
+        def scrub(self, data, fmt):
+            raise RuntimeError("DLP down")
+
+    good, deps.scrubber = deps.scrubber, Broken()
+    assert upload(client, sid).status_code == 503
+    deps.scrubber = good
+    for _ in range(10):
+        assert upload(client, sid).status_code == 201
+    assert upload(client, sid).status_code == 402
+    counter = deps.store.query("usagecounters", "studentId", sid)
+    assert [c["count"] for c in counter] == [10]
+    assert client.delete(f"/students/{sid}", headers=auth("alex")).status_code == 204
+    assert deps.store.query("usagecounters", "studentId", sid) == []

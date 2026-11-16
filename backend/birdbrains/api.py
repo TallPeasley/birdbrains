@@ -346,6 +346,8 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
             d.store.delete("worksheets", g["gradingId"])
             d.store.delete("gradings", g["gradingId"])
         d.store.delete("ledgers", student_id)
+        for c in d.store.query("usagecounters", "studentId", student_id):
+            d.store.delete("usagecounters", f"{student_id}_{c['month']}")
         d.store.delete("rosters", student_id)
         for parent in d.store.query_contains("users", "childStudentIds", student_id):
             parent["childStudentIds"].remove(student_id)
@@ -430,16 +432,29 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
                     409, f"Photo {i + 1} was already uploaded. Open your earlier diagnostic instead.",
                     headers={"Location": f"/submissions/{seen['submissionId']}"})
 
+        # Take this month's slot in one atomic step, so uploads sent at the same
+        # instant cannot both squeeze under the Free cap. The slot is given back if
+        # the upload fails after this point.
+        current = usage(studentId)
+        counter_id = f"{studentId}_{datetime.now(timezone.utc):%Y-%m}"
+        if not d.store.add_to_counter("usagecounters", counter_id, 1, limit=current.monthlyLimit,
+                                      seed=current.usedThisMonth,
+                                      fields={"studentId": studentId, "month": counter_id[-7:]}):
+            raise HTTPException(402, "FREE_LIMIT_REACHED")
         file_records = []
-        for i, data, mime, ext, sha in stored:
-            try:
-                data = d.scrubber.scrub(data, ext.upper())  # names and EXIF removed before storage
-            except Exception:
-                log.exception("Photo scrubbing failed")
-                raise HTTPException(503, "We could not check the photo for names. Please try again.")
-            path = f"submissions/{studentId}/{submission_id}/{i}.{ext}"
-            uri = d.storage.write_bytes(path, data, mime)
-            file_records.append({"path": path, "uri": uri, "mimeType": mime, "sha256": sha})
+        try:
+            for i, data, mime, ext, sha in stored:
+                try:
+                    data = d.scrubber.scrub(data, ext.upper())  # names and EXIF removed before storage
+                except Exception:
+                    log.exception("Photo scrubbing failed")
+                    raise HTTPException(503, "We could not check the photo for names. Please try again.")
+                path = f"submissions/{studentId}/{submission_id}/{i}.{ext}"
+                uri = d.storage.write_bytes(path, data, mime)
+                file_records.append({"path": path, "uri": uri, "mimeType": mime, "sha256": sha})
+        except Exception:
+            d.store.add_to_counter("usagecounters", counter_id, -1)
+            raise
         record = {
             "submissionId": submission_id,
             "studentId": studentId,
