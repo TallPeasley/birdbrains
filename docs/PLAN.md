@@ -95,5 +95,5 @@ Counts: 65 tasks. Maalik 28, Claude 24, Gemini 13. On Nov 15 Maalik gave the 10 
 - [ ] **Sat Dec 19** · **Claude:** v1.1 exemplars from pilot mistakes. Turn the wrong diagnoses Maalik logged in pilot week into few-shot exemplars and rerun the accuracy suite on both Free and Pro modes.
 - [ ] **Wed Dec 23** · **Claude:** Cost tuning + science curriculum. Optimise cache TTL and token budgets; add Grade 11 and 12 physics, chemistry and biology micro-skills (Gemini Week 7).
 - [x] **Wed Dec 30** · **Claude:** Reports API + LTI if schools sign on. Cohort and longitudinal mastery data for schools and tutors (Gemini Week 8). Canvas and Brightspace LTI 1.3 if school accounts exist. Reports done Nov 15 (`/students/{id}/progress`, `/teacher/report`). LTI not built: no school has signed on.
-- [ ] **Wed Dec 30** · **Gemini:** Class and progress report screens. Teacher class overview and a parent progress report over time, from Claude's reports API.
+- [x] **Wed Dec 30** · **Gemini:** Class and progress report screens. Teacher class overview and a parent progress report over time, from Claude's reports API.
 - [ ] **Tue Jan 5** · **Maalik:** Sign-off: review the pilot and next phase. Read the pilot summary (usage, accuracy, cost, issues) and choose what's next.
