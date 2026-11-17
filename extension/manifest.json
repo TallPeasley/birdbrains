@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "BirdBrains Math Capture",
+  "version": "0.1.0",
+  "description": "Capture or upload a math worksheet page directly to BirdBrains for instant 4-pillar diagnostics.",
+  "permissions": ["activeTab", "storage"],
+  "host_permissions": [
+    "https://birdbrains-api-28737473918.northamerica-northeast1.run.app/*",
+    "https://identitytoolkit.googleapis.com/*",
+    "http://localhost:8080/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "BirdBrains Math Capture"
+  }
+}
