@@ -132,3 +132,27 @@
     pointer-events: none;
   }
 }
+
+@media print {
+  @page {
+    size: letter portrait;
+    margin: 0.6in;
+  }
+  body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+  }
+  header,
+  nav,
+  .no-print {
+    display: none !important;
+  }
+  .card {
+    border: none !important;
+    box-shadow: none !important;
+  }
+  .print-avoid-break {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}

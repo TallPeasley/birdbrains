@@ -67,7 +67,7 @@ Counts: 65 tasks. Maalik 28, Claude 24, Gemini 13. There is no freelancer (Maali
 
 ## Week 4 (Dec 4 to 9): Printable worksheets (Pro)
 
-- [ ] **Fri Dec 4** · **Gemini:** Worksheet viewer and print layout. On-screen worksheet for students (3 stages, answer boxes) and an HTML print template Claude's PDF job will render.
+- [x] **Fri Dec 4** · **Gemini:** Worksheet viewer and print layout. On-screen worksheet for students (3 stages, answer boxes) and an HTML print template Claude's PDF job will render.
 - [ ] **Fri Dec 4** · **Claude:** Run the nightly worksheet batch for real (Pro). Vertex Batch API job in Montréal for flagged Pro students only, 3 stages: Diagnostic Mirror, Faded Scaffolding, Independent Transfer, with KaTeX syntax checks on the output. *(Nov 15: the syntax and structure checks are built; the real batch run is left.)*
 - [ ] **Sat Dec 5** · **Maalik:** Review 5 generated worksheets. Read 5 real worksheets as a tutor: right level, right error, good scaffolding? Note fixes for Claude.
 - [ ] **Sun Dec 6** · **Maalik:** Gold set: 20 more (60 total). Fill the gaps the accuracy report shows (weak codes or grades).

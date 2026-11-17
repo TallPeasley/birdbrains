@@ -1,8 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { CheckCircle2, Eye, Lightbulb, RotateCcw, XCircle } from 'lucide-react';
+import { CheckCircle2, Download, Eye, Lightbulb, Loader2, Printer, RotateCcw, XCircle } from 'lucide-react';
 import type { FadedScaffoldingStep, WS_3STAGE_V1 } from '@/types/birdBrains';
+import { api } from '@/lib/api';
+import { useSession } from '@/lib/session';
 import { PILLARS } from '@/lib/pillars';
 import { formatMathPlaceholder, MathNumber, MathText } from '@/components/MathText';
 
@@ -15,18 +17,75 @@ const SECTIONS = [
 type SectionKey = (typeof SECTIONS)[number]['key'];
 
 export default function WorksheetViewer({ worksheet }: { worksheet: WS_3STAGE_V1 }) {
+  const { live, getToken } = useSession();
   const [active, setActive] = useState<SectionKey>('A');
+  const [pdfBusy, setPdfBusy] = useState(false);
+  const [pdfNotice, setPdfNotice] = useState('');
+
+  async function handleDownloadPdf() {
+    setPdfNotice('');
+    if (!live) {
+      setPdfNotice('Demo mode: opening print view for PDF export.');
+      window.print();
+      return;
+    }
+    setPdfBusy(true);
+    try {
+      const token = await getToken();
+      const blob = await api.worksheetPdf(token, worksheet.gradingId);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${worksheet.worksheetId || 'birdbrains-worksheet'}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setPdfNotice(err instanceof Error ? err.message : 'PDF is not available yet. You can print this page instead.');
+    } finally {
+      setPdfBusy(false);
+    }
+  }
 
   return (
     <section className="card overflow-hidden">
-      <div className="border-b border-slate-200 p-4 pb-0 sm:p-6 sm:pb-0">
-        <p className="eyebrow">Your remedial worksheet</p>
-        <h2 className="mt-1 text-xl font-semibold text-slate-900">
-          <MathText text={worksheet.title} />
-        </h2>
-        <p className="mt-1 text-sm text-slate-500">
-          Target concept: <MathText text={worksheet.targetConcept} />
-        </p>
+      <div className="no-print border-b border-slate-200 p-4 pb-0 sm:p-6 sm:pb-0">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="eyebrow">Your remedial worksheet</p>
+            <h2 className="mt-1 text-xl font-semibold text-slate-900">
+              <MathText text={worksheet.title} />
+            </h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Target concept: <MathText text={worksheet.targetConcept} />
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => window.print()}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+            >
+              <Printer className="h-3.5 w-3.5" aria-hidden />
+              Print
+            </button>
+            <button
+              type="button"
+              onClick={handleDownloadPdf}
+              disabled={pdfBusy}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-60"
+            >
+              {pdfBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden /> : <Download className="h-3.5 w-3.5" aria-hidden />}
+              Download PDF
+            </button>
+          </div>
+        </div>
+        {pdfNotice && (
+          <p role="status" className="mt-2 text-xs font-medium text-amber-800">
+            {pdfNotice}
+          </p>
+        )}
 
         <div role="tablist" aria-label="Worksheet sections" className="mt-5 grid grid-cols-3 gap-1">
           {SECTIONS.map((s) => (
@@ -53,10 +112,73 @@ export default function WorksheetViewer({ worksheet }: { worksheet: WS_3STAGE_V1
         </div>
       </div>
 
-      <div className="p-4 sm:p-6" role="tabpanel" id={`panel-${active}`} aria-labelledby={`tab-${active}`}>
+      <div className="no-print p-4 sm:p-6" role="tabpanel" id={`panel-${active}`} aria-labelledby={`tab-${active}`}>
         {active === 'A' && <DiagnosticMirror worksheet={worksheet} />}
         {active === 'B' && <FadedScaffolding steps={worksheet.sectionB_FadedScaffolding} />}
         {active === 'C' && <IndependentTransfer worksheet={worksheet} />}
+      </div>
+
+      {/* Print-only 3-stage layout */}
+      <div className="hidden space-y-6 p-2 print:block">
+        <div className="border-b-2 border-slate-900 pb-3">
+          <p className="text-xs font-bold uppercase tracking-wider text-slate-500">BirdBrains · 3-Stage Practice Worksheet</p>
+          <h2 className="mt-1 text-xl font-bold text-slate-900">
+            <MathText text={worksheet.title} />
+          </h2>
+          <p className="mt-1 text-sm text-slate-700">
+            Target concept: <MathText text={worksheet.targetConcept} />
+          </p>
+        </div>
+
+        <div className="print-avoid-break space-y-3">
+          <h3 className="text-sm font-bold uppercase tracking-wider text-slate-800">Section A · Diagnostic Mirror</h3>
+          <DiagnosticMirror worksheet={worksheet} />
+        </div>
+
+        <div className="print-avoid-break space-y-3">
+          <h3 className="text-sm font-bold uppercase tracking-wider text-slate-800">Section B · Faded Scaffolding</h3>
+          {worksheet.sectionB_FadedScaffolding[0]?.prompt && (
+            <p className="rounded-lg border border-slate-300 p-3 text-sm">
+              <strong>Problem:</strong> <MathText text={worksheet.sectionB_FadedScaffolding[0].prompt} />
+            </p>
+          )}
+          <ol className="space-y-3">
+            {worksheet.sectionB_FadedScaffolding.map((step) => (
+              <li key={step.stepNumber} className="rounded-lg border border-slate-300 p-3 text-sm">
+                <p className="font-semibold">
+                  Step {step.stepNumber}: {step.stepNumber === 1 ? 'Set up' : <MathText text={step.prompt} />}
+                </p>
+                {step.scaffoldingType === 'INDEPENDENT' ? (
+                  <div className="mt-3 space-y-4">
+                    <div className="h-6 border-b border-dashed border-slate-400" />
+                    <div className="h-6 border-b border-dashed border-slate-400" />
+                  </div>
+                ) : (
+                  <p className="math mt-2">
+                    <MathText text={step.givenContent.replaceAll(BLANK, ' [ ________ ] ')} />
+                  </p>
+                )}
+              </li>
+            ))}
+          </ol>
+        </div>
+
+        <div className="print-avoid-break space-y-3">
+          <h3 className="text-sm font-bold uppercase tracking-wider text-slate-800">Section C · Independent Transfer</h3>
+          <p className="rounded-lg border border-slate-300 p-3 text-sm font-medium">
+            <MathText text={worksheet.sectionC_IndependentTransfer.problemStatement} />
+          </p>
+          <div className="h-44 rounded-lg border border-slate-300 p-2 text-xs text-slate-400">Show your full solution here:</div>
+          <div className="space-y-1.5 pt-1">
+            <p className="text-xs font-bold uppercase tracking-wider text-slate-700">Self-Check</p>
+            {worksheet.sectionC_IndependentTransfer.metacognitiveChecklist.map((item, idx) => (
+              <p key={idx} className="flex items-center gap-2 text-xs text-slate-800">
+                <span className="inline-block h-3.5 w-3.5 border border-slate-700" />
+                <MathText text={item} />
+              </p>
+            ))}
+          </div>
+        </div>
       </div>
     </section>
   );
