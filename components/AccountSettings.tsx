@@ -9,6 +9,7 @@ import {
   BookOpen,
   Check,
   Copy,
+  CreditCard,
   GraduationCap,
   Link2,
   Loader2,
@@ -100,6 +101,11 @@ export default function AccountSettings() {
   // Plan & monthly usage state
   const [usage, setUsage] = useState<ApiUsage | null>(null);
   const [usageLoading, setUsageLoading] = useState(false);
+  const [upgradeBanner, setUpgradeBanner] = useState<'confirming' | 'confirmed' | 'pending' | 'cancelled' | null>(null);
+  const [confirmedPro, setConfirmedPro] = useState(false);
+  const [billingBusy, setBillingBusy] = useState(false);
+  const [billingUnavailable, setBillingUnavailable] = useState(false);
+  const [billingMsg, setBillingMsg] = useState('');
 
   // Parent: link another child state
   const [childCode, setChildCode] = useState('');
@@ -346,6 +352,91 @@ export default function AccountSettings() {
     }
   };
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const status = new URLSearchParams(window.location.search).get('upgrade');
+    if (status === 'cancelled') {
+      setUpgradeBanner('cancelled');
+      return;
+    }
+    if (status !== 'success') return;
+
+    if (!live) {
+      setConfirmedPro(true);
+      setUpgradeBanner('confirmed');
+      return;
+    }
+
+    let cancelled = false;
+    setUpgradeBanner('confirming');
+    (async () => {
+      for (let attempt = 0; attempt < 5; attempt++) {
+        if (cancelled) return;
+        try {
+          const token = await getToken();
+          const me = await api.me(token);
+          if (me.plan === 'pro') {
+            if (!cancelled) {
+              setConfirmedPro(true);
+              setUpgradeBanner('confirmed');
+            }
+            return;
+          }
+        } catch {
+          // keep polling
+        }
+        await new Promise((r) => setTimeout(r, 1500));
+      }
+      if (!cancelled) setUpgradeBanner('pending');
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [live, getToken]);
+
+  const handleStartCheckout = async () => {
+    setBillingMsg('');
+    if (!live) {
+      setConfirmedPro(true);
+      setBillingMsg('Demo mode: previewing Pro plan.');
+      return;
+    }
+    setBillingBusy(true);
+    try {
+      const token = await getToken();
+      const { url } = await api.startCheckout(token);
+      window.location.href = url;
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 503) {
+        setBillingUnavailable(true);
+      } else {
+        setBillingMsg(formatApiError(err));
+      }
+      setBillingBusy(false);
+    }
+  };
+
+  const handleOpenPortal = async () => {
+    setBillingMsg('');
+    if (!live) {
+      setBillingMsg('Demo mode: Stripe billing portal opens here on a live account.');
+      return;
+    }
+    setBillingBusy(true);
+    try {
+      const token = await getToken();
+      const { url } = await api.billingPortal(token);
+      window.location.href = url;
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 404) {
+        setBillingMsg('No Stripe subscription was found for this account.');
+      } else {
+        setBillingMsg(formatApiError(err));
+      }
+      setBillingBusy(false);
+    }
+  };
+
   const handleSignOut = async () => {
     if (!live) {
       setDemo(false);
@@ -390,6 +481,29 @@ export default function AccountSettings() {
           Back to dashboard
         </Link>
       </header>
+
+      {upgradeBanner === 'confirming' && (
+        <div role="status" className="flex items-center gap-2 rounded-2xl border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm font-medium text-indigo-900">
+          <Loader2 className="h-4 w-4 animate-spin text-indigo-600" aria-hidden />
+          Confirming your Pro upgrade with Stripe…
+        </div>
+      )}
+      {upgradeBanner === 'confirmed' && (
+        <div role="status" className="flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-900">
+          <Check className="h-4 w-4 text-emerald-600" aria-hidden />
+          Welcome to BirdBrains Pro! Unlimited uploads, mood insights, and nightly worksheets are now active.
+        </div>
+      )}
+      {upgradeBanner === 'pending' && (
+        <div role="status" className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          Payment received. Your Pro plan is activating and will apply on your next upload.
+        </div>
+      )}
+      {upgradeBanner === 'cancelled' && (
+        <div role="status" className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+          Checkout was cancelled. Your Free plan is unchanged.
+        </div>
+      )}
 
       {/* Profile section (read-only) */}
       <section className="card p-5 sm:p-6" aria-labelledby="profile-heading">
@@ -511,6 +625,49 @@ export default function AccountSettings() {
             {isStudent
               ? 'Free accounts include 10 uploads per calendar month.'
               : 'Link a child account below to view their monthly upload allowance.'}
+          </p>
+        )}
+
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-4">
+          {effectivePlan === 'pro' || confirmedPro ? (
+            <>
+              <p className="text-xs text-slate-500">
+                Cancelling keeps Pro active until the end of your paid billing period.
+              </p>
+              <button
+                type="button"
+                onClick={handleOpenPortal}
+                disabled={billingBusy}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50 disabled:opacity-60"
+              >
+                {billingBusy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <CreditCard className="h-4 w-4" aria-hidden />}
+                Manage subscription
+              </button>
+            </>
+          ) : billingUnavailable ? (
+            <p className="text-xs text-slate-500">
+              Online checkout is not enabled on this server yet.
+            </p>
+          ) : (
+            <>
+              <Link href="/plans" className="text-xs font-semibold text-indigo-600 hover:text-indigo-800">
+                Compare Free vs. Pro features
+              </Link>
+              <button
+                type="button"
+                onClick={handleStartCheckout}
+                disabled={billingBusy}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60"
+              >
+                {billingBusy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Sparkles className="h-4 w-4" aria-hidden />}
+                Upgrade to Pro
+              </button>
+            </>
+          )}
+        </div>
+        {billingMsg && (
+          <p role="status" className="mt-2 text-xs font-medium text-slate-700">
+            {billingMsg}
           </p>
         )}
       </section>
