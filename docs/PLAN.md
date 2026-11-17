@@ -74,7 +74,7 @@ Counts: 65 tasks. Maalik 28, Claude 24, Gemini 13. There is no freelancer (Maali
 - [x] **Mon Dec 7** · **Claude:** PDF worksheets job. WeasyPrint on Cloud Run Jobs renders Gemini's print template to PDF each night; download links in the API (Phase 4.3).
 - [ ] **Tue Dec 8** · **Maalik:** Gold set: last 20 (80 total). Finish the 80-sample set across grades 3 to 12 (Phase 5.1).
 - [x] **Tue Dec 8** · **Claude:** Draft privacy policy and terms. Plain-language privacy policy (PIPEDA, Canadian data residency, what is stored, mood data only on Pro, 90-day photo deletion, parental consent for minors) and terms of use, including plan, cap, billing and cancellation terms. Text for Gemini's pages.
-- [ ] **Tue Dec 8** · **Gemini:** Legal pages + consent at sign-up. Privacy and terms pages from Claude's text, a consent checkbox at sign-up (parent consent for under-13s), PDF download buttons on worksheets.
+- [x] **Tue Dec 8** · **Gemini:** Legal pages + consent at sign-up. Privacy and terms pages from Claude's text, a consent checkbox at sign-up (parent consent for under-13s), PDF download buttons on worksheets.
 - [ ] **Wed Dec 9** · **Maalik:** Week 4 exit check + merges. A flagged Pro student gets a print-ready PDF worksheet the next morning (E2E-03); a Free student does not. Merge week-4 PRs.
 
 ## Week 5 (Dec 10 to 14): Benchmarks, load test, launch
