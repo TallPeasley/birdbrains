@@ -94,6 +94,9 @@ class Stage1TranscriptionOutput(Strict):
     requires_hitl: bool = Field(default=False)
     # What the page is about, read from the printed problems and the work. Students no
     # longer tag uploads; these fill the course, unit and topic. Empty when unsure.
+    # Only when requires_hitl is true: why the page cannot be graded.
+    unreadable_reason: Optional[Literal["HANDWRITING_UNCLEAR", "BLANK_PAGE", "NOT_MATH", "QUESTIONS_NOT_VISIBLE",
+                                        "PAGE_CUT_OFF", "GLARE_OR_SHADOW"]] = None
     detected_course: Optional[Literal["MTH1W", "MPM2D"]] = None
     detected_unit: str = ""
     detected_topic: str = ""
@@ -228,6 +231,7 @@ class SubmissionIngestionPayload(Api):
     fileUrls: List[str]
     status: SubmissionStatus = "UPLOADED"
     gradingId: Optional[str] = None
+    failureCode: Optional[int] = None  # upload failure code (upload_errors.py) when status is NEEDS_RETAKE or FAILED
 
 
 class ApiPillarBreakdown(Api):

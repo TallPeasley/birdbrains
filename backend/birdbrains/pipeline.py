@@ -83,7 +83,10 @@ Rules:
    part-way, cramped rushed writing, or clean continuous flow.
 6. overall_ocr_confidence is your confidence in the transcription as a whole.
    Set requires_hitl to true if the page is unreadable, is not mathematics, or
-   contains no student work.
+   contains no student work, and then set unreadable_reason to the best fit:
+   HANDWRITING_UNCLEAR, BLANK_PAGE, NOT_MATH, QUESTIONS_NOT_VISIBLE (answers shown
+   but the printed questions they answer cannot be seen), PAGE_CUT_OFF (part of the
+   page is outside the photo) or GLARE_OR_SHADOW. Leave it null otherwise.
 7. Never transcribe people's names, student numbers, signatures, emails or phone
    numbers. Parts of the page may already be blacked out for privacy; ignore them.
 8. Also say what the page is about, from the printed problems and the work.
