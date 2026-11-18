@@ -19,7 +19,7 @@ export default function PillarBadge({
   return (
     <span
       className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-sm border bg-white px-1.5 py-[3px] font-mono text-[10.5px] font-semibold uppercase leading-none tracking-[0.06em] ${className ?? ''}`}
-      style={{ color: p.ink, borderColor: `color-mix(in srgb, ${p.color} 45%, #fff)` }}
+      style={{ color: p.color, borderColor: `color-mix(in srgb, ${p.color} 45%, #fff)` }}
       title={p.label}
     >
       <span className="h-2 w-2 shrink-0 rounded-[1px]" style={{ backgroundColor: p.color }} aria-hidden />

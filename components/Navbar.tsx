@@ -21,6 +21,7 @@ const COORDS: Record<string, string> = {
   '/plans': 'BB-03 / PLANS',
   '/account': 'BB-04 / ACCOUNT',
   '/reports': 'BB-05 / REPORTS',
+  '/teacher': 'BB-06 / TEACHER',
 };
 
 /** BirdBrains' own links and controls, inside the shared Aero shell header. */
@@ -50,6 +51,11 @@ export default function Navbar() {
           <Link href="/reports" aria-current={pathname === '/reports' ? 'page' : undefined}>
             Reports
           </Link>
+          {(demo || profile?.role === 'teacher') && (
+            <Link href="/teacher" aria-current={pathname === '/teacher' ? 'page' : undefined}>
+              Teacher
+            </Link>
+          )}
           {showAccount && (
             <Link href="/account" aria-current={pathname === '/account' ? 'page' : undefined}>
               Account

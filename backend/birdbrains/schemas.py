@@ -429,12 +429,14 @@ class ClassroomImportRequest(Api):
 
 
 class ApiRosterStudent(Api):
-    """A student a teacher imported from Google Classroom (no account of their own)."""
+    """A student a teacher imported from Google Classroom or another LMS."""
 
     studentId: str
     name: str
     course: CourseEnum
-    googleCourseId: str
+    googleCourseId: Optional[str] = None
+    lmsProvider: Optional[str] = None
+    lmsCourseId: Optional[str] = None
 
 
 class ApiImportedWork(Api):
@@ -450,6 +452,40 @@ class ApiSkippedWork(Api):
 
 class ApiClassroomImport(Api):
     imported: List[ApiImportedWork]
+    skipped: List[ApiSkippedWork]
+
+
+LmsProviderId = Literal["google_classroom", "brightspace", "canvas", "microsoft_edu"]
+
+
+class LmsConnectRequest(Api):
+    instanceUrl: Optional[str] = Field(default=None, max_length=255)
+
+
+class ApiLmsProviderStatus(Api):
+    id: LmsProviderId
+    name: str
+    configured: bool
+    connected: bool
+    requiresInstanceUrl: bool
+    defaultPlaceholder: str = ""
+    instanceUrl: Optional[str] = None
+    plan: PlanTier
+
+
+class LmsSyncRequest(Api):
+    submissionIds: Optional[List[str]] = None
+
+
+class ApiLmsSyncedItem(Api):
+    submissionId: str
+    studentName: str
+    score: float
+    maxScore: float
+
+
+class ApiLmsSyncResult(Api):
+    synced: List[ApiLmsSyncedItem]
     skipped: List[ApiSkippedWork]
 
 

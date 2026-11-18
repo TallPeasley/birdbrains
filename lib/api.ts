@@ -3,6 +3,9 @@ import type {
   ClassroomCourse,
   ClassroomCoursework,
   ClassroomImportResult,
+  LmsProviderId,
+  LmsProviderStatus,
+  LmsSyncResult,
   PlanTier,
   RosterStudent,
   ProgressReport,
@@ -67,7 +70,7 @@ export interface ProcessResult {
 
 export const api = {
   me: (t: string) => request<UserProfile>('/me', t),
-  register: (t: string, body: { role: 'student' | 'parent'; name: string; course?: string }) =>
+  register: (t: string, body: { role: 'student' | 'parent' | 'teacher'; name: string; course?: string }) =>
     request<UserProfile>('/me', t, json(body)),
   linkChild: (t: string, linkCode: string) => request<UserProfile>('/me/children', t, json({ linkCode })),
   createSubmission: (t: string, form: FormData) =>
@@ -112,6 +115,55 @@ export const api = {
   /** Imports handed-in photos as submissions (ungraded). Then call processSubmission for each. */
   classroomImport: (t: string, courseId: string, workId: string, body: { course: string; unitTopic: string }) =>
     request<ClassroomImportResult>(`/classroom/courses/${courseId}/coursework/${workId}/import`, t, json(body)),
+  classroomSync: (t: string, courseId: string, workId: string, submissionIds?: string[]) =>
+    request<LmsSyncResult>(`/classroom/courses/${courseId}/coursework/${workId}/sync`, t, json({ submissionIds })),
+  /** Multi-LMS (Brightspace, Canvas, Microsoft Teams for Education, plus Google Classroom status). */
+  lmsProviders: (t: string) => request<LmsProviderStatus[]>('/lms/providers', t),
+  lmsConnect: (t: string, provider: Exclude<LmsProviderId, 'google_classroom'>, instanceUrl?: string) =>
+    request<{ url: string }>(`/lms/${provider}/connect`, t, json({ instanceUrl: instanceUrl || null })),
+  lmsDisconnect: (t: string, provider: Exclude<LmsProviderId, 'google_classroom'>) =>
+    request<void>(`/lms/${provider}`, t, { method: 'DELETE' }),
+  lmsCourses: (t: string, provider: Exclude<LmsProviderId, 'google_classroom'>) =>
+    request<ClassroomCourse[]>(`/lms/${provider}/courses`, t),
+  lmsAssignments: (t: string, provider: Exclude<LmsProviderId, 'google_classroom'>, courseId: string) =>
+    request<ClassroomCoursework[]>(`/lms/${provider}/courses/${encodeURIComponent(courseId)}/assignments`, t),
+  lmsImport: (
+    t: string,
+    provider: Exclude<LmsProviderId, 'google_classroom'>,
+    courseId: string,
+    workId: string,
+    body: { course: string; unitTopic: string },
+  ) =>
+    request<ClassroomImportResult>(
+      `/lms/${provider}/courses/${encodeURIComponent(courseId)}/assignments/${encodeURIComponent(workId)}/import`,
+      t,
+      json(body),
+    ),
+  lmsSync: (
+    t: string,
+    provider: Exclude<LmsProviderId, 'google_classroom'>,
+    courseId: string,
+    workId: string,
+    submissionIds?: string[],
+  ) =>
+    request<LmsSyncResult>(
+      `/lms/${provider}/courses/${encodeURIComponent(courseId)}/assignments/${encodeURIComponent(workId)}/sync`,
+      t,
+      json({ submissionIds }),
+    ),
+  /** School LMS SSO (Brightspace, Canvas, Microsoft). */
+  lmsSsoConnect: (provider: Exclude<LmsProviderId, 'google_classroom'>, instanceUrl?: string) =>
+    fetch(`${API_URL}/auth/lms/${provider}/connect`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ instanceUrl: instanceUrl || null }),
+    }).then(async (r) => {
+      if (!r.ok) {
+        const body = await r.json().catch(() => ({}));
+        throw new ApiError(r.status, body.detail || 'SSO start failed');
+      }
+      return r.json() as Promise<{ url: string }>;
+    }),
   teacherStudents: (t: string) => request<RosterStudent[]>('/teacher/students', t),
   /** Results over time for one student (student, linked parent or their teacher). */
   progress: (t: string, studentId: string) => request<ProgressReport>(`/students/${studentId}/progress`, t),
