@@ -87,11 +87,18 @@ gcloud projects add-iam-policy-binding "$PROJECT" \
 sleep 60
 
 echo "== Deploying to Cloud Run"
+# Model and region overrides: export them before running, for example
+#   BIRDBRAINS_VERTEX_LOCATION=northamerica-northeast2 BIRDBRAINS_STAGE1_MODEL=gemini-3.5-flash ./deploy.sh <project>
+# (python tools/check_models.py shows which models each Canadian region serves.)
+EXTRA=""
+for v in BIRDBRAINS_VERTEX_LOCATION BIRDBRAINS_STAGE1_MODEL BIRDBRAINS_STAGE2_MODEL BIRDBRAINS_STAGE2_FREE_MODEL BIRDBRAINS_WORKSHEET_MODEL; do
+  [ -n "${!v:-}" ] && EXTRA="$EXTRA;$v=${!v}"
+done
 # --allow-unauthenticated: the browser calls the API directly; every route except
 # /health checks a Firebase sign-in token (or the batch token) itself.
 gcloud run deploy "$SERVICE" --source . --region "$REGION" --service-account "$SA" \
   --allow-unauthenticated --memory 1Gi --timeout 300 --max-instances 5 \
-  --set-env-vars "^;^GOOGLE_CLOUD_PROJECT=$PROJECT;BIRDBRAINS_BUCKET=$BUCKET;BIRDBRAINS_CORS_ORIGINS=$CORS;BIRDBRAINS_SITE_URL=$ORIGIN" \
+  --set-env-vars "^;^GOOGLE_CLOUD_PROJECT=$PROJECT;BIRDBRAINS_BUCKET=$BUCKET;BIRDBRAINS_CORS_ORIGINS=$CORS;BIRDBRAINS_SITE_URL=$ORIGIN$EXTRA" \
   --set-secrets "$SECRETS"
 URL="$(gcloud run services describe "$SERVICE" --region "$REGION" --format='value(status.url)')"
 # The API needs its own public address for the Google sign-in return link.

@@ -12,9 +12,12 @@ import argparse
 import os
 import sys
 
-DEFAULT_MODELS = [os.environ.get("BIRDBRAINS_STAGE1_MODEL", "gemini-2.5-flash"),
-                  os.environ.get("BIRDBRAINS_STAGE2_MODEL", "gemini-2.5-pro")]
-DEFAULT_REGIONS = ["northamerica-northeast1", "northamerica-northeast2", "us-central1", "global"]
+# Gemini 2.5 was retired on Vertex AI on 2026-10-20, so the app's current defaults answer
+# "404 not found". These are the newer models Google's locations page lists for Montréal.
+DEFAULT_MODELS = ["gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.6-flash", "gemini-3.5-flash",
+                  "gemini-3.1-pro-preview", "gemini-3-flash-preview"]
+# Canada only by default: Montréal and Toronto. Add --regions to look further.
+DEFAULT_REGIONS = ["northamerica-northeast1", "northamerica-northeast2"]
 
 
 def main() -> int:
@@ -36,7 +39,7 @@ def main() -> int:
             except Exception as e:  # noqa: BLE001 - we want whatever Google said
                 failed += 1
                 print(f"FAILED {region:26} {model}  {type(e).__name__}: {str(e)[:160]}")
-    print("\nThe app uses northamerica-northeast1 (Canada). Other regions are shown only so you can see what exists.")
+    print("\nPick models that say OK in the region you want, then set BIRDBRAINS_STAGE1_MODEL, BIRDBRAINS_STAGE2_MODEL and BIRDBRAINS_VERTEX_LOCATION.")
     return 0 if failed < len(args.models) * len(args.regions) else 1
 
 
