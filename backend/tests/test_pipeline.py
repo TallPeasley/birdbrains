@@ -48,7 +48,8 @@ def test_stage1_request():
     client = StubClient()
     out = P.GeminiPipeline(client=client).run_stage1(CTX, [P.ImageRef("gs://b/p.jpg", "image/jpeg")])
     model, contents, config = client.calls[0]
-    assert model == "gemini-2.5-flash"
+    assert model == "gemini-3.5-flash"
+    assert config.thinking_config.thinking_level.value == "MINIMAL"
     assert contents[0].parts[0].file_data.file_uri == "gs://b/p.jpg"
     assert "NEVER correct" in config.system_instruction
     assert out.submission_id == CTX.submission_id and not out.requires_hitl
@@ -61,15 +62,15 @@ def test_stage1_low_confidence_goes_to_hitl():
     assert P.GeminiPipeline(client=client).run_stage1(CTX, [P.ImageRef("gs://b/p.jpg", "image/jpeg")]).requires_hitl
 
 
-def test_stage2_uses_cache_and_thinking_budget():
+def test_stage2_uses_cache_and_thinking_level():
     client = StubClient()
     pipe = P.GeminiPipeline(client=client)
     out = pipe.run_stage2(CTX, S1)
     pipe.run_stage2(CTX, S1)
     model, contents, config = client.calls[0]
-    assert model == "gemini-2.5-pro" == client.cache_model
+    assert model == "gemini-3.5-flash" == client.cache_model
     assert config.cached_content == "cachedContents/123" and config.system_instruction is None
-    assert config.thinking_config.thinking_budget == 2048
+    assert config.thinking_config.thinking_level.value == "LOW"
     assert client.cache_creates == 1 and client.cache_config.ttl == "86400s"
     assert "CON-01" in client.cache_config.contents[0].parts[0].text
     assert out.submission_id == CTX.submission_id

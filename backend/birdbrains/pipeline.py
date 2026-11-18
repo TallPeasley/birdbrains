@@ -39,13 +39,29 @@ log = logging.getLogger(__name__)
 # regions serve our models.
 VERTEX_LOCATION = os.environ.get("BIRDBRAINS_VERTEX_LOCATION", "northamerica-northeast1")
 
-STAGE1_MODEL = os.environ.get("BIRDBRAINS_STAGE1_MODEL", "gemini-2.5-flash")
-STAGE2_MODEL = os.environ.get("BIRDBRAINS_STAGE2_MODEL", "gemini-2.5-pro")
-STAGE2_THINKING_BUDGET = 2048
-# Free plan: transcription and 4-pillar error codes on Flash, with no thinking
-# budget and no mood analysis. Roughly a tenth of the Pro cost per upload.
-STAGE2_FREE_MODEL = os.environ.get("BIRDBRAINS_STAGE2_FREE_MODEL", "gemini-2.5-flash")
-STAGE2_FREE_THINKING_BUDGET = int(os.environ.get("BIRDBRAINS_STAGE2_FREE_THINKING", "0"))
+# Gemini 2.5 was retired on Vertex AI on 2026-10-20. gemini-3.5-flash is the model that
+# answers in Montréal (checked with tools/check_models.py on 2026-11-18); Toronto serves none.
+STAGE1_MODEL = os.environ.get("BIRDBRAINS_STAGE1_MODEL", "gemini-3.5-flash")
+STAGE2_MODEL = os.environ.get("BIRDBRAINS_STAGE2_MODEL", "gemini-3.5-flash")
+# Free plan: transcription and 4-pillar error codes with minimal thinking and no mood
+# analysis. Pro thinks more. Levels: MINIMAL, LOW, MEDIUM, HIGH (Gemini 3); on a 2.5
+# model they map to a thinking budget.
+STAGE2_FREE_MODEL = os.environ.get("BIRDBRAINS_STAGE2_FREE_MODEL", "gemini-3.5-flash")
+STAGE1_THINKING = os.environ.get("BIRDBRAINS_STAGE1_THINKING", "MINIMAL")
+STAGE2_THINKING = os.environ.get("BIRDBRAINS_STAGE2_THINKING", "LOW")  # MEDIUM was 45-55 s and ~$0.15-0.20 per upload
+STAGE2_FREE_THINKING = os.environ.get("BIRDBRAINS_STAGE2_FREE_THINKING", "MINIMAL")
+_LEGACY_BUDGETS = {"MINIMAL": 0, "LOW": 512, "MEDIUM": 2048, "HIGH": 8192}
+
+
+def thinking_config(model: str, level: str):
+    """Gemini 3 takes a thinking level; Gemini 2.5 takes a token budget."""
+    from google.genai import types
+
+    if model.startswith("gemini-2."):
+        return types.ThinkingConfig(thinking_budget=_LEGACY_BUDGETS[level])
+    return types.ThinkingConfig(thinking_level=level)
+
+
 CACHE_TTL_SECONDS = 24 * 60 * 60
 # Below this overall OCR confidence the work goes to a human / retake instead of Stage 2.
 HITL_CONFIDENCE_FLOOR = 0.60
@@ -131,6 +147,8 @@ required as usual. Keep explanations to one sentence each.
 # USD per million tokens: (input, cached input, output incl. thinking). List prices
 # for prompts under 200k tokens; override with BIRDBRAINS_PRICES_JSON if they change.
 DEFAULT_PRICES = {
+    # gemini-3.5-flash: from a third-party price list, not Google's own page. Check it.
+    "gemini-3.5-flash": (1.50, 0.15, 9.00),
     "gemini-2.5-flash": (0.30, 0.03, 2.50),
     "gemini-2.5-pro": (1.25, 0.125, 10.00),
 }
@@ -304,6 +322,7 @@ class GeminiPipeline:
                 temperature=0.0,
                 response_mime_type="application/json",
                 response_schema=Stage1TranscriptionOutput,
+                thinking_config=thinking_config(STAGE1_MODEL, STAGE1_THINKING),
             ),
         )
         if meter is not None:
@@ -326,8 +345,7 @@ class GeminiPipeline:
             temperature=0.0,
             response_mime_type="application/json",
             response_schema=Stage2GradingAndAffectOutput,
-            thinking_config=types.ThinkingConfig(
-                thinking_budget=STAGE2_FREE_THINKING_BUDGET if free else STAGE2_THINKING_BUDGET),
+            thinking_config=thinking_config(model, STAGE2_FREE_THINKING if free else STAGE2_THINKING),
         )
         prompt = stage2_prompt(ctx, stage1, plan)
         cache = self._stage2_cache(model)
