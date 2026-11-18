@@ -1,0 +1,77 @@
+# Auto-deploy: runs on every merge to main that touches the API or the site.
+# Order: backend tests -> build image + site -> deploy API -> health check -> publish site.
+# If the tests, the build or the health check fail, nothing after that step is deployed.
+# Set up once with deploy/setup-auto-deploy.sh. Rollback: see docs/DEPLOY.md.
+substitutions:
+  _REGION: northamerica-northeast1
+  _SERVICE: birdbrains-api
+  _REPO: cloud-run-source-deploy          # Artifact Registry repo that `deploy.sh` created
+  _API_URL: ""                            # the three below are public identifiers, not secrets
+  _FIREBASE_API_KEY: ""
+  _FIREBASE_AUTH_DOMAIN: ""
+
+options:
+  logging: CLOUD_LOGGING_ONLY            # required when a build runs as a custom service account
+
+steps:
+  - id: test-backend
+    name: python:3.12-slim
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        apt-get update -qq && apt-get install -y -qq libpango-1.0-0 libpangoft2-1.0-0 libharfbuzz-subset0 fonts-dejavu-core >/dev/null
+        cd backend && pip install -q -r requirements.txt pytest && python -m pytest -q
+
+  - id: build-site
+    name: node:20
+    waitFor: ["-"]
+    entrypoint: bash
+    env:
+      - NEXT_PUBLIC_API_URL=${_API_URL}
+      - NEXT_PUBLIC_FIREBASE_API_KEY=${_FIREBASE_API_KEY}
+      - NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=${_FIREBASE_AUTH_DOMAIN}
+      - NEXT_PUBLIC_FIREBASE_PROJECT_ID=${PROJECT_ID}
+    args: ["-c", "npm ci --no-audit --no-fund && npm run build"]
+
+  - id: build-api-image
+    name: gcr.io/cloud-builders/docker
+    waitFor: ["-"]
+    args: ["build", "-t", "${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_SERVICE}:${BUILD_ID}", "backend"]
+
+  - id: push-api-image
+    name: gcr.io/cloud-builders/docker
+    waitFor: [build-api-image, test-backend]
+    args: ["push", "${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_SERVICE}:${BUILD_ID}"]
+
+  # Only the image changes. Env vars, secrets, scaling and the service account stay as set by deploy.sh.
+  - id: deploy-api
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    waitFor: [push-api-image]
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - ${_SERVICE}
+      - --image=${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_REPO}/${_SERVICE}:${BUILD_ID}
+      - --region=${_REGION}
+      - --quiet
+
+  - id: health-check
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    waitFor: [deploy-api]
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        URL="$(gcloud run services describe ${_SERVICE} --region ${_REGION} --format='value(status.url)')"
+        for i in 1 2 3 4 5 6; do curl -fsS "$URL/health" && exit 0; sleep 5; done
+        echo "API did not answer /health after the deploy. Site not published." >&2; exit 1
+
+  - id: publish-site
+    name: python:3.12-slim
+    waitFor: [build-site, health-check]
+    env: ["COMMIT_SHA=${COMMIT_SHA}"]
+    args: ["python3", "deploy/hosting_deploy.py", "--project", "${PROJECT_ID}"]
+
+timeout: 1500s
