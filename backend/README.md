@@ -98,7 +98,8 @@ To exercise real Gemini from your machine, keep `BIRDBRAINS_BACKEND=local`, set
 | `MLFLOW_TRACKING_URI` | unset (tracing off) | Where `@mlflow.trace` spans go |
 | `BIRDBRAINS_CLASSROOM` | unset | `demo` swaps in a pretend Google Classroom (3 classes, invented students) for testing. Refused on Cloud Run. See `docs/TEST_CLASSROOMS.md` |
 
-The Vertex AI location is fixed to `northamerica-northeast1` in code.
+The Vertex AI location defaults to `northamerica-northeast1` (Canada, PIPEDA). `BIRDBRAINS_VERTEX_LOCATION` overrides it, but only change it after deciding that photos may be processed outside Canada.
+If uploads end in "The diagnostic could not be completed", run `python tools/check_models.py --project <project>` in Cloud Shell to see which regions serve the models, and search the Cloud Run logs for `pipeline_failed` (it holds Google's error text, never student work).
 
 ## Choices the specs left open
 

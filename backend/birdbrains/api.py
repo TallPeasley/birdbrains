@@ -595,8 +595,12 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
             stage2 = d.pipeline.run_stage2(ctx, stage1, plan=plan, meter=meter)
         except HTTPException:
             raise
-        except Exception:
+        except Exception as e:
             log.exception("Pipeline failed for %s", submission_id)
+            # One JSON line the logs can be searched for. The text is Google's error
+            # (model, region, status), never the student's work.
+            print(json.dumps({"severity": "ERROR", "event": "pipeline_failed", "submissionId": submission_id,
+                              "error": type(e).__name__, "message": str(e)[:400]}), flush=True)
             set_status("FAILED")
             raise HTTPException(502, "The diagnostic could not be completed. Please try again.")
 
