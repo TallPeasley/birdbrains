@@ -7,7 +7,7 @@ import { demoPersonas } from '@/lib/mockData';
 import { PILLARS, PILLAR_ORDER } from '@/lib/pillars';
 import { IS_LIVE } from '@/lib/api';
 import AccountCard from '@/components/AccountCard';
-import AeroLogo from '@/components/aero/AeroLogo';
+import AeroMorphPlate from '@/components/aero/AeroMorphPlate';
 import SectionIndex from '@/components/aero/SectionIndex';
 import PillarBadge from '@/components/PillarBadge';
 import { useSession } from '@/lib/session';
@@ -37,6 +37,7 @@ export default function HomePage() {
       <section>
         <div className="flex flex-wrap items-center gap-2">
           <span className="aero-badge aero-badge--accent">Ontario · MTH1W · MPM2D</span>
+          <span className="aero-badge">Collab · 7 Figure EdTech Consulting (Jan)</span>
           <span className="aero-coord">GR 9–10 MATH</span>
         </div>
         <h1 className="mt-5 max-w-2xl text-4xl font-extrabold leading-[1.05] text-slate-900 sm:text-[3.25rem]">
@@ -50,7 +51,7 @@ export default function HomePage() {
 
         <div className="mt-8 grid gap-3 sm:grid-cols-[148px_minmax(0,1fr)]">
           <figure className="aero-plate aero-blueprint m-0 max-sm:w-36">
-            <AeroLogo brand="birdbrains" variant="isometric" title="BirdBrains cortex cube" />
+            <AeroMorphPlate brand="birdbrains" title="BirdBrains cortex cube" />
             <figcaption className="contents">
               <span className="aero-plate__tag aero-plate__tag--tl">Fig. 01</span>
               <span className="aero-plate__tag aero-plate__tag--br">Iso 30°</span>
@@ -83,6 +84,15 @@ export default function HomePage() {
               </p>
             </div>
           ))}
+        </div>
+        <div className="aero-panel mt-6 flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+          <div>
+            <span className="aero-eyebrow block">Upcoming Partnership</span>
+            <p className="mt-0.5 text-sm text-slate-700">
+              Collaborating with <strong className="font-semibold text-slate-900">7 Figure EdTech Consulting</strong> — official announcement in January.
+            </p>
+          </div>
+          <span className="aero-badge aero-badge--accent">JAN 2027</span>
         </div>
       </section>
 

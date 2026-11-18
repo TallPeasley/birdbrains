@@ -28,8 +28,10 @@ export interface AeroGlobalHeaderProps {
  * render from the same stylesheet (app/aero.css).
  */
 export default function AeroGlobalHeader({ brand, home = '/', coord, nav, children, stack }: AeroGlobalHeaderProps) {
+  const isAero = brand === 'aero';
   const me = aeroBrand(brand, BRAND_STAGE);
   const items = aeroSwitcher(brand, BRAND_STAGE, AERO_URLS);
+  const aeroUrl = isAero ? home : AERO_URLS.aero || aeroBrand('aero', BRAND_STAGE).url || '/';
   const menuId = useId();
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
@@ -115,17 +117,18 @@ export default function AeroGlobalHeader({ brand, home = '/', coord, nav, childr
                 </span>
               </a>
             ))}
-            <p className="aero-switcher__foot">
+            <a className="aero-switcher__foot" href={aeroUrl} aria-current={isAero ? 'true' : undefined}>
               <AeroLogo brand="aero" />
               <span>One system, three tools.</span>
-            </p>
+              <span className="aero-switcher__foot-go">{isAero ? 'Here' : 'Overview →'}</span>
+            </a>
           </div>
         </div>
 
-        <Link href={home} className="aero-lockup" aria-label={`${me.name} by Aero, home`}>
+        <Link href={home} className="aero-lockup" aria-label={isAero ? 'Aero, home' : `${me.name} by Aero, home`}>
           <AeroLogo brand={brand} />
           <span className="aero-lockup__name">{me.name}</span>
-          <span className="aero-lockup__by">by Aero</span>
+          <span className="aero-lockup__by">{isAero ? 'SYS-00' : 'by Aero'}</span>
         </Link>
 
         {nav && (

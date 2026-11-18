@@ -20,6 +20,7 @@ const COORDS: Record<string, string> = {
   '/parent': 'BB-02 / PARENT',
   '/plans': 'BB-03 / PLANS',
   '/account': 'BB-04 / ACCOUNT',
+  '/reports': 'BB-05 / REPORTS',
 };
 
 /** BirdBrains' own links and controls, inside the shared Aero shell header. */
@@ -37,20 +38,24 @@ export default function Navbar() {
       stack
       coord={COORDS[pathname] ?? 'BB-00'}
       nav={
-        showDashboard || showAccount ? (
-          <>
-            {showDashboard && (
-              <Link href={`/${role}`} aria-current={pathname === `/${role}` ? 'page' : undefined}>
-                Dashboard
-              </Link>
-            )}
-            {showAccount && (
-              <Link href="/account" aria-current={pathname === '/account' ? 'page' : undefined}>
-                Account
-              </Link>
-            )}
-          </>
-        ) : undefined
+        <>
+          {showDashboard && (
+            <Link href={`/${role}`} aria-current={pathname === `/${role}` ? 'page' : undefined}>
+              Dashboard
+            </Link>
+          )}
+          <Link href="/plans" aria-current={pathname === '/plans' ? 'page' : undefined}>
+            Plans
+          </Link>
+          <Link href="/reports" aria-current={pathname === '/reports' ? 'page' : undefined}>
+            Reports
+          </Link>
+          {showAccount && (
+            <Link href="/account" aria-current={pathname === '/account' ? 'page' : undefined}>
+              Account
+            </Link>
+          )}
+        </>
       }
     >
       {IS_LIVE && demo && (

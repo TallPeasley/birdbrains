@@ -9,6 +9,7 @@ export const BRAND_STAGE = process.env.NEXT_PUBLIC_BRAND_STAGE ?? '';
 
 /** Link overrides for the ecosystem switcher, so local previews can point at each other. Unset in production. */
 export const AERO_URLS: Partial<Record<AeroBrandKey, string>> = {
+  aero: process.env.NEXT_PUBLIC_AERO_URL_AERO || undefined,
   ascent: process.env.NEXT_PUBLIC_AERO_URL_ASCENT || undefined,
   birdbrains: process.env.NEXT_PUBLIC_AERO_URL_BIRDBRAINS || undefined,
   chirp: process.env.NEXT_PUBLIC_AERO_URL_CHIRP || undefined,

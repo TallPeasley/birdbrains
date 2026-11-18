@@ -39,7 +39,7 @@ function chirpImportUrl(worksheet: WS_3STAGE_V1): string {
     .replace(/\+/g, '-')
     .replace(/\//g, '_')
     .replace(/=+$/, '');
-  return `${base}/#import=${b64}`;
+  return `${base}/app#import=${b64}`;
 }
 
 function printWorksheet() {

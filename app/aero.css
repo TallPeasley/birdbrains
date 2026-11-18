@@ -94,7 +94,14 @@
   :root[data-aero-theme="auto"], :root[data-aero-theme="auto"] [data-aero-brand] { --aero-accent-ink: var(--aero-primary); }
 }
 
-/* ── 4. Logo ─────────────────────────────────────────────────────────────── */
+/* ── 4. Accessibility & Logo ─────────────────────────────────────────────── */
+.aero-skip {
+  position: fixed; top: -120px; left: 12px; z-index: 100;
+  padding: 10px 14px; border-radius: var(--aero-radius);
+  background: var(--aero-accent-ink); color: #fff; border: 1px solid var(--aero-accent-ink);
+  font: 600 13px/1 var(--aero-font-body); text-decoration: none;
+}
+.aero-skip:focus-visible { top: 12px; outline: 2px solid var(--aero-ink); outline-offset: 2px; }
 aero-logo { display: inline-flex; line-height: 0; }
 .aero-logo { display: block; flex: none; overflow: visible; }
 .aero-logo:where(:not([width])) { width: 28px; height: 28px; } /* default size; an explicit width/height or a context rule wins */
@@ -161,7 +168,9 @@ aero-global-header > [slot] { display: none; }
 .aero-switcher__role { display: block; margin-top: 2px; font-size: 12px; line-height: 1.35; color: var(--aero-ink-3); }
 .aero-switcher__meta { display: grid; justify-items: end; gap: 4px; font: 500 10px/1 var(--aero-font-mono); color: var(--aero-ink-3); white-space: nowrap; }
 .aero-switcher__here { padding: 3px 5px; border-radius: var(--aero-radius-xs); background: var(--aero-accent-soft); color: var(--aero-accent-ink); border: 1px solid var(--aero-accent-line); letter-spacing: 0.08em; text-transform: uppercase; }
-.aero-switcher__foot { display: flex; align-items: center; gap: 8px; margin: 0; padding: 9px 12px; border-top: 1px solid var(--aero-line); background: var(--aero-canvas); font: 500 10px/1.3 var(--aero-font-mono); color: var(--aero-ink-3); border-radius: 0 0 var(--aero-radius) var(--aero-radius); }
+.aero-switcher__foot { display: flex; align-items: center; gap: 8px; margin: 0; padding: 9px 12px; border-top: 1px solid var(--aero-line); background: var(--aero-canvas); font: 500 10px/1.3 var(--aero-font-mono); color: var(--aero-ink-3); border-radius: 0 0 var(--aero-radius) var(--aero-radius); text-decoration: none; transition: background-color .12s, color .12s; }
+a.aero-switcher__foot:hover, a.aero-switcher__foot:focus-visible { background: var(--aero-surface); color: var(--aero-ink); }
+.aero-switcher__foot-go { margin-left: auto; color: var(--aero-accent-ink); font-weight: 600; }
 .aero-switcher__foot .aero-logo { width: 16px; height: 16px; }
 
 .aero-lockup { display: inline-flex; align-items: center; gap: 9px; padding: 0 16px; color: var(--aero-ink); text-decoration: none; white-space: nowrap; }
@@ -255,9 +264,82 @@ aero-global-header > [slot] { display: none; }
 /* Isometric plate: frames a Series B logo as a drawing, with mono annotations in the corners. */
 .aero-plate { position: relative; display: grid; place-items: center; aspect-ratio: 1; border: 1px solid var(--aero-line); border-radius: var(--aero-radius); overflow: hidden; }
 .aero-plate .aero-logo { width: 58%; height: 58%; }
-.aero-plate__tag { position: absolute; font: 500 9.5px/1 var(--aero-font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--aero-ink-4); }
+.aero-plate__tag { position: absolute; font: 500 9.5px/1 var(--aero-font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--aero-ink-4); z-index: 3; }
 .aero-plate__tag--tl { top: 8px; left: 8px; } .aero-plate__tag--tr { top: 8px; right: 8px; }
 .aero-plate__tag--bl { bottom: 8px; left: 8px; } .aero-plate__tag--br { bottom: 8px; right: 8px; }
+
+/* Flat-to-3D Isometric Extrusion Animation (2D Origami <-> 3D Axonometric) */
+.aero-morph {
+  position: relative; display: grid; place-items: center;
+  perspective: 840px; transform-style: preserve-3d;
+  cursor: pointer; user-select: none;
+}
+.aero-morph__stage {
+  position: relative; width: 100%; height: 100%;
+  display: grid; place-items: center; transform-style: preserve-3d;
+}
+.aero-morph__grid {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  opacity: 0.42; pointer-events: none;
+}
+.aero-morph__flat, .aero-morph__3d {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  transform-origin: 50% 50%; will-change: transform, opacity, filter;
+  transition: transform 820ms cubic-bezier(0.2, 0.8, 0.2, 1), opacity 680ms cubic-bezier(0.2, 0.8, 0.2, 1), filter 820ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.aero-morph__flat .aero-logo, .aero-morph__3d .aero-logo { width: 62%; height: 62%; }
+.aero-morph__crease { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0.35; pointer-events: none; animation: aeroCreasePulse 3s infinite ease-in-out; }
+.aero-morph__shadow {
+  position: absolute; bottom: 8%; width: 46%; height: 7px; border-radius: 999px;
+  background: var(--aero-ink); filter: blur(3px); pointer-events: none;
+  transform: scaleX(0.55); opacity: 0.08;
+  transition: transform 720ms cubic-bezier(0.22, 1, 0.36, 1), opacity 640ms ease;
+}
+/* Resting 2D Flat Origami state */
+.aero-morph:not(.aero-morph--3d) .aero-morph__flat {
+  opacity: 1; transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg) translateY(0px) scale(1);
+  filter: drop-shadow(0px 2px 4px rgb(15 23 42 / 0.06));
+}
+.aero-morph:not(.aero-morph--3d) .aero-morph__3d {
+  opacity: 0; transform: rotateX(55deg) rotateY(-35deg) rotateZ(25deg) translateY(16px) scale(0.72);
+  filter: drop-shadow(0px 20px 25px rgb(15 23 42 / 0.25)); pointer-events: none;
+}
+/* Extruded 3D Axonometric state (via .aero-morph--3d or hover when auto-hover is enabled) */
+.aero-morph.aero-morph--3d .aero-morph__flat,
+.aero-morph[data-morph-hover]:hover .aero-morph__flat {
+  opacity: 0; transform: rotateX(-45deg) rotateY(35deg) rotateZ(-20deg) translateY(-14px) scale(0.78);
+  filter: drop-shadow(0px 2px 2px rgb(15 23 42 / 0.02)); pointer-events: none;
+}
+.aero-morph.aero-morph--3d .aero-morph__3d,
+.aero-morph[data-morph-hover]:hover .aero-morph__3d {
+  opacity: 1; transform: rotateX(12deg) rotateY(-18deg) rotateZ(8deg) translateY(-4px) scale(1.06);
+  filter: drop-shadow(4px 14px 18px rgb(15 23 42 / 0.18));
+}
+.aero-morph.aero-morph--3d .aero-morph__shadow,
+.aero-morph[data-morph-hover]:hover .aero-morph__shadow {
+  transform: scaleX(1.08); opacity: 0.26;
+}
+/* Default plate morphs start in 3D when data-morph-default="3d" unless hovered */
+.aero-morph[data-morph-default="3d"]:not(.aero-morph--flat) .aero-morph__flat {
+  opacity: 0; transform: rotateX(-45deg) rotateY(35deg) rotateZ(-20deg) translateY(-14px) scale(0.78); pointer-events: none;
+}
+.aero-morph[data-morph-default="3d"]:not(.aero-morph--flat) .aero-morph__3d {
+  opacity: 1; transform: rotateX(12deg) rotateY(-18deg) rotateZ(8deg) translateY(-4px) scale(1.06);
+  filter: drop-shadow(4px 14px 18px rgb(15 23 42 / 0.18));
+}
+.aero-morph[data-morph-default="3d"]:not(.aero-morph--flat) .aero-morph__shadow { transform: scaleX(1.08); opacity: 0.26; }
+.aero-morph[data-morph-default="3d"]:not(.aero-morph--flat):hover .aero-morph__flat {
+  opacity: 1; transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg) translateY(0px) scale(1);
+}
+.aero-morph[data-morph-default="3d"]:not(.aero-morph--flat):hover .aero-morph__3d {
+  opacity: 0; transform: rotateX(55deg) rotateY(-35deg) rotateZ(25deg) translateY(16px) scale(0.72);
+}
+.aero-morph[data-morph-default="3d"]:not(.aero-morph--flat):hover .aero-morph__shadow { transform: scaleX(0.55); opacity: 0.08; }
+
+@keyframes aeroCreasePulse { 0%, 100% { opacity: 0.16; } 50% { opacity: 0.45; } }
+@keyframes aeroChirpPulse { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
+.animate-chirp-1 { animation: aeroChirpPulse 2s infinite ease-in-out; }
+.animate-chirp-2 { animation: aeroChirpPulse 2s infinite ease-in-out 0.35s; }
 
 /* Ecosystem footer strip. */
 .aero-foot {
@@ -270,6 +352,8 @@ aero-global-header > [slot] { display: none; }
 .aero-foot__sep { color: var(--aero-ink-4); }
 
 @media (prefers-reduced-motion: reduce) {
-  .aero-switcher__chev, .aero-header__nav a::after, .aero-btn, .aero-switcher__pill { transition: none; }
+  .aero-switcher__chev, .aero-header__nav a::after, .aero-btn, .aero-switcher__pill,
+  .aero-morph__flat, .aero-morph__3d, .aero-morph__shadow { transition: none; }
+  .aero-morph__crease, .animate-chirp-1, .animate-chirp-2 { animation: none; }
 }
 @media print { .aero-header, aero-global-header, .aero-foot { display: none !important; } }
