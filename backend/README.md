@@ -7,7 +7,7 @@ serves the JSON contracts in `../types/birdBrains.ts`.
 birdbrains/
   schemas.py                 Pydantic v2 contracts (pipeline: strict snake_case; API: camelCase)
   taxonomy.py                the 16 official error codes + Ontario curriculum registry (the cached context)
-  pipeline.py                Stage 1 (gemini-2.5-flash) and Stage 2 (gemini-2.5-pro, thinking 2048), 24h context cache, MLflow traces
+  pipeline.py                Stage 1 and Stage 2 (gemini-3.5-flash, thinking levels), 24h context cache, MLflow traces
   mastery_affect_ledger.py   Dual EWMA (mastery 0.30, valence 0.35) + scaffolding-mode state machine
   batch_engine.py            Nightly worksheet generation through the Vertex AI Batch API
   projections.py             Stored records -> grading, worksheet and parent-summary payloads
@@ -115,14 +115,17 @@ These are defaults picked during the build; each is one constant or one file.
 
 | | Free | Pro |
 |---|---|---|
-| Stage 1 (read the handwriting) | `gemini-2.5-flash` | `gemini-2.5-flash` |
-| Stage 2 (grade) | `gemini-2.5-flash`, no thinking budget, no mood analysis | `gemini-2.5-pro`, 2048-token thinking budget, mood analysis |
+| Stage 1 (read the handwriting; also detects course, unit, topic) | `gemini-3.5-flash`, minimal thinking | `gemini-3.5-flash`, minimal thinking |
+| Stage 2 (grade) | `gemini-3.5-flash`, minimal thinking, no mood analysis | `gemini-3.5-flash`, low thinking, mood analysis |
 | Context cache | its own 24 h cache | its own 24 h cache |
 
 The plan is decided per upload from the student's effective plan. On Free the model is
 told to skip mood analysis and anything it returns for mood is discarded. Models are
 set with `BIRDBRAINS_STAGE1_MODEL`, `BIRDBRAINS_STAGE2_MODEL`, `BIRDBRAINS_STAGE2_FREE_MODEL`
-and `BIRDBRAINS_STAGE2_FREE_THINKING`.
+and the thinking levels (MINIMAL, LOW, MEDIUM, HIGH) with `BIRDBRAINS_STAGE1_THINKING`, `BIRDBRAINS_STAGE2_THINKING`
+and `BIRDBRAINS_STAGE2_FREE_THINKING`. Gemini 2.5 was retired on Vertex AI on 2026-10-20; `gemini-3.5-flash` is
+the model that answers in Montréal (Toronto serves none). First real run (2026-11-18): about 7-10 s for stage 1,
+17-28 s for a whole upload, roughly $0.05-0.08 each.
 
 Every graded upload stores its token counts, time and estimated cost on the grading
 record (`cost`, never returned by the API) and prints one `pipeline_done` JSON line.

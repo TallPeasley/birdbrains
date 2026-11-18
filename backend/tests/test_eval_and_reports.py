@@ -28,23 +28,24 @@ def test_free_mode_uses_flash_without_thinking_or_mood():
     meter = P.Meter()
     out = P.GeminiPipeline(client=client).run_stage2(CTX, S1, plan="free", meter=meter)
     model, contents, config = client.calls[0]
-    assert model == "gemini-2.5-flash" == client.cache_model       # its own cache, not Pro's
-    assert config.thinking_config.thinking_budget == 0
+    assert model == "gemini-3.5-flash" == client.cache_model       # its own cache, not Pro's
+    assert config.thinking_config.thinking_level.value == "MINIMAL"
     assert contents.startswith("Plan: FREE")
     # The stub returned mood data anyway; none of it survives on Free.
     assert out.sentiment_entities == [] and out.aggregate_valence == 0 and out.aggregate_friction == 0
     assert out.recommended_scaffolding_mode is ScaffoldingModeEnum.STANDARD_PROGRESSIVE_FADE
     assert out.identified_errors == S2.identified_errors and out.pillar_scores == S2.pillar_scores
-    assert meter.calls[0].model == "gemini-2.5-flash"
+    assert meter.calls[0].model == "gemini-3.5-flash"
 
 
-def test_pro_and_free_keep_separate_caches():
+def test_pro_and_free_keep_separate_caches(monkeypatch):
+    monkeypatch.setattr(P, "STAGE2_MODEL", "pro-model")  # Pro and Free use different models only when configured so
     client = StubClient()
     pipe = P.GeminiPipeline(client=client)
     for plan in ("pro", "free", "pro", "free"):
         pipe.run_stage2(CTX, S1, plan=plan)
     assert client.cache_creates == 2
-    assert [c[0] for c in client.calls] == ["gemini-2.5-pro", "gemini-2.5-flash"] * 2
+    assert [c[0] for c in client.calls] == ["pro-model", "gemini-3.5-flash"] * 2
 
 
 def test_meter_prices_tokens(monkeypatch):
