@@ -14,7 +14,11 @@ or shown to Gemini:
    - names, dates, emails and phone numbers anywhere on the page.
 3. Every detected box is padded and heavily blurred (Gaussian blur over a
    pixelated copy, so handwriting cannot be recovered).
-If DLP fails the upload fails: nothing unscrubbed is stored.
+If DLP fails, the upload still goes through (Maalik, 2026-11-18: a failed name check must
+not block a student). The top FALLBACK_HEADER_FRACTION of the page, where names and dates
+are written, is blurred instead, EXIF is still dropped, and a ``privacy_fallback`` log line
+records Google's error so the cause can be fixed. Names elsewhere on the page are not
+caught in that case, and Stage 1 is told never to transcribe names.
 
 ``BIRDBRAINS_HEADER_MASK`` can still black out a fixed top strip as a backstop
 (off by default). Locally and in tests there is no DLP, so nothing is detected
@@ -23,6 +27,7 @@ unless a test supplies a detector.
 from __future__ import annotations
 
 import io
+import json
 import logging
 from dataclasses import dataclass
 from typing import Optional, Protocol
@@ -33,6 +38,7 @@ log = logging.getLogger(__name__)
 
 REGION = "northamerica-northeast1"
 LABEL = "HEADER_FIELD_LABEL"
+FALLBACK_HEADER_FRACTION = 0.15  # blurred when Cloud DLP is unavailable
 # Printed labels on worksheets and tests. The value written after them is private.
 LABEL_REGEX = (
     r"(?i)\b(name|nom|first name|last name|date|class|classe|period|block|section|teacher|"
@@ -134,7 +140,13 @@ class PhotoScrubber:
             if img.mode not in ("RGB", "L"):
                 img = img.convert("RGB")
             img.load()
-        boxes = self.detector.detect(self._encode(img, fmt), fmt)  # coordinates match the upright image
+        try:
+            boxes = self.detector.detect(self._encode(img, fmt), fmt)  # coordinates match the upright image
+        except Exception as exc:  # DLP down, not enabled, no permission, timeout...
+            boxes = []
+            blur_region(img, (0, 0, img.width, round(img.height * FALLBACK_HEADER_FRACTION)))
+            print(json.dumps({"severity": "WARNING", "event": "privacy_fallback", "error": type(exc).__name__,
+                              "message": str(exc)[:300]}), flush=True)
         for region in _regions(boxes, img.width, img.height):
             blur_region(img, region)
         band = round(img.height * self.header_fraction)

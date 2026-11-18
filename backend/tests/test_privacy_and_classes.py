@@ -61,14 +61,16 @@ def test_stored_photo_is_scrubbed(client, family, deps):
         assert not img.getexif() and not _stripes_visible(img, 55) and _stripes_visible(img, 615)
 
 
-def test_dlp_failure_stores_nothing(client, family, deps):
+def test_dlp_failure_does_not_block_the_upload(client, family, deps):
+    """Changed 2026-11-18: a failed name check falls back to a blurred header, it never stops a student."""
     class Broken:
         def detect(self, data, fmt):
             raise RuntimeError("DLP down")
 
     deps.scrubber.detector = Broken()
-    assert upload(client, family["studentId"]).status_code == 503
-    assert deps.store.query("submissions", "studentId", family["studentId"]) == []
+    r = upload(client, family["studentId"])
+    assert r.status_code == 201, r.text
+    assert len(deps.store.query("submissions", "studentId", family["studentId"])) == 1
 
 
 def test_profile_and_classes(client, family):
@@ -120,3 +122,16 @@ def test_delete_me(client, family):
     assert client.get("/me", headers=auth("jordan")).status_code == 403
     assert client.delete("/me", headers=auth("alex")).status_code == 204
     assert client.get("/me", headers=auth("alex")).status_code == 403
+
+
+def test_failed_name_check_does_not_block_and_blurs_the_header(capsys):
+    class Down:
+        def detect(self, data, fmt):
+            raise RuntimeError("DLP API has not been used in project")
+
+    out = PhotoScrubber(Down()).scrub(_page_with_header(), "PNG")
+    with Image.open(io.BytesIO(out)) as img:
+        assert not img.getexif()
+        assert not _stripes_visible(img, 55)   # the header band is blurred anyway
+        assert _stripes_visible(img, 615)      # the maths further down is untouched
+    assert '"event": "privacy_fallback"' in capsys.readouterr().out
