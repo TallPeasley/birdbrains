@@ -96,6 +96,7 @@ To exercise real Gemini from your machine, keep `BIRDBRAINS_BACKEND=local`, set
 | `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, `BIRDBRAINS_PUBLIC_URL` | unset (Classroom off) | Google OAuth web client and the API's own URL (for the redirect) |
 | `BIRDBRAINS_SITE_URL` | Firebase Hosting site | Where Stripe and Google send people back to |
 | `MLFLOW_TRACKING_URI` | unset (tracing off) | Where `@mlflow.trace` spans go |
+| `BIRDBRAINS_CLASSROOM` | unset | `demo` swaps in a pretend Google Classroom (3 classes, invented students) for testing. Refused on Cloud Run. See `docs/TEST_CLASSROOMS.md` |
 
 The Vertex AI location is fixed to `northamerica-northeast1` in code.
 
