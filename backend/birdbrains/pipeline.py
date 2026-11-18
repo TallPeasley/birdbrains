@@ -34,7 +34,10 @@ from .taxonomy import CURRICULUM, cached_context_text
 log = logging.getLogger(__name__)
 
 # PIPEDA: all inference stays in Montréal. This is enforced, not configurable.
-VERTEX_LOCATION = "northamerica-northeast1"
+# Montréal keeps student work in Canada (PIPEDA). Only change this once Maalik has
+# decided that photos may be processed elsewhere; tools/check_models.py shows which
+# regions serve our models.
+VERTEX_LOCATION = os.environ.get("BIRDBRAINS_VERTEX_LOCATION", "northamerica-northeast1")
 
 STAGE1_MODEL = os.environ.get("BIRDBRAINS_STAGE1_MODEL", "gemini-2.5-flash")
 STAGE2_MODEL = os.environ.get("BIRDBRAINS_STAGE2_MODEL", "gemini-2.5-pro")
