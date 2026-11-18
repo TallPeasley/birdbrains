@@ -11,7 +11,6 @@ import {
   Loader2,
   RotateCcw,
   ShieldCheck,
-  Tag,
   Trash2,
   UploadCloud,
   X,
@@ -24,18 +23,12 @@ import { demoPersonas, gradingOutput as demoGrading } from '@/lib/mockData';
 import { api, ApiError } from '@/lib/api';
 import { useSession } from '@/lib/session';
 import type {
-  GradeCourse,
   Stage2GradingAndAffectOutput,
   SubmissionIngestionPayload,
 } from '@/types/birdBrains';
 
 const MAX_FILES = 6;
 const MAX_FILE_BYTES = 12 * 1024 * 1024;
-
-const UNITS: Record<GradeCourse, string[]> = {
-  MTH1W: ['Number Sense', 'Algebra & Linear Relations', 'Data', 'Geometry & Measurement', 'Financial Literacy'],
-  MPM2D: ['Linear Systems', 'Analytic Geometry', 'Quadratic Relations', 'Completing the Square', 'Trigonometry'],
-};
 
 type Stage =
   | 'IDLE'
@@ -81,10 +74,6 @@ export default function CaptureModal() {
   const [problem, setProblem] = useState<ProblemState | null>(null);
   const runId = useRef(0);
   const [studentId, setStudentId] = useState<string>(demoPersonas.student.id);
-  const [course, setCourse] = useState<GradeCourse>('MPM2D');
-  const [unit, setUnit] = useState(UNITS.MPM2D[3]);
-  const [tags, setTags] = useState<string[]>(['vertex form']);
-  const [tagDraft, setTagDraft] = useState('');
   const [files, setFiles] = useState<QueuedFile[]>([]);
   const [dragging, setDragging] = useState(false);
   const [stage, setStage] = useState<Stage>('IDLE');
@@ -167,12 +156,6 @@ export default function CaptureModal() {
       return prev.filter((f) => f.id !== id);
     });
 
-  const addTag = () => {
-    const t = tagDraft.trim();
-    if (t && !tags.includes(t)) setTags([...tags, t]);
-    setTagDraft('');
-  };
-
   const analyzing = files.some((f) => !f.quality && !f.error);
   const allPassed =
     files.length > 0 &&
@@ -200,16 +183,15 @@ export default function CaptureModal() {
     const smallest = qualities.reduce((a, b) =>
       Math.min(a.width, a.height) <= Math.min(b.width, b.height) ? a : b,
     );
-    const unitTopic = [unit, ...tags].join(' · ');
     if (live) {
-      void submitLive(unitTopic, weakest.sharpnessScore);
+      void submitLive(weakest.sharpnessScore);
       return;
     }
     const p: SubmissionIngestionPayload = {
       submissionId: `sub_${Date.now().toString().slice(-7)}`,
       studentId: targetStudentId,
-      course,
-      unitTopic,
+      course: 'MPM2D',
+      unitTopic: demoGrading.topic,
       imageResolution: { width: smallest.width, height: smallest.height },
       sharpnessScore: weakest.sharpnessScore,
       isQualityPassed: true,
@@ -232,7 +214,7 @@ export default function CaptureModal() {
     );
   };
 
-  const submitLive = async (unitTopic: string, sharpnessScore: number) => {
+  const submitLive = async (sharpnessScore: number) => {
     const run = ++runId.current;
     const alive = () => run === runId.current;
     let reached = 0;
@@ -248,8 +230,6 @@ export default function CaptureModal() {
       go('UPLOADING');
       const form = new FormData();
       form.set('studentId', targetStudentId);
-      form.set('course', course);
-      form.set('unitTopic', unitTopic);
       form.set('sharpnessScore', String(sharpnessScore));
       files.forEach((f) => form.append('files', f.file));
 
@@ -356,7 +336,7 @@ export default function CaptureModal() {
         <div className="flex-1 space-y-5 overflow-y-auto px-4 py-5 sm:px-6">
           {stage === 'IDLE' ? (
             <>
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div>
                 <label className="block">
                   <span className="mb-1 block text-sm font-medium text-slate-700">Student ID</span>
                   <input
@@ -366,75 +346,6 @@ export default function CaptureModal() {
                     className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm read-only:bg-slate-50 read-only:text-slate-500 focus:border-indigo-500 focus:ring-indigo-500"
                   />
                 </label>
-                <fieldset>
-                  <legend className="mb-1 block text-sm font-medium text-slate-700">Grade / Course</legend>
-                  <div className="grid grid-cols-2 gap-2">
-                    {(['MTH1W', 'MPM2D'] as GradeCourse[]).map((c) => (
-                      <button
-                        key={c}
-                        type="button"
-                        onClick={() => {
-                          setCourse(c);
-                          setUnit(UNITS[c][0]);
-                        }}
-                        aria-pressed={course === c}
-                        className={`rounded-xl border px-3 py-2 text-left text-sm transition ${
-                          course === c
-                            ? 'border-indigo-500 bg-indigo-50 text-indigo-800 ring-1 ring-indigo-500'
-                            : 'border-slate-300 text-slate-700 hover:border-slate-400'
-                        }`}
-                      >
-                        <span className="block font-semibold">{c}</span>
-                        <span className="block text-xs text-slate-500">{c === 'MTH1W' ? 'Grade 9' : 'Grade 10'}</span>
-                      </button>
-                    ))}
-                  </div>
-                </fieldset>
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <label className="block">
-                  <span className="mb-1 block text-sm font-medium text-slate-700">Unit</span>
-                  <select
-                    value={unit}
-                    onChange={(e) => setUnit(e.target.value)}
-                    className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-indigo-500"
-                  >
-                    {UNITS[course].map((u) => (
-                      <option key={u}>{u}</option>
-                    ))}
-                  </select>
-                </label>
-                <div>
-                  <span className="mb-1 block text-sm font-medium text-slate-700">Topic tags</span>
-                  <div className="flex flex-wrap items-center gap-1.5 rounded-xl border border-slate-300 px-2 py-1.5 focus-within:border-indigo-500">
-                    {tags.map((t) => (
-                      <span
-                        key={t}
-                        className="inline-flex items-center gap-1 rounded-full bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700"
-                      >
-                        <Tag className="h-3 w-3" aria-hidden />
-                        {t}
-                        <button onClick={() => setTags(tags.filter((x) => x !== t))} aria-label={`Remove ${t}`}>
-                          <X className="h-3 w-3" />
-                        </button>
-                      </span>
-                    ))}
-                    <input
-                      value={tagDraft}
-                      onChange={(e) => setTagDraft(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ',') {
-                          e.preventDefault();
-                          addTag();
-                        }
-                      }}
-                      onBlur={addTag}
-                      placeholder="Add tag…"
-                      className="min-w-[6rem] flex-1 border-0 p-1 text-sm focus:ring-0"
-                    />
-                  </div>
-                </div>
               </div>
 
               <div

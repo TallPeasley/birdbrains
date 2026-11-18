@@ -236,3 +236,16 @@ def test_failed_upload_gives_its_slot_back(client, family, deps):
     assert [c["count"] for c in counter] == [10]
     assert client.delete(f"/students/{sid}", headers=auth("alex")).status_code == 204
     assert deps.store.query("usagecounters", "studentId", sid) == []
+
+
+def test_upload_without_tags_reads_course_and_topic_from_the_page(client, family):
+    """Students no longer tag uploads: course and unit come from the reading step."""
+    sid = family["studentId"]
+    files = [("files", ("p1.jpg", photo(), "image/jpeg"))]
+    r = client.post("/submissions", data={"studentId": sid, "sharpnessScore": "82"}, files=files, headers=auth("alex"))
+    assert r.status_code == 201, r.text
+    assert r.json()["unitTopic"] == ""
+    done = client.post(f"/submissions/{r.json()['submissionId']}/process", headers=auth("alex")).json()
+    assert done["submission"]["status"] == "GRADED"
+    assert done["submission"]["unitTopic"] == "Completing the Square · Vertex form"
+    assert done["submission"]["course"] == "MPM2D"

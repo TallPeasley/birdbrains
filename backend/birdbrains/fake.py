@@ -34,6 +34,9 @@ class FakePipeline:
             {
                 "submission_id": ctx.submission_id,
                 "overall_ocr_confidence": 0.94,
+                "detected_course": "MPM2D",
+                "detected_unit": "Completing the Square",
+                "detected_topic": "Vertex form",
                 "lines": [
                     {
                         "line_number": i + 1,
