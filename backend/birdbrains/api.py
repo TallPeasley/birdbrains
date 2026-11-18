@@ -15,12 +15,13 @@ from typing import Annotated, Optional
 from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, Request, Response, UploadFile
 from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from PIL import Image
 
 from . import mastery_affect_ledger as ledger_engine
 from .billing import Billing, BillingError, plan_change
 from .classroom import Classroom, ClassroomError
+from .upload_errors import READING_REASON_CODES, UPLOAD_ERRORS, UploadFailure, classify_pipeline_error, failure_body
 from .auth import Authenticator
 from .batch_engine import BatchEngine, FlaggedGrading, is_flagged
 from .privacy import CloudDlpDetector, PhotoScrubber
@@ -190,6 +191,11 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
     d = deps or deps_from_env()
     configure_tracing()
     app = FastAPI(title="BirdBrains API", version="0.1.0")
+
+    @app.exception_handler(UploadFailure)
+    async def upload_failure_handler(request: Request, exc: UploadFailure):
+        """Same status and ``detail`` as before, plus the upload failure code and a plain next step."""
+        return JSONResponse(failure_body(exc), status_code=exc.status_code, headers=exc.headers)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=list(d.cors_origins),
@@ -403,7 +409,7 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
     ):
         require_student_access(user, studentId)
         if not 1 <= len(files) <= MAX_FILES:
-            raise HTTPException(422, f"Attach between 1 and {MAX_FILES} photos")
+            raise UploadFailure(422, 107, f"Attach between 1 and {MAX_FILES} photos")
         blobs = [upload.file.read(MAX_FILE_BYTES + 1) for upload in files]
         course = course or CourseEnum(user.get("course") or CourseEnum.MPM2D.value)
         return ingest(user["uid"], tenant_of(user), studentId, course, unitTopic, sharpnessScore, blobs)
@@ -414,36 +420,36 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         """Shared by the web upload and the extension's one-time upload link: plan
         limit, image checks, duplicate check, privacy scrub, then storage."""
         if usage(studentId).remaining == 0:
-            raise HTTPException(402, "FREE_LIMIT_REACHED")
+            raise UploadFailure(402, 402, "FREE_LIMIT_REACHED")
         submission_id = new_id("sub")
         stored, smallest = [], None
         for i, data in enumerate(blobs):
             if len(data) > MAX_FILE_BYTES:
-                raise HTTPException(413, "Each photo must be 12 MB or smaller")
+                raise UploadFailure(413, 106, "Each photo must be 12 MB or smaller")
             try:
                 with Image.open(io.BytesIO(data)) as img:
                     fmt, (w, h) = img.format, img.size
                     img.verify()
             except Exception:
-                raise HTTPException(422, "One of the files is not a readable image")
+                raise UploadFailure(422, 104, "One of the files is not a readable image")
             if fmt not in ALLOWED_TYPES:
-                raise HTTPException(422, "Photos must be JPEG, PNG or WebP")
+                raise UploadFailure(422, 105, "Photos must be JPEG, PNG or WebP")
             if min(w, h) < MIN_SHORT_EDGE:
-                raise HTTPException(422, f"Photo {i + 1} is below 1080p ({w}x{h}). Please retake it.")
+                raise UploadFailure(422, 102, f"Photo {i + 1} is below 1080p ({w}x{h}). Please retake it.")
             if smallest is None or min(w, h) < min(smallest):
                 smallest = (w, h)
             stored.append((i, data, ALLOWED_TYPES[fmt], fmt.lower(), hashlib.sha256(data).hexdigest()))
         # Classroom imports come with no browser sharpness score; unreadable pages are
         # caught by Stage 1 (NEEDS_RETAKE) instead.
         if sharpnessScore is not None and sharpnessScore < MIN_SHARPNESS_SCORE:
-            raise HTTPException(422, "The photo is too blurry. Please retake it.")
+            raise UploadFailure(422, 101, "The photo is too blurry. Please retake it.")
         # UT-06: the exact same photo uploaded again for this student is a 409, and
         # the pipeline is not run a second time. Location points at the original.
         for i, *_, sha in stored:
             seen = d.store.get("imagehashes", f"{studentId}_{sha}")
             if seen:
-                raise HTTPException(
-                    409, f"Photo {i + 1} was already uploaded. Open your earlier diagnostic instead.",
+                raise UploadFailure(
+                    409, 108, f"Photo {i + 1} was already uploaded. Open your earlier diagnostic instead.",
                     headers={"Location": f"/submissions/{seen['submissionId']}"})
 
         # Take this month's slot in one atomic step, so uploads sent at the same
@@ -454,7 +460,7 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         if not d.store.add_to_counter("usagecounters", counter_id, 1, limit=current.monthlyLimit,
                                       seed=current.usedThisMonth,
                                       fields={"studentId": studentId, "month": counter_id[-7:]}):
-            raise HTTPException(402, "FREE_LIMIT_REACHED")
+            raise UploadFailure(402, 402, "FREE_LIMIT_REACHED")
         file_records = []
         try:
             for i, data, mime, ext, sha in stored:
@@ -462,7 +468,7 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
                     data = d.scrubber.scrub(data, ext.upper())  # names and EXIF removed before storage
                 except Exception:
                     log.exception("Photo scrubbing failed")
-                    raise HTTPException(503, "We could not check the photo for names. Please try again.")
+                    raise UploadFailure(503, 302, "We could not check the photo for names. Please try again.")
                 path = f"submissions/{studentId}/{submission_id}/{i}.{ext}"
                 uri = d.storage.write_bytes(path, data, mime)
                 file_records.append({"path": path, "uri": uri, "mimeType": mime, "sha256": sha})
@@ -497,7 +503,7 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         without the sign-in token (so a content script never has to hold it)."""
         require_student_access(user, body.studentId)
         if usage(body.studentId).remaining == 0:
-            raise HTTPException(402, "FREE_LIMIT_REACHED")
+            raise UploadFailure(402, 402, "FREE_LIMIT_REACHED")
         upload_id, token = new_id("upl"), secrets.token_urlsafe(32)
         expires = datetime.now(timezone.utc) + timedelta(seconds=UPLOAD_LINK_SECONDS)
         d.store.put("uploadtickets", upload_id, {
@@ -517,9 +523,9 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
                 or not hmac.compare_digest(ticket["tokenHash"], hashlib.sha256(token.encode()).hexdigest())):
             raise HTTPException(404, "Not found")
         if datetime.fromisoformat(ticket["expiresAt"]) < datetime.now(timezone.utc):
-            raise HTTPException(410, "UPLOAD_LINK_EXPIRED")
+            raise UploadFailure(410, 304, "UPLOAD_LINK_EXPIRED")
         if int(request.headers.get("content-length") or 0) > MAX_FILE_BYTES:
-            raise HTTPException(413, "Each photo must be 12 MB or smaller")
+            raise UploadFailure(413, 106, "Each photo must be 12 MB or smaller")
         data = await request.body()
         payload = await run_in_threadpool(
             ingest, ticket["uid"], ticket["tenantId"], ticket["studentId"], CourseEnum(ticket["course"]),
@@ -546,7 +552,7 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         try:
             data = d.storage.read_bytes(f["path"])
         except Exception:
-            raise HTTPException(410, "PHOTO_EXPIRED")  # raw photos are deleted after 90 days
+            raise UploadFailure(410, 303, "PHOTO_EXPIRED")  # raw photos are deleted after 90 days
         # Photos are only served through this signed-in route; browsers keep them 15 minutes at most.
         return Response(data, media_type=f["mimeType"], headers={"Cache-Control": "private, max-age=900"})
 
@@ -580,7 +586,7 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
                 stage1 = d.pipeline.run_stage1(ctx, images, meter=meter)
                 d.store.put("transcriptions", submission_id, stage1.model_dump(mode="json"))
             if stage1.requires_hitl:
-                set_status("NEEDS_RETAKE")
+                set_status("NEEDS_RETAKE", failureCode=READING_REASON_CODES.get(stage1.unreadable_reason or "", 201))
                 return {"submission": submission_payload(record), "grading": None}
             # Fill the course and topic from what the page showed, unless the upload
             # already carried them (extension, Classroom, older clients).
@@ -601,8 +607,9 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
             # (model, region, status), never the student's work.
             print(json.dumps({"severity": "ERROR", "event": "pipeline_failed", "submissionId": submission_id,
                               "error": type(e).__name__, "message": str(e)[:400]}), flush=True)
-            set_status("FAILED")
-            raise HTTPException(502, "The diagnostic could not be completed. Please try again.")
+            code = classify_pipeline_error(e)
+            set_status("FAILED", failureCode=code)
+            raise UploadFailure(502, code, "The diagnostic could not be completed. Please try again.")
 
         strand = strand_for(ctx.course, ctx.unit_topic)
         stored_ledger = d.store.get("ledgers", student_id)
@@ -637,7 +644,7 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
             "cost": meter.summary(),  # internal: never returned by the API
         }
         d.store.put("gradings", grading_id, grading)
-        set_status("GRADED", gradingId=grading_id)
+        set_status("GRADED", gradingId=grading_id, failureCode=None)
         # One JSON line per graded upload on stdout, which Cloud Run stores as a
         # structured log entry. The cost and speed charts and alerts are built from
         # it (backend/monitoring.sh). Ids only, never names.

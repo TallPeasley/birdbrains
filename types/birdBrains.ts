@@ -32,6 +32,8 @@ export interface SubmissionIngestionPayload {
   /** Set by the backend. */
   status?: SubmissionStatus;
   gradingId?: string | null;
+  /** Upload failure code when status is NEEDS_RETAKE or FAILED (lib/uploadErrors.ts). */
+  failureCode?: number | null;
 }
 
 export interface PillarBreakdown {

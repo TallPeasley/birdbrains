@@ -21,6 +21,7 @@ import { errorCodeName } from '@/lib/errorCodes';
 import { PILLARS } from '@/lib/pillars';
 import { demoPersonas, gradingOutput as demoGrading } from '@/lib/mockData';
 import { api, ApiError } from '@/lib/api';
+import { UPLOAD_ERRORS, uploadErrorCode } from '@/lib/uploadErrors';
 import { useSession } from '@/lib/session';
 import type {
   Stage2GradingAndAffectOutput,
@@ -57,6 +58,8 @@ interface QueuedFile {
 }
 
 interface ProblemState {
+  /** Upload failure code, see lib/uploadErrors.ts. */
+  code?: number;
   message: string;
   failedAt: number;
   status?: number;
@@ -65,7 +68,7 @@ interface ProblemState {
 const TIER_STYLE = {
   EXCELLENT: { label: 'Sharp', cls: 'bg-emerald-50 text-emerald-700 ring-emerald-200', bar: 'bg-emerald-500' },
   ACCEPTABLE: { label: 'Readable', cls: 'bg-amber-50 text-amber-800 ring-amber-200', bar: 'bg-amber-500' },
-  TOO_BLURRY: { label: 'Too Blurry', cls: 'bg-rose-50 text-rose-700 ring-rose-200', bar: 'bg-rose-500' },
+  TOO_BLURRY: { label: 'Too Blurry · Code 101', cls: 'bg-rose-50 text-rose-700 ring-rose-200', bar: 'bg-rose-500' },
 } as const;
 
 export default function CaptureModal() {
@@ -120,14 +123,14 @@ export default function CaptureModal() {
       const annotated = incoming.map((q) => {
         const sig = `${q.file.name}:${q.file.size}:${q.file.lastModified}`;
         if (existingSignatures.has(sig)) {
-          return { ...q, error: 'Duplicate photo: this file is already in your upload list.' };
+          return { ...q, error: 'Code 108 · Duplicate photo: this file is already in your upload list.' };
         }
         existingSignatures.add(sig);
         if (q.file.size > MAX_FILE_BYTES) {
-          return { ...q, error: 'File is over 12 MB. Please choose a smaller photo.' };
+          return { ...q, error: 'Code 106 · File is over 12 MB. Please choose a smaller photo.' };
         }
         if (!q.file.type.startsWith('image/')) {
-          return { ...q, error: 'Not an image file. Use a JPEG, PNG, or WebP photo.' };
+          return { ...q, error: 'Code 105 · Not an image file. Use a JPEG, PNG, or WebP photo.' };
         }
         return q;
       });
@@ -249,9 +252,10 @@ export default function CaptureModal() {
       const result = await api.processSubmission(token, created.submissionId);
       if (!alive()) return;
       if (result.submission.status === 'NEEDS_RETAKE') {
+        const code = result.submission.failureCode && UPLOAD_ERRORS[result.submission.failureCode] ? result.submission.failureCode : 201;
         setProblem({
-          message:
-            'We couldn’t read the handwriting clearly enough on this page. Please retake the photo in good light and try again.',
+          code,
+          message: UPLOAD_ERRORS[code].message,
           failedAt: 2,
           status: 422,
         });
@@ -266,6 +270,7 @@ export default function CaptureModal() {
       if (!alive()) return;
       if (err instanceof ApiError && err.status === 409) {
         setProblem({
+          code: uploadErrorCode(409, err.detail, err.code ?? 108),
           message:
             err.detail || 'This photo was already uploaded earlier. Open your student dashboard to see that diagnostic.',
           failedAt: 0,
@@ -276,6 +281,7 @@ export default function CaptureModal() {
       }
       if (err instanceof ApiError && err.status === 422) {
         setProblem({
+          code: uploadErrorCode(422, err.detail, err.code),
           message:
             err.detail || 'The photo is too blurry or below 1080p. Please retake it in good light and try again.',
           failedAt: 1,
@@ -291,6 +297,7 @@ export default function CaptureModal() {
             ? err.message
             : 'Something went wrong. Please try again.';
       setProblem({
+        code: err instanceof ApiError ? uploadErrorCode(err.status, err.detail, err.code) : 900,
         message,
         failedAt: reached,
         status: err instanceof ApiError ? err.status : undefined,
@@ -554,6 +561,22 @@ function FileRow({ item, onRemove }: { item: QueuedFile; onRemove: () => void })
   );
 }
 
+/** "Code 201 · Handwriting unclear" and what to do next, for any failed upload. */
+function ErrorCodeLine({ code }: { code?: number }) {
+  const info = code ? UPLOAD_ERRORS[code] : undefined;
+  if (!code || !info) return null;
+  return (
+    <div className="mt-2 text-xs text-slate-600">
+      <p>
+        <span className="rounded-md bg-slate-100 px-1.5 py-0.5 font-mono font-semibold text-slate-700">Code {code}</span>{' '}
+        {info.title}
+      </p>
+      <p className="mt-1">{info.action}</p>
+      {info.ours && <p className="mt-1 text-slate-500">This one is on our side, not yours. If it keeps happening, tell us the code.</p>}
+    </div>
+  );
+}
+
 function PipelineView({
   stage,
   activeIndex,
@@ -591,6 +614,7 @@ function PipelineView({
           <p className="mt-1 text-sm text-slate-600">
             {problem?.message ?? 'This photo was already uploaded earlier. Open your earlier diagnostic instead.'}
           </p>
+          <ErrorCodeLine code={problem?.code} />
         </div>
 
         <div className="flex flex-wrap justify-center gap-2">
@@ -622,8 +646,10 @@ function PipelineView({
           </span>
           <h3 className="mt-3 text-lg font-semibold text-slate-900">Please retake a clearer photo</h3>
           <p className="mt-1 text-sm text-slate-600">
-            We couldn&apos;t read the handwriting clearly enough to grade each line fairly.
+            {(problem?.code && UPLOAD_ERRORS[problem.code]?.message) ||
+              'We couldn’t read the handwriting clearly enough to grade each line fairly.'}
           </p>
+          <ErrorCodeLine code={problem?.code} />
         </div>
 
         <RetakeTipsCard
@@ -721,6 +747,7 @@ function PipelineView({
         <div className="space-y-4">
           <div role="alert" className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
             {problem?.message ?? 'Something went wrong. Please try again.'}
+            <ErrorCodeLine code={problem?.code} />
           </div>
           <div className="flex flex-wrap justify-end gap-2">
             <button

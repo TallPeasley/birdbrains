@@ -24,6 +24,8 @@ export class ApiError extends Error {
   constructor(
     public status: number,
     public detail: string,
+    /** Upload failure code (see lib/uploadErrors.ts), when the API sent one. */
+    public code?: number,
   ) {
     super(detail);
   }
@@ -41,14 +43,16 @@ async function request<T>(path: string, token: string, init?: RequestInit): Prom
   }
   if (!res.ok) {
     let detail = res.statusText;
+    let code: number | undefined;
     try {
       const body = await res.json();
+      if (typeof body.code === 'number') code = body.code;
       if (typeof body.detail === 'string') detail = body.detail;
       else if (Array.isArray(body.detail)) detail = 'Some of the details entered are not valid.';
     } catch {
       /* non-JSON error body */
     }
-    throw new ApiError(res.status, detail);
+    throw new ApiError(res.status, detail, code);
   }
   if (res.status === 204) return undefined as T;
   return res.json() as Promise<T>;
