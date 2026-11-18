@@ -34,6 +34,45 @@ export function buildAeroMcpConnectUrl(params: ConnectMcpServerParams): string {
   return url.toString();
 }
 
+export async function bindAeroMcpApiKey(params: {
+  resourceUri: string;
+  apiKey: string;
+  gatewayUrl?: string;
+}): Promise<{ bound: boolean; resource: string }> {
+  const base = params.gatewayUrl ?? DEFAULT_GATEWAY_URL;
+  const res = await fetch(`${base}/api/oauth/bind-key`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      resourceUri: params.resourceUri,
+      apiKey: params.apiKey,
+      app: 'BIRDBRAINS',
+    }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(err.error ?? `Failed to bind API key (${res.status})`);
+  }
+  return res.json();
+}
+
+export async function listAeroMcpResources(
+  gatewayUrl = DEFAULT_GATEWAY_URL
+): Promise<Array<{ resourceUri: string; aeroApp: string; scope: string | null; expiresAt: string }>> {
+  const res = await fetch(`${gatewayUrl}/api/mcp/resources`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to list MCP resources (${res.status})`);
+  }
+  const data = (await res.json()) as {
+    resources: Array<{ resourceUri: string; aeroApp: string; scope: string | null; expiresAt: string }>;
+  };
+  return data.resources;
+}
+
 /**
  * Executes a tool on a bound MCP server via the Aero Gateway's Just-in-Time
  * server-side token retrieval endpoint.
@@ -90,6 +129,7 @@ export async function revokeAeroMcpResource(
 export async function streamAeroByokChat(params: {
   model: string;
   messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>;
+  mcpResources?: string[];
   gatewayUrl?: string;
 }): Promise<Response> {
   const base = params.gatewayUrl ?? DEFAULT_GATEWAY_URL;
@@ -100,6 +140,7 @@ export async function streamAeroByokChat(params: {
     body: JSON.stringify({
       model: params.model,
       messages: params.messages,
+      ...(params.mcpResources?.length ? { mcpResources: params.mcpResources } : {}),
     }),
   });
 

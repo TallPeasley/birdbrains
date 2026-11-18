@@ -8,6 +8,7 @@ import Navbar from '@/components/Navbar';
 import CaptureFab from '@/components/CaptureFab';
 import CaptureModal from '@/components/CaptureModal';
 import AeroFooter from '@/components/aero/AeroFooter';
+import AeroScreenComments from '@/components/aero/AeroScreenComments';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://birdbrains.netlify.app'),
@@ -48,8 +49,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <SessionProvider>
         <RoleProvider>
           <Navbar />
-          <main id="main" className="mx-auto max-w-7xl px-4 pb-16 pt-6 sm:px-6 lg:px-8">{children}</main>
+          <main id="main" className="w-full px-4 pb-16 pt-6 sm:px-6 lg:px-10">{children}</main>
           <AeroFooter />
+          <AeroScreenComments />
           <CaptureFab />
           <CaptureModal />
         </RoleProvider>
