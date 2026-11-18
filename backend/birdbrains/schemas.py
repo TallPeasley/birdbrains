@@ -92,6 +92,11 @@ class Stage1TranscriptionOutput(Strict):
     overall_ocr_confidence: float = Field(..., ge=0.0, le=1.0)
     lines: List[Stage1LineTranscription]
     requires_hitl: bool = Field(default=False)
+    # What the page is about, read from the printed problems and the work. Students no
+    # longer tag uploads; these fill the course, unit and topic. Empty when unsure.
+    detected_course: Optional[Literal["MTH1W", "MPM2D"]] = None
+    detected_unit: str = ""
+    detected_topic: str = ""
 
 
 # ------------------------------------------------------------------ Stage 2 output

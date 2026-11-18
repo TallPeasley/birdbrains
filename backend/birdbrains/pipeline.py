@@ -29,7 +29,7 @@ from .schemas import (
     Stage1TranscriptionOutput,
     Stage2GradingAndAffectOutput,
 )
-from .taxonomy import cached_context_text
+from .taxonomy import CURRICULUM, cached_context_text
 
 log = logging.getLogger(__name__)
 
@@ -67,8 +67,17 @@ Rules:
    contains no student work.
 7. Never transcribe people's names, student numbers, signatures, emails or phone
    numbers. Parts of the page may already be blacked out for privacy; ignore them.
+8. Also say what the page is about, from the printed problems and the work.
+   detected_course is MTH1W (Grade 9) or MPM2D (Grade 10), or null if you cannot
+   tell. detected_unit is the closest unit from the list below, copied exactly, or
+   empty if none fits. detected_topic is the specific skill in 3 to 6 words
+   (for example "Completing the square").
 Do not grade. Do not comment. Output only the structured result.
 """
+STAGE1_SYSTEM += "\nUnits by course:\n" + "\n".join(
+    f"- {course.value}: " + "; ".join(u for units in strands.values() for u in units)
+    for course, strands in CURRICULUM.items()
+) + "\n"
 
 STAGE2_SYSTEM = """\
 You are the diagnostic reasoning stage of BirdBrains, an error-analysis tool for

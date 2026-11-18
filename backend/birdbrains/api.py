@@ -388,15 +388,18 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
     def create_submission(
         user: User,
         studentId: Annotated[str, Form(pattern=STUDENT_ID_PATTERN)],
-        course: Annotated[CourseEnum, Form()],
-        unitTopic: Annotated[str, Form(min_length=1, max_length=200)],
         sharpnessScore: Annotated[float, Form(ge=0, le=100)],
         files: Annotated[list[UploadFile], File()],
+        # Optional: students just upload. The reading step works out the course, unit
+        # and topic from the page (see process_submission).
+        course: Annotated[Optional[CourseEnum], Form()] = None,
+        unitTopic: Annotated[str, Form(max_length=200)] = "",
     ):
         require_student_access(user, studentId)
         if not 1 <= len(files) <= MAX_FILES:
             raise HTTPException(422, f"Attach between 1 and {MAX_FILES} photos")
         blobs = [upload.file.read(MAX_FILE_BYTES + 1) for upload in files]
+        course = course or CourseEnum(user.get("course") or CourseEnum.MPM2D.value)
         return ingest(user["uid"], tenant_of(user), studentId, course, unitTopic, sharpnessScore, blobs)
 
     def ingest(uid: str, tenant_id: str, studentId: str, course: CourseEnum, unitTopic: str,
@@ -573,6 +576,14 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
             if stage1.requires_hitl:
                 set_status("NEEDS_RETAKE")
                 return {"submission": submission_payload(record), "grading": None}
+            # Fill the course and topic from what the page showed, unless the upload
+            # already carried them (extension, Classroom, older clients).
+            read_topic = " · ".join(t for t in (stage1.detected_unit, stage1.detected_topic) if t)
+            if not record["unitTopic"].strip() and read_topic:
+                record["unitTopic"] = read_topic[:200]
+            if stage1.detected_course:
+                record["course"] = stage1.detected_course
+            ctx = SubmissionContext(submission_id, CourseEnum(record["course"]), record["unitTopic"] or "Not stated")
 
             set_status("GRADING")
             stage2 = d.pipeline.run_stage2(ctx, stage1, plan=plan, meter=meter)
