@@ -155,7 +155,13 @@ def deps_from_env() -> Deps:
         from .billing import StripeBilling
 
         billing = StripeBilling(env("STRIPE_SECRET_KEY"), env("STRIPE_WEBHOOK_SECRET"), env("STRIPE_PRICE_ID"))
-    if env("GOOGLE_OAUTH_CLIENT_ID") and env("GOOGLE_OAUTH_CLIENT_SECRET") and env("BIRDBRAINS_PUBLIC_URL"):
+    if env("BIRDBRAINS_CLASSROOM") == "demo":
+        if on_cloud_run:
+            raise RuntimeError("The demo Classroom is not allowed on Cloud Run")
+        from .demo_classroom import DemoClassroom
+
+        classroom = DemoClassroom(env("BIRDBRAINS_PUBLIC_URL") or "http://localhost:8080")
+    elif env("GOOGLE_OAUTH_CLIENT_ID") and env("GOOGLE_OAUTH_CLIENT_SECRET") and env("BIRDBRAINS_PUBLIC_URL"):
         from .classroom import GoogleClassroom
 
         classroom = GoogleClassroom(env("GOOGLE_OAUTH_CLIENT_ID"), env("GOOGLE_OAUTH_CLIENT_SECRET"),
