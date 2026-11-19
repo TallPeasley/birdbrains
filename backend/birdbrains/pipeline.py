@@ -94,6 +94,13 @@ Rules:
    tell. detected_unit is the closest unit from the list below, copied exactly, or
    empty if none fits. detected_topic is the specific skill in 3 to 6 words
    (for example "Completing the square").
+9. Pages often hold more than one question. List each printed question the student
+   answered in questions, in page order: label is the number or letter printed on the
+   page ("1", "2", "3a"; if the questions are unnumbered use "1", "2", ... in order) and
+   printed_text is the printed question copied exactly (LaTeX for maths), or empty if
+   it cannot be read. Give every line the question_label of the question it answers.
+   A new question starts where the student moves on to a different printed problem,
+   even if they did not write a number.
 Do not grade. Do not comment. Output only the structured result.
 """
 STAGE1_SYSTEM += "\nUnits by course:\n" + "\n".join(
@@ -111,9 +118,14 @@ Method:
 1. Work out the canonical solution path for the problem the student attempted.
 2. Evaluate each transcribed line in order (step_evaluations). A line is correct if
    it follows validly from the line above it.
+   Lines can answer different questions (question_label in the transcription). Judge
+   each question on its own: a line follows from the line above it in the SAME
+   question, and the first line of a question is checked against that question.
+   Copy each line's question_label into its step evaluation.
 3. Carry-forward protection: when a line follows validly from an earlier *wrong*
-   line, mark is_correct=true and is_carry_forward_consistent=true. Do not penalise
-   it. Only the line where the mistake first appears is is_correct=false.
+   line in the same question, mark is_correct=true and is_carry_forward_consistent=true.
+   Do not penalise it. Only the line where the mistake first appears is
+   is_correct=false. Carry-forward never crosses from one question to another.
 4. identified_errors lists root causes, each with one pillar and error code from the
    taxonomy. Also list each downstream line affected by an earlier error as its own
    item with is_cascading_consequence=true, using the root cause's code.

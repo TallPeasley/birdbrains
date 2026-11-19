@@ -5,6 +5,7 @@ from collections import Counter
 from datetime import datetime
 from typing import Optional
 
+from .questions import strip_label
 from .schemas import (
     AffectStateEnum,
     ApiGrading,
@@ -39,6 +40,21 @@ def dominant_affect(stage2: Stage2GradingAndAffectOutput) -> AffectStateEnum:
     return AffectStateEnum.PRODUCTIVE_STRUGGLE
 
 
+def step_diagnostics(stage2: Stage2GradingAndAffectOutput) -> list[dict]:
+    """Steps numbered from 1 within each question, without the student's own "a)" label."""
+    counts: Counter = Counter()
+    out = []
+    for s in stage2.step_evaluations:
+        counts[s.question_label] += 1
+        out.append(dict(
+            stepNumber=s.step_number, questionLabel=s.question_label, questionStepNumber=counts[s.question_label],
+            studentInput=strip_label(s.student_latex) if stage2.questions else s.student_latex,
+            isCorrect=s.is_correct, pillarImpacted=s.pillar,
+            isCarryForwardProtected=s.is_carry_forward_consistent, explanation=s.explanation,
+        ))
+    return out
+
+
 def to_api_grading(record: dict) -> ApiGrading:
     stage2 = Stage2GradingAndAffectOutput.model_validate(record["stage2"])
     roots = [e for e in stage2.identified_errors if not e.is_cascading_consequence]
@@ -58,12 +74,8 @@ def to_api_grading(record: dict) -> ApiGrading:
                  errorCount=per_pillar.get(p.pillar, 0), feedback=p.feedback)
             for p in stage2.pillar_scores
         ],
-        stepDiagnostics=[
-            dict(stepNumber=s.step_number, studentInput=s.student_latex, isCorrect=s.is_correct,
-                 pillarImpacted=s.pillar, isCarryForwardProtected=s.is_carry_forward_consistent,
-                 explanation=s.explanation)
-            for s in stage2.step_evaluations
-        ],
+        stepDiagnostics=step_diagnostics(stage2),
+        questions=[dict(label=q.label, text=q.printed_text) for q in stage2.questions],
         entityExtractions=[
             dict(misconceptionId=e.error_code, description=e.description, severity=e.severity) for e in roots
         ],

@@ -76,12 +76,12 @@ function DiagnosticMirror({ worksheet, steps }: { worksheet: WS_3STAGE_V1; steps
         const idx = steps?.findIndex((s) => squash(s.studentInput) === squash(item.originalStepText)) ?? -1;
         const wrongStep = idx >= 0 ? steps![idx] : undefined;
         const before = item.previousStepText || (idx > 0 ? steps![idx - 1].studentInput : '');
-        const beforeNumber = idx > 0 ? steps![idx - 1].stepNumber : undefined;
+        const beforeNumber = idx > 0 ? steps![idx - 1].questionStepNumber || steps![idx - 1].stepNumber : undefined;
         const why = item.whatWentWrong || wrongStep?.explanation || '';
         return (
           <div key={i} className="space-y-4">
             <p className="text-sm text-slate-600">
-              Here is the exact move where it went off track{wrongStep ? ` (step ${wrongStep.stepNumber})` : ''}.
+              Here is the exact move where it went off track{wrongStep ? ` (step ${wrongStep.questionStepNumber || wrongStep.stepNumber})` : ''}.
             </p>
 
             <ol className="space-y-0">
@@ -101,7 +101,7 @@ function DiagnosticMirror({ worksheet, steps }: { worksheet: WS_3STAGE_V1; steps
               <li className="rounded-xl border-2 border-rose-300 bg-rose-50/60 p-4">
                 <StepLabel
                   tone="bad"
-                  text={wrongStep ? `Step ${wrongStep.stepNumber} · what you wrote` : 'What you wrote'}
+                  text={wrongStep ? `Step ${wrongStep.questionStepNumber || wrongStep.stepNumber} · what you wrote` : 'What you wrote'}
                 />
                 <p className="math mt-2 break-words text-base text-slate-800 sm:text-lg [overflow-wrap:anywhere]">
                   <Marked text={item.originalStepText} part={item.wrongPart} tone="bad" />

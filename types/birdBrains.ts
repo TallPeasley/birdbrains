@@ -46,6 +46,9 @@ export interface PillarBreakdown {
 
 export interface StepDiagnostic {
   stepNumber: number;
+  /** The question this step answers ("" when the page has one question), and its number within it. */
+  questionLabel?: string;
+  questionStepNumber?: number;
   studentInput: string;
   isCorrect: boolean;
   pillarImpacted?: PillarCategory;
@@ -65,6 +68,8 @@ export interface Stage2GradingAndAffectOutput {
   supportiveFramingMessage: string;
   pillarBreakdowns: PillarBreakdown[];
   stepDiagnostics: StepDiagnostic[];
+  /** The printed questions on the page, in order. Empty on gradings made before questions were split. */
+  questions?: { label: string; text: string }[];
   entityExtractions: {
     misconceptionId: string;
     description: string;

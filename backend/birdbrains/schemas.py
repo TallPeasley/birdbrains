@@ -85,6 +85,15 @@ class Stage1LineTranscription(Strict):
     bounding_box_normalized: List[float] = Field(..., min_length=4, max_length=4)
     confidence_score: float = Field(..., ge=0.0, le=1.0)
     visual_affect_markers: List[VisualAffectMarker]
+    # Which printed question this line answers ("1", "2", "2b"). Empty when the page has one question.
+    question_label: str = ""
+
+
+class QuestionInfo(Strict):
+    """One printed question on the page, so each question's steps can be shown under it."""
+
+    label: str
+    printed_text: str = ""  # the printed question, verbatim; empty if it can't be read
 
 
 class Stage1TranscriptionOutput(Strict):
@@ -100,6 +109,8 @@ class Stage1TranscriptionOutput(Strict):
     detected_course: Optional[Literal["MTH1W", "MPM2D"]] = None
     detected_unit: str = ""
     detected_topic: str = ""
+    # The printed questions the student answered, in page order (see question_label on each line).
+    questions: List[QuestionInfo] = Field(default_factory=list)
 
 
 # ------------------------------------------------------------------ Stage 2 output
@@ -116,6 +127,9 @@ class StepEvaluation(Strict):
     pillar: Optional[PillarEnum] = None
     error_code: Optional[str] = Field(default=None, pattern=ERROR_CODE_PATTERN)
     explanation: str
+    # The question this line belongs to (copied from the transcription). Steps are judged
+    # and numbered within their own question; carry-forward never crosses questions.
+    question_label: str = ""
 
 
 class SentimentEntityExtraction(Strict):
@@ -153,6 +167,8 @@ class Stage2GradingAndAffectOutput(Strict):
     pillar_scores: List[PillarScore] = Field(default_factory=list)
     supportive_framing_message: str = ""
     parent_insight: str = ""
+    # Filled by questions.split_by_question after grading, not by the model.
+    questions: List[QuestionInfo] = Field(default_factory=list)
 
 
 # ------------------------------------------------------- worksheet (batch output)
@@ -250,8 +266,16 @@ class ApiPillarBreakdown(Api):
     feedback: str
 
 
+class ApiQuestion(Api):
+    label: str
+    text: str = ""
+
+
 class ApiStepDiagnostic(Api):
     stepNumber: int
+    # Which question the step answers, and its number within that question (1, 2, 3 ...).
+    questionLabel: str = ""
+    questionStepNumber: int = 0
     studentInput: str
     isCorrect: bool
     pillarImpacted: Optional[PillarEnum] = None
@@ -281,6 +305,8 @@ class ApiGrading(Api):
     supportiveFramingMessage: str
     pillarBreakdowns: List[ApiPillarBreakdown]
     stepDiagnostics: List[ApiStepDiagnostic]
+    # The questions on the page, in order. Empty (or one entry) for a single question.
+    questions: List[ApiQuestion] = []
     entityExtractions: List[ApiEntityExtraction]
     scaffoldingMode: Optional[ScaffoldingModeEnum]  # null on the Free plan
     gradedAt: str
