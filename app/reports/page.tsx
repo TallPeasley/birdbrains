@@ -1,0 +1,9 @@
+import ReportsDashboard from '@/components/reports/ReportsDashboard';
+
+export const metadata = {
+  title: 'Progress & Class Reports · BirdBrains',
+};
+
+export default function ReportsPage() {
+  return <ReportsDashboard />;
+}

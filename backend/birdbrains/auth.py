@@ -19,6 +19,9 @@ class Authenticator(Protocol):
     def delete_user(self, uid: str) -> None:
         """Remove the sign-in account (used by delete-my-data)."""
 
+    def create_custom_token(self, uid: str, claims: dict | None = None) -> str:
+        """Mint a sign-in token for SSO callbacks."""
+
     def uid_for_email(self, email: str) -> Optional[str]:
         """The uid signed in with this email, or None (used by admin routes)."""
 
@@ -34,6 +37,10 @@ class DevAuthenticator:
 
     def delete_user(self, uid: str) -> None:
         pass
+
+    def create_custom_token(self, uid: str, claims: dict | None = None) -> str:
+        safe = re.sub(r"[^A-Za-z0-9_-]", "_", uid)[:64]
+        return f"dev:{safe}"
 
     def uid_for_email(self, email: str) -> Optional[str]:
         """Dev accounts have no emails: ``alex@anything`` is uid ``alex``."""
@@ -65,6 +72,12 @@ class FirebaseAuthenticator:
             auth.delete_user(uid, app=self._app)
         except auth.UserNotFoundError:
             pass
+
+    def create_custom_token(self, uid: str, claims: dict | None = None) -> str:
+        from firebase_admin import auth
+
+        raw = auth.create_custom_token(uid, developer_claims=claims, app=self._app)
+        return raw.decode("utf-8") if isinstance(raw, bytes) else raw
 
     def uid_for_email(self, email: str) -> Optional[str]:
         from firebase_admin import auth

@@ -220,20 +220,20 @@ function ScaffoldStep({ step }: { step: FadedScaffoldingStep }) {
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <button
               onClick={() => setChecked(true)}
-              className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-700"
+              className="btn btn-sm btn-primary"
             >
               Check
             </button>
             <button
               onClick={() => setShowHint((v) => !v)}
-              className="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+              className="btn btn-sm btn-secondary"
             >
               <Lightbulb className="h-3.5 w-3.5" aria-hidden /> {showHint ? 'Hide hint' : 'Hint'}
             </button>
             {step.scaffoldingType === 'INDEPENDENT' && (
               <button
                 onClick={() => setRevealed(true)}
-                className="inline-flex items-center gap-1 rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                className="btn btn-sm btn-secondary"
               >
                 <Eye className="h-3.5 w-3.5" aria-hidden /> Show answer
               </button>

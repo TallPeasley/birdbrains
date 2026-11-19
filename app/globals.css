@@ -13,6 +13,36 @@
 }
 
 @layer components {
+  /* Buttons. One look everywhere so the thing to press is obvious:
+     primary = solid indigo with a lift, secondary = white with a firm border, link = underlined indigo text. */
+  .btn {
+    @apply inline-flex min-h-[44px] select-none items-center justify-center gap-2 whitespace-nowrap rounded-xl px-5 text-sm font-semibold
+      transition duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2
+      active:translate-y-px disabled:cursor-not-allowed disabled:opacity-60;
+  }
+  .btn-sm {
+    @apply min-h-[36px] rounded-lg px-3.5 text-xs;
+  }
+  .btn-lg {
+    @apply min-h-[52px] rounded-xl px-7 text-base;
+  }
+  .btn-primary {
+    @apply bg-indigo-600 text-white shadow-[0_6px_16px_-6px_rgba(79,70,229,0.65)] ring-1 ring-inset ring-indigo-700/40
+      hover:bg-indigo-700 hover:shadow-[0_8px_20px_-6px_rgba(67,56,202,0.7)] disabled:hover:bg-indigo-600;
+  }
+  .btn-secondary {
+    @apply border-2 border-slate-300 bg-white text-slate-900 shadow-sm hover:border-indigo-500 hover:bg-indigo-50 hover:text-indigo-800;
+  }
+  .btn-dark {
+    @apply bg-slate-900 text-white shadow-[0_6px_16px_-6px_rgba(15,23,42,0.6)] hover:bg-slate-800;
+  }
+  .btn-on-dark {
+    @apply bg-white text-indigo-800 shadow-[0_6px_16px_-6px_rgba(0,0,0,0.5)] hover:bg-indigo-50;
+  }
+  .btn-link {
+    @apply inline-flex items-center gap-1.5 font-semibold text-indigo-700 underline decoration-indigo-300 decoration-2 underline-offset-4
+      hover:text-indigo-900 hover:decoration-indigo-600;
+  }
   .card {
     @apply rounded-2xl border border-slate-200 bg-white shadow-sm;
   }

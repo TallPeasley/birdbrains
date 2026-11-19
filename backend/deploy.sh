@@ -74,8 +74,14 @@ optional_secret() {  # ENV_NAME secret-name
 optional_secret STRIPE_SECRET_KEY          birdbrains-stripe-secret-key
 optional_secret STRIPE_WEBHOOK_SECRET      birdbrains-stripe-webhook-secret
 optional_secret STRIPE_PRICE_ID            birdbrains-stripe-price-id
-optional_secret GOOGLE_OAUTH_CLIENT_ID     birdbrains-google-oauth-client-id
-optional_secret GOOGLE_OAUTH_CLIENT_SECRET birdbrains-google-oauth-client-secret
+optional_secret GOOGLE_OAUTH_CLIENT_ID      birdbrains-google-oauth-client-id
+optional_secret GOOGLE_OAUTH_CLIENT_SECRET  birdbrains-google-oauth-client-secret
+optional_secret BRIGHTSPACE_OAUTH_CLIENT_ID     birdbrains-brightspace-oauth-client-id
+optional_secret BRIGHTSPACE_OAUTH_CLIENT_SECRET birdbrains-brightspace-oauth-client-secret
+optional_secret CANVAS_OAUTH_CLIENT_ID          birdbrains-canvas-oauth-client-id
+optional_secret CANVAS_OAUTH_CLIENT_SECRET      birdbrains-canvas-oauth-client-secret
+optional_secret MICROSOFT_OAUTH_CLIENT_ID       birdbrains-microsoft-oauth-client-id
+optional_secret MICROSOFT_OAUTH_CLIENT_SECRET   birdbrains-microsoft-oauth-client-secret
 
 echo "== Build permissions"
 # New projects build source deploys as the default compute service account, which

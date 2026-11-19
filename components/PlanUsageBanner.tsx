@@ -60,7 +60,7 @@ export function UploadsLeftMeter({
         </div>
         <Link
           href="/plans"
-          className="text-xs font-semibold text-indigo-700 hover:text-indigo-900"
+          className="btn-link text-xs"
         >
           Plan details
         </Link>
@@ -88,7 +88,7 @@ export function UploadsLeftMeter({
         </div>
         <Link
           href="/plans"
-          className="inline-flex items-center gap-1 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-700"
+          className="btn btn-sm btn-primary"
         >
           <Sparkles className="h-3.5 w-3.5" aria-hidden />
           Upgrade to Pro
@@ -160,7 +160,7 @@ export function LockedProCard({
         </div>
         <Link
           href="/plans"
-          className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"
+          className="shrink-0 btn btn-primary"
         >
           <Sparkles className="h-4 w-4" aria-hidden />
           Upgrade to Pro

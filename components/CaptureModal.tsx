@@ -400,7 +400,7 @@ export default function CaptureModal() {
                 <button
                   type="button"
                   onClick={() => cameraRef.current?.click()}
-                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 active:scale-[0.99]"
+                  className="w-full btn btn-lg btn-primary"
                 >
                   <Camera className="h-5 w-5" aria-hidden /> Take photo
                 </button>
@@ -486,7 +486,7 @@ export default function CaptureModal() {
             <button
               onClick={() => submit()}
               disabled={!canSubmit}
-              className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-slate-300"
+              className="btn btn-primary"
             >
               <ImagePlus className="h-4 w-4" aria-hidden />
               Submit for diagnosis
@@ -656,7 +656,7 @@ function PipelineView({
           <Link
             href="/student"
             onClick={onClose}
-            className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"
+            className="btn btn-primary"
           >
             Open earlier diagnostic
           </Link>
@@ -690,7 +690,7 @@ function PipelineView({
           <button
             type="button"
             onClick={onBack}
-            className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            className="btn btn-secondary"
           >
             Back to photos
           </button>
@@ -789,7 +789,7 @@ function PipelineView({
               <button
                 type="button"
                 onClick={onRetry}
-                className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"
+                className="btn btn-primary"
               >
                 <RotateCcw className="h-4 w-4" aria-hidden /> Try again
               </button>
@@ -843,7 +843,7 @@ function PipelineView({
             <Link
               href="/student"
               onClick={onClose}
-              className="rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"
+              className="btn btn-primary"
             >
               See the results
             </Link>
