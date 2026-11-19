@@ -22,15 +22,19 @@ const COORDS: Record<string, string> = {
   '/account': 'BB-04 / ACCOUNT',
   '/reports': 'BB-05 / REPORTS',
   '/teacher': 'BB-06 / TEACHER',
+  '/how-it-works': 'BB-07 / DEMO',
 };
 
 /** BirdBrains' own links and controls, inside the shared Aero shell header. */
 export default function Navbar() {
   const { role, setRole } = useRole();
   const pathname = usePathname();
-  const { demo, setDemo, signedIn, profile } = useSession();
+  const { demo, signedIn, profile } = useSession();
   const showAccount = demo || signedIn || Boolean(profile);
-  const showDashboard = pathname !== '/';
+  // The sample student/parent now live on /how-it-works. Dashboards are for signed-in people
+  // (or local builds with no API, which show mock data).
+  const hasDashboard = !IS_LIVE || Boolean(profile);
+  const showDashboard = hasDashboard && pathname !== '/';
 
   return (
     <AeroGlobalHeader
@@ -45,6 +49,9 @@ export default function Navbar() {
               Dashboard
             </Link>
           )}
+          <Link href="/how-it-works" aria-current={pathname === '/how-it-works' ? 'page' : undefined}>
+            How it works
+          </Link>
           <Link href="/plans" aria-current={pathname === '/plans' ? 'page' : undefined}>
             Plans
           </Link>
@@ -64,37 +71,36 @@ export default function Navbar() {
         </>
       }
     >
-      {IS_LIVE && demo && (
-        <span className="aero-badge aero-badge--warn">
-          Demo
-          <Link href="/" onClick={() => setDemo(false)} className="underline underline-offset-2 hover:text-amber-950">
-            Exit
-          </Link>
-        </span>
+      {hasDashboard && (
+        <div
+          role="radiogroup"
+          aria-label="Switch view"
+          className="grid grid-cols-2 overflow-hidden rounded-lg border border-line bg-canvas"
+        >
+          {OPTIONS.map(({ value, label, icon: Icon }) => (
+            <button
+              key={value}
+              role="radio"
+              aria-checked={role === value}
+              onClick={() => setRole(value, pathname !== '/account')}
+              className={`flex h-8 items-center justify-center gap-1.5 border-b-2 px-2.5 text-xs font-semibold transition-colors first:border-r first:border-r-line sm:px-3 sm:text-[13px] ${
+                role === value
+                  ? 'border-b-brand bg-white text-slate-900'
+                  : 'border-b-transparent text-slate-500 hover:bg-white hover:text-slate-800'
+              }`}
+            >
+              <Icon className={`h-3.5 w-3.5 shrink-0 ${role === value ? 'text-brand' : ''}`} aria-hidden />
+              <span className="hidden md:inline">{label}</span>
+              <span className="md:hidden">{label.split(' ')[0]}</span>
+            </button>
+          ))}
+        </div>
       )}
-      <div
-        role="radiogroup"
-        aria-label="Switch view"
-        className="grid grid-cols-2 overflow-hidden rounded-lg border border-line bg-canvas"
-      >
-        {OPTIONS.map(({ value, label, icon: Icon }) => (
-          <button
-            key={value}
-            role="radio"
-            aria-checked={role === value}
-            onClick={() => setRole(value, pathname !== '/account')}
-            className={`flex h-8 items-center justify-center gap-1.5 border-b-2 px-2.5 text-xs font-semibold transition-colors first:border-r first:border-r-line sm:px-3 sm:text-[13px] ${
-              role === value
-                ? 'border-b-brand bg-white text-slate-900'
-                : 'border-b-transparent text-slate-500 hover:bg-white hover:text-slate-800'
-            }`}
-          >
-            <Icon className={`h-3.5 w-3.5 shrink-0 ${role === value ? 'text-brand' : ''}`} aria-hidden />
-            <span className="hidden md:inline">{label}</span>
-            <span className="md:hidden">{label.split(' ')[0]}</span>
-          </button>
-        ))}
-      </div>
+      {IS_LIVE && !profile && (
+        <Link href="/#get-started" className="btn btn-sm btn-primary">
+          Sign in
+        </Link>
+      )}
     </AeroGlobalHeader>
   );
 }

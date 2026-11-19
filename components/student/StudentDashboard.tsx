@@ -10,6 +10,7 @@ import StepDiagnostics from '@/components/student/StepDiagnostics';
 import WorksheetViewer from '@/components/student/WorksheetViewer';
 import { LoadError, Loading, NoWorkNotice, useDashboardGate } from '@/components/DashboardStates';
 import {
+  DEMO_FREE_USAGE,
   DEMO_PRO_USAGE,
   LockedProCard,
   UploadsLeftMeter,
@@ -17,7 +18,7 @@ import {
 import { api, ApiError } from '@/lib/api';
 import { demoPersonas, gradingOutput, worksheet as demoWorksheet } from '@/lib/mockData';
 import { useSession } from '@/lib/session';
-import type { ApiUsage, Stage2GradingAndAffectOutput, WS_3STAGE_V1 } from '@/types/birdBrains';
+import type { ApiUsage, PlanTier, Stage2GradingAndAffectOutput, WS_3STAGE_V1 } from '@/types/birdBrains';
 
 const WORKSHEET_NOTES: Record<string, string> = {
   WORKSHEET_QUEUED: 'Your practice worksheet is built overnight. Check back tomorrow morning.',
@@ -118,9 +119,33 @@ export default function StudentDashboard() {
   return <View name={profile!.name} own={profile!.role === 'student'} {...state} />;
 }
 
+/**
+ * The sample student (Alex) on the How it works page. Pure mock data, no session or API calls,
+ * so it behaves the same on every build. The plan switch shows what Free and Pro each include.
+ */
+export function StudentDemo({ plan }: { plan: PlanTier }) {
+  const free = plan === 'free';
+  const grading: Stage2GradingAndAffectOutput = free
+    ? { ...gradingOutput, plan: 'free', affectState: null, scaffoldingMode: null }
+    : { ...gradingOutput, plan: 'pro' };
+  return (
+    <View
+      name={demoPersonas.student.name}
+      own
+      sample
+      grading={grading}
+      worksheet={free ? null : demoWorksheet}
+      worksheetNote=""
+      worksheetProOnly={free}
+      usage={free ? DEMO_FREE_USAGE : DEMO_PRO_USAGE}
+    />
+  );
+}
+
 function View({
   name,
   own,
+  sample = false,
   grading,
   worksheet,
   worksheetNote,
@@ -134,6 +159,8 @@ function View({
   worksheetNote: string;
   worksheetProOnly: boolean;
   usage: ApiUsage | null;
+  /** Sample data on the How it works page: no upload button. */
+  sample?: boolean;
 }) {
   const { openCapture } = useRole();
   const limitReached = usage !== null && usage.plan === 'free' && usage.remaining === 0;
@@ -147,7 +174,9 @@ function View({
             {own ? `Hi ${name.split(' ')[0]}, here’s your latest diagnostic` : 'Latest diagnostic'}
           </h1>
         </div>
-        {limitReached ? (
+        {sample ? (
+          <span className="aero-badge aero-badge--accent">Sample data</span>
+        ) : limitReached ? (
           <Link
             href="/plans"
             className="btn btn-primary"
