@@ -7,7 +7,7 @@ tests; the app refuses to start in that mode on Cloud Run.
 from __future__ import annotations
 
 import re
-from typing import Protocol
+from typing import Optional, Protocol
 
 from fastapi import HTTPException
 
@@ -18,6 +18,9 @@ class Authenticator(Protocol):
 
     def delete_user(self, uid: str) -> None:
         """Remove the sign-in account (used by delete-my-data)."""
+
+    def uid_for_email(self, email: str) -> Optional[str]:
+        """The uid signed in with this email, or None (used by admin routes)."""
 
 
 class DevAuthenticator:
@@ -31,6 +34,11 @@ class DevAuthenticator:
 
     def delete_user(self, uid: str) -> None:
         pass
+
+    def uid_for_email(self, email: str) -> Optional[str]:
+        """Dev accounts have no emails: ``alex@anything`` is uid ``alex``."""
+        m = self._UID.match("dev:" + email.split("@", 1)[0])
+        return m.group(1) if m else None
 
 
 class FirebaseAuthenticator:
@@ -57,3 +65,11 @@ class FirebaseAuthenticator:
             auth.delete_user(uid, app=self._app)
         except auth.UserNotFoundError:
             pass
+
+    def uid_for_email(self, email: str) -> Optional[str]:
+        from firebase_admin import auth
+
+        try:
+            return auth.get_user_by_email(email.strip(), app=self._app).uid
+        except (auth.UserNotFoundError, ValueError):
+            return None

@@ -74,6 +74,7 @@ To exercise real Gemini from your machine, keep `BIRDBRAINS_BACKEND=local`, set
 | `GET /teacher/report` | Pro teacher | Class overview across imported students |
 | `GET /internal/stats?days=1` | `X-Batch-Token` | Counts for the daily pilot summary (no names or ids) |
 | `POST /internal/users/{uid}/plan` | `X-Batch-Token` | Set `free` / `pro` until billing exists |
+| `POST /internal/testers` | `X-Batch-Token` | Turn a testing account on/off by `email` or `uid` (see below) |
 | `DELETE /students/{id}` | student, linked parent | Delete every record and photo for that student |
 | `POST /internal/schools`, `POST /internal/schools/{id}/classes` | `X-Batch-Token` | Create a school (and tenant) and a class with a join code |
 | `POST /internal/batch/worksheets/{submit,collect}` | Cloud Scheduler (`X-Batch-Token`) | Nightly worksheet batch |
@@ -131,6 +132,26 @@ Every graded upload stores its token counts, time and estimated cost on the grad
 record (`cost`, never returned by the API) and prints one `pipeline_done` JSON line.
 Prices per million tokens are in `pipeline.DEFAULT_PRICES`; override with
 `BIRDBRAINS_PRICES_JSON` (`{"model": [input, cached input, output]}`) when Google changes them.
+
+## Testing accounts
+
+A testing account has no monthly upload cap, can send the same photo again to have it
+graded again (no 409 / code 108), and has every Pro feature. The flag covers the
+student, and any student linked to a tester parent or teacher. Only the admin route
+`POST /internal/testers` sets it (it needs the batch token), so nobody can give it
+to themselves. Tester uploads are left out of `GET /internal/stats` and shown as
+`testerUploads` instead.
+
+1. Sign up on the site with the test email (student, or parent + linked student).
+2. In Cloud Shell, from `~/birdbrains/backend`:
+
+```bash
+pip install -q httpx
+python tools/set_tester.py \
+  --url https://birdbrains-api-28737473918.northamerica-northeast1.run.app \
+  --batch-token "$(gcloud secrets versions access latest --secret=birdbrains-batch-token)" \
+  --email you@example.com          # --off to undo
+```
 
 ## Accuracy, load and monitoring tools
 
