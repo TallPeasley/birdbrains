@@ -152,6 +152,7 @@ export interface UserProfile {
   plan?: PlanTier;
   /** Students: classes joined with a class code. */
   classIds?: string[];
+  tester?: boolean; // testing account: no upload cap, repeat photos allowed (set by an admin only)
 }
 
 /** A class a student joined with a code (GET /me/classes). */

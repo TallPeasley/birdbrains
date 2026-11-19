@@ -15,7 +15,7 @@ from __future__ import annotations
 from enum import Enum
 from typing import List, Literal, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 STUDENT_ID_PATTERN = r"^stu_[a-zA-Z0-9]{12}$"
 SUBMISSION_ID_PATTERN = r"^sub_[a-zA-Z0-9]{12}$"
@@ -360,6 +360,7 @@ class UserProfile(Api):
     tenantId: Optional[str] = None
     plan: PlanTier = "free"
     classIds: List[str] = Field(default_factory=list)  # students: classes joined with a code
+    tester: bool = False  # testing account: no upload cap, repeat photos allowed (admin-set only)
 
 
 class RegisterRequest(Api):
@@ -404,6 +405,21 @@ class CreateClassRequest(Api):
 
 class SetPlanRequest(Api):
     plan: PlanTier
+
+
+class SetTesterRequest(Api):
+    """Admin: mark a testing account. Give the sign-in email or the uid."""
+
+    model_config = ConfigDict(extra="forbid")
+    email: Optional[str] = Field(None, max_length=254)
+    uid: Optional[str] = Field(None, max_length=128)
+    tester: bool = True
+
+    @model_validator(mode="after")
+    def _one_of(self):
+        if not (self.email or self.uid):
+            raise ValueError("Give email or uid")
+        return self
 
 
 class ApiUsage(Api):
