@@ -71,12 +71,27 @@ def is_flagged(stage2: Stage2GradingAndAffectOutput) -> bool:
 
 def worksheet_prompt(item: FlaggedGrading) -> str:
     roots = [e.model_dump(mode="json") for e in item.stage2.identified_errors if not e.is_cascading_consequence]
-    steps = [s.model_dump(mode="json") for s in item.stage2.step_evaluations]
+    if item.stage2.question_analyses:
+        questions = [
+            {
+                "question_number": q.question_number,
+                "problem_statement": q.problem_statement,
+                "answer_key": q.answer_key.model_dump(mode="json"),
+                "final_answer_verification": q.final_answer_verification.model_dump(mode="json"),
+                "key_step_checks": [c.model_dump(mode="json") for c in q.key_step_checks],
+                "step_evaluations": [s.model_dump(mode="json") for s in q.step_evaluations],
+            }
+            for q in item.stage2.question_analyses
+        ]
+        work_section = f"Per-question diagnostic breakdown:\n{json.dumps(questions, indent=1)}"
+    else:
+        steps = [s.model_dump(mode="json") for s in item.stage2.step_evaluations]
+        work_section = f"Student's steps as evaluated:\n{json.dumps(steps, indent=1)}"
     return (
         f"Course: {item.course.value}\nUnit / topic: {item.unit_topic}\n"
         f"Scaffolding mode: {item.scaffolding_mode.value}\n\n"
         f"Root-cause errors:\n{json.dumps(roots, indent=1)}\n\n"
-        f"Student's steps as evaluated:\n{json.dumps(steps, indent=1)}"
+        f"{work_section}"
     )
 
 

@@ -631,7 +631,17 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         before = StudentLedger.model_validate(stored_ledger) if stored_ledger else StudentLedger(student_id=student_id)
         if plan == "free":
             # Free plan: no affect telemetry is kept, and mood never changes the scaffolding mode.
-            stage2 = stage2.model_copy(update={"sentiment_entities": [], "aggregate_valence": 0.0,
+            clean_questions = [
+                q.model_copy(update={
+                    "sentiment_entities": [],
+                    "aggregate_valence": 0.0,
+                    "aggregate_friction": 0.0,
+                    "recommended_scaffolding_mode": ScaffoldingModeEnum.STANDARD_PROGRESSIVE_FADE,
+                })
+                for q in stage2.question_analyses
+            ]
+            stage2 = stage2.model_copy(update={"question_analyses": clean_questions,
+                                               "sentiment_entities": [], "aggregate_valence": 0.0,
                                                "aggregate_friction": 0.0})
         ledger = ledger_engine.apply_observation(before, stage2, strand)
         if plan == "free":
