@@ -78,7 +78,7 @@ export function LoadError({ title, message, onRetry }: { title: string; message:
 }
 
 const primary =
-  'inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700';
+  'inline-flex items-center gap-2 btn btn-primary';
 const dark =
   'inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-800';
 

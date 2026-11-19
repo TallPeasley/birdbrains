@@ -237,7 +237,7 @@ export default function ReportsDashboard() {
           )}
           <Link
             href={`/${role}`}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+            className="btn btn-secondary"
           >
             <ArrowLeft className="h-4 w-4" aria-hidden />
             Back to dashboard
@@ -351,7 +351,7 @@ export default function ReportsDashboard() {
                   </div>
                   <Link
                     href="/plans"
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-semibold text-white hover:bg-indigo-700"
+                    className="btn btn-sm btn-primary"
                   >
                     <Sparkles className="h-3.5 w-3.5" aria-hidden /> Upgrade to Pro
                   </Link>
@@ -433,7 +433,7 @@ export default function ReportsDashboard() {
               </div>
               <Link
                 href="/plans"
-                className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"
+                className="shrink-0 btn btn-primary"
               >
                 <Sparkles className="h-4 w-4" aria-hidden /> View Pro Plan
               </Link>

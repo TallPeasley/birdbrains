@@ -55,7 +55,7 @@ export default function AffectCard({ grading }: { grading: Stage2GradingAndAffec
               </div>
               <Link
                 href="/plans"
-                className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-indigo-700"
+                className="shrink-0 btn btn-sm btn-primary"
               >
                 <Sparkles className="h-3.5 w-3.5" aria-hidden />
                 Upgrade

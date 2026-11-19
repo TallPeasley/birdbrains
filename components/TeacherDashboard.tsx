@@ -382,7 +382,7 @@ export default function TeacherDashboard() {
           <p className="mt-2 text-sm text-slate-600">
             This page is for teacher accounts. You are signed in as a {profile.role}.
           </p>
-          <Link href={`/${profile.role}`} className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-600">
+          <Link href={`/${profile.role}`} className="btn-link mt-4 text-sm">
             Go to your dashboard <ArrowRight className="h-4 w-4" aria-hidden />
           </Link>
         </div>
@@ -405,7 +405,7 @@ export default function TeacherDashboard() {
         </div>
         <Link
           href="/reports"
-          className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+          className="btn btn-secondary"
         >
           <Users className="h-4 w-4" aria-hidden /> Class Reports
         </Link>
@@ -505,7 +505,7 @@ export default function TeacherDashboard() {
                   type="button"
                   disabled={!p.configured || !isPro || busyProvider === p.id || (p.requiresInstanceUrl && !(instanceUrls[p.id] ?? '').trim())}
                   onClick={() => void handleConnect(p)}
-                  className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-indigo-600 px-3 py-2 text-xs font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
+                  className="inline-flex w-full items-center justify-center gap-1.5 btn btn-sm btn-primary"
                 >
                   {busyProvider === p.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden /> : <Link2 className="h-3.5 w-3.5" aria-hidden />}
                   Connect {p.name}
@@ -609,7 +609,7 @@ export default function TeacherDashboard() {
               type="button"
               disabled={!selectedCourse || !selectedWork || importBusy}
               onClick={() => void handleImport()}
-              className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-50"
+              className="btn btn-primary"
             >
               {importBusy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Download className="h-4 w-4" aria-hidden />}
               Import Submissions
@@ -631,7 +631,7 @@ export default function TeacherDashboard() {
               type="button"
               disabled={!selectedCourse || !selectedWork || syncBusy}
               onClick={() => void handleSyncGrades()}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+              className="btn btn-secondary disabled:opacity-50"
             >
               {syncBusy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Send className="h-4 w-4" aria-hidden />}
               Sync Grades to LMS

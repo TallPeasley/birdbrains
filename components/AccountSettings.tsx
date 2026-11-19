@@ -384,7 +384,7 @@ export default function AccountSettings() {
         </div>
         <Link
           href={`/${activeProfile.role}`}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+          className="btn btn-secondary"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden />
           Back to dashboard
@@ -640,7 +640,7 @@ export default function AccountSettings() {
               <button
                 type="submit"
                 disabled={linkBusy || childCode.trim() === ''}
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+                className="btn btn-primary"
               >
                 {linkBusy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
                 Link child
@@ -733,7 +733,7 @@ export default function AccountSettings() {
               <button
                 type="submit"
                 disabled={joinBusy || joinCode.trim() === ''}
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+                className="btn btn-primary"
               >
                 {joinBusy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
                 Join class
@@ -868,7 +868,7 @@ export default function AccountSettings() {
                   setDeleteInput('');
                   setDeleteError('');
                 }}
-                className="rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                className="btn btn-secondary"
               >
                 Cancel
               </button>

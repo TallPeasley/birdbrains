@@ -75,11 +75,11 @@ export default function AccountCard() {
         )}
         <button
           onClick={() => go(profile.role)}
-          className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"
+          className="mt-4 w-full btn btn-primary"
         >
           {profile.role === 'teacher' ? 'Open teacher hub' : 'Open my dashboard'} <ArrowRight className="h-4 w-4" aria-hidden />
         </button>
-        <button onClick={() => run(signOut)} className="mt-2 w-full py-2 text-sm font-medium text-slate-500 hover:text-slate-800">
+        <button onClick={() => run(signOut)} className="btn btn-secondary mt-2 w-full">
           Sign out
         </button>
       </div>
@@ -139,7 +139,7 @@ export default function AccountCard() {
         )}
         {error && <p role="alert" className="rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-700">{error}</p>}
         <button disabled={busy}
-          className="flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60">
+          className="w-full btn btn-primary">
           {busy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
           {needsProfile ? 'Finish' : mode === 'signup' ? 'Create account' : 'Sign in'}
         </button>
@@ -152,7 +152,7 @@ export default function AccountCard() {
               type="button"
               disabled={busy}
               onClick={() => void run(signInWithGoogle)}
-              className="rounded-xl border border-slate-300 bg-white py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+              className="btn btn-sm btn-secondary"
             >
               Google
             </button>
@@ -160,7 +160,7 @@ export default function AccountCard() {
               type="button"
               disabled={busy}
               onClick={() => void run(signInWithMicrosoft)}
-              className="rounded-xl border border-slate-300 bg-white py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+              className="btn btn-sm btn-secondary"
             >
               Microsoft
             </button>
@@ -216,7 +216,7 @@ export default function AccountCard() {
         </button>
       ) : (
         <button onClick={() => { setMode(mode === 'signup' ? 'signin' : 'signup'); setError(''); }}
-          className="mt-3 text-sm font-medium text-indigo-700 hover:text-indigo-900">
+          className="btn-link mt-3 text-sm">
           {mode === 'signup' ? 'I already have an account' : 'New here? Create an account'}
         </button>
       )}

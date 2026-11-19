@@ -116,7 +116,7 @@ export default function PwaSetup() {
               await promptEvent.userChoice.catch(() => null);
               setPromptEvent(null);
             }}
-            className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-indigo-600 px-3 py-2 text-sm font-semibold text-white hover:bg-indigo-700"
+            className="shrink-0 btn btn-sm btn-primary"
           >
             <Download className="h-4 w-4" aria-hidden /> Install
           </button>

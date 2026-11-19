@@ -150,14 +150,14 @@ function View({
         {limitReached ? (
           <Link
             href="/plans"
-            className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"
+            className="btn btn-primary"
           >
             <Sparkles className="h-4 w-4" aria-hidden /> Upgrade for more uploads
           </Link>
         ) : (
           <button
             onClick={openCapture}
-            className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700"
+            className="btn btn-primary"
           >
             <UploadCloud className="h-4 w-4" aria-hidden /> Upload new work
           </button>
