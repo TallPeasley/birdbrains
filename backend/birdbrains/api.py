@@ -52,6 +52,7 @@ from .schemas import (
     CreateSchoolRequest,
     JoinClassRequest,
     SetPlanRequest,
+    SetTesterRequest,
     UpdateProfileRequest,
     CourseEnum,
     LinkChildRequest,
@@ -334,15 +335,27 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         return user
 
     # ------------------------------------------------------------ plans + usage
-    def effective_plan(student_id: str) -> str:
-        """Pro if the student, a parent linked to them, or the teacher who imported
-        them from Classroom is on Pro."""
+    def linked_accounts(student_id: str) -> list[dict]:
+        """The student's own account, parents linked to them, and the teacher who
+        imported them from Classroom."""
         accounts = d.store.query("users", "studentId", student_id) + \
             d.store.query_contains("users", "childStudentIds", student_id)
         roster = d.store.get("rosters", student_id)
         if roster and (teacher := d.store.get("users", roster["teacherUid"])):
             accounts.append(teacher)
-        return "pro" if any(a.get("plan") == "pro" for a in accounts) else "free"
+        return accounts
+
+    def is_tester(student_id: str) -> bool:
+        """Testing accounts: no monthly cap, the same photo can be sent again, and
+        every Pro feature is on. Only POST /internal/testers (batch token) sets the
+        flag; no route a signed-in user can call writes it."""
+        return any(a.get("tester") is True for a in linked_accounts(student_id))
+
+    def effective_plan(student_id: str) -> str:
+        """Pro if the student, a parent linked to them, or the teacher who imported
+        them from Classroom is on Pro. Testing accounts count as Pro."""
+        accounts = linked_accounts(student_id)
+        return "pro" if any(a.get("plan") == "pro" or a.get("tester") is True for a in accounts) else "free"
 
     def usage(student_id: str) -> ApiUsage:
         now = datetime.now(timezone.utc)
@@ -488,7 +501,8 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
             raise UploadFailure(422, 101, "The photo is too blurry. Please retake it.")
         # UT-06: the exact same photo uploaded again for this student is a 409, and
         # the pipeline is not run a second time. Location points at the original.
-        for i, *_, sha in stored:
+        # Testing accounts may resend a photo to grade it again.
+        for i, *_, sha in ([] if is_tester(studentId) else stored):
             seen = d.store.get("imagehashes", f"{studentId}_{sha}")
             if seen:
                 raise UploadFailure(
@@ -1364,6 +1378,21 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         d.store.put("users", uid, profile)
         return profile
 
+    @app.post("/internal/testers", response_model=UserProfile, dependencies=[Depends(require_batch_token)])
+    def set_tester(body: SetTesterRequest):
+        """Turn a testing account on or off, by sign-in email or uid. Admin only:
+        the batch token is a server secret, so no one can grant this to themselves."""
+        uid = body.uid or d.auth.uid_for_email(body.email)
+        profile = d.store.get("users", uid) if uid else None
+        if not profile:
+            raise HTTPException(404, "No BirdBrains account for that email or uid. Sign up on the site first.")
+        if body.tester:
+            profile["tester"] = True
+        else:
+            profile.pop("tester", None)
+        d.store.put("users", uid, profile)
+        return profile
+
     @app.get("/internal/stats", dependencies=[Depends(require_batch_token)])
     def stats(days: int = 1):
         """Numbers for the daily pilot summary. Counts and codes only: no names, no ids."""
@@ -1373,6 +1402,11 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         since = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
         subs = d.store.query_since("submissions", "uploadedAt", since)
         grads = d.store.query_since("gradings", "gradedAt", since)
+        # Uploads from testing accounts are counted apart so they do not skew the pilot numbers.
+        testers = {sid for sid in {s["studentId"] for s in subs} | {g["studentId"] for g in grads} if is_tester(sid)}
+        tester_uploads = sum(1 for s in subs if s["studentId"] in testers)
+        subs = [s for s in subs if s["studentId"] not in testers]
+        grads = [g for g in grads if g["studentId"] not in testers]
         codes: Counter = Counter()
         cost: Counter = Counter()
         seconds: list[float] = []
@@ -1391,6 +1425,7 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
             "days": days, "since": since,
             "newAccounts": dict(Counter(u["role"] for u in d.store.query_since("users", "createdAt", since))),
             "uploads": len(subs),
+            "testerUploads": tester_uploads,
             "uploadsByStatus": dict(Counter(s["status"] for s in subs)),
             "uploadsBySource": dict(Counter(s.get("source", "web") for s in subs)),
             "activeStudents": len(students),

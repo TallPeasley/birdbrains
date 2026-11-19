@@ -7,7 +7,7 @@ tests; the app refuses to start in that mode on Cloud Run.
 from __future__ import annotations
 
 import re
-from typing import Protocol
+from typing import Optional, Protocol
 
 from fastapi import HTTPException
 
@@ -21,6 +21,9 @@ class Authenticator(Protocol):
 
     def create_custom_token(self, uid: str, claims: dict | None = None) -> str:
         """Mint a sign-in token for SSO callbacks."""
+
+    def uid_for_email(self, email: str) -> Optional[str]:
+        """The uid signed in with this email, or None (used by admin routes)."""
 
 
 class DevAuthenticator:
@@ -38,6 +41,11 @@ class DevAuthenticator:
     def create_custom_token(self, uid: str, claims: dict | None = None) -> str:
         safe = re.sub(r"[^A-Za-z0-9_-]", "_", uid)[:64]
         return f"dev:{safe}"
+
+    def uid_for_email(self, email: str) -> Optional[str]:
+        """Dev accounts have no emails: ``alex@anything`` is uid ``alex``."""
+        m = self._UID.match("dev:" + email.split("@", 1)[0])
+        return m.group(1) if m else None
 
 
 class FirebaseAuthenticator:
@@ -70,3 +78,11 @@ class FirebaseAuthenticator:
 
         raw = auth.create_custom_token(uid, developer_claims=claims, app=self._app)
         return raw.decode("utf-8") if isinstance(raw, bytes) else raw
+
+    def uid_for_email(self, email: str) -> Optional[str]:
+        from firebase_admin import auth
+
+        try:
+            return auth.get_user_by_email(email.strip(), app=self._app).uid
+        except (auth.UserNotFoundError, ValueError):
+            return None
