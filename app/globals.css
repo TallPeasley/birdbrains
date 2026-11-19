@@ -43,6 +43,11 @@
     @apply inline-flex items-center gap-1.5 font-semibold text-indigo-700 underline decoration-indigo-300 decoration-2 underline-offset-4
       hover:text-indigo-900 hover:decoration-indigo-600;
   }
+  /* KaTeX output (fractions). Slightly larger than body text so fractions stay readable. */
+  .bb-katex .katex {
+    font-size: 1.08em;
+    white-space: nowrap;
+  }
   .card {
     @apply rounded-2xl border border-slate-200 bg-white shadow-sm;
   }

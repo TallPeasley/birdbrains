@@ -1,4 +1,5 @@
 import React from 'react';
+import { hasFraction, renderKatex, renderKatexFraction } from '@/lib/katexMath';
 
 /**
  * LaTeX / KaTeX-style mathematical & numeric renderer for BirdBrains.
@@ -438,19 +439,15 @@ function renderLatexNodes(rawInput: string, strictMath: boolean, keyPrefix = 'm'
         // Special case: simple numeric fraction inside parentheses like (6/2)^2 -> render 6/2 as stacked LaTeX fraction!
         const simpleFracMatch = group.content.trim().match(/^(-?\d+(?:\.\d+)?)\s*\/\s*(-?\d+(?:\.\d+)?)$/);
         if (innerIsMath && simpleFracMatch) {
-          nodes.push(
-            <span key={nextKey()} className="latex-math inline-flex items-center">
-              <span className="latex-delim">(</span>
-              <span className="latex-frac" role="math">
-                <span className="latex-frac-num">{renderLatexNodes(simpleFracMatch[1], true, nextKey())}</span>
-                <span className="latex-frac-bar" aria-hidden="true" />
-                <span className="latex-frac-den">{renderLatexNodes(simpleFracMatch[2], true, nextKey())}</span>
-              </span>
-              <span className="latex-delim">)</span>
-            </span>
-          );
-          i = group.nextIndex;
-          continue;
+          // Typeset "(6/2)^2" whole with KaTeX: brackets sized to the fraction, exponent attached.
+          const expMatch = afterGroup.match(/^\s*\^\s*(\{[^}]*\}|-?[\w.]+)/);
+          const exp = expMatch ? expMatch[1].replace(/^\{|\}$/g, '') : '';
+          const html = renderKatex(`\\left(\\frac{${simpleFracMatch[1]}}{${simpleFracMatch[2]}}\\right)${exp ? `^{${exp}}` : ''}`);
+          if (html) {
+            nodes.push(<span key={nextKey()} className="bb-katex" dangerouslySetInnerHTML={{ __html: html }} />);
+            i = group.nextIndex + (expMatch ? expMatch[0].length : 0);
+            continue;
+          }
         }
 
         if (innerIsMath) {
@@ -581,22 +578,21 @@ function renderLatexNodes(rawInput: string, strictMath: boolean, keyPrefix = 'm'
       continue;
     }
 
-    // 9. Tight numeric fraction like 6/2 or 1/2 (not part of a date like 2024/10/24)
-    const tightFracMatch = rest.match(/^(\d+(?:\.\d+)?)\/(\d+(?:\.\d+)?)(?![/\d])/);
-    if (tightFracMatch && (i === 0 || !/[\d/]/.test(str[i - 1]))) {
-      nodes.push(
-        <span key={nextKey()} className="latex-frac" role="math">
-          <span className="latex-frac-num">
-            <span className="latex-num">{tightFracMatch[1]}</span>
-          </span>
-          <span className="latex-frac-bar" aria-hidden="true" />
-          <span className="latex-frac-den">
-            <span className="latex-num">{tightFracMatch[2]}</span>
-          </span>
-        </span>
-      );
-      i += tightFracMatch[0].length;
-      continue;
+    // 9. Numeric fraction (6/2, -30/7) or mixed number (4 2/7), typeset by KaTeX.
+    //    Not part of a date like 2024/10/24. A sign is only taken when it can't be a binary minus.
+    const fracMatch = rest.match(/^([-−]?)(?:(\d+)\s+)?(\d+(?:\.\d+)?)\/(\d+(?:\.\d+)?)(?![/\d])/);
+    const fracPrev = i > 0 ? str[i - 1] : '';
+    if (
+      fracMatch &&
+      !/[\d/.]/.test(fracPrev) &&
+      (!fracMatch[1] || i === 0 || /[\s(=,:]/.test(fracPrev))
+    ) {
+      const html = renderKatexFraction(fracMatch[3], fracMatch[4], fracMatch[2], fracMatch[1]);
+      if (html) {
+        nodes.push(<span key={nextKey()} className="bb-katex" dangerouslySetInnerHTML={{ __html: html }} />);
+        i += fracMatch[0].length;
+        continue;
+      }
     }
 
     // 10. Signed or unsigned number, optionally followed by a single-letter variable (e.g. -4x^2, 2x, 12x, -9, +1, 88%, 8.0)
@@ -743,7 +739,15 @@ export function MathText({ text, mode = 'auto', className }: MathTextProps) {
   if (typeof text === 'number') {
     return <MathNumber value={text} className={className} />;
   }
-  const rendered = renderLatexNodes(String(text), mode === 'math');
+  const raw = String(text);
+  // Lines of maths with a fraction are typeset whole by KaTeX, so signs, fractions and mixed numbers line up.
+  if (mode === 'math' && hasFraction(raw)) {
+    const html = renderKatex(raw);
+    if (html) {
+      return <span className={`bb-katex ${className ?? ''}`.trim()} dangerouslySetInnerHTML={{ __html: html }} />;
+    }
+  }
+  const rendered = renderLatexNodes(raw, mode === 'math');
   return <span className={`${mode === 'math' ? 'latex-math ' : ''}${className ?? ''}`.trim()}>{rendered}</span>;
 }
 
