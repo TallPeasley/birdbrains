@@ -30,14 +30,16 @@ gcloud services enable cloudbuild.googleapis.com artifactregistry.googleapis.com
 echo "== Build service account (least privilege)"
 gcloud iam service-accounts describe "$DEPLOYER" >/dev/null 2>&1 || \
   gcloud iam service-accounts create birdbrains-deployer --display-name="BirdBrains auto-deploy (Cloud Build)"
+# A new service account takes a few seconds to be visible to IAM; retry instead of failing.
+retry() { for i in 1 2 3 4 5 6 7 8; do "$@" >/dev/null 2>&1 && return 0; echo "   (waiting for the new account to propagate, try $i)"; sleep 8; done; "$@" >/dev/null; }
 for role in roles/run.admin roles/artifactregistry.writer roles/firebasehosting.admin \
             roles/logging.logWriter roles/serviceusage.serviceUsageConsumer; do
-  gcloud projects add-iam-policy-binding "$PROJECT" --member="serviceAccount:$DEPLOYER" --role="$role" \
-    --condition=None >/dev/null
+  retry gcloud projects add-iam-policy-binding "$PROJECT" --member="serviceAccount:$DEPLOYER" --role="$role" \
+    --condition=None
 done
 # Needed to deploy a service that runs as the API's account. Only that one account, not the project.
-gcloud iam service-accounts add-iam-policy-binding "$RUNTIME_SA" --member="serviceAccount:$DEPLOYER" \
-  --role=roles/iam.serviceAccountUser >/dev/null
+retry gcloud iam service-accounts add-iam-policy-binding "$RUNTIME_SA" --member="serviceAccount:$DEPLOYER" \
+  --role=roles/iam.serviceAccountUser
 
 echo "== Reading the public values the site is built with"
 API_URL="$(gcloud run services describe "$SERVICE" --region "$REGION" --format='value(status.url)')"
