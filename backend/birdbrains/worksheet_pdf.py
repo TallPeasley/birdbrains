@@ -31,8 +31,11 @@ ul.check { list-style: none; padding: 0; } ul.check li::before { content: "\\261
 def render_html(ws: ApiWorksheet) -> str:
     e = escape
     a = "".join(
-        f'<div class="box"><div class="label">Your step</div><div class="math">{e(m.originalStepText)}</div>'
-        f'<div class="label" style="margin-top:2mm">Corrected</div><div class="math">{e(m.annotatedCorrection)}</div>'
+        f'<div class="box">'
+        + (f'<div class="label">Your step before</div><div class="math">{e(m.previousStepText)}</div>' if m.previousStepText else "")
+        + f'<div class="label">Your step{" with the mistake" if m.previousStepText else ""}</div><div class="math">{e(m.originalStepText)}</div>'
+        + (f'<p><strong>What went wrong:</strong> {e(m.whatWentWrong)}</p>' if m.whatWentWrong else "")
+        + f'<div class="label" style="margin-top:2mm">Corrected</div><div class="math">{e(m.annotatedCorrection)}</div>'
         f'<p><strong>Key takeaway:</strong> {e(m.keyTakeaway)}</p></div>'
         for m in ws.sectionA_DiagnosticMirror
     )

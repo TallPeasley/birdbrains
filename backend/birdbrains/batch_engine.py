@@ -33,8 +33,15 @@ Grade 10 (MPM2D) students, targeted at one diagnosed root-cause error.
 
 The worksheet has three sections:
 A. diagnostic_mirror: for each line where a root-cause error first appeared, show
-   the student's original line, the corrected line with the fix made visible, and a
-   one-sentence takeaway. Never include lines that were only cascading consequences.
+   the move that went wrong as two lines of the student's own work:
+   previous_step_text = the student's line just before the mistake, copied exactly;
+   original_step_text = the student's line with the mistake, copied exactly.
+   wrong_part = the exact characters of original_step_text that are wrong (e.g. "- 9"),
+   and correct_part = what that piece should have been (e.g. "- 18").
+   what_went_wrong = one sentence naming what the student did between the two lines and
+   why it is wrong. annotated_correction = the corrected line with the fix made visible,
+   and key_takeaway = one sentence to remember. Never include lines that were only
+   cascading consequences.
 B. faded_scaffolding: ONE new problem of the same type with different numbers,
    solved in 3 to 5 steps. The first step is GIVEN (fully worked). Middle steps are
    PARTIAL_BLANK: write the line with "[ __ ]" where the student fills in, and put

@@ -200,7 +200,7 @@ function View({
       <StepDiagnostics grading={grading} />
 
       {worksheet ? (
-        <WorksheetViewer worksheet={worksheet} />
+        <WorksheetViewer worksheet={worksheet} steps={grading.stepDiagnostics} />
       ) : worksheetProOnly || grading.plan === 'free' ? (
         <LockedProCard
           title="Nightly 3-stage practice worksheet"

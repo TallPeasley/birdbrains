@@ -79,7 +79,14 @@ export interface Stage2GradingAndAffectOutput {
 }
 
 export interface DiagnosticMirrorItem {
+  /** The student's line just before the mistake. Empty on worksheets made before this existed. */
+  previousStepText?: string;
   originalStepText: string;
+  /** The exact piece of originalStepText that is wrong (e.g. "- 9"), and what it should be ("- 18"). */
+  wrongPart?: string;
+  correctPart?: string;
+  /** One sentence: what happened between the two lines and why it is wrong. */
+  whatWentWrong?: string;
   annotatedCorrection: string;
   keyTakeaway: string;
 }

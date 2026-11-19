@@ -92,7 +92,11 @@
     "targetConcept": "Distributing outer factors when extracting terms from completed squares.",
     "sectionA_DiagnosticMirror": [
       {
+        "previousStepText": "y = 2(x^2 + 6x + 9 - 9) + 5",
         "originalStepText": "y = 2(x + 3)^2 - 9 + 5",
+        "wrongPart": "- 9",
+        "correctPart": "- 18",
+        "whatWentWrong": "The -9 was inside the bracket, so the 2 outside multiplies it too. It should leave the bracket as 2 × (-9) = -18, not -9.",
         "annotatedCorrection": "y = 2(x + 3)^2 - (2 * 9) + 5  =>  y = 2(x + 3)^2 - 18 + 5",
         "keyTakeaway": "Remember: Any number exiting the bracket MUST be multiplied by the factor outside!"
       }
