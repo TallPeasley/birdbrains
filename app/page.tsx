@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import {
   ArrowRight,
   Camera,
@@ -17,8 +16,6 @@ import {
   Users,
   XCircle,
 } from 'lucide-react';
-import { useRole, type Role } from '@/lib/roleContext';
-import { demoPersonas } from '@/lib/mockData';
 import { PILLARS, PILLAR_ORDER } from '@/lib/pillars';
 import { IS_LIVE } from '@/lib/api';
 import AccountCard from '@/components/AccountCard';
@@ -96,7 +93,7 @@ const FAQ: [q: string, a: string][] = [
   ],
   [
     'Do I need an account to try it?',
-    'No. The demo below lets you explore as a sample student or parent with real-looking results. Nothing is saved.',
+    'No. The How it works page has the student and parent screens built in with a sample quiz, so you can click through everything first. Nothing is saved.',
   ],
   [
     'Does it give the answers?',
@@ -109,15 +106,8 @@ const FAQ: [q: string, a: string][] = [
 ];
 
 export default function HomePage() {
-  const { role, setRole } = useRole();
-  const router = useRouter();
-  const { setDemo, profile } = useSession();
+  const { profile } = useSession();
 
-  const startDemo = (r: Role) => {
-    if (IS_LIVE) setDemo(true);
-    setRole(r, false);
-    router.push(`/${r}`);
-  };
 
   return (
     <div className="space-y-20 pb-8 sm:space-y-24">
@@ -137,9 +127,9 @@ export default function HomePage() {
             worksheet that targets exactly what to practise next.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-            <a href="#get-started" className="btn btn-lg btn-primary">
-              Try the free demo <ArrowRight className="h-5 w-5" aria-hidden />
-            </a>
+            <Link href="/how-it-works" className="btn btn-lg btn-primary">
+              See how it works <ArrowRight className="h-5 w-5" aria-hidden />
+            </Link>
             {IS_LIVE ? (
               <a href="#get-started" className="btn btn-lg btn-secondary">
                 {profile ? 'Open my account' : 'Create a free account'}
@@ -151,7 +141,7 @@ export default function HomePage() {
             )}
           </div>
           <ul className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-sm text-slate-500">
-            {['No account needed for the demo', 'Works on any phone', 'Made for the Ontario curriculum'].map((t) => (
+            {['Try it without an account', 'Works on any phone', 'Made for the Ontario curriculum'].map((t) => (
               <li key={t} className="inline-flex items-center gap-1.5">
                 <CheckCircle2 className="h-4 w-4 text-emerald-600" aria-hidden />
                 {t}
@@ -188,6 +178,9 @@ export default function HomePage() {
             </li>
           ))}
         </ol>
+        <Link href="/how-it-works" className="btn btn-secondary mt-6">
+          Try it with a sample quiz <ArrowRight className="h-4 w-4" aria-hidden />
+        </Link>
       </section>
 
       {/* ── Four pillars ─────────────────────────────────────────────────── */}
@@ -270,7 +263,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── Get started: demo + account ──────────────────────────────────── */}
+      {/* ── Get started ──────────────────────────────────────────────────── */}
       <section id="get-started" aria-labelledby="start-heading" className="scroll-mt-24">
         <SectionHeading
           id="start-heading"
@@ -278,60 +271,20 @@ export default function HomePage() {
           title="Get started"
           sub={
             IS_LIVE
-              ? 'Try the demo with sample data, or sign in to upload your own work.'
-              : 'Pick a sample person to explore with sample data.'
+              ? 'See it working with sample work first, or sign in to upload your own.'
+              : 'See it working with sample work.'
           }
         />
-        <div className={`mt-8 grid gap-6 ${IS_LIVE ? 'lg:grid-cols-2' : 'max-w-xl'}`}>
+        <div className={`mt-8 grid items-start gap-6 ${IS_LIVE ? 'lg:grid-cols-2' : 'max-w-xl'}`}>
           <div className="card p-6">
-            <h3 className="font-display text-lg font-bold tracking-display text-slate-900">Try the demo</h3>
-            <p className="mt-1 text-sm text-slate-500">No account needed. Nothing is saved.</p>
-            <div className="mt-5 space-y-3">
-              {(['student', 'parent'] as Role[]).map((r) => {
-                const persona = demoPersonas[r];
-                const selected = role === r;
-                return (
-                  <div
-                    key={r}
-                    className={`rounded-xl border-2 p-4 transition-colors ${
-                      selected ? 'border-indigo-500 bg-indigo-50/60' : 'border-slate-200 hover:border-slate-300'
-                    }`}
-                  >
-                    <button
-                      onClick={() => setRole(r, false)}
-                      aria-pressed={selected}
-                      className="flex w-full items-center gap-3 text-left"
-                    >
-                      <span
-                        className={`grid h-11 w-11 shrink-0 place-items-center rounded-full font-mono text-sm font-semibold ${
-                          selected ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600'
-                        }`}
-                      >
-                        {persona.initials}
-                      </span>
-                      <span className="flex-1">
-                        <span className="eyebrow block">{r === 'student' ? 'Student' : 'Parent'}</span>
-                        <span className="mt-0.5 block font-semibold text-slate-900">{persona.name}</span>
-                        <span className="block text-sm text-slate-500">
-                          <MathText text={persona.detail} />
-                        </span>
-                      </span>
-                      <span
-                        className={`grid h-5 w-5 shrink-0 place-items-center rounded-full border-2 ${
-                          selected ? 'border-indigo-600' : 'border-slate-300'
-                        }`}
-                        aria-hidden
-                      >
-                        {selected && <span className="h-2.5 w-2.5 rounded-full bg-indigo-600" />}
-                      </span>
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-            <button onClick={() => startDemo(role)} className="btn btn-lg btn-primary mt-5 w-full">
-              Continue as {demoPersonas[role].name.split(' ')[0]} <ArrowRight className="h-5 w-5" aria-hidden />
-            </button>
+            <h3 className="font-display text-lg font-bold tracking-display text-slate-900">Try it with sample work</h3>
+            <p className="mt-1 text-sm text-slate-600">
+              The How it works page has the real student and parent screens built in, filled with a sample quiz. Click
+              through both and switch between Free and Pro. No account needed, nothing is saved.
+            </p>
+            <Link href="/how-it-works" className="btn btn-lg btn-primary mt-5 w-full">
+              See how it works <ArrowRight className="h-5 w-5" aria-hidden />
+            </Link>
           </div>
           {IS_LIVE && <AccountCard />}
         </div>
@@ -358,11 +311,11 @@ export default function HomePage() {
         <h2 className="mx-auto max-w-2xl font-display text-3xl font-extrabold tracking-display text-white sm:text-4xl">
           Got a marked test in your bag? Find out what really went wrong.
         </h2>
-        <p className="mx-auto mt-3 max-w-xl text-indigo-100">Takes about a minute. The demo needs no account.</p>
+        <p className="mx-auto mt-3 max-w-xl text-indigo-100">See the student and parent views with a sample quiz. No account needed.</p>
         <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-          <a href="#get-started" className="btn btn-lg btn-on-dark">
-            Try the free demo <ArrowRight className="h-5 w-5" aria-hidden />
-          </a>
+          <Link href="/how-it-works" className="btn btn-lg btn-on-dark">
+            See how it works <ArrowRight className="h-5 w-5" aria-hidden />
+          </Link>
           <Link href="/plans" className="btn btn-lg border-2 border-white/40 text-white hover:border-white hover:bg-white/10">
             See plans
           </Link>

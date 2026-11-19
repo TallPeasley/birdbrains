@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://birdbrains.netlify.app/sitemap.xml
+Sitemap: https://birdbrain-514606.web.app/sitemap.xml

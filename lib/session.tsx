@@ -16,12 +16,12 @@ const DEV_AUTH = process.env.NEXT_PUBLIC_AUTH_MODE === 'dev';
 const DEV_KEY = 'birdbrains.devUid';
 const DEMO_KEY = 'birdbrains.demo';
 
-function readDemoFlag(): boolean {
+/** The old site-wide demo mode is retired (the sample views live on /how-it-works). Clear any leftover flag. */
+function clearDemoFlag() {
   try {
-    if (new URLSearchParams(window.location.search).get('demo') === '1') return true;
-    return window.sessionStorage.getItem(DEMO_KEY) === '1';
+    window.sessionStorage.removeItem(DEMO_KEY);
   } catch {
-    return false;
+    /* storage blocked: nothing to clear */
   }
 }
 
@@ -113,7 +113,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   }, [getToken]);
 
   useEffect(() => {
-    if (IS_LIVE && readDemoFlag()) setDemoOn(true);
+    clearDemoFlag();
   }, []);
 
   const setDemo = useCallback((on: boolean) => {
