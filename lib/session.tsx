@@ -26,7 +26,7 @@ function readDemoFlag(): boolean {
 }
 
 export interface NewProfile {
-  role: 'student' | 'parent';
+  role: 'student' | 'parent' | 'teacher';
   name: string;
   course?: GradeCourse;
 }
@@ -46,6 +46,9 @@ interface SessionValue {
   activeStudentId: string | null;
   setActiveStudentId: (id: string) => void;
   signIn: (email: string, password: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
+  signInWithMicrosoft: () => Promise<void>;
+  signInWithSsoToken: (token: string) => Promise<void>;
   signUp: (email: string, password: string, profile: NewProfile) => Promise<void>;
   createProfile: (profile: NewProfile) => Promise<void>;
   linkChild: (code: string) => Promise<void>;
@@ -135,11 +138,33 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       if (!cancelled) setReady(true);
     };
     if (DEV_AUTH) {
-      devUid.current = window.localStorage.getItem(DEV_KEY);
+      const params = new URLSearchParams(window.location.search);
+      const ssoToken = params.get('ssoToken');
+      if (ssoToken && ssoToken.startsWith('dev:')) {
+        devUid.current = ssoToken.slice(4);
+        window.localStorage.setItem(DEV_KEY, devUid.current);
+        params.delete('ssoToken');
+        params.delete('ssoName');
+        params.delete('provider');
+        const next = params.toString();
+        window.history.replaceState({}, '', window.location.pathname + (next ? `?${next}` : ''));
+      } else {
+        devUid.current = window.localStorage.getItem(DEV_KEY);
+      }
       void settle(devUid.current !== null);
     } else {
       firebaseAuth()
-        .then(({ auth, instance }) => {
+        .then(async ({ auth, instance }) => {
+          const params = new URLSearchParams(window.location.search);
+          const ssoToken = params.get('ssoToken');
+          if (ssoToken) {
+            params.delete('ssoToken');
+            params.delete('ssoName');
+            params.delete('provider');
+            const next = params.toString();
+            window.history.replaceState({}, '', window.location.pathname + (next ? `?${next}` : ''));
+            await auth.signInWithCustomToken(instance, ssoToken).catch(() => {});
+          }
           unsubscribe = auth.onAuthStateChanged(instance, (user) => void settle(user !== null));
         })
         .catch(() => setReady(true));
@@ -179,6 +204,44 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
         else {
           const { auth, instance } = await firebaseAuth();
           await auth.signInWithEmailAndPassword(instance, email, password).catch((e) => {
+            throw friendlyAuthError(e);
+          });
+          setSignedIn(true);
+        }
+        await loadProfile();
+      },
+      signInWithGoogle: async () => {
+        if (DEV_AUTH) devSignIn('google_sso_user');
+        else {
+          const { auth, instance } = await firebaseAuth();
+          const provider = new auth.GoogleAuthProvider();
+          await auth.signInWithPopup(instance, provider).catch((e) => {
+            throw friendlyAuthError(e);
+          });
+          setSignedIn(true);
+        }
+        await loadProfile();
+      },
+      signInWithMicrosoft: async () => {
+        if (DEV_AUTH) devSignIn('microsoft_sso_user');
+        else {
+          const { auth, instance } = await firebaseAuth();
+          const provider = new auth.OAuthProvider('microsoft.com');
+          await auth.signInWithPopup(instance, provider).catch((e) => {
+            throw friendlyAuthError(e);
+          });
+          setSignedIn(true);
+        }
+        await loadProfile();
+      },
+      signInWithSsoToken: async (token: string) => {
+        if (DEV_AUTH) {
+          devUid.current = token.startsWith('dev:') ? token.slice(4) : token;
+          window.localStorage.setItem(DEV_KEY, devUid.current);
+          setSignedIn(true);
+        } else {
+          const { auth, instance } = await firebaseAuth();
+          await auth.signInWithCustomToken(instance, token).catch((e) => {
             throw friendlyAuthError(e);
           });
           setSignedIn(true);

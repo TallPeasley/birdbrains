@@ -196,16 +196,36 @@ export interface ClassroomCoursework {
   title: string;
 }
 
-/** A student a teacher imported from Google Classroom (no account of their own). */
+/** A student a teacher imported from Google Classroom or another LMS. */
 export interface RosterStudent {
   studentId: string;
   name: string;
   course: GradeCourse;
-  googleCourseId: string;
+  googleCourseId?: string | null;
+  lmsProvider?: LmsProviderId | null;
+  lmsCourseId?: string | null;
 }
 
 export interface ClassroomImportResult {
   imported: { studentId: string; studentName: string; submissionId: string }[];
+  skipped: { studentName: string; reason: string }[];
+}
+
+export type LmsProviderId = 'google_classroom' | 'brightspace' | 'canvas' | 'microsoft_edu';
+
+export interface LmsProviderStatus {
+  id: LmsProviderId;
+  name: string;
+  configured: boolean;
+  connected: boolean;
+  requiresInstanceUrl: boolean;
+  defaultPlaceholder: string;
+  instanceUrl?: string | null;
+  plan: PlanTier;
+}
+
+export interface LmsSyncResult {
+  synced: { submissionId: string; studentName: string; score: number; maxScore: number }[];
   skipped: { studentName: string; reason: string }[];
 }
 

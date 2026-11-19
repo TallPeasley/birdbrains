@@ -136,8 +136,17 @@ class GoogleSession:
         for s in self._pages(url, "studentSubmissions"):
             files = [{"id": a["driveFile"]["id"], "title": a["driveFile"].get("title", "")}
                      for a in s.get("assignmentSubmission", {}).get("attachments", []) if "driveFile" in a]
-            out.append({"userId": s["userId"], "state": s.get("state"), "files": files})
+            out.append({"id": s["id"], "userId": s["userId"], "state": s.get("state"), "files": files})
         return out
+
+    def sync_grade(self, course_id: str, work_id: str, submission_id: str, grade: float) -> None:
+        """Set draftGrade on a Classroom student submission (requires classroom.coursework.students)."""
+        url = (f"{self.API}/courses/{urllib.parse.quote(course_id)}/courseWork/"
+               f"{urllib.parse.quote(work_id)}/studentSubmissions/{urllib.parse.quote(submission_id)}"
+               f"?updateMask=draftGrade")
+        body = json.dumps({"draftGrade": round(grade, 2)}).encode()
+        headers = {**self._auth, "Content-Type": "application/json"}
+        _call(urllib.request.Request(url, data=body, headers=headers, method="PATCH"))
 
     def download(self, file_id: str) -> tuple[bytes, str]:
         base = f"https://www.googleapis.com/drive/v3/files/{urllib.parse.quote(file_id)}"

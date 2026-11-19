@@ -8,6 +8,7 @@ import logging
 import os
 import secrets
 import string
+import urllib.parse
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from typing import Annotated, Optional
@@ -21,6 +22,7 @@ from PIL import Image
 from . import mastery_affect_ledger as ledger_engine
 from .billing import Billing, BillingError, plan_change
 from .classroom import Classroom, ClassroomError
+from .lms import LMS_PROVIDERS, LmsError, LmsProvider, normalize_instance_url
 from .upload_errors import READING_REASON_CODES, UPLOAD_ERRORS, UploadFailure, classify_pipeline_error, failure_body
 from .auth import Authenticator
 from .batch_engine import BatchEngine, FlaggedGrading, is_flagged
@@ -33,9 +35,14 @@ from .schemas import (
     ApiClass,
     ApiClassroomImport,
     ApiCohortReport,
+    ApiLmsProviderStatus,
+    ApiLmsSyncResult,
     ApiProgressReport,
     ApiRosterStudent,
     ClassroomImportRequest,
+    LmsConnectRequest,
+    LmsProviderId,
+    LmsSyncRequest,
     ApiUploadTicket,
     ApiUsage,
     CreateUploadRequest,
@@ -103,6 +110,7 @@ class Deps:
     free_worksheets: bool = False  # nightly 3-stage worksheets are a Pro feature
     billing: Optional[Billing] = None  # Stripe; None = upgrades not configured
     classroom: Optional[Classroom] = None  # Google Classroom OAuth; None = not configured
+    lms_providers: dict[str, LmsProvider] = field(default_factory=dict)  # Brightspace, Canvas, Microsoft Edu
     site_url: str = "https://birdbrain-514606.web.app"
 
 
@@ -168,6 +176,38 @@ def deps_from_env() -> Deps:
         classroom = GoogleClassroom(env("GOOGLE_OAUTH_CLIENT_ID"), env("GOOGLE_OAUTH_CLIENT_SECRET"),
                                     env("BIRDBRAINS_PUBLIC_URL").rstrip("/") + "/classroom/callback")
 
+    lms_providers: dict[str, LmsProvider] = {}
+    pub = env("BIRDBRAINS_PUBLIC_URL")
+    if pub:
+        pub = pub.rstrip("/")
+        if env("BRIGHTSPACE_OAUTH_CLIENT_ID") and env("BRIGHTSPACE_OAUTH_CLIENT_SECRET"):
+            from .lms import BrightspaceProvider
+
+            lms_providers["brightspace"] = BrightspaceProvider(
+                env("BRIGHTSPACE_OAUTH_CLIENT_ID"),
+                env("BRIGHTSPACE_OAUTH_CLIENT_SECRET"),
+                f"{pub}/lms/brightspace/callback",
+                f"{pub}/auth/lms/brightspace/callback",
+            )
+        if env("CANVAS_OAUTH_CLIENT_ID") and env("CANVAS_OAUTH_CLIENT_SECRET"):
+            from .lms import CanvasProvider
+
+            lms_providers["canvas"] = CanvasProvider(
+                env("CANVAS_OAUTH_CLIENT_ID"),
+                env("CANVAS_OAUTH_CLIENT_SECRET"),
+                f"{pub}/lms/canvas/callback",
+                f"{pub}/auth/lms/canvas/callback",
+            )
+        if env("MICROSOFT_OAUTH_CLIENT_ID") and env("MICROSOFT_OAUTH_CLIENT_SECRET"):
+            from .lms import MicrosoftEduProvider
+
+            lms_providers["microsoft_edu"] = MicrosoftEduProvider(
+                env("MICROSOFT_OAUTH_CLIENT_ID"),
+                env("MICROSOFT_OAUTH_CLIENT_SECRET"),
+                f"{pub}/lms/microsoft_edu/callback",
+                f"{pub}/auth/lms/microsoft_edu/callback",
+            )
+
     origins = os.environ.get("BIRDBRAINS_CORS_ORIGINS")
     return Deps(
         store=store,
@@ -183,6 +223,7 @@ def deps_from_env() -> Deps:
         free_worksheets=os.environ.get("BIRDBRAINS_FREE_WORKSHEETS", "0") == "1",
         billing=billing,
         classroom=classroom,
+        lms_providers=lms_providers,
         site_url=(env("BIRDBRAINS_SITE_URL") or Deps.site_url).rstrip("/"),
     )
 
@@ -391,6 +432,8 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
                 for r in d.store.query("rosters", "teacherUid", user["uid"]):
                     purge_student(r["studentId"])
                 disconnect_classroom(user)
+                for pid in LMS_PROVIDERS:
+                    disconnect_lms(user, pid)
             d.store.delete("users", user["uid"])
             d.auth.delete_user(user["uid"])
         return Response(status_code=204)
@@ -873,7 +916,318 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
                 continue
             imported.append({"studentId": roster["studentId"], "studentName": name,
                              "submissionId": payload.submissionId})
+            d.store.put("lmsimports", payload.submissionId, {
+                "submissionId": payload.submissionId,
+                "teacherUid": user["uid"],
+                "studentId": roster["studentId"],
+                "studentName": name,
+                "provider": "google_classroom",
+                "courseId": course_id,
+                "assignmentId": work_id,
+                "lmsUserId": sub["userId"],
+                "lmsSubmissionId": sub.get("id"),
+            })
         return {"imported": imported, "skipped": skipped}
+
+    @app.post("/classroom/courses/{course_id}/coursework/{work_id}/sync", response_model=ApiLmsSyncResult)
+    def classroom_sync(course_id: str, work_id: str, user: User, body: Optional[LmsSyncRequest] = None):
+        """Push graded BirdBrains scores back to Google Classroom as draft grades."""
+        sess = classroom_session(user)
+        return _sync_lms_grades(user, "google_classroom", course_id, work_id, body,
+                                lambda rec, score, max_score, _fb: sess.sync_grade(
+                                    course_id, work_id, rec["lmsSubmissionId"],
+                                    (score / max_score * 100.0) if max_score > 0 else 0.0,
+                                ))
+
+    # ---------------------------------------- Multi-LMS (Brightspace, Canvas, Microsoft Edu)
+    def lms_provider(provider_id: str) -> LmsProvider:
+        if provider_id not in LMS_PROVIDERS:
+            raise HTTPException(404, f"Unknown LMS provider: {provider_id}")
+        prov = d.lms_providers.get(provider_id)
+        if not prov:
+            raise HTTPException(503, f"LMS_NOT_CONFIGURED:{provider_id}")
+        return prov
+
+    def lms_teacher(user: dict, provider_id: str) -> LmsProvider:
+        if user["role"] != "teacher":
+            raise HTTPException(403, "Only teacher accounts can connect an LMS")
+        if user.get("plan") != "pro":
+            raise HTTPException(402, "PRO_ONLY")
+        return lms_provider(provider_id)
+
+    def lms_token_key(uid: str, provider_id: str) -> str:
+        return f"{uid}:{provider_id}"
+
+    def lms_session(user: dict, provider_id: str):
+        prov = lms_teacher(user, provider_id)
+        tokens = d.store.get("lmstokens", lms_token_key(user["uid"], provider_id))
+        if not tokens:
+            raise HTTPException(409, f"LMS_NOT_CONNECTED:{provider_id}")
+        try:
+            return prov.open(tokens["tokenData"])
+        except LmsError:
+            d.store.delete("lmstokens", lms_token_key(user["uid"], provider_id))
+            raise HTTPException(409, f"LMS_NOT_CONNECTED:{provider_id}")
+
+    def disconnect_lms(user: dict, provider_id: str) -> None:
+        key = lms_token_key(user["uid"], provider_id)
+        tokens = d.store.get("lmstokens", key)
+        if tokens:
+            prov = d.lms_providers.get(provider_id)
+            if prov:
+                try:
+                    prov.revoke(tokens["tokenData"])
+                except Exception:
+                    pass
+            d.store.delete("lmstokens", key)
+
+    def lms_call(call):
+        try:
+            return call()
+        except LmsError as e:
+            log.warning("LMS call failed: %s", e)
+            raise HTTPException(502, f"LMS could not be reached: {e}")
+
+    def _sync_lms_grades(user: dict, provider_id: str, course_id: str, work_id: str,
+                         body: Optional[LmsSyncRequest], push_fn) -> dict:
+        records = [
+            r for r in d.store.query("lmsimports", "teacherUid", user["uid"])
+            if r.get("provider") == provider_id and r.get("courseId") == course_id and r.get("assignmentId") == work_id
+        ]
+        if body and body.submissionIds:
+            wanted = set(body.submissionIds)
+            records = [r for r in records if r["submissionId"] in wanted]
+        synced, skipped = [], []
+        for rec in records:
+            sub = d.store.get("submissions", rec["submissionId"])
+            if not sub or sub.get("status") != "GRADED" or not sub.get("gradingId"):
+                skipped.append({"studentName": rec["studentName"], "reason": "Not graded in BirdBrains yet"})
+                continue
+            grading = d.store.get("gradings", sub["gradingId"])
+            if not grading:
+                skipped.append({"studentName": rec["studentName"], "reason": "Grading record missing"})
+                continue
+            score = float(grading.get("totalScoreEarned", 0.0))
+            max_score = float(grading.get("totalScorePossible", 0.0))
+            feedback = grading.get("studentFacingSummary") or "Graded by BirdBrains"
+            try:
+                push_fn(rec, score, max_score, feedback)
+                synced.append({
+                    "submissionId": rec["submissionId"],
+                    "studentName": rec["studentName"],
+                    "score": score,
+                    "maxScore": max_score,
+                })
+            except (ClassroomError, LmsError) as e:
+                skipped.append({"studentName": rec["studentName"], "reason": str(e)})
+        return {"synced": synced, "skipped": skipped}
+
+    @app.get("/lms/providers", response_model=list[ApiLmsProviderStatus])
+    def lms_providers_status(user: User):
+        plan = user.get("plan", "free")
+        out = [
+            ApiLmsProviderStatus(
+                id="google_classroom",
+                name="Google Classroom",
+                configured=d.classroom is not None,
+                connected=d.store.get("googletokens", user["uid"]) is not None,
+                requiresInstanceUrl=False,
+                plan=plan,
+            )
+        ]
+        for pid, meta in LMS_PROVIDERS.items():
+            tok = d.store.get("lmstokens", lms_token_key(user["uid"], pid))
+            out.append(
+                ApiLmsProviderStatus(
+                    id=pid,
+                    name=meta["name"],
+                    configured=pid in d.lms_providers,
+                    connected=tok is not None,
+                    requiresInstanceUrl=meta["requiresInstanceUrl"],
+                    defaultPlaceholder=meta["defaultPlaceholder"],
+                    instanceUrl=(tok or {}).get("instanceUrl"),
+                    plan=plan,
+                )
+            )
+        return out
+
+    @app.post("/lms/{provider_id}/connect")
+    def lms_connect(provider_id: str, user: User, body: Optional[LmsConnectRequest] = None):
+        prov = lms_teacher(user, provider_id)
+        instance_url = body.instanceUrl if body else None
+        if prov.requires_instance_url:
+            try:
+                instance_url = normalize_instance_url(instance_url)
+            except LmsError as e:
+                raise HTTPException(422, str(e))
+        state = secrets.token_urlsafe(32)
+        d.store.put("oauthstates", state, {
+            "uid": user["uid"],
+            "provider": provider_id,
+            "instanceUrl": instance_url,
+            "kind": "lms",
+            "expiresAt": (datetime.now(timezone.utc) + timedelta(minutes=10)).isoformat(),
+        })
+        return {"url": prov.auth_url(state, instance_url=instance_url, sso=False)}
+
+    @app.get("/lms/{provider_id}/callback")
+    def lms_callback(provider_id: str, state: str = "", code: str = "", error: str = ""):
+        back = f"{d.site_url}/teacher?lms={urllib.parse.quote(provider_id)}&status="
+        pending = d.store.get("oauthstates", state) if state else None
+        if state:
+            d.store.delete("oauthstates", state)
+        prov = d.lms_providers.get(provider_id)
+        if (
+            not pending
+            or pending.get("provider") != provider_id
+            or not prov
+            or not code
+            or error
+            or datetime.fromisoformat(pending["expiresAt"]) < datetime.now(timezone.utc)
+        ):
+            return RedirectResponse(back + "failed", status_code=303)
+        try:
+            token_data = prov.exchange(code, instance_url=pending.get("instanceUrl"), sso=False)
+        except LmsError:
+            return RedirectResponse(back + "failed", status_code=303)
+        d.store.put("lmstokens", lms_token_key(pending["uid"], provider_id), {
+            "uid": pending["uid"],
+            "provider": provider_id,
+            "instanceUrl": pending.get("instanceUrl"),
+            "tokenData": token_data,
+            "connectedAt": now_iso(),
+        })
+        return RedirectResponse(back + "connected", status_code=303)
+
+    @app.delete("/lms/{provider_id}", status_code=204)
+    def lms_disconnect(provider_id: str, user: User):
+        if provider_id not in LMS_PROVIDERS:
+            raise HTTPException(404, f"Unknown LMS provider: {provider_id}")
+        disconnect_lms(user, provider_id)
+        return Response(status_code=204)
+
+    @app.get("/lms/{provider_id}/courses")
+    def lms_courses(provider_id: str, user: User):
+        sess = lms_session(user, provider_id)
+        return lms_call(sess.courses)
+
+    @app.get("/lms/{provider_id}/courses/{course_id}/assignments")
+    def lms_assignments(provider_id: str, course_id: str, user: User):
+        sess = lms_session(user, provider_id)
+        return lms_call(lambda: sess.assignments(course_id))
+
+    @app.post("/lms/{provider_id}/courses/{course_id}/assignments/{work_id}/import", response_model=ApiClassroomImport)
+    def lms_import(provider_id: str, course_id: str, work_id: str, body: ClassroomImportRequest, user: User):
+        sess = lms_session(user, provider_id)
+        names = lms_call(lambda: sess.student_names(course_id))
+        handed_in = lms_call(lambda: sess.submissions(course_id, work_id))
+        imported, skipped = [], []
+        for sub in handed_in:
+            name = names.get(sub["userId"], "Student")
+            if sub.get("state") not in ("TURNED_IN", "RETURNED"):
+                skipped.append({"studentName": name, "reason": "Not handed in yet"})
+                continue
+            blobs = []
+            for f in sub["files"][:MAX_FILES]:
+                try:
+                    blobs.append(sess.download(f["id"], f.get("url"))[0])
+                except LmsError:
+                    pass
+            if not blobs:
+                skipped.append({"studentName": name, "reason": "No photo attached (JPEG, PNG or WebP)"})
+                continue
+            key = f"{user['uid']}:{provider_id}:{sub['userId']}"
+            roster = next(iter(d.store.query("rosters", "lmsKey", key)), None)
+            if not roster:
+                roster = {
+                    "studentId": new_id("stu"),
+                    "teacherUid": user["uid"],
+                    "lmsKey": key,
+                    "lmsProvider": provider_id,
+                    "lmsCourseId": course_id,
+                    "tenantId": tenant_of(user),
+                    "createdAt": now_iso(),
+                }
+            roster.update(name=name, course=body.course.value)
+            d.store.put("rosters", roster["studentId"], roster)
+            try:
+                payload = ingest(
+                    user["uid"], tenant_of(user), roster["studentId"], body.course,
+                    body.unitTopic, None, blobs, provider_id,
+                )
+            except HTTPException as e:
+                reason = "Already imported" if e.status_code == 409 else str(e.detail)
+                skipped.append({"studentName": name, "reason": reason})
+                continue
+            imported.append({"studentId": roster["studentId"], "studentName": name, "submissionId": payload.submissionId})
+            d.store.put("lmsimports", payload.submissionId, {
+                "submissionId": payload.submissionId,
+                "teacherUid": user["uid"],
+                "studentId": roster["studentId"],
+                "studentName": name,
+                "provider": provider_id,
+                "courseId": course_id,
+                "assignmentId": work_id,
+                "lmsUserId": sub["userId"],
+                "lmsSubmissionId": sub.get("id"),
+            })
+        return {"imported": imported, "skipped": skipped}
+
+    @app.post("/lms/{provider_id}/courses/{course_id}/assignments/{work_id}/sync", response_model=ApiLmsSyncResult)
+    def lms_sync(provider_id: str, course_id: str, work_id: str, user: User, body: Optional[LmsSyncRequest] = None):
+        sess = lms_session(user, provider_id)
+        return _sync_lms_grades(
+            user, provider_id, course_id, work_id, body,
+            lambda rec, score, max_score, fb: sess.sync_grade(
+                course_id, work_id, rec["lmsUserId"], rec.get("lmsSubmissionId"), score, max_score, fb
+            ),
+        )
+
+    # ---------------------------------------- School LMS SSO (Brightspace, Canvas, Microsoft)
+    @app.post("/auth/lms/{provider_id}/connect")
+    def lms_sso_connect(provider_id: str, body: Optional[LmsConnectRequest] = None):
+        prov = lms_provider(provider_id)
+        instance_url = body.instanceUrl if body else None
+        if prov.requires_instance_url:
+            try:
+                instance_url = normalize_instance_url(instance_url)
+            except LmsError as e:
+                raise HTTPException(422, str(e))
+        state = secrets.token_urlsafe(32)
+        d.store.put("oauthstates", state, {
+            "provider": provider_id,
+            "instanceUrl": instance_url,
+            "kind": "sso",
+            "expiresAt": (datetime.now(timezone.utc) + timedelta(minutes=10)).isoformat(),
+        })
+        return {"url": prov.auth_url(state, instance_url=instance_url, sso=True)}
+
+    @app.get("/auth/lms/{provider_id}/callback")
+    def lms_sso_callback(provider_id: str, state: str = "", code: str = "", error: str = ""):
+        back_err = f"{d.site_url}/?ssoError={urllib.parse.quote(provider_id)}"
+        pending = d.store.get("oauthstates", state) if state else None
+        if state:
+            d.store.delete("oauthstates", state)
+        prov = d.lms_providers.get(provider_id)
+        if (
+            not pending
+            or pending.get("kind") != "sso"
+            or pending.get("provider") != provider_id
+            or not prov
+            or not code
+            or error
+            or datetime.fromisoformat(pending["expiresAt"]) < datetime.now(timezone.utc)
+        ):
+            return RedirectResponse(back_err, status_code=303)
+        try:
+            tok = prov.exchange(code, instance_url=pending.get("instanceUrl"), sso=True)
+            info = prov.user_info(tok["access_token"], instance_url=pending.get("instanceUrl"))
+        except LmsError:
+            return RedirectResponse(back_err, status_code=303)
+        raw_uid = f"lms_{provider_id}_{info['sub']}"
+        custom_token = d.auth.create_custom_token(raw_uid, {"provider": provider_id, "name": info.get("name", "")})
+        q = urllib.parse.urlencode({"ssoToken": custom_token, "ssoName": info.get("name", ""), "provider": provider_id})
+        return RedirectResponse(f"{d.site_url}/?{q}", status_code=303)
 
     @app.get("/teacher/students", response_model=list[ApiRosterStudent])
     def teacher_students(user: User):
