@@ -81,8 +81,9 @@ def to_api_worksheet(record: dict) -> ApiWorksheet:
         title=content.title,
         targetConcept=content.target_concept,
         sectionA_DiagnosticMirror=[
-            dict(originalStepText=m.original_step_text, annotatedCorrection=m.annotated_correction,
-                 keyTakeaway=m.key_takeaway)
+            dict(previousStepText=m.previous_step_text, originalStepText=m.original_step_text,
+                 wrongPart=m.wrong_part, correctPart=m.correct_part, whatWentWrong=m.what_went_wrong,
+                 annotatedCorrection=m.annotated_correction, keyTakeaway=m.key_takeaway)
             for m in content.diagnostic_mirror
         ],
         sectionB_FadedScaffolding=[

@@ -157,7 +157,15 @@ class Stage2GradingAndAffectOutput(Strict):
 
 # ------------------------------------------------------- worksheet (batch output)
 class DiagnosticMirrorItem(Strict):
+    # The student's last correct line, just before the mistake, so the worksheet can show
+    # the move that went wrong (two lines), not only the wrong line. Empty on older worksheets.
+    previous_step_text: str = ""
     original_step_text: str
+    # The exact piece of original_step_text that is wrong (e.g. "- 9") and what it should be ("- 18").
+    wrong_part: str = ""
+    correct_part: str = ""
+    # One sentence: what the student did between the two lines and why it is wrong.
+    what_went_wrong: str = ""
     annotated_correction: str
     key_takeaway: str
 
@@ -280,7 +288,11 @@ class ApiGrading(Api):
 
 
 class ApiDiagnosticMirrorItem(Api):
+    previousStepText: str = ""
     originalStepText: str
+    wrongPart: str = ""
+    correctPart: str = ""
+    whatWentWrong: str = ""
     annotatedCorrection: str
     keyTakeaway: str
 

@@ -1,20 +1,20 @@
 'use client';
 
 import { useState } from 'react';
-import { CheckCircle2, Eye, Lightbulb, RotateCcw, XCircle } from 'lucide-react';
-import type { FadedScaffoldingStep, WS_3STAGE_V1 } from '@/types/birdBrains';
+import { ArrowDown, CheckCircle2, Eye, Lightbulb, RotateCcw, XCircle } from 'lucide-react';
+import type { FadedScaffoldingStep, StepDiagnostic, WS_3STAGE_V1 } from '@/types/birdBrains';
 import { PILLARS } from '@/lib/pillars';
 import { formatMathPlaceholder, MathNumber, MathText } from '@/components/MathText';
 
 const SECTIONS = [
-  { key: 'A', title: 'Diagnostic Mirror', sub: 'Your work vs. the fix' },
+  { key: 'A', title: 'Diagnostic Mirror', sub: 'Where it went wrong' },
   { key: 'B', title: 'Faded Scaffolding', sub: 'Guided practice' },
   { key: 'C', title: 'Independent Transfer', sub: 'Try it solo + reflect' },
 ] as const;
 
 type SectionKey = (typeof SECTIONS)[number]['key'];
 
-export default function WorksheetViewer({ worksheet }: { worksheet: WS_3STAGE_V1 }) {
+export default function WorksheetViewer({ worksheet, steps }: { worksheet: WS_3STAGE_V1; steps?: StepDiagnostic[] }) {
   const [active, setActive] = useState<SectionKey>('A');
 
   return (
@@ -54,7 +54,7 @@ export default function WorksheetViewer({ worksheet }: { worksheet: WS_3STAGE_V1
       </div>
 
       <div className="p-4 sm:p-6" role="tabpanel" id={`panel-${active}`} aria-labelledby={`tab-${active}`}>
-        {active === 'A' && <DiagnosticMirror worksheet={worksheet} />}
+        {active === 'A' && <DiagnosticMirror worksheet={worksheet} steps={steps} />}
         {active === 'B' && <FadedScaffolding steps={worksheet.sectionB_FadedScaffolding} />}
         {active === 'C' && <IndependentTransfer worksheet={worksheet} />}
       </div>
@@ -62,39 +62,133 @@ export default function WorksheetViewer({ worksheet }: { worksheet: WS_3STAGE_V1
   );
 }
 
-function DiagnosticMirror({ worksheet }: { worksheet: WS_3STAGE_V1 }) {
+const squash = (t: string) => t.replace(/\s+/g, '');
+
+/**
+ * Show the move that went wrong as two lines of the student's own work: the line before (correct) and the
+ * line with the mistake, with the wrong piece marked and the right piece beside it. Older worksheets have no
+ * previousStepText, so the line before is looked up in the graded steps when we have them.
+ */
+function DiagnosticMirror({ worksheet, steps }: { worksheet: WS_3STAGE_V1; steps?: StepDiagnostic[] }) {
   return (
-    <div className="space-y-4">
-      {worksheet.sectionA_DiagnosticMirror.map((item, i) => (
-        <div key={i} className="space-y-3">
-          <div className="grid gap-3 md:grid-cols-2">
-            <div className="min-w-0 rounded-xl border border-rose-200 bg-rose-50/50 p-4">
-              <p className="text-xs font-semibold uppercase tracking-wider text-rose-700">What you wrote</p>
-              <p className="math mt-3 break-words text-base text-slate-800 underline decoration-rose-400 decoration-wavy underline-offset-4 sm:text-lg [overflow-wrap:anywhere]">
-                <MathText mode="math" text={item.originalStepText} />
-              </p>
-            </div>
+    <div className="space-y-8">
+      {worksheet.sectionA_DiagnosticMirror.map((item, i) => {
+        const idx = steps?.findIndex((s) => squash(s.studentInput) === squash(item.originalStepText)) ?? -1;
+        const wrongStep = idx >= 0 ? steps![idx] : undefined;
+        const before = item.previousStepText || (idx > 0 ? steps![idx - 1].studentInput : '');
+        const beforeNumber = idx > 0 ? steps![idx - 1].stepNumber : undefined;
+        const why = item.whatWentWrong || wrongStep?.explanation || '';
+        return (
+          <div key={i} className="space-y-4">
+            <p className="text-sm text-slate-600">
+              Here is the exact move where it went off track{wrongStep ? ` (step ${wrongStep.stepNumber})` : ''}.
+            </p>
+
+            <ol className="space-y-0">
+              {before && (
+                <li className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-4">
+                  <StepLabel tone="ok" text={beforeNumber ? `Step ${beforeNumber} · your line before` : 'Your line before'} />
+                  <p className="math mt-2 break-words text-base text-slate-800 sm:text-lg [overflow-wrap:anywhere]">
+                    <MathText mode="math" text={before} />
+                  </p>
+                </li>
+              )}
+              {before && (
+                <li aria-hidden className="flex items-center gap-2 py-2 pl-5 text-sm font-medium text-rose-700">
+                  <ArrowDown className="h-4 w-4" /> the mistake happens in this move
+                </li>
+              )}
+              <li className="rounded-xl border-2 border-rose-300 bg-rose-50/60 p-4">
+                <StepLabel
+                  tone="bad"
+                  text={wrongStep ? `Step ${wrongStep.stepNumber} · what you wrote` : 'What you wrote'}
+                />
+                <p className="math mt-2 break-words text-base text-slate-800 sm:text-lg [overflow-wrap:anywhere]">
+                  <Marked text={item.originalStepText} part={item.wrongPart} tone="bad" />
+                </p>
+                {item.wrongPart && item.correctPart && (
+                  <p className="mt-3 flex flex-wrap items-center gap-2 text-sm text-slate-700">
+                    <span className="rounded-md bg-rose-100 px-2 py-0.5 font-semibold text-rose-800">
+                      <MathText mode="math" text={item.wrongPart} />
+                    </span>
+                    <span>should be</span>
+                    <span className="rounded-md bg-emerald-100 px-2 py-0.5 font-semibold text-emerald-800">
+                      <MathText mode="math" text={item.correctPart} />
+                    </span>
+                  </p>
+                )}
+              </li>
+            </ol>
+
+            {why && (
+              <div className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-700">
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">What went wrong</p>
+                <p className="mt-1.5">
+                  <MathText text={why} />
+                </p>
+              </div>
+            )}
+
             <div className="min-w-0 rounded-xl border border-emerald-200 bg-emerald-50/50 p-4">
-              <p className="text-xs font-semibold uppercase tracking-wider text-emerald-700">Annotated breakdown</p>
-              <div className="math mt-3 space-y-1 break-words text-base text-slate-800 sm:text-lg [overflow-wrap:anywhere]">
-                {item.annotatedCorrection.split('=>').map((line, j) => (
+              <StepLabel tone="ok" text="The fix" />
+              <div className="math mt-2 space-y-1 break-words text-base text-slate-800 sm:text-lg [overflow-wrap:anywhere]">
+                {item.annotatedCorrection.split('=>').map((line, j, all) => (
                   <p key={j}>
                     {j > 0 && <span className="latex-op mr-2 text-emerald-600">⇒</span>}
-                    <MathText mode="math" text={line.trim()} />
+                    {j === all.length - 1 && item.correctPart ? (
+                      <Marked text={line.trim()} part={item.correctPart} tone="ok" />
+                    ) : (
+                      <MathText mode="math" text={line.trim()} />
+                    )}
                   </p>
                 ))}
               </div>
             </div>
+
+            <div className="flex gap-3 rounded-xl bg-indigo-50 p-4 text-sm text-indigo-900 ring-1 ring-indigo-200">
+              <Lightbulb className="h-5 w-5 shrink-0 text-indigo-600" aria-hidden />
+              <p>
+                <strong>Key takeaway:</strong> <MathText text={item.keyTakeaway} />
+              </p>
+            </div>
           </div>
-          <div className="flex gap-3 rounded-xl bg-indigo-50 p-4 text-sm text-indigo-900 ring-1 ring-indigo-200">
-            <Lightbulb className="h-5 w-5 shrink-0 text-indigo-600" aria-hidden />
-            <p>
-              <strong>Key takeaway:</strong> <MathText text={item.keyTakeaway} />
-            </p>
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
+  );
+}
+
+function StepLabel({ tone, text }: { tone: 'ok' | 'bad'; text: string }) {
+  const Icon = tone === 'ok' ? CheckCircle2 : XCircle;
+  return (
+    <p
+      className={`flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider ${
+        tone === 'ok' ? 'text-emerald-700' : 'text-rose-700'
+      }`}
+    >
+      <Icon className="h-4 w-4" aria-hidden /> {text}
+    </p>
+  );
+}
+
+/** A line of maths with one piece highlighted. Falls back to the plain line if the piece isn't in it. */
+function Marked({ text, part, tone }: { text: string; part?: string; tone: 'ok' | 'bad' }) {
+  const at = part ? text.lastIndexOf(part) : -1;
+  if (!part || at < 0) return <MathText mode="math" text={text} />;
+  const head = text.slice(0, at).trim();
+  const tail = text.slice(at + part.length).trim();
+  return (
+    <>
+      {head && <MathText mode="math" text={head} />}{' '}
+      <mark
+        className={`rounded-md px-1.5 py-0.5 ring-2 ${
+          tone === 'bad' ? 'bg-rose-200/70 text-rose-900 ring-rose-400' : 'bg-emerald-200/70 text-emerald-900 ring-emerald-400'
+        }`}
+      >
+        <MathText mode="math" text={part} />
+      </mark>{' '}
+      {tail && <MathText mode="math" text={tail} />}
+    </>
   );
 }
 

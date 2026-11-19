@@ -71,7 +71,10 @@ def lint_worksheet(ws: WorksheetContent) -> list[str]:
     if not ws.diagnostic_mirror:
         problems.append("diagnostic_mirror: empty")
     for i, item in enumerate(ws.diagnostic_mirror, 1):
+        check(f"mirror {i} previous", item.previous_step_text, required=False)
         check(f"mirror {i} original", item.original_step_text)
+        if item.wrong_part and item.wrong_part not in item.original_step_text:
+            problems.append(f"mirror {i}: wrong_part is not in the student's line")
         check(f"mirror {i} correction", item.annotated_correction)
         check(f"mirror {i} takeaway", item.key_takeaway)
 

@@ -136,7 +136,14 @@ def fake_worksheet(item: FlaggedGrading) -> WorksheetContent:
             "target_concept": "Distributing the outer factor when a term leaves the bracket.",
             "diagnostic_mirror": [
                 {
+                    "previous_step_text": "y = 2(x^2 + 6x + 9 - 9) + 5",
                     "original_step_text": "y = 2(x + 3)^2 - 9 + 5",
+                    "wrong_part": "- 9",
+                    "correct_part": "- 18",
+                    "what_went_wrong": (
+                        "The -9 was inside the bracket, so the 2 outside multiplies it too: "
+                        "it should leave the bracket as 2 * (-9) = -18, not -9."
+                    ),
                     "annotated_correction": "y = 2(x + 3)^2 - (2 * 9) + 5  =>  y = 2(x + 3)^2 - 18 + 5",
                     "key_takeaway": "Any number leaving the bracket must be multiplied by the factor outside.",
                 }

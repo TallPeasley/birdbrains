@@ -106,6 +106,8 @@ def test_broken_worksheets_are_retried_not_shown():
             steps[0], steps[1].model_copy(update={"given_content": "y = 3(x^2 + 4x + 4 - 4) + 1"}), *steps[2:]]}),
         "bad maths": good.model_copy(update={"target_concept": "Expand 2(x + 3"}),
         "no mirror": good.model_copy(update={"diagnostic_mirror": []}),
+        "mirror points at text not in the line": good.model_copy(update={"diagnostic_mirror": [
+            good.diagnostic_mirror[0].model_copy(update={"wrong_part": "- 7"})]}),
     }
     for name, ws in broken.items():
         assert lint_worksheet(ws), name
@@ -307,3 +309,20 @@ def test_internal_stats_has_numbers_but_no_names_or_ids(client, family, deps):
     old = deps.store.get("submissions", sub["submissionId"]) | {"uploadedAt": "2026-01-01T00:00:00+00:00"}
     deps.store.put("submissions", sub["submissionId"], old)
     assert client.get("/internal/stats", headers=TOKEN).json()["uploads"] == 1
+
+
+def test_mirror_shows_the_step_before_and_the_wrong_part():
+    """Section A shows the move that went wrong (two lines) and points at the exact piece."""
+    from birdbrains.projections import to_api_worksheet
+
+    content = fake_worksheet(None)
+    api = to_api_worksheet({"worksheetId": "ws_1", "gradingId": "g_1", "content": content.model_dump(mode="json")})
+    m = api.sectionA_DiagnosticMirror[0]
+    assert m.previousStepText == "y = 2(x^2 + 6x + 9 - 9) + 5"
+    assert m.wrongPart in m.originalStepText and m.correctPart == "- 18"
+    assert m.whatWentWrong
+    # Worksheets saved before these fields existed still load.
+    old = content.model_dump(mode="json")
+    for k in ("previous_step_text", "wrong_part", "correct_part", "what_went_wrong"):
+        old["diagnostic_mirror"][0].pop(k)
+    assert to_api_worksheet({"worksheetId": "ws_2", "gradingId": "g_2", "content": old}).sectionA_DiagnosticMirror[0].previousStepText == ""
