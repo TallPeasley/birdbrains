@@ -83,6 +83,13 @@ export default function CaptureModal() {
   const [payload, setPayload] = useState<SubmissionIngestionPayload | null>(null);
   const [grading, setGrading] = useState<Stage2GradingAndAffectOutput | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  // Phones and tablets get a separate "Take photo" button that opens the rear camera directly
+  // (works in the installed app on iPhone and Android, where there is no drag and drop).
+  const cameraRef = useRef<HTMLInputElement>(null);
+  const [touch, setTouch] = useState(false);
+  useEffect(() => {
+    setTouch(window.matchMedia('(pointer: coarse)').matches);
+  }, []);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   const reset = useCallback(() => {
@@ -176,7 +183,7 @@ export default function CaptureModal() {
       .forEach((f) => removeFile(f.id));
     setStage('IDLE');
     setProblem(null);
-    inputRef.current?.click();
+    (touch ? cameraRef : inputRef).current?.click();
   };
 
   const submit = (again = false) => {
@@ -389,6 +396,27 @@ export default function CaptureModal() {
                 />
               </div>
 
+              {touch && (
+                <button
+                  type="button"
+                  onClick={() => cameraRef.current?.click()}
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-indigo-700 active:scale-[0.99]"
+                >
+                  <Camera className="h-5 w-5" aria-hidden /> Take photo
+                </button>
+              )}
+              <input
+                ref={cameraRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                className="hidden"
+                onChange={(e) => {
+                  addFiles(e.target.files);
+                  e.target.value = '';
+                }}
+              />
+
               <p className="flex items-start gap-2 rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-600 ring-1 ring-slate-200">
                 <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600" aria-hidden />
                 <span>
@@ -429,7 +457,7 @@ export default function CaptureModal() {
               onRetake={() => {
                 setProblem(null);
                 reset();
-                setTimeout(() => inputRef.current?.click(), 50);
+                setTimeout(() => (touch ? cameraRef : inputRef).current?.click(), 50);
               }}
               onBack={() => {
                 setProblem(null);
