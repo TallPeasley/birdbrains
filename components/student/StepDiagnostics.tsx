@@ -1,13 +1,22 @@
 import { AlertCircle, CheckCircle2, ShieldCheck } from 'lucide-react';
-import type { Stage2GradingAndAffectOutput } from '@/types/birdBrains';
+import type { Stage2GradingAndAffectOutput, StepDiagnostic } from '@/types/birdBrains';
 import { PILLARS } from '@/lib/pillars';
 import { errorCodeName } from '@/lib/errorCodes';
 import { errorCodeHelp, errorCodePillar } from '@/components/student/errorCodeHelp';
-import { MathNumber, MathText } from '@/components/MathText';
+import { MathText } from '@/components/MathText';
 
 export default function StepDiagnostics({ grading }: { grading: Stage2GradingAndAffectOutput }) {
   const firstError = grading.stepDiagnostics.find((s) => !s.isCorrect);
   const protectedSteps = grading.stepDiagnostics.filter((s) => s.isCarryForwardProtected);
+  const groups = groupByQuestion(grading);
+  const showQuestions = groups.length > 1 || groups.some((g) => g.text);
+  // Step numbers restart in each question, so name the question too when there is more than one.
+  const stepName = (s: StepDiagnostic) => {
+    const n = s.questionStepNumber || s.stepNumber;
+    if (groups.length < 2) return String(n);
+    const gi = groups.findIndex((g) => g.steps.includes(s));
+    return `${n} of question ${questionName(groups[gi].label, gi)}`;
+  };
 
   return (
     <section className="card p-4 sm:p-6">
@@ -20,65 +29,85 @@ export default function StepDiagnostics({ grading }: { grading: Stage2GradingAnd
           <div className="flex items-center gap-2 rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-900 ring-1 ring-amber-200">
             <ShieldCheck className="h-5 w-5 shrink-0 text-amber-600" aria-hidden />
             <span>
-              <strong>Carry-forward protection:</strong> the slip in step <MathNumber value={firstError.stepNumber} /> didn&apos;t cost you
-              marks in step <MathText text={protectedSteps.map((s) => s.stepNumber).join(', ')} />.
+              <strong>Carry-forward protection:</strong> the slip in step <MathText text={stepName(firstError)} /> didn&apos;t cost you
+              marks in step <MathText text={protectedSteps.map(stepName).join(', ')} />.
             </span>
           </div>
         )}
       </div>
 
-      <ol className="mt-5 space-y-0">
-        {grading.stepDiagnostics.map((s, i) => {
-          const last = i === grading.stepDiagnostics.length - 1;
-          const tone = s.isCarryForwardProtected
-            ? { dot: 'bg-amber-500', card: 'border-amber-200 bg-amber-50/60' }
-            : s.isCorrect
-              ? { dot: 'bg-emerald-500', card: 'border-slate-200 bg-white' }
-              : { dot: 'bg-rose-500', card: 'border-rose-200 bg-rose-50/60' };
-          const stepPillar = s.pillarImpacted && PILLARS[s.pillarImpacted] ? PILLARS[s.pillarImpacted] : undefined;
-          return (
-            <li key={s.stepNumber} className="relative flex gap-3 pb-4 sm:gap-4">
-              {!last && <span className="absolute left-[15px] top-8 h-full w-px bg-slate-200" aria-hidden />}
-              <span className={`latex-num relative z-10 grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-bold text-white ${tone.dot}`}>
-                {s.stepNumber}
-              </span>
-              <div className={`min-w-0 flex-1 rounded-xl border p-3 ${tone.card}`}>
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="math max-w-full break-words rounded-md bg-slate-900/[0.04] px-2.5 py-1 text-base text-slate-900 [overflow-wrap:anywhere]">
-                    <MathText mode="math" text={s.studentInput} />
-                  </span>
-                  {s.isCarryForwardProtected ? (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800">
-                      <ShieldCheck className="h-3.5 w-3.5" aria-hidden /> Carry-Forward Protected
-                    </span>
-                  ) : s.isCorrect ? (
-                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700">
-                      <CheckCircle2 className="h-3.5 w-3.5" aria-hidden /> Correct
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-semibold text-rose-700">
-                      <AlertCircle className="h-3.5 w-3.5" aria-hidden /> Error found here
-                    </span>
-                  )}
-                  {stepPillar && (
-                    <span className="ml-auto inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-500">
-                      <span
-                        className="h-2 w-2 rounded-full"
-                        style={{ backgroundColor: stepPillar.color }}
-                        aria-hidden
-                      />
-                      {stepPillar.short}
-                    </span>
-                  )}
-                </div>
-                <p className="mt-2 break-words text-sm text-slate-600">
-                  <MathText text={s.explanation} />
+      <div className="mt-5 space-y-6">
+        {groups.map((g, gi) => (
+          <div key={`${g.label}-${gi}`}>
+            {showQuestions && (
+              <div className="mb-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <p className="text-xs font-semibold uppercase tracking-wider text-indigo-700">
+                  Question {questionName(g.label, gi)}
                 </p>
+                {g.text ? (
+                  <p className="mt-1.5 break-words text-sm text-slate-800 [overflow-wrap:anywhere]">
+                    <MathText text={g.text} />
+                  </p>
+                ) : (
+                  <p className="mt-1.5 text-sm text-slate-500">The printed question couldn&apos;t be read from the photo.</p>
+                )}
               </div>
-            </li>
-          );
-        })}
-      </ol>
+            )}
+            <ol className="space-y-0">
+              {g.steps.map((s, i) => {
+                const last = i === g.steps.length - 1;
+                const tone = s.isCarryForwardProtected
+                  ? { dot: 'bg-amber-500', card: 'border-amber-200 bg-amber-50/60' }
+                  : s.isCorrect
+                    ? { dot: 'bg-emerald-500', card: 'border-slate-200 bg-white' }
+                    : { dot: 'bg-rose-500', card: 'border-rose-200 bg-rose-50/60' };
+                const stepPillar = s.pillarImpacted && PILLARS[s.pillarImpacted] ? PILLARS[s.pillarImpacted] : undefined;
+                return (
+                  <li key={s.stepNumber} className="relative flex gap-3 pb-4 sm:gap-4">
+                    {!last && <span className="absolute left-[15px] top-8 h-full w-px bg-slate-200" aria-hidden />}
+                    <span className={`latex-num relative z-10 grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-bold text-white ${tone.dot}`}>
+                      {s.questionStepNumber || s.stepNumber}
+                    </span>
+                    <div className={`min-w-0 flex-1 rounded-xl border p-3 ${tone.card}`}>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="math max-w-full break-words rounded-md bg-slate-900/[0.04] px-2.5 py-1 text-base text-slate-900 [overflow-wrap:anywhere]">
+                          <MathText mode="math" text={s.studentInput} />
+                        </span>
+                        {s.isCarryForwardProtected ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800">
+                            <ShieldCheck className="h-3.5 w-3.5" aria-hidden /> Carry-Forward Protected
+                          </span>
+                        ) : s.isCorrect ? (
+                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700">
+                            <CheckCircle2 className="h-3.5 w-3.5" aria-hidden /> Correct
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-semibold text-rose-700">
+                            <AlertCircle className="h-3.5 w-3.5" aria-hidden /> Error found here
+                          </span>
+                        )}
+                        {stepPillar && (
+                          <span className="ml-auto inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-500">
+                            <span
+                              className="h-2 w-2 rounded-full"
+                              style={{ backgroundColor: stepPillar.color }}
+                              aria-hidden
+                            />
+                            {stepPillar.short}
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-2 break-words text-sm text-slate-600">
+                        <MathText text={s.explanation} />
+                      </p>
+                    </div>
+                  </li>
+                );
+              })}
+            </ol>
+          </div>
+        ))}
+      </div>
 
       {grading.entityExtractions.length > 0 && (
         <div className="mt-2 border-t border-slate-200 pt-4">
@@ -149,4 +178,34 @@ export default function StepDiagnostics({ grading }: { grading: Stage2GradingAnd
       )}
     </section>
   );
+}
+
+interface QuestionGroup {
+  label: string;
+  text: string;
+  steps: StepDiagnostic[];
+}
+
+/** "a" -> "a", "2" -> "2", "" -> its place on the page. */
+function questionName(label: string, index: number): string {
+  return label ? label : String(index + 1);
+}
+
+/** Steps grouped by question, in page order, each with its printed question text. */
+function groupByQuestion(grading: Stage2GradingAndAffectOutput): QuestionGroup[] {
+  const groups: QuestionGroup[] = [];
+  for (const s of grading.stepDiagnostics) {
+    const label = s.questionLabel ?? '';
+    let g = groups[groups.length - 1];
+    if (!g || g.label !== label) {
+      g = { label, text: '', steps: [] };
+      groups.push(g);
+    }
+    g.steps.push(s);
+  }
+  const questions = grading.questions ?? [];
+  groups.forEach((g, i) => {
+    g.text = (questions.find((q) => q.label === g.label) ?? (questions.length === groups.length ? questions[i] : undefined))?.text ?? '';
+  });
+  return groups;
 }

@@ -3,7 +3,7 @@
     "gradingId": "grd_mpm2d_001",
     "submissionId": "sub_8839201",
     "studentId": "stu_alexmercer99",
-    "topic": "Completing the Square \u00b7 vertex form",
+    "topic": "Completing the Square · vertex form",
     "totalScore": 8.0,
     "maxPossibleScore": 10.0,
     "affectState": "HIGH_FRICTION_FRUSTRATION",
@@ -44,21 +44,27 @@
         "studentInput": "y = 2x^2 + 12x + 5",
         "isCorrect": true,
         "isCarryForwardProtected": false,
-        "explanation": "Original equation correctly written."
+        "explanation": "Original equation correctly written.",
+        "questionLabel": "1",
+        "questionStepNumber": 1
       },
       {
         "stepNumber": 2,
         "studentInput": "y = 2(x^2 + 6x) + 5",
         "isCorrect": true,
         "isCarryForwardProtected": false,
-        "explanation": "Factored out coefficient 2 from the first two terms accurately."
+        "explanation": "Factored out coefficient 2 from the first two terms accurately.",
+        "questionLabel": "1",
+        "questionStepNumber": 2
       },
       {
         "stepNumber": 3,
         "studentInput": "y = 2(x^2 + 6x + 9 - 9) + 5",
         "isCorrect": true,
         "isCarryForwardProtected": false,
-        "explanation": "Correctly completed square inside parenthesis using (6/2)^2 = 9."
+        "explanation": "Correctly completed square inside parenthesis using (6/2)^2 = 9.",
+        "questionLabel": "1",
+        "questionStepNumber": 3
       },
       {
         "stepNumber": 4,
@@ -66,7 +72,9 @@
         "isCorrect": false,
         "pillarImpacted": "PRC",
         "isCarryForwardProtected": false,
-        "explanation": "Procedural Slip: Forgot to multiply -9 by the outer factor of 2 when removing it from parentheses. Should be -18."
+        "explanation": "Procedural Slip: Forgot to multiply -9 by the outer factor of 2 when removing it from parentheses. Should be -18.",
+        "questionLabel": "1",
+        "questionStepNumber": 4
       },
       {
         "stepNumber": 5,
@@ -74,7 +82,27 @@
         "isCorrect": true,
         "pillarImpacted": "PRC",
         "isCarryForwardProtected": true,
-        "explanation": "Carry-Forward Protection Applied: The calculation -9 + 5 = -4 is mathematically consistent with Step 4's error. Conceptual vertex conversion logic praised."
+        "explanation": "Carry-Forward Protection Applied: The calculation -9 + 5 = -4 is mathematically consistent with Step 4's error. Conceptual vertex conversion logic praised.",
+        "questionLabel": "1",
+        "questionStepNumber": 5
+      },
+      {
+        "stepNumber": 6,
+        "questionLabel": "2",
+        "questionStepNumber": 1,
+        "studentInput": "\\overline{AB} = \\sqrt{(5 - 1)^2 + (4 - 2)^2}",
+        "isCorrect": true,
+        "isCarryForwardProtected": false,
+        "explanation": "Set up the distance formula with the right coordinates."
+      },
+      {
+        "stepNumber": 7,
+        "questionLabel": "2",
+        "questionStepNumber": 2,
+        "studentInput": "\\overline{AB} = \\sqrt{20}",
+        "isCorrect": true,
+        "isCarryForwardProtected": false,
+        "explanation": "Correctly evaluated 4^2 + 2^2 = 20."
       }
     ],
     "entityExtractions": [
@@ -82,6 +110,16 @@
         "misconceptionId": "PRC-03",
         "description": "Failure to distribute leading coefficient to subtracted square term when extracting from bracket.",
         "severity": "HIGH"
+      }
+    ],
+    "questions": [
+      {
+        "label": "1",
+        "text": "Write y = 2x^2 + 12x + 5 in vertex form by completing the square."
+      },
+      {
+        "label": "2",
+        "text": "Find the length of the segment from A(1, 2) to B(5, 4). Leave your answer as a square root."
       }
     ]
   },

@@ -210,6 +210,12 @@ function renderLatexNodes(rawInput: string, strictMath: boolean, keyPrefix = 'm'
         const end = rest.indexOf('$', 1);
         if (end !== -1) {
           const inner = rest.slice(1, end);
+          const html = renderKatex(inner);
+          if (html) {
+            nodes.push(<span key={nextKey()} className="bb-katex" dangerouslySetInnerHTML={{ __html: html }} />);
+            i += end + 1;
+            continue;
+          }
           nodes.push(
             <span key={nextKey()} className="latex-math">
               {renderLatexNodes(inner, true, nextKey())}
@@ -412,6 +418,18 @@ function renderLatexNodes(rawInput: string, strictMath: boolean, keyPrefix = 'm'
           );
           i = cursor;
           continue;
+        }
+
+        // Any other \command (\overline{AB}, \angle, \vec{v} ...): let KaTeX typeset it with its {...} arguments.
+        {
+          let end = cursor;
+          for (let g = extractBalanced(str, end, '{', '}'); g; g = extractBalanced(str, end, '{', '}')) end = g.nextIndex;
+          const html = renderKatex(str.slice(i, end));
+          if (html) {
+            nodes.push(<span key={nextKey()} className="bb-katex" dangerouslySetInnerHTML={{ __html: html }} />);
+            i = end;
+            continue;
+          }
         }
 
         // Fallback for any other \command: render command name cleanly without backslash
@@ -740,8 +758,8 @@ export function MathText({ text, mode = 'auto', className }: MathTextProps) {
     return <MathNumber value={text} className={className} />;
   }
   const raw = String(text);
-  // Lines of maths with a fraction are typeset whole by KaTeX, so signs, fractions and mixed numbers line up.
-  if (mode === 'math' && hasFraction(raw)) {
+  // Lines of maths with a fraction or a LaTeX command (\\overline, \\sqrt ...) are typeset whole by KaTeX.
+  if (mode === 'math' && (hasFraction(raw) || /\\[a-zA-Z]/.test(raw))) {
     const html = renderKatex(raw);
     if (html) {
       return <span className={`bb-katex ${className ?? ''}`.trim()} dangerouslySetInnerHTML={{ __html: html }} />;

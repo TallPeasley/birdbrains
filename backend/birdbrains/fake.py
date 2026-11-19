@@ -37,6 +37,7 @@ class FakePipeline:
                 "detected_course": "MPM2D",
                 "detected_unit": "Completing the Square",
                 "detected_topic": "Vertex form",
+                "questions": [{"label": "1", "printed_text": "Write y = 2x^2 + 12x + 5 in vertex form."}],
                 "lines": [
                     {
                         "line_number": i + 1,
