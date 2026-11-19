@@ -18,11 +18,14 @@ from .metrics import PHASE2_EXACT_MATCH, SampleResult, Summary, consistency_prob
 
 def typed_transcription(sample: GoldSample) -> Stage1TranscriptionOutput:
     n = len(sample.lines)
+    lines = [{"line_number": i + 1, "raw_latex": text, "bounding_box_normalized": [0.05, i / n, 0.95, (i + 1) / n],
+              "confidence_score": 1.0, "visual_affect_markers": ["CLEAN_CONTINUOUS_FLOW"]}
+             for i, text in enumerate(sample.lines)]
     return Stage1TranscriptionOutput.model_validate({
         "submission_id": sample.id, "overall_ocr_confidence": 1.0, "requires_hitl": False,
-        "lines": [{"line_number": i + 1, "raw_latex": text, "bounding_box_normalized": [0.05, i / n, 0.95, (i + 1) / n],
-                   "confidence_score": 1.0, "visual_affect_markers": ["CLEAN_CONTINUOUS_FLOW"]}
-                  for i, text in enumerate(sample.lines)]})
+        "questions": [{"question_number": "1", "problem_statement": "", "lines": lines}],
+        "lines": lines,
+    })
 
 
 def run_sample(engine: PipelineEngine, sample: GoldSample, plan: str) -> SampleResult:

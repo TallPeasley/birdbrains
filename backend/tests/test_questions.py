@@ -1,7 +1,7 @@
 """Pages with several questions: steps are split, numbered per question, and never
 carry-forward-protected by a mistake in another question."""
 from birdbrains.projections import step_diagnostics
-from birdbrains.questions import split_by_question, strip_label, written_label
+from birdbrains.questions import segment_questions, split_by_question, strip_label, written_label
 from birdbrains.schemas import Stage1TranscriptionOutput, Stage2GradingAndAffectOutput
 
 
@@ -73,3 +73,39 @@ def test_single_question_is_unchanged():
     assert [s.question_label for s in out.step_evaluations] == ["", ""]
     assert [q.printed_text for q in out.questions] == ["Solve x."]
     assert [d["questionStepNumber"] for d in step_diagnostics(out)] == [1, 2]
+
+
+def segmented(questions):
+    return Stage1TranscriptionOutput.model_validate({
+        "submission_id": "s", "overall_ocr_confidence": 0.9,
+        "questions": [{"question_number": n, "problem_statement": p,
+                       "lines": [{"line_number": i + 1, "raw_latex": t, "bounding_box_normalized": [0, 0, 1, 1],
+                                  "confidence_score": 0.9, "visual_affect_markers": []}
+                                 for i, t in enumerate(lines)]}
+                      for n, p, lines in questions],
+    })
+
+
+def test_reading_that_merged_two_numbered_questions_is_split():
+    s1 = segmented([("1", "Solve the system.", ["1. 2x + 3y = 6", "y = 2", "2. AB = 5", "BC = 5"])])
+    out = segment_questions(s1).resolved_questions()
+    assert [q.question_number for q in out] == ["1", "2"]
+    assert [[l.line_number for l in q.lines] for q in out] == [[1, 2], [1, 2]]
+    assert out[0].problem_statement == "Solve the system." and out[1].problem_statement == ""
+
+
+def test_sub_parts_stay_in_their_question():
+    s1 = segmented([("3", "Triangle ABC.", ["a) AB = 5", "b) BC = 5", "Not isosceles."])])
+    assert segment_questions(s1) is s1
+
+
+def test_number_that_is_already_its_own_question_is_left_alone():
+    s1 = segmented([("1", "", ["x = 1", "2. x = 2"]), ("2", "", ["y = 3"])])
+    assert [q.question_number for q in segment_questions(s1).resolved_questions()] == ["1", "2"]
+
+
+def test_older_transcription_format_still_loads():
+    s1 = stage1([("x = 1", "1"), ("x = 2", ""), ("y = 3", "2")], questions=[("1", "Q one"), ("2", "Q two")])
+    qs = s1.resolved_questions()
+    assert [(q.question_number, q.problem_statement, len(q.lines)) for q in qs] == [("1", "Q one", 2), ("2", "Q two", 1)]
+    assert qs[1].lines[0].line_number == 1

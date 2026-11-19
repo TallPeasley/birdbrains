@@ -112,7 +112,7 @@
     display: inline-flex;
     flex-direction: column;
     align-items: center;
-    vertical-align: -0.32em;
+    vertical-align: middle;
     margin: 0 0.14em;
     font-size: 0.88em;
     line-height: 1.05;

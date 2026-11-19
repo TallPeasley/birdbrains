@@ -5,14 +5,16 @@ from collections import Counter
 from datetime import datetime
 from typing import Optional
 
-from .questions import strip_label
+from .questions import strip_label, written_label
 from .schemas import (
     AffectStateEnum,
     ApiGrading,
     ApiParentSummary,
+    ApiQuestionDiagnostic,
     ApiWorksheet,
     EQAOLevel,
     PillarEnum,
+    QuestionGradingOutput,
     Stage2GradingAndAffectOutput,
     StudentLedger,
     WorksheetContent,
@@ -40,8 +42,27 @@ def dominant_affect(stage2: Stage2GradingAndAffectOutput) -> AffectStateEnum:
     return AffectStateEnum.PRODUCTIVE_STRUGGLE
 
 
+def _without_question_number(latex: str, question_number: str) -> str:
+    """"2. AB = 5" in question 2 -> "AB = 5". Sub-part labels ("a)") are kept."""
+    return strip_label(latex) if written_label(latex) == (question_number or "").lower() else latex
+
+
 def step_diagnostics(stage2: Stage2GradingAndAffectOutput) -> list[dict]:
-    """Steps numbered from 1 within each question, without the student's own "a)" label."""
+    """Every step on the page in order, each numbered from 1 within its question and
+    without the student's own "a)" / "2." label when the page has several questions."""
+    multi = len(stage2.question_analyses) > 1
+    if stage2.question_analyses:
+        out = []
+        for q in stage2.question_analyses:
+            for s in q.step_evaluations:
+                out.append(dict(
+                    stepNumber=len(out) + 1, questionLabel=q.question_number if multi else "",
+                    questionStepNumber=s.step_number,
+                    studentInput=_without_question_number(s.student_latex, q.question_number),
+                    isCorrect=s.is_correct, pillarImpacted=s.pillar,
+                    isCarryForwardProtected=s.is_carry_forward_consistent, explanation=s.explanation,
+                ))
+        return out
     counts: Counter = Counter()
     out = []
     for s in stage2.step_evaluations:
@@ -55,11 +76,91 @@ def step_diagnostics(stage2: Stage2GradingAndAffectOutput) -> list[dict]:
     return out
 
 
+def page_questions(stage2: Stage2GradingAndAffectOutput) -> list[dict]:
+    """The printed questions on the page, in order."""
+    if stage2.question_analyses:
+        multi = len(stage2.question_analyses) > 1
+        return [dict(label=q.question_number if multi else "", text=q.problem_statement)
+                for q in stage2.question_analyses if multi or q.problem_statement]
+    return [dict(label=q.label, text=q.printed_text) for q in stage2.questions]
+
+
+def _to_api_question_diagnostic(q: QuestionGradingOutput) -> ApiQuestionDiagnostic:
+    roots = [e for e in q.identified_errors if not e.is_cascading_consequence]
+    per_pillar = Counter(e.pillar for e in roots)
+    return ApiQuestionDiagnostic(
+        questionNumber=q.question_number,
+        problemStatement=q.problem_statement,
+        totalScore=round(sum(min(p.earned_score, p.max_score) for p in q.pillar_scores), 2),
+        maxPossibleScore=round(sum(p.max_score for p in q.pillar_scores), 2),
+        answerKey=dict(
+            methodUsed=q.answer_key.method_used,
+            steps=[
+                dict(
+                    stepNumber=s.step_number,
+                    description=s.description,
+                    expectedMath=s.expected_math,
+                    isKeyStep=s.is_key_step,
+                )
+                for s in q.answer_key.steps
+            ],
+            finalAnswer=q.answer_key.final_answer,
+            answerVerification=q.answer_key.answer_verification,
+        ),
+        finalAnswerVerification=dict(
+            studentFinalAnswer=q.final_answer_verification.student_final_answer,
+            resubstitutionCheck=q.final_answer_verification.resubstitution_check,
+            satisfiesInitialQuestion=q.final_answer_verification.satisfies_initial_question,
+            discrepancyNote=q.final_answer_verification.discrepancy_note,
+        ),
+        keyStepChecks=[
+            dict(
+                keyStepNumber=c.key_step_number,
+                keyStepDescription=c.key_step_description,
+                expectedMath=c.expected_math,
+                status=c.status,
+                matchedStudentSteps=list(c.matched_student_steps),
+                note=c.note,
+            )
+            for c in q.key_step_checks
+        ],
+        stepDiagnostics=[
+            dict(
+                stepNumber=s.step_number,
+                questionLabel=q.question_number,
+                questionStepNumber=s.step_number,
+                studentInput=_without_question_number(s.student_latex, q.question_number),
+                isCorrect=s.is_correct,
+                pillarImpacted=s.pillar,
+                isCarryForwardProtected=s.is_carry_forward_consistent,
+                explanation=s.explanation,
+            )
+            for s in q.step_evaluations
+        ],
+        entityExtractions=[
+            dict(misconceptionId=e.error_code, description=e.description, severity=e.severity)
+            for e in roots
+        ],
+        pillarBreakdowns=[
+            dict(
+                pillar=p.pillar,
+                maxScore=p.max_score,
+                earnedScore=min(p.earned_score, p.max_score),
+                errorCount=per_pillar.get(p.pillar, 0),
+                feedback=p.feedback,
+            )
+            for p in q.pillar_scores
+        ],
+        supportiveFramingMessage=q.supportive_framing_message,
+    )
+
+
 def to_api_grading(record: dict) -> ApiGrading:
     stage2 = Stage2GradingAndAffectOutput.model_validate(record["stage2"])
     roots = [e for e in stage2.identified_errors if not e.is_cascading_consequence]
     per_pillar = Counter(e.pillar for e in roots)
     pro = record.get("plan", "pro") == "pro"  # gradings made before plans existed count as pro
+    question_analyses = [_to_api_question_diagnostic(q) for q in stage2.question_analyses]
     return ApiGrading(
         gradingId=record["gradingId"],
         submissionId=record["submissionId"],
@@ -74,8 +175,9 @@ def to_api_grading(record: dict) -> ApiGrading:
                  errorCount=per_pillar.get(p.pillar, 0), feedback=p.feedback)
             for p in stage2.pillar_scores
         ],
+        questionAnalyses=question_analyses,
         stepDiagnostics=step_diagnostics(stage2),
-        questions=[dict(label=q.label, text=q.printed_text) for q in stage2.questions],
+        questions=page_questions(stage2),
         entityExtractions=[
             dict(misconceptionId=e.error_code, description=e.description, severity=e.severity) for e in roots
         ],

@@ -96,24 +96,125 @@ class QuestionInfo(Strict):
     printed_text: str = ""  # the printed question, verbatim; empty if it can't be read
 
 
-class Stage1TranscriptionOutput(Strict):
+class Stage1QuestionTranscription(Strict):
+    """One numbered (or standalone) question segmented on the worksheet."""
+
+    question_number: str
+    problem_statement: str = ""
+    lines: List[Stage1LineTranscription] = Field(default_factory=list)
+
+
+UnreadableReason = Literal["HANDWRITING_UNCLEAR", "BLANK_PAGE", "NOT_MATH", "QUESTIONS_NOT_VISIBLE",
+                           "PAGE_CUT_OFF", "GLARE_OR_SHADOW"]
+
+
+class Stage1VisionOutput(Strict):
+    """Structured output requested from Gemini Stage 1 (vision & affect)."""
+
     submission_id: str
     overall_ocr_confidence: float = Field(..., ge=0.0, le=1.0)
-    lines: List[Stage1LineTranscription]
+    questions: List[Stage1QuestionTranscription]
     requires_hitl: bool = Field(default=False)
+    # Only when requires_hitl is true: why the page cannot be graded.
+    unreadable_reason: Optional[UnreadableReason] = None
     # What the page is about, read from the printed problems and the work. Students no
     # longer tag uploads; these fill the course, unit and topic. Empty when unsure.
-    # Only when requires_hitl is true: why the page cannot be graded.
-    unreadable_reason: Optional[Literal["HANDWRITING_UNCLEAR", "BLANK_PAGE", "NOT_MATH", "QUESTIONS_NOT_VISIBLE",
-                                        "PAGE_CUT_OFF", "GLARE_OR_SHADOW"]] = None
     detected_course: Optional[Literal["MTH1W", "MPM2D"]] = None
     detected_unit: str = ""
     detected_topic: str = ""
-    # The printed questions the student answered, in page order (see question_label on each line).
-    questions: List[QuestionInfo] = Field(default_factory=list)
+
+
+class Stage1TranscriptionOutput(Strict):
+    submission_id: str
+    overall_ocr_confidence: float = Field(..., ge=0.0, le=1.0)
+    questions: List[Stage1QuestionTranscription] = Field(default_factory=list)
+    # Legacy flat lines kept optional so previously stored transcriptions and
+    # single-problem eval fixtures remain readable.
+    lines: List[Stage1LineTranscription] = Field(default_factory=list)
+    requires_hitl: bool = Field(default=False)
+    unreadable_reason: Optional[UnreadableReason] = None
+    detected_course: Optional[Literal["MTH1W", "MPM2D"]] = None
+    detected_unit: str = ""
+    detected_topic: str = ""
+
+    @model_validator(mode="before")
+    @classmethod
+    def _legacy_question_list(cls, data):
+        """Transcriptions stored between the two question formats list questions as
+        {label, printed_text} beside flat lines tagged with question_label. Rebuild
+        them as segmented questions so old records still load."""
+        if not isinstance(data, dict):
+            return data
+        qs = data.get("questions") or []
+        if not qs or not all(isinstance(q, dict) and "label" in q for q in qs):
+            return data
+        lines = [l for l in (data.get("lines") or []) if isinstance(l, dict)]
+        labels = [q["label"] for q in qs]
+        grouped: dict[int, list] = {i: [] for i in range(len(qs))}
+        current = 0
+        for l in lines:
+            if (l.get("question_label") or "") in labels:
+                current = labels.index(l["question_label"])
+            grouped[current].append(l)
+        out = [
+            {"question_number": q["label"] or str(i + 1), "problem_statement": q.get("printed_text", ""),
+             "lines": [dict(l, line_number=n + 1) for n, l in enumerate(grouped[i])]}
+            for i, q in enumerate(qs)
+        ]
+        # The flat lines stay too: older flat gradings point at them by page line number.
+        return {**data, "questions": out}
+
+    def resolved_questions(self) -> List[Stage1QuestionTranscription]:
+        """Always return a per-question list, wrapping legacy flat lines as Q1."""
+        if self.questions:
+            return list(self.questions)
+        if self.lines:
+            return [Stage1QuestionTranscription(question_number="1", problem_statement="", lines=list(self.lines))]
+        return []
 
 
 # ------------------------------------------------------------------ Stage 2 output
+KeyStepStatus = Literal["PRESENT", "PRESENT_WITH_ERROR", "MISSING", "EQUIVALENT_METHOD"]
+
+
+class AnswerKeyStep(Strict):
+    """One canonical step in the generated answer key for a question."""
+
+    step_number: int = Field(..., ge=1)
+    description: str
+    expected_math: str
+    is_key_step: bool = True
+
+
+class QuestionAnswerKey(Strict):
+    """Canonical answer key generated for a single question before evaluating steps."""
+
+    method_used: str
+    steps: List[AnswerKeyStep]
+    final_answer: str
+    answer_verification: str
+
+
+class KeyStepCheck(Strict):
+    """Checks whether an answer-key step shows up on the student's worksheet."""
+
+    key_step_number: int = Field(..., ge=1)
+    key_step_description: str
+    expected_math: str
+    status: KeyStepStatus
+    matched_student_steps: List[int] = Field(default_factory=list)
+    note: str
+
+
+class FinalAnswerVerification(Strict):
+    """Re-substitution / check of the student's final answer against the initial question."""
+
+    student_final_answer: str
+    resubstitution_check: str
+    satisfies_initial_question: bool
+    discrepancy_note: str = ""
+
+
 class StepEvaluation(Strict):
     """One line of student work, judged. The spec leaves this as ``dict``; it is
     typed here so Gemini's structured output is constrained."""
@@ -155,9 +256,39 @@ class PillarScore(Strict):  # extension
     feedback: str
 
 
+class QuestionGradingOutput(Strict):
+    """Isolated diagnostic analysis for a single question on the worksheet.
+
+    Field order is intentional: the model generates ``answer_key``, checks the
+    student's conclusion via ``final_answer_verification`` (re-substituting into
+    the initial question), and verifies worksheet coverage via ``key_step_checks``
+    BEFORE judging ``step_evaluations`` and ``identified_errors``.
+    """
+
+    question_number: str
+    problem_statement: str
+    answer_key: QuestionAnswerKey
+    final_answer_verification: FinalAnswerVerification
+    key_step_checks: List[KeyStepCheck]
+    step_evaluations: List[StepEvaluation]
+    identified_errors: List[RootCauseErrorItem]
+    pillar_scores: List[PillarScore]
+    sentiment_entities: List[SentimentEntityExtraction]
+    aggregate_valence: float = Field(..., ge=-1.0, le=1.0)
+    aggregate_friction: float = Field(..., ge=0.0, le=1.0)
+    recommended_scaffolding_mode: ScaffoldingModeEnum
+    supportive_framing_message: str
+    parent_insight: str
+
+
 class Stage2GradingAndAffectOutput(Strict):
     submission_id: str
-    step_evaluations: List[StepEvaluation]
+    # Separate per-question analyses, each with its own answer key, key-step
+    # coverage check, re-substitution check, steps, and errors.
+    question_analyses: List[QuestionGradingOutput] = Field(default_factory=list)
+    # Populated only for single-question or legacy gradings; left empty on
+    # multi-question worksheets so steps from different questions are never merged.
+    step_evaluations: List[StepEvaluation] = Field(default_factory=list)
     identified_errors: List[RootCauseErrorItem]
     sentiment_entities: List[SentimentEntityExtraction]
     aggregate_valence: float = Field(..., ge=-1.0, le=1.0)
@@ -167,7 +298,8 @@ class Stage2GradingAndAffectOutput(Strict):
     pillar_scores: List[PillarScore] = Field(default_factory=list)
     supportive_framing_message: str = ""
     parent_insight: str = ""
-    # Filled by questions.split_by_question after grading, not by the model.
+    # Flat (older) gradings only: filled by questions.split_by_question, not by the model.
+    # Gradings made question by question carry their questions in question_analyses.
     questions: List[QuestionInfo] = Field(default_factory=list)
 
 
@@ -289,6 +421,50 @@ class ApiEntityExtraction(Api):
     severity: SeverityEnum
 
 
+class ApiAnswerKeyStep(Api):
+    stepNumber: int
+    description: str
+    expectedMath: str
+    isKeyStep: bool = True
+
+
+class ApiQuestionAnswerKey(Api):
+    methodUsed: str
+    steps: List[ApiAnswerKeyStep]
+    finalAnswer: str
+    answerVerification: str
+
+
+class ApiKeyStepCheck(Api):
+    keyStepNumber: int
+    keyStepDescription: str
+    expectedMath: str
+    status: KeyStepStatus
+    matchedStudentSteps: List[int] = Field(default_factory=list)
+    note: str
+
+
+class ApiFinalAnswerVerification(Api):
+    studentFinalAnswer: str
+    resubstitutionCheck: str
+    satisfiesInitialQuestion: bool
+    discrepancyNote: str = ""
+
+
+class ApiQuestionDiagnostic(Api):
+    questionNumber: str
+    problemStatement: str
+    totalScore: float
+    maxPossibleScore: float
+    answerKey: ApiQuestionAnswerKey
+    finalAnswerVerification: ApiFinalAnswerVerification
+    keyStepChecks: List[ApiKeyStepCheck]
+    stepDiagnostics: List[ApiStepDiagnostic]
+    entityExtractions: List[ApiEntityExtraction]
+    pillarBreakdowns: List[ApiPillarBreakdown]
+    supportiveFramingMessage: str = ""
+
+
 PlanTier = Literal["free", "pro"]
 
 
@@ -304,7 +480,10 @@ class ApiGrading(Api):
     affectState: Optional[AffectStateEnum]  # null on the Free plan
     supportiveFramingMessage: str
     pillarBreakdowns: List[ApiPillarBreakdown]
-    stepDiagnostics: List[ApiStepDiagnostic]
+    # Per-question analyses: answer key, key-step coverage, re-substitution check, steps.
+    questionAnalyses: List[ApiQuestionDiagnostic] = Field(default_factory=list)
+    # Every step on the page, each tagged with its question and its number within it.
+    stepDiagnostics: List[ApiStepDiagnostic] = Field(default_factory=list)
     # The questions on the page, in order. Empty (or one entry) for a single question.
     questions: List[ApiQuestion] = []
     entityExtractions: List[ApiEntityExtraction]
