@@ -64,3 +64,21 @@ def test_tester_uploads_stay_out_of_pilot_stats(client, family):
     upload(client, family["studentId"])
     s = client.get("/internal/stats", headers=ADMIN).json()
     assert s["uploads"] == 0 and s["testerUploads"] == 1 and s["activeStudents"] == 0
+
+
+def test_tester_can_recheck_an_old_upload(client, family, deps):
+    sid = family["studentId"]
+    sub = upload(client, sid).json()["submissionId"]
+    first = client.post(f"/submissions/{sub}/process", headers=auth("alex")).json()["grading"]
+    # Not a tester yet: re-checking is refused.
+    assert client.post(f"/submissions/{sub}/regrade", headers=auth("alex")).status_code == 403
+    assert make_tester(client, uid="alex").status_code == 200
+    ledger_before = deps.store.get("ledgers", sid)
+    again = client.post(f"/submissions/{sub}/regrade", headers=auth("alex"))
+    assert again.status_code == 200, again.text
+    second = again.json()["grading"]
+    assert second["gradingId"] != first["gradingId"] and second["submissionId"] == sub
+    # The old grading is replaced, and the work does not count twice.
+    history = client.get(f"/students/{sid}/gradings", headers=auth("alex")).json()
+    assert [g["gradingId"] for g in history] == [second["gradingId"]]
+    assert deps.store.get("ledgers", sid) == ledger_before
