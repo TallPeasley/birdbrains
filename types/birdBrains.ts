@@ -56,6 +56,56 @@ export interface StepDiagnostic {
   explanation: string;
 }
 
+export interface AnswerKeyStep {
+  stepNumber: number;
+  description: string;
+  expectedMath: string;
+  isKeyStep: boolean;
+}
+
+export interface QuestionAnswerKey {
+  methodUsed: string;
+  steps: AnswerKeyStep[];
+  finalAnswer: string;
+  answerVerification: string;
+}
+
+export type KeyStepCheckStatus = 'PRESENT' | 'PRESENT_WITH_ERROR' | 'MISSING' | 'EQUIVALENT_METHOD';
+
+export interface KeyStepCheck {
+  keyStepNumber: number;
+  keyStepDescription: string;
+  expectedMath: string;
+  status: KeyStepCheckStatus;
+  matchedStudentSteps: number[];
+  note: string;
+}
+
+export interface FinalAnswerVerification {
+  studentFinalAnswer: string;
+  resubstitutionCheck: string;
+  satisfiesInitialQuestion: boolean;
+  discrepancyNote: string;
+}
+
+export interface QuestionDiagnostic {
+  questionNumber: string;
+  problemStatement: string;
+  totalScore: number;
+  maxPossibleScore: number;
+  answerKey: QuestionAnswerKey;
+  finalAnswerVerification: FinalAnswerVerification;
+  keyStepChecks: KeyStepCheck[];
+  stepDiagnostics: StepDiagnostic[];
+  entityExtractions: {
+    misconceptionId: string;
+    description: string;
+    severity: 'LOW' | 'MEDIUM' | 'HIGH';
+  }[];
+  pillarBreakdowns: PillarBreakdown[];
+  supportiveFramingMessage?: string;
+}
+
 export interface Stage2GradingAndAffectOutput {
   gradingId: string;
   submissionId: string;
@@ -67,6 +117,10 @@ export interface Stage2GradingAndAffectOutput {
   affectState: AffectState | null;
   supportiveFramingMessage: string;
   pillarBreakdowns: PillarBreakdown[];
+  /** Separate per-question analyses (each with answer key, key-step coverage,
+   *  re-substitution check, isolated steps, and errors). */
+  questionAnalyses?: QuestionDiagnostic[];
+  /** Legacy / single-question flat step list; empty on multi-question worksheets. */
   stepDiagnostics: StepDiagnostic[];
   /** The printed questions on the page, in order. Empty on gradings made before questions were split. */
   questions?: { label: string; text: string }[];

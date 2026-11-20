@@ -49,6 +49,12 @@ def test_full_flow(client, family):
     assert [p["pillar"] for p in grading["pillarBreakdowns"]] == ["CON", "PRC", "FAC", "TST"]
     # Carry-forward: step 5 is protected and only one root cause is reported.
     assert grading["stepDiagnostics"][4]["isCarryForwardProtected"] is True
+    assert len(grading["questionAnalyses"]) == 1
+    q1 = grading["questionAnalyses"][0]
+    assert q1["questionNumber"] == "1"
+    assert q1["answerKey"]["finalAnswer"]
+    assert q1["finalAnswerVerification"]["satisfiesInitialQuestion"] is False
+    assert any(c["status"] == "MISSING" for c in q1["keyStepChecks"])
     assert [e["misconceptionId"] for e in grading["entityExtractions"]] == ["PRC-03"]
     assert grading["pillarBreakdowns"][1]["errorCount"] == 1
 

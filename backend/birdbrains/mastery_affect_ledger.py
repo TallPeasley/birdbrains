@@ -45,7 +45,11 @@ def score_fraction(stage2: Stage2GradingAndAffectOutput) -> float:
         earned = sum(min(p.earned_score, p.max_score) for p in stage2.pillar_scores)
         return max(0.0, min(1.0, earned / max_total))
     # No pillar scores: fall back to the share of steps that were not root errors.
-    steps = stage2.step_evaluations
+    steps = (
+        [s for q in stage2.question_analyses for s in q.step_evaluations]
+        if stage2.question_analyses
+        else stage2.step_evaluations
+    )
     if not steps:
         return 0.0
     return sum(1 for s in steps if s.is_correct) / len(steps)

@@ -39,7 +39,13 @@ class SampleResult:
         want = self.sample.carry_forward_steps
         if not want:
             return 0, 0
-        steps = {s.step_number: s for s in self.stage2.step_evaluations} if self.stage2 else {}
+        if self.stage2 and self.stage2.step_evaluations:
+            evals = self.stage2.step_evaluations
+        elif self.stage2 and len(self.stage2.question_analyses) == 1:
+            evals = self.stage2.question_analyses[0].step_evaluations
+        else:
+            evals = []
+        steps = {s.step_number: s for s in evals}
         ok = sum(1 for n in want if n in steps and steps[n].is_correct)
         return ok, len(want)
 
@@ -53,6 +59,23 @@ def consistency_problems(stage2: Stage2GradingAndAffectOutput) -> list[str]:
     for s in stage2.step_evaluations:
         if s.error_code and s.pillar and not s.error_code.startswith(s.pillar.value):
             problems.append(f"step {s.step_number}: {s.error_code} filed under pillar {s.pillar.value}")
+    for q in stage2.question_analyses:
+        qtag = f"Q{q.question_number}"
+        if not q.answer_key.steps or not q.answer_key.final_answer.strip():
+            problems.append(f"{qtag}: missing answer key steps or final answer")
+        if not q.key_step_checks:
+            problems.append(f"{qtag}: missing key_step_checks")
+        q_roots = [e for e in q.identified_errors if not e.is_cascading_consequence]
+        if not q.final_answer_verification.satisfies_initial_question and not q_roots:
+            problems.append(f"{qtag}: final answer failed initial-question check with no root-cause error")
+        seen_err = False
+        for s in sorted(q.step_evaluations, key=lambda x: x.step_number):
+            if s.error_code and s.pillar and not s.error_code.startswith(s.pillar.value):
+                problems.append(f"{qtag} step {s.step_number}: {s.error_code} filed under pillar {s.pillar.value}")
+            if not s.is_correct:
+                seen_err = True
+            elif s.is_carry_forward_consistent and not seen_err:
+                problems.append(f"{qtag} step {s.step_number}: carry-forward set with no prior error in {qtag}")
     pillars = sorted(p.pillar.value for p in stage2.pillar_scores)
     if pillars != ["CON", "FAC", "PRC", "TST"]:
         problems.append(f"pillar_scores has {pillars}, expected one each of CON, FAC, PRC, TST")
