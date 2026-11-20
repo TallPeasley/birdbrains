@@ -141,7 +141,8 @@ Rules:
 8. If a printed question on the worksheet has no student work at all, still include
    it in `questions` with an empty `lines` list so Stage 2 can flag it unanswered.
 9. `bounding_box_normalized` is [x_min, y_min, x_max, y_max], each in 0..1 relative
-   to the image. With several images, treat them as one page stacked top to bottom.
+   to the image. With several images, treat them as stacked top to bottom and give the
+   box in the image you read that line from.
 10. `visual_affect_markers` describes how the line looks on the page, not whether it
     is right: scratch-outs, rewrites, question marks in the margin, a step abandoned
     part-way, cramped rushed writing, or clean continuous flow.
@@ -159,6 +160,16 @@ Rules:
     tell. `detected_unit` is the closest unit from the list below, copied exactly, or
     empty if none fits. `detected_topic` is the specific skill in 3 to 6 words
     (for example "Completing the square").
+14. Several images are ALWAYS photos of the SAME worksheet: the whole page, a
+    re-shoot of it, and/or close-ups of single questions. Merge them into ONE
+    transcription. Never list a question twice and never copy a line twice because
+    it appears in two photos. For each line, read it from whichever photo shows it
+    most clearly (usually the close-up), and use the other photos to fill in lines a
+    blurry or angled photo hides. Base `overall_ocr_confidence` on the best reading
+    of each line, not on the worst photo.
+15. `detected_worksheet_code`: if the page prints a worksheet code such as "BB-W12"
+    (usually beside the title or the name line), copy it exactly. Otherwise leave it
+    empty.
 Do not grade. Do not comment. Output only the structured result.
 """
 STAGE1_SYSTEM += "\nUnits by course:\n" + "\n".join(
@@ -652,6 +663,8 @@ class GeminiPipeline:
                 f"submission_id: {ctx.submission_id}. Segment this page by question, transcribe each "
                 "question's complete printed problem_statement verbatim, and transcribe EVERY handwritten "
                 "line of student work per question (including initial setup equations and multi-column steps)."
+                + (f" These {len(images)} images are photos of the same worksheet: merge them into one "
+                   "transcription, reading each line from the clearest photo." if len(images) > 1 else "")
             )
         ))
         config = types.GenerateContentConfig(

@@ -122,6 +122,8 @@ class Stage1VisionOutput(Strict):
     detected_course: Optional[Literal["MTH1W", "MPM2D"]] = None
     detected_unit: str = ""
     detected_topic: str = ""
+    # The worksheet's printed code, such as "BB-W12", when one is printed on the page.
+    detected_worksheet_code: str = ""
 
 
 class Stage1TranscriptionOutput(Strict):
@@ -136,6 +138,8 @@ class Stage1TranscriptionOutput(Strict):
     detected_course: Optional[Literal["MTH1W", "MPM2D"]] = None
     detected_unit: str = ""
     detected_topic: str = ""
+    # The worksheet's printed code, such as "BB-W12", when one is printed on the page.
+    detected_worksheet_code: str = ""
 
     @model_validator(mode="before")
     @classmethod

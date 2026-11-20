@@ -90,6 +90,13 @@ export const api = {
   /** Testing accounts: grade an earlier upload again with the current grader. Replaces its old result. */
   regrade: (t: string, submissionId: string) =>
     request<ProcessResult>(`/submissions/${submissionId}/regrade`, t, { method: 'POST' }),
+  /** Add photos of the same page (a clearer re-shoot, or close-ups of single questions).
+   *  The page is read again from all its photos and the result is replaced. No new upload is used. */
+  addPhotos: (t: string, submissionId: string, files: File[]) => {
+    const form = new FormData();
+    files.forEach((f) => form.append('files', f));
+    return request<ProcessResult>(`/submissions/${submissionId}/photos`, t, { method: 'POST', body: form });
+  },
   worksheet: (t: string, gradingId: string) => request<WS_3STAGE_V1>(`/gradings/${gradingId}/worksheet`, t),
   parentSummary: (t: string, studentId: string) =>
     request<ParentProjectionSummary>(`/students/${studentId}/parent-summary`, t),
