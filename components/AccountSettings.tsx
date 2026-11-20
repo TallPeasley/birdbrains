@@ -10,6 +10,7 @@ import {
   Check,
   Copy,
   GraduationCap,
+  History,
   Link2,
   Loader2,
   LogOut,
@@ -23,6 +24,7 @@ import { api, ApiError } from '@/lib/api';
 import { useRole } from '@/lib/roleContext';
 import { useSession } from '@/lib/session';
 import { Loading, SignInNotice } from '@/components/DashboardStates';
+import UploadHistory from '@/components/account/UploadHistory';
 import type { ApiClass, ApiUsage, UserProfile } from '@/types/birdBrains';
 
 const DEMO_PROFILES: { student: UserProfile; parent: UserProfile } = {
@@ -368,7 +370,10 @@ export default function AccountSettings() {
         ? 'Grade 9 · MTH1W'
         : activeProfile.course ?? 'Not set';
 
+  const showHistory = activeProfile.role !== 'teacher' && (!live || Boolean(activeStudentId));
+
   return (
+    <div className="space-y-8">
     <div className="mx-auto max-w-3xl space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
@@ -382,13 +387,18 @@ export default function AccountSettings() {
               : 'Manage your profile details, family links, classes, and stored data.'}
           </p>
         </div>
-        <Link
-          href={`/${activeProfile.role}`}
-          className="btn btn-secondary"
-        >
-          <ArrowLeft className="h-4 w-4" aria-hidden />
-          Back to dashboard
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link href={`/${activeProfile.role}`} className="btn btn-secondary">
+            <ArrowLeft className="h-4 w-4" aria-hidden />
+            Back to dashboard
+          </Link>
+          {showHistory && (
+            <a href="#history" className="btn btn-secondary">
+              <History className="h-4 w-4" aria-hidden />
+              Upload history
+            </a>
+          )}
+        </div>
       </header>
 
       {/* Profile section (read-only) */}
@@ -903,6 +913,12 @@ export default function AccountSettings() {
           Sign out
         </button>
       </section>
+    </div>
+      {showHistory && (
+        <div id="history" className="mx-auto max-w-6xl scroll-mt-24">
+          <UploadHistory />
+        </div>
+      )}
     </div>
   );
 }
