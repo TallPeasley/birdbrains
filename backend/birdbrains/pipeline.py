@@ -75,7 +75,30 @@ def thinking_config(model: str, level: str):
     return types.ThinkingConfig(thinking_level=level)
 
 
-STAGE2_MAX_WORKERS = 5  # questions on one page graded in parallel
+# Questions on one page graded at the same time. Kept low: each question is its own
+# model call, and a burst of them is what Vertex answers with 429 (busy).
+STAGE2_MAX_WORKERS = int(os.environ.get("BIRDBRAINS_STAGE2_MAX_WORKERS", "3"))
+# Busy or Google-side errors are retried after these waits (seconds).
+RETRY_WAITS = (2.0, 6.0, 15.0)
+TRANSIENT_CODES = (429, 500, 502, 503, 504)
+
+
+def is_transient(exc: BaseException) -> bool:
+    """Vertex said it is busy or had trouble of its own; the same call may work later."""
+    return getattr(exc, "code", None) in TRANSIENT_CODES
+
+
+def with_retries(call, label: str, waits: Sequence[float] = RETRY_WAITS):
+    """Run ``call`` and retry it on busy / Google-side errors, waiting a little longer each time."""
+    for attempt, wait in enumerate([*waits, None]):
+        try:
+            return call()
+        except Exception as exc:
+            if wait is None or not is_transient(exc):
+                raise
+            log.warning("%s: Vertex returned %s, retrying in %.0fs (attempt %d)",
+                        label, getattr(exc, "code", "?"), wait, attempt + 1)
+            time.sleep(wait)
 CACHE_TTL_SECONDS = 24 * 60 * 60
 # Below this overall OCR confidence the work goes to a human / retake instead of Stage 2.
 HITL_CONFIDENCE_FLOOR = 0.60
@@ -631,17 +654,15 @@ class GeminiPipeline:
                 "line of student work per question (including initial setup equations and multi-column steps)."
             )
         ))
-        response = self._client.models.generate_content(
-            model=STAGE1_MODEL,
-            contents=[types.Content(role="user", parts=parts)],
-            config=types.GenerateContentConfig(
-                system_instruction=STAGE1_SYSTEM,
-                temperature=0.0,
-                response_mime_type="application/json",
-                response_schema=Stage1VisionOutput,
-                thinking_config=thinking_config(STAGE1_MODEL, STAGE1_THINKING),
-            ),
+        config = types.GenerateContentConfig(
+            system_instruction=STAGE1_SYSTEM,
+            temperature=0.0,
+            response_mime_type="application/json",
+            response_schema=Stage1VisionOutput,
+            thinking_config=thinking_config(STAGE1_MODEL, STAGE1_THINKING),
         )
+        response = with_retries(lambda: self._client.models.generate_content(
+            model=STAGE1_MODEL, contents=[types.Content(role="user", parts=parts)], config=config), "stage1")
         if meter is not None:
             meter.record("stage1", STAGE1_MODEL, started, response)
         out = Stage1TranscriptionOutput.model_validate_json(response.text)
@@ -674,13 +695,25 @@ class GeminiPipeline:
             response_schema=QuestionGradingOutput,
             thinking_config=thinking_config(model, STAGE2_FREE_THINKING if free else STAGE2_THINKING),
         )
+        inline = types.GenerateContentConfig(system_instruction=STAGE2_SYSTEM, **common)
+        inline_contents = cached_context_text() + "\n\n---\n\n" + prompt
+
+        def call(config, contents):
+            return with_retries(
+                lambda: self._client.models.generate_content(model=model, contents=contents, config=config),
+                stage_label)
+
         if cache:
-            config = types.GenerateContentConfig(cached_content=cache, **common)
-            contents = prompt
+            try:
+                response = call(types.GenerateContentConfig(cached_content=cache, **common), prompt)
+            except Exception as exc:
+                if not is_transient(exc):
+                    raise
+                # The cached-context path kept failing; send the taxonomy inline once instead.
+                log.warning("%s: cached call failed (%s), sending the taxonomy inline", stage_label, exc)
+                response = call(inline, inline_contents)
         else:
-            config = types.GenerateContentConfig(system_instruction=STAGE2_SYSTEM, **common)
-            contents = cached_context_text() + "\n\n---\n\n" + prompt
-        response = self._client.models.generate_content(model=model, contents=contents, config=config)
+            response = call(inline, inline_contents)
         if meter is not None:
             meter.record(stage_label, model, started, response)
         return QuestionGradingOutput.model_validate_json(response.text)

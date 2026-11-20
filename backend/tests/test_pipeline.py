@@ -1,3 +1,4 @@
+import pytest
 """GeminiPipeline and the batch engine against a stub client: checks the requests
 we build (models, thinking budget, cache use, location, per-question isolation,
 answer keys, key-step checks, re-substitution verification) without calling Vertex."""
@@ -357,3 +358,39 @@ def test_batch_round_trip(tmp_path):
     storage.write_text(job["outputPrefix"] + "prediction/predictions.jsonl", json.dumps(ok) + "\n" + json.dumps(bad))
     done, failed = engine.collect(job)
     assert list(done) == ["grd_abcdefghijkl"] and failed == ["grd_bad"]
+
+
+def test_busy_vertex_is_retried_then_sent_inline(monkeypatch):
+    """429/5xx from Vertex: retry with waits, then try once without the cached context."""
+    monkeypatch.setattr(P.time, "sleep", lambda s: None)
+
+    class Busy(Exception):
+        code = 429
+
+    client = StubClient()
+    real = client._generate
+    seen = []
+
+    def flaky(model, contents, config):
+        seen.append(bool(config.cached_content))
+        if config.cached_content:
+            raise Busy("RESOURCE_EXHAUSTED")
+        return real(model, contents, config)
+
+    client.models.generate_content = flaky
+    out = P.GeminiPipeline(client=client).run_stage2(CTX, S1)
+    assert out.question_analyses
+    assert seen == [True] * (len(P.RETRY_WAITS) + 1) + [False]
+
+
+def test_non_transient_errors_are_not_retried(monkeypatch):
+    monkeypatch.setattr(P.time, "sleep", lambda s: None)
+    calls = []
+
+    def bad():
+        calls.append(1)
+        raise ValueError("bad schema")
+
+    with pytest.raises(ValueError):
+        P.with_retries(bad, "x")
+    assert calls == [1]
