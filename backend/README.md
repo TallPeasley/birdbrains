@@ -202,3 +202,9 @@ mk() { printf '%s' "$2" | gcloud secrets create "$1" --data-file=- \
 While the consent screen is in "Testing", only the listed test users can connect (up to 100) and
 their connection expires after 7 days. Going public needs Google's verification; `drive.readonly`
 is a restricted scope, which also needs a yearly third-party security assessment.
+
+## Photo quality
+
+- **Straightening** (`birdbrains/photo_prep.py`): every uploaded photo is flattened to a straight top-down page, cropped to the paper and evened out for lighting before it is scrubbed and stored. If no clear page outline is found (for example a close-up of one question), the photo is stored unchanged.
+- **Known worksheets** (`birdbrains/known_worksheets.py`): when the reading step sees a printed code such as `BB-W12`, the question text comes from this file instead of the photo. Add a sheet by adding its code and its numbered questions, word for word.
+- **Adding photos to an upload**: `POST /submissions/{id}/photos` (form field `files`) adds photos of the same page, such as a clearer re-shoot or close-ups of single questions. The same photo may be sent again. The page is read again from all of its photos and the grading is replaced. It does not use a monthly upload and the ledger is not counted twice. Limits: 10 photos per upload, 3 rounds of adding.

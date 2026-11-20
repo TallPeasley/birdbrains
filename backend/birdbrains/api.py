@@ -27,7 +27,9 @@ from .upload_errors import READING_REASON_CODES, UPLOAD_ERRORS, UploadFailure, c
 from .auth import Authenticator
 from .batch_engine import BatchEngine, FlaggedGrading, is_flagged
 from .privacy import CloudDlpDetector, PhotoScrubber
+from .photo_prep import straighten
 from .pipeline import ImageRef, Meter, PipelineEngine, SubmissionContext, configure_tracing
+from .known_worksheets import apply_known_worksheet
 from .questions import segment_questions, split_by_question
 from .projections import parent_summary, to_api_grading, to_api_worksheet
 from .schemas import (
@@ -74,6 +76,10 @@ log = logging.getLogger(__name__)
 MIN_SHORT_EDGE = 1080  # matches lib/imageQuality.ts
 MIN_SHARPNESS_SCORE = 59  # the client's "Too Blurry" cut-off (variance 60) on its 0-100 scale
 MAX_FILES = 6
+# Extra photos a student adds to an earlier upload (a re-shoot, or close-ups of single
+# questions) are read together with the first ones. Capped so one upload stays one page.
+MAX_TOTAL_FILES = 10
+MAX_ADD_ROUNDS = 3
 MAX_FILE_BYTES = 12 * 1024 * 1024
 ALLOWED_TYPES = {"JPEG": "image/jpeg", "PNG": "image/png", "WEBP": "image/webp"}
 MAX_WORKSHEET_ATTEMPTS = 2
@@ -471,16 +477,11 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         course = course or CourseEnum(user.get("course") or CourseEnum.MPM2D.value)
         return ingest(user["uid"], tenant_of(user), studentId, course, unitTopic, sharpnessScore, blobs)
 
-    def ingest(uid: str, tenant_id: str, studentId: str, course: CourseEnum, unitTopic: str,
-               sharpnessScore: Optional[float], blobs: list[bytes],
-               source: str = "web") -> SubmissionIngestionPayload:
-        """Shared by the web upload and the extension's one-time upload link: plan
-        limit, image checks, duplicate check, privacy scrub, then storage."""
-        if usage(studentId).remaining == 0:
-            raise UploadFailure(402, 402, "FREE_LIMIT_REACHED")
-        submission_id = new_id("sub")
+    def check_photos(blobs: list[bytes], first_index: int = 0):
+        """Size, format and resolution checks. Returns (index, bytes, mime, ext, sha256)
+        per photo and the smallest photo's size."""
         stored, smallest = [], None
-        for i, data in enumerate(blobs):
+        for i, data in enumerate(blobs, start=first_index):
             if len(data) > MAX_FILE_BYTES:
                 raise UploadFailure(413, 106, "Each photo must be 12 MB or smaller")
             try:
@@ -496,6 +497,34 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
             if smallest is None or min(w, h) < min(smallest):
                 smallest = (w, h)
             stored.append((i, data, ALLOWED_TYPES[fmt], fmt.lower(), hashlib.sha256(data).hexdigest()))
+        return stored, smallest
+
+    def store_photos(studentId: str, submission_id: str, stored: list) -> list[dict]:
+        """Straighten, scrub names, then store. Raises UploadFailure on a scrub error."""
+        records = []
+        for i, data, mime, ext, sha in stored:
+            # Angled shots are flattened to a straight top-down page first; the stored
+            # photo is the straightened one, so the reading step and the viewer agree.
+            data = straighten(data, ext)
+            try:
+                data = d.scrubber.scrub(data, ext.upper())  # names and EXIF removed before storage
+            except Exception:
+                log.exception("Photo scrubbing failed")
+                raise UploadFailure(503, 302, "We could not check the photo for names. Please try again.")
+            path = f"submissions/{studentId}/{submission_id}/{i}.{ext}"
+            uri = d.storage.write_bytes(path, data, mime)
+            records.append({"path": path, "uri": uri, "mimeType": mime, "sha256": sha})
+        return records
+
+    def ingest(uid: str, tenant_id: str, studentId: str, course: CourseEnum, unitTopic: str,
+               sharpnessScore: Optional[float], blobs: list[bytes],
+               source: str = "web") -> SubmissionIngestionPayload:
+        """Shared by the web upload and the extension's one-time upload link: plan
+        limit, image checks, duplicate check, privacy scrub, then storage."""
+        if usage(studentId).remaining == 0:
+            raise UploadFailure(402, 402, "FREE_LIMIT_REACHED")
+        submission_id = new_id("sub")
+        stored, smallest = check_photos(blobs)
         # Classroom imports come with no browser sharpness score; unreadable pages are
         # caught by Stage 1 (NEEDS_RETAKE) instead.
         if sharpnessScore is not None and sharpnessScore < MIN_SHARPNESS_SCORE:
@@ -519,17 +548,8 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
                                       seed=current.usedThisMonth,
                                       fields={"studentId": studentId, "month": counter_id[-7:]}):
             raise UploadFailure(402, 402, "FREE_LIMIT_REACHED")
-        file_records = []
         try:
-            for i, data, mime, ext, sha in stored:
-                try:
-                    data = d.scrubber.scrub(data, ext.upper())  # names and EXIF removed before storage
-                except Exception:
-                    log.exception("Photo scrubbing failed")
-                    raise UploadFailure(503, 302, "We could not check the photo for names. Please try again.")
-                path = f"submissions/{studentId}/{submission_id}/{i}.{ext}"
-                uri = d.storage.write_bytes(path, data, mime)
-                file_records.append({"path": path, "uri": uri, "mimeType": mime, "sha256": sha})
+            file_records = store_photos(studentId, submission_id, stored)
         except Exception:
             d.store.add_to_counter("usagecounters", counter_id, -1)
             raise
@@ -637,6 +657,34 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         d.store.delete("transcriptions", submission_id)
         return run_pipeline(record, regrade=True)
 
+    @app.post("/submissions/{submission_id}/photos")
+    def add_photos(
+        submission_id: str,
+        user: User,
+        files: Annotated[list[UploadFile], File()],
+        sharpnessScore: Annotated[Optional[float], Form(ge=0, le=100)] = None,
+    ):
+        """Add photos of the same worksheet to an earlier upload: a clearer re-shoot,
+        or close-ups of single questions. The page is read again from all of its photos
+        together and the grading is replaced. The same photo may be sent again. It
+        does not use a monthly upload, and the ledger is not counted twice."""
+        record = owned("submissions", submission_id, user)
+        if record["status"] in ("TRANSCRIBING", "GRADING"):
+            raise HTTPException(409, "ALREADY_RUNNING")
+        if record.get("addedPhotoRounds", 0) >= MAX_ADD_ROUNDS:
+            raise UploadFailure(422, 107, f"This upload already has photos added {MAX_ADD_ROUNDS} times. Start a new upload instead.")
+        if not 1 <= len(files) <= MAX_TOTAL_FILES - len(record["files"]):
+            raise UploadFailure(422, 107, f"An upload can hold at most {MAX_TOTAL_FILES} photos.")
+        blobs = [upload.file.read(MAX_FILE_BYTES + 1) for upload in files]
+        stored, _ = check_photos(blobs, first_index=len(record["files"]))
+        if sharpnessScore is not None and sharpnessScore < MIN_SHARPNESS_SCORE:
+            raise UploadFailure(422, 101, "The photo is too blurry. Please retake it.")
+        record["files"] = record["files"] + store_photos(record["studentId"], submission_id, stored)
+        record["addedPhotoRounds"] = record.get("addedPhotoRounds", 0) + 1
+        d.store.put("submissions", submission_id, record)
+        d.store.delete("transcriptions", submission_id)
+        return run_pipeline(record, regrade=record.get("gradingId") is not None)
+
     def run_pipeline(record: dict, regrade: bool = False) -> dict:
         submission_id = record["submissionId"]
         old_grading_id = record.get("gradingId") if regrade else None
@@ -675,6 +723,7 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
 
             set_status("GRADING")
             stage1 = segment_questions(stage1)  # two numbered questions read as one are split
+            stage1 = apply_known_worksheet(stage1)  # printed questions of a known BB-W sheet
             stage2 = d.pipeline.run_stage2(ctx, stage1, plan=plan, meter=meter)
             stage2 = split_by_question(stage1, stage2)
         except HTTPException:

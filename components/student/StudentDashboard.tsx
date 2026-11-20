@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { CalendarClock, History, RefreshCw, Sparkles, UploadCloud } from 'lucide-react';
+import { CalendarClock, Camera, History, RefreshCw, Sparkles, UploadCloud } from 'lucide-react';
 import { useRole } from '@/lib/roleContext';
 import AffectCard from '@/components/student/AffectCard';
 import PillarCards from '@/components/student/PillarCards';
@@ -49,6 +49,8 @@ export default function StudentDashboard() {
   const [ws, setWs] = useState<WorksheetState | null>(null);
   const [recheck, setRecheck] = useState<{ busy: boolean; error: string }>({ busy: false, error: '' });
   const known = useRef<Set<string>>(new Set());
+  const [adding, setAdding] = useState<{ busy: boolean; error: string }>({ busy: false, error: '' });
+  const addInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!live || !activeStudentId) return;
@@ -144,9 +146,49 @@ export default function StudentDashboard() {
     }
   };
 
+  const addPhotos = async (list: FileList | null) => {
+    const files = Array.from(list ?? []);
+    if (addInput.current) addInput.current.value = '';
+    if (!files.length) return;
+    setAdding({ busy: true, error: '' });
+    try {
+      const token = await getToken();
+      const out = await api.addPhotos(token, grading.submissionId, files);
+      if (out.grading) setSelectedId(out.grading.gradingId);
+      setAdding({ busy: false, error: out.grading ? '' : 'The photos could not be read. Try a closer, flatter shot.' });
+      setAttempt((n) => n + 1);
+    } catch (err) {
+      setAdding({ busy: false, error: err instanceof Error ? err.message : 'Adding the photos failed.' });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <UploadHistory history={state.history} selectedId={grading.gradingId} onSelect={setSelectedId} />
+      {profile?.role === 'student' && (
+        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm">
+          <div className="min-w-0 flex-1">
+            <p className="font-medium text-slate-800">Something read wrong?</p>
+            <p className="text-slate-600">
+              Add another photo of the same page, or close-ups of single questions. We read them all together
+              and update this result. It doesn’t use another upload.
+            </p>
+          </div>
+          <input
+            ref={addInput}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            multiple
+            className="hidden"
+            onChange={(e) => addPhotos(e.target.files)}
+          />
+          <button onClick={() => addInput.current?.click()} disabled={adding.busy} className="btn btn-sm btn-secondary">
+            <Camera className={`h-4 w-4 ${adding.busy ? 'animate-pulse' : ''}`} aria-hidden />
+            {adding.busy ? 'Reading all photos… (about a minute)' : 'Add photos of this page'}
+          </button>
+          {adding.error && <span className="w-full text-rose-700">{adding.error}</span>}
+        </div>
+      )}
       {profile?.tester && (
         <div className="flex flex-wrap items-center gap-3 rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm">
           <span className="font-medium text-slate-700">Test account</span>
