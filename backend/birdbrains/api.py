@@ -622,6 +622,24 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         if record["status"] == "GRADED":
             return {"submission": submission_payload(record),
                     "grading": to_api_grading(d.store.get("gradings", record["gradingId"]))}
+        return run_pipeline(record)
+
+    @app.post("/submissions/{submission_id}/regrade")
+    def regrade_submission(submission_id: str, user: User):
+        """Testing accounts: read and grade an earlier upload again with the current
+        pipeline. The new grading replaces the old one (and its worksheet). The ledger
+        is left alone, so the same work never counts twice."""
+        record = owned("submissions", submission_id, user)
+        if not is_tester(record["studentId"]):
+            raise HTTPException(403, "TESTERS_ONLY")
+        if record["status"] in ("TRANSCRIBING", "GRADING"):
+            raise HTTPException(409, "ALREADY_RUNNING")
+        d.store.delete("transcriptions", submission_id)
+        return run_pipeline(record, regrade=True)
+
+    def run_pipeline(record: dict, regrade: bool = False) -> dict:
+        submission_id = record["submissionId"]
+        old_grading_id = record.get("gradingId") if regrade else None
 
         def set_status(status: str, **extra):
             record.update(status=status, **extra)
@@ -692,7 +710,8 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         if plan == "free":
             ledger = ledger.model_copy(update={"valence_ewma": before.valence_ewma,
                                                "scaffolding_mode": before.scaffolding_mode})
-        d.store.put("ledgers", student_id, ledger.model_dump(mode="json"))
+        if not regrade:
+            d.store.put("ledgers", student_id, ledger.model_dump(mode="json"))
 
         grading_id = new_id("grd")
         grading = {
@@ -715,6 +734,9 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         }
         d.store.put("gradings", grading_id, grading)
         set_status("GRADED", gradingId=grading_id, failureCode=None)
+        if old_grading_id and old_grading_id != grading_id:
+            d.store.delete("gradings", old_grading_id)
+            d.store.delete("worksheets", old_grading_id)
         # One JSON line per graded upload on stdout, which Cloud Run stores as a
         # structured log entry. The cost and speed charts and alerts are built from
         # it (backend/monitoring.sh). Ids only, never names.

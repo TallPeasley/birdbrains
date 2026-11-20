@@ -84,6 +84,12 @@ export const api = {
     request<ProcessResult>(`/submissions/${id}/process`, t, { method: 'POST' }),
   latestGrading: (t: string, studentId: string) =>
     request<Stage2GradingAndAffectOutput>(`/students/${studentId}/gradings/latest`, t),
+  /** Past uploads, newest first (up to 50). */
+  gradings: (t: string, studentId: string) =>
+    request<Stage2GradingAndAffectOutput[]>(`/students/${studentId}/gradings`, t),
+  /** Testing accounts: grade an earlier upload again with the current grader. Replaces its old result. */
+  regrade: (t: string, submissionId: string) =>
+    request<ProcessResult>(`/submissions/${submissionId}/regrade`, t, { method: 'POST' }),
   worksheet: (t: string, gradingId: string) => request<WS_3STAGE_V1>(`/gradings/${gradingId}/worksheet`, t),
   parentSummary: (t: string, studentId: string) =>
     request<ParentProjectionSummary>(`/students/${studentId}/parent-summary`, t),
