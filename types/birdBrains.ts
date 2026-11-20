@@ -135,6 +135,10 @@ export interface Stage2GradingAndAffectOutput {
   /** The plan the work was graded under. */
   plan?: PlanTier;
   gradedAt?: string;
+  /** MTH1W / MPM2D. Set by the API (not on older demo data). */
+  course?: string | null;
+  /** QUEUED, PENDING, READY, NOT_NEEDED, PRO_ONLY or FAILED. */
+  worksheetStatus?: string | null;
 }
 
 export interface DiagnosticMirrorItem {

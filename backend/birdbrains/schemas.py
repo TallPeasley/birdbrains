@@ -490,6 +490,9 @@ class ApiGrading(Api):
     scaffoldingMode: Optional[ScaffoldingModeEnum]  # null on the Free plan
     gradedAt: str
     plan: PlanTier = "pro"  # the plan the work was graded under
+    course: Optional[str] = None  # MTH1W / MPM2D, as read from the page
+    # QUEUED, PENDING, READY, NOT_NEEDED, PRO_ONLY or FAILED (shown in the upload history).
+    worksheetStatus: Optional[str] = None
 
 
 class ApiDiagnosticMirrorItem(Api):

@@ -184,6 +184,8 @@ def to_api_grading(record: dict) -> ApiGrading:
         scaffoldingMode=record["scaffoldingMode"] if pro else None,
         gradedAt=record["gradedAt"],
         plan="pro" if pro else "free",
+        course=record.get("course"),
+        worksheetStatus=record.get("worksheetStatus"),
     )
 
 
