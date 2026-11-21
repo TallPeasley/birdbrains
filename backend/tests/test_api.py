@@ -255,3 +255,20 @@ def test_upload_without_tags_reads_course_and_topic_from_the_page(client, family
     assert done["submission"]["status"] == "GRADED"
     assert done["submission"]["unitTopic"] == "Completing the Square · Vertex form"
     assert done["submission"]["course"] == "MPM2D"
+
+
+def test_one_unreadable_batch_job_does_not_block_the_others(deps, client):
+    deps.store.put("batchjobs", "broken", {"name": "broken", "state": "SUBMITTED", "gradingIds": []})
+    deps.store.put("batchjobs", "fine", {"name": "fine", "state": "SUBMITTED", "gradingIds": []})
+    real = deps.batch.collect
+
+    def collect(job):
+        if job["name"] == "broken":
+            raise RuntimeError("Vertex could not find the job")
+        return real(job)
+
+    deps.batch.collect = collect
+    out = client.post("/internal/batch/worksheets/collect", headers={"X-Batch-Token": "s3cret"}).json()
+    assert out["jobsWithErrors"] == 1
+    assert deps.store.get("batchjobs", "fine")["state"] == "COLLECTED"
+    assert deps.store.get("batchjobs", "broken")["state"] == "SUBMITTED"  # asked again next time

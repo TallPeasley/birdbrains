@@ -47,6 +47,13 @@ for role in roles/aiplatform.user roles/datastore.user roles/dlp.user; do
 done
 gcloud storage buckets add-iam-policy-binding "gs://$BUCKET" --member="serviceAccount:$SA" \
   --role=roles/storage.objectAdmin >/dev/null
+# Nightly worksheet batch jobs run as Vertex AI's own service agent, which reads the
+# request file from the bucket and writes the results back to it.
+PROJECT_NUMBER="$(gcloud projects describe "$PROJECT" --format='value(projectNumber)')"
+gcloud beta services identity create --service=aiplatform.googleapis.com --project "$PROJECT" >/dev/null 2>&1 || true
+gcloud storage buckets add-iam-policy-binding "gs://$BUCKET" \
+  --member="serviceAccount:service-${PROJECT_NUMBER}@gcp-sa-aiplatform.iam.gserviceaccount.com" \
+  --role=roles/storage.objectAdmin >/dev/null
 
 echo "== Batch token (Secret Manager)"
 if ! gcloud secrets describe birdbrains-batch-token >/dev/null 2>&1; then
@@ -120,7 +127,7 @@ schedule() {  # name, cron, path
     --uri "$URL$3" --http-method POST "$headers" "X-Batch-Token=$TOKEN" >/dev/null
 }
 schedule birdbrains-worksheets-submit  "0 1 * * *"     /internal/batch/worksheets/submit
-schedule birdbrains-worksheets-collect "*/30 2-8 * * *" /internal/batch/worksheets/collect
+schedule birdbrains-worksheets-collect "*/30 * * * *"    /internal/batch/worksheets/collect
 
 echo
 echo "API is live at: $URL"

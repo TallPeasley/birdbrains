@@ -1394,8 +1394,16 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
     @app.post("/internal/batch/worksheets/collect", dependencies=[Depends(require_batch_token)])
     def batch_collect():
         ready = failed = running = 0
+        errors = 0
         for job in d.store.query("batchjobs", "state", "SUBMITTED"):
-            result = d.batch.collect(job)
+            try:
+                result = d.batch.collect(job)
+            except Exception:
+                # One job Vertex can't report on must not hold up the others; it is
+                # asked again at the next collect.
+                log.exception("Collecting batch job %s failed", job.get("name"))
+                errors += 1
+                continue
             if result is None:
                 running += 1
                 continue
@@ -1422,7 +1430,7 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
                 failed += 1
             job["state"] = "COLLECTED"
             d.store.put("batchjobs", job["name"].replace("/", "_"), job)
-        return {"ready": ready, "failed": failed, "jobsStillRunning": running}
+        return {"ready": ready, "failed": failed, "jobsStillRunning": running, "jobsWithErrors": errors}
 
     # --------------------------- schools and classes (internal; no teacher accounts at launch)
     @app.post("/internal/schools", status_code=201, dependencies=[Depends(require_batch_token)])
