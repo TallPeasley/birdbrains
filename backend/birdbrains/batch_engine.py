@@ -16,6 +16,7 @@ from datetime import datetime, timezone
 from typing import Iterable, Optional, Protocol
 
 from .math_lint import lint_worksheet, tidy_worksheet
+from .worksheet_maths import check_worksheet_maths
 from .pipeline import STAGE2_MODEL, VERTEX_LOCATION
 from .schemas import (
     CourseEnum,
@@ -172,7 +173,7 @@ def parse_output_jsonl(
             body = row["response"]["candidates"][0]["content"]["parts"]
             raw = "".join(p.get("text", "") for p in body if not p.get("thought"))
             content = tidy_worksheet(WorksheetContent.model_validate_json(raw))
-            problems = lint_worksheet(content)
+            problems = lint_worksheet(content) or check_worksheet_maths(content)
             if problems:  # a retry usually fixes it; a student never sees a broken sheet
                 raise ValueError("; ".join(problems[:5]))
             done[grading_id] = content

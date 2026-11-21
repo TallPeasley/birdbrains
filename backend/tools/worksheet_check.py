@@ -33,6 +33,7 @@ from ai_eval.gold import GoldSample, load_gold
 from ai_eval.runner import typed_transcription
 from birdbrains import batch_engine as B
 from birdbrains.math_lint import lint_worksheet, tidy_worksheet
+from birdbrains.worksheet_maths import check_worksheet_maths
 from birdbrains.pipeline import GeminiPipeline, ImageRef, Meter, SubmissionContext, configure_tracing
 from birdbrains.questions import segment_questions
 from birdbrains.known_worksheets import apply_known_worksheet
@@ -158,6 +159,7 @@ def main() -> int:
         try:
             ws = tidy_worksheet(WorksheetContent.model_validate_json(raw))
             entry["lint"] = lint_worksheet(ws)
+            entry["mathsCheck"] = check_worksheet_maths(ws)
             md.append(worksheet_markdown(item.grading_id, ws))
         except Exception as exc:
             entry["schemaError"] = str(exc)[:400]
