@@ -64,6 +64,10 @@ STAGE1_THINKING = os.environ.get("BIRDBRAINS_STAGE1_THINKING", "MINIMAL")
 STAGE2_THINKING = os.environ.get("BIRDBRAINS_STAGE2_THINKING", "LOW")  # MEDIUM was 45-55 s and ~$0.15-0.20 per upload
 STAGE2_FREE_THINKING = os.environ.get("BIRDBRAINS_STAGE2_FREE_THINKING", "MINIMAL")
 _LEGACY_BUDGETS = {"MINIMAL": 0, "LOW": 512, "MEDIUM": 2048, "HIGH": 8192}
+# Vertex refuses an explicit cache under 4,096 tokens. The taxonomy is about 2,600
+# (Nov 2026), so asking only costs a failing call per instance. Roughly 4 characters
+# a token; below this size the taxonomy is sent inline without trying.
+CACHE_MIN_CHARS = int(os.environ.get("BIRDBRAINS_CACHE_MIN_CHARS", "16000"))
 
 
 def thinking_config(model: str, level: str):
@@ -625,6 +629,8 @@ class GeminiPipeline:
             if name and now < expires_at - 300:
                 return name
             if now < self._cache_unavailable_until.get(model, 0.0):
+                return None
+            if len(cached_context_text()) < CACHE_MIN_CHARS:
                 return None
             try:
                 cache = self._client.caches.create(

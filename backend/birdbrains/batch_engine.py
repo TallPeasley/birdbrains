@@ -16,7 +16,7 @@ from datetime import datetime, timezone
 from typing import Iterable, Optional, Protocol
 
 from .math_lint import lint_worksheet, tidy_worksheet
-from .worksheet_maths import check_worksheet_maths
+from .worksheet_maths import maths_report
 from .pipeline import STAGE2_MODEL, VERTEX_LOCATION
 from .schemas import (
     CourseEnum,
@@ -29,6 +29,18 @@ log = logging.getLogger(__name__)
 
 WORKSHEET_MODEL = os.environ.get("BIRDBRAINS_WORKSHEET_MODEL", STAGE2_MODEL)
 WORKSHEET_TEMPERATURE = float(os.environ.get("BIRDBRAINS_WORKSHEET_TEMPERATURE", "0.2"))
+# Pinned so cost and wait don't drift with the model's default (live check, Nov 2026:
+# 8-14 s per worksheet). MINIMAL, LOW, MEDIUM or HIGH.
+WORKSHEET_THINKING = os.environ.get("BIRDBRAINS_WORKSHEET_THINKING", "LOW")
+
+
+def _thinking_json() -> dict:
+    """The batch request's thinkingConfig (the REST spelling of pipeline.thinking_config)."""
+    from .pipeline import _LEGACY_BUDGETS
+
+    if WORKSHEET_MODEL.startswith("gemini-2."):
+        return {"thinkingBudget": _LEGACY_BUDGETS[WORKSHEET_THINKING]}
+    return {"thinkingLevel": WORKSHEET_THINKING}
 
 WORKSHEET_SYSTEM = """\
 You write short remedial mathematics worksheets for Ontario Grade 9 (MTH1W) and
@@ -42,7 +54,7 @@ A. diagnostic_mirror: for each line where a root-cause error first appeared, sho
    wrong_part = the exact characters of original_step_text that are wrong (e.g. "- 9"),
    and correct_part = what that piece should have been (e.g. "- 18").
    what_went_wrong = one sentence naming what the student did between the two lines and
-   why it is wrong. annotated_correction = the corrected line with the fix made visible,
+   why it is wrong. annotated_correction = the corrected line, maths only with no words, with the fix made visible,
    and key_takeaway = one sentence to remember. Never include lines that were only
    cascading consequences.
 B. faded_scaffolding: ONE new problem of the same type with different numbers,
@@ -50,6 +62,13 @@ B. faded_scaffolding: ONE new problem of the same type with different numbers,
    PARTIAL_BLANK: write the line with "[ __ ]" where the student fills in, and put
    the expected answer in blank_placeholder. The last step is INDEPENDENT:
    given_content holds the expected final line. Every step has a hint.
+   Every given_content is ONE line of maths with no words, written "left = right"
+   so it can be checked: "y = 3(x + 2)^2 - 11", "x^2 + 5x + 6 = (x + 2)(x + 3)",
+   "4x = 20", "x = 5", "2(5) + 5 = 15". Put explanations in prompt and hint only.
+   A blank stands for something the student works out (a number, a term or an
+   expression), never a lone letter such as "b" or "x".
+   A hint points to the method ("What two numbers multiply to 6 and add to 5?")
+   and NEVER contains the blank's answer or the final line.
 C. independent_transfer: one further problem with no support, targeting the same
    pillar, and a checklist of 3 or 4 "I ..." self-check statements. Give its exact
    final `answer` and a short `worked_solution` (the key lines, 2 to 5 lines).
@@ -163,6 +182,7 @@ def build_jsonl(items: Iterable[FlaggedGrading]) -> str:
                             "temperature": WORKSHEET_TEMPERATURE,
                             "responseMimeType": "application/json",
                             "responseJsonSchema": schema,
+                            "thinkingConfig": _thinking_json(),
                         },
                     },
                 }
@@ -205,7 +225,10 @@ def parse_output_jsonl(
 def worksheet_from_text(raw: str) -> WorksheetContent:
     """Validate, repair and check one worksheet; raises ValueError if a student must not see it."""
     content = tidy_worksheet(WorksheetContent.model_validate_json(raw))
-    problems = lint_worksheet(content) or check_worksheet_maths(content)
+    problems = lint_worksheet(content)
+    if not problems:
+        problems, read, steps = maths_report(content)
+        log.info("Worksheet maths check read %d of %d guided steps", read, steps)
     if problems:
         raise ValueError("; ".join(problems[:5]))
     return content
@@ -270,11 +293,12 @@ class GeminiBatchEngine:
         schema and checks as the nightly job, at the normal price instead of half."""
         from google.genai import types
 
-        from .pipeline import with_retries
+        from .pipeline import thinking_config, with_retries
 
         config = types.GenerateContentConfig(
             system_instruction=WORKSHEET_SYSTEM,
             temperature=WORKSHEET_TEMPERATURE,
+            thinking_config=thinking_config(WORKSHEET_MODEL, WORKSHEET_THINKING),
             response_mime_type="application/json",
             response_json_schema=WorksheetContent.model_json_schema(),
         )
