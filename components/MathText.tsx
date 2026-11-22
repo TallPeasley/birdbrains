@@ -1,5 +1,5 @@
 import React from 'react';
-import { hasFraction, renderKatex, renderKatexFraction } from '@/lib/katexMath';
+import { hasFraction, isWordy, renderKatex, renderKatexFraction } from '@/lib/katexMath';
 
 /**
  * LaTeX / KaTeX-style mathematical & numeric renderer for BirdBrains.
@@ -752,20 +752,51 @@ export interface MathTextProps {
   className?: string;
 }
 
+/**
+ * Sentences written before worksheets used $...$ can hold bare maths like "sqrt(25)" or
+ * "x1 = -3". Those pieces are wrapped in $...$ so KaTeX typesets them.
+ */
+function wrapBareMath(text: string): string {
+  if (text.includes('$')) return text;
+  let out = text.replace(/(^|[^A-Za-z0-9\\_])([a-z])([12])(?![\w.])/g, (_m, pre, v, n) => `${pre}$${v}_${n}$`);
+  let at = out.indexOf('sqrt(');
+  while (at !== -1) {
+    if (at > 0 && out[at - 1] === '\\') {
+      at = out.indexOf('sqrt(', at + 5);
+      continue;
+    }
+    let depth = 0;
+    let end = -1;
+    for (let j = at + 4; j < out.length; j++) {
+      if (out[j] === '(') depth++;
+      else if (out[j] === ')' && --depth === 0) {
+        end = j;
+        break;
+      }
+    }
+    if (end === -1) break;
+    const piece = `$${out.slice(at, end + 1)}$`;
+    out = out.slice(0, at) + piece + out.slice(end + 1);
+    at = out.indexOf('sqrt(', at + piece.length);
+  }
+  return out;
+}
+
 export function MathText({ text, mode = 'auto', className }: MathTextProps) {
   if (text === null || text === undefined || text === '') return null;
   if (typeof text === 'number') {
     return <MathNumber value={text} className={className} />;
   }
   const raw = String(text);
-  // Lines of maths with a fraction or a LaTeX command (\\overline, \\sqrt ...) are typeset whole by KaTeX.
-  if (mode === 'math' && (hasFraction(raw) || /\\[a-zA-Z]/.test(raw))) {
+  // Lines of maths are typeset whole by KaTeX (sqrt, powers, subscripts, fractions), unless they
+  // are mostly words; the hand-built renderer is the fallback when KaTeX can't read a line.
+  if (mode === 'math' && (!isWordy(raw) || hasFraction(raw) || /\\[a-zA-Z]/.test(raw))) {
     const html = renderKatex(raw);
     if (html) {
       return <span className={`bb-katex ${className ?? ''}`.trim()} dangerouslySetInnerHTML={{ __html: html }} />;
     }
   }
-  const rendered = renderLatexNodes(raw, mode === 'math');
+  const rendered = renderLatexNodes(mode === 'math' ? raw : wrapBareMath(raw), mode === 'math');
   return <span className={`${mode === 'math' ? 'latex-math ' : ''}${className ?? ''}`.trim()}>{rendered}</span>;
 }
 

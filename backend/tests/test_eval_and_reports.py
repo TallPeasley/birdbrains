@@ -364,3 +364,25 @@ def test_output_lines_without_grading_id_are_matched_by_their_echoed_request():
     done, failed = B.parse_output_jsonl(json.dumps(failed_row), B.request_keys([item]))
     assert done == {} and failed == ["grd_abcdefghijkl"]
     assert B.parse_output_jsonl(json.dumps(row)) == ({}, [])  # unknown line: skipped, not crashed
+
+
+def test_worksheet_pdf_has_practice_set_answer_key_and_typeset_maths():
+    from birdbrains.projections import to_api_worksheet
+    from birdbrains.worksheet_pdf import render_html
+
+    content = fake_worksheet(None).model_dump(mode="json")
+    content["practice_set"][0]["problem_statement"] = "Find $d = sqrt((5 - (-3))^2 + (y2 - y1)^2)$."
+    html = render_html(to_api_worksheet({"worksheetId": "wks_abcdefghijkl", "gradingId": "grd_x", "content": content}))
+    assert "D. Practice set" in html and "Answer key" in html
+    assert html.count('class="key"') == 3 + 1 + 8  # B steps 2-4, C, eight practice answers
+    body = html.split("<body>", 1)[1]
+    text_only = __import__("re").sub(r'<img[^>]*>', "", body)
+    assert "sqrt(" not in text_only and "^2" not in text_only  # every formula is an image
+
+
+def test_practice_set_is_required_on_new_worksheets():
+    good = fake_worksheet(None)
+    assert lint_worksheet(good) == []
+    assert any("practice_set" in p for p in lint_worksheet(good.model_copy(update={"practice_set": good.practice_set[:3]})))
+    nokey = good.model_copy(update={"independent_transfer": good.independent_transfer.model_copy(update={"answer": ""})})
+    assert any("transfer answer" in p for p in lint_worksheet(nokey))

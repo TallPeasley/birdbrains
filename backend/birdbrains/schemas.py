@@ -335,6 +335,18 @@ class IndependentTransferProblem(Strict):
     problem_statement: str
     target_pillar_focus: PillarEnum
     metacognitive_checklist: List[str]
+    # For the answer key. Empty on worksheets made before the key existed.
+    answer: str = ""
+    worked_solution: str = ""
+
+
+class PracticeProblem(Strict):
+    """One problem of the practice set (section D), with its answer for the key."""
+
+    problem_statement: str
+    difficulty: Literal["WARM_UP", "CORE", "STRETCH"]
+    answer: str
+    worked_solution: str
 
 
 class WorksheetContent(Strict):
@@ -343,6 +355,8 @@ class WorksheetContent(Strict):
     diagnostic_mirror: List[DiagnosticMirrorItem]
     faded_scaffolding: List[FadedScaffoldingStep]
     independent_transfer: IndependentTransferProblem
+    # Section D: more problems of the same skill, easy to hard. Empty on older worksheets.
+    practice_set: List[PracticeProblem] = Field(default_factory=list)
 
 
 # ------------------------------------------------------------------------- ledger
@@ -523,6 +537,16 @@ class ApiIndependentTransferProblem(Api):
     problemStatement: str
     targetPillarFocus: PillarEnum
     metacognitiveChecklist: List[str]
+    answer: str = ""
+    workedSolution: str = ""
+
+
+class ApiPracticeProblem(Api):
+    number: int
+    problemStatement: str
+    difficulty: Literal["WARM_UP", "CORE", "STRETCH"]
+    answer: str
+    workedSolution: str
 
 
 class ApiWorksheet(Api):
@@ -535,6 +559,7 @@ class ApiWorksheet(Api):
     sectionA_DiagnosticMirror: List[ApiDiagnosticMirrorItem]
     sectionB_FadedScaffolding: List[ApiFadedScaffoldingStep]
     sectionC_IndependentTransfer: ApiIndependentTransferProblem
+    sectionD_PracticeSet: List[ApiPracticeProblem] = Field(default_factory=list)
 
 
 class ApiTrajectoryPoint(Api):
