@@ -83,6 +83,7 @@ own or their linked children's data; anything else is a 404.
 | `GET /gradings/{id}` | owner | `Stage2GradingAndAffectOutput` | 404 |
 | `GET /gradings/{id}/worksheet` | owner | `WS_3STAGE_V1` | 404 `WORKSHEET_QUEUED` / `WORKSHEET_PENDING` (made overnight), `WORKSHEET_NOT_NEEDED` (no errors), `WORKSHEET_FAILED` |
 | `GET /gradings/{id}/worksheet.pdf` | owner | the worksheet as a PDF download | same 404 codes as the worksheet route |
+| `POST /gradings/{id}/worksheet/generate` | owner, Pro | makes the worksheet now instead of overnight (about 30 s) and returns `WS_3STAGE_V1`; a ready one is returned as is | 402 `PRO_ONLY`, 409 `WORKSHEET_NOT_NEEDED`, 502 `WORKSHEET_NOT_MADE` (failed the checks; stays queued for the night) |
 | `POST /uploads` `{studentId, course, unitTopic, sharpnessScore}` | student, linked parent | `ApiUploadTicket {uploadId, uploadUrl, method, expiresAt, maxBytes}` | 402 `FREE_LIMIT_REACHED` |
 | `PUT {uploadUrl}` raw image bytes, no sign-in header | whoever holds the link | `SubmissionIngestionPayload`, 201 | same errors as `POST /submissions`; 404 used or wrong link; 410 `UPLOAD_LINK_EXPIRED` |
 | `GET /students/{id}/parent-summary` | linked parent (or the student) | `ParentProjectionSummary` | 404 `NO_GRADED_WORK` |

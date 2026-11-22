@@ -12,3 +12,4 @@ google-cloud-dlp>=3.20
 weasyprint>=62
 opencv-python-headless>=4.10
 numpy>=1.26
+sympy>=1.13

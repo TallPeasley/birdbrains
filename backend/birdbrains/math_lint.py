@@ -24,6 +24,9 @@ degree circ angle triangle perp parallel cong
 to rightarrow Rightarrow leftarrow Leftarrow leftrightarrow implies iff therefore because
 quad qquad ldots cdots dots begin end
 in notin subset cup cap emptyset forall exists
+displaystyle textbf textit operatorname overset underset underbrace overbrace binom
+longrightarrow Longrightarrow longleftrightarrow checkmark square mid vert lvert rvert
+lt gt neg ast star prime bcancel xcancel hline color textcolor colorbox
 """.split())
 
 _PAIRS = {")": "(", "]": "[", "}": "{"}
@@ -58,21 +61,79 @@ def lint_math(text: str) -> list[str]:
     return problems
 
 
+def lint_copied(text: str) -> list[str]:
+    """Lighter check for lines copied from the student's page. Students leave brackets
+    open, and that is often the very mistake the worksheet is about, so only what
+    stops KaTeX from rendering at all is checked: unbalanced { } and \\left/\\right."""
+    problems: list[str] = []
+    depth = 0
+    i = 0
+    while i < len(text):
+        ch = text[i]
+        if ch == "\\":
+            i += 2
+            continue
+        depth += (ch == "{") - (ch == "}")
+        if depth < 0:
+            break
+        i += 1
+    if depth:
+        problems.append("unbalanced '{' or '}'")
+    if len(re.findall(r"\\left\b", text)) != len(re.findall(r"\\right\b", text)):
+        problems.append("\\left without a matching \\right")
+    return problems
+
+
+def _squash(text: str) -> str:
+    return re.sub(r"\s+", "", text)
+
+
+def tidy_worksheet(ws: WorksheetContent) -> WorksheetContent:
+    """Small repairs that are safer than throwing a whole worksheet away.
+
+    ``wrong_part`` must be an exact piece of the student's line so the site can mark it.
+    The model often changes the spacing ("-9" for "- 9"): the piece is then taken from the
+    line itself. If it still can't be found, the highlight is dropped and the viewer shows
+    the plain line with what_went_wrong, which it already does for older worksheets."""
+    items = []
+    for item in ws.diagnostic_mirror:
+        part, line = item.wrong_part, item.original_step_text
+        if part and part not in line:
+            target = _squash(part)
+            found = ""
+            if target:
+                for start in range(len(line)):
+                    if line[start].isspace():
+                        continue
+                    for end in range(start + 1, len(line) + 1):
+                        piece = line[start:end]
+                        if _squash(piece) == target:
+                            found = piece
+                            break
+                        if len(_squash(piece)) > len(target):
+                            break
+                    if found:
+                        break
+            item = item.model_copy(update={"wrong_part": found, "correct_part": item.correct_part if found else ""})
+        items.append(item)
+    return ws.model_copy(update={"diagnostic_mirror": items})
+
+
 def lint_worksheet(ws: WorksheetContent) -> list[str]:
     problems: list[str] = []
 
-    def check(where: str, text: str, required: bool = True) -> None:
+    def check(where: str, text: str, required: bool = True, copied: bool = False) -> None:
         if required and not text.strip():
             problems.append(f"{where}: empty")
-        problems.extend(f"{where}: {p}" for p in lint_math(text))
+        problems.extend(f"{where}: {p}" for p in (lint_copied(text) if copied else lint_math(text)))
 
     check("title", ws.title)
     check("target_concept", ws.target_concept)
     if not ws.diagnostic_mirror:
         problems.append("diagnostic_mirror: empty")
     for i, item in enumerate(ws.diagnostic_mirror, 1):
-        check(f"mirror {i} previous", item.previous_step_text, required=False)
-        check(f"mirror {i} original", item.original_step_text)
+        check(f"mirror {i} previous", item.previous_step_text, required=False, copied=True)
+        check(f"mirror {i} original", item.original_step_text, copied=True)
         if item.wrong_part and item.wrong_part not in item.original_step_text:
             problems.append(f"mirror {i}: wrong_part is not in the student's line")
         check(f"mirror {i} correction", item.annotated_correction)

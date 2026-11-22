@@ -22,6 +22,7 @@ import WorksheetViewer from "@/components/student/WorksheetViewer";
 import { MathText } from "@/components/MathText";
 import { api, API_URL, ApiError } from "@/lib/api";
 import { gradingOutput, worksheet as demoWorksheet } from "@/lib/mockData";
+import MakeWorksheetButton, { MAKEABLE } from "@/components/student/MakeWorksheetButton";
 import { AFFECT_META, PILLAR_ORDER, PILLARS } from "@/lib/pillars";
 import { useSession } from "@/lib/session";
 import type {
@@ -38,7 +39,7 @@ const STATUS: Record<string, { label: string; tone: string }> = {
     tone: "bg-emerald-50 text-emerald-700 ring-emerald-200",
   },
   QUEUED: {
-    label: "Worksheet built overnight",
+    label: "Worksheet not made yet",
     tone: "bg-indigo-50 text-indigo-700 ring-indigo-200",
   },
   PENDING: {
@@ -61,13 +62,13 @@ const STATUS: Record<string, { label: string; tone: string }> = {
 
 const WORKSHEET_NOTES: Record<string, string> = {
   QUEUED:
-    "This practice worksheet is built overnight. Check back tomorrow morning.",
+    "This practice worksheet hasn't been made yet. Make it now, or it will be ready tomorrow morning.",
   PENDING:
-    "This practice worksheet is being built right now. Check back in the morning.",
+    "This practice worksheet is in tonight's batch. Make it now if you don't want to wait.",
   NOT_NEEDED:
     "No mistakes to practise from this upload, so no worksheet was needed.",
   PRO_ONLY: "Practice worksheets are part of Pro.",
-  FAILED: "A worksheet could not be built for this upload.",
+  FAILED: "The last try at this worksheet did not pass our checks. Try making it again.",
 };
 
 function formatWhen(iso?: string): string {
@@ -500,6 +501,7 @@ function Inspector({ grading: g }: { grading: Stage2GradingAndAffectOutput }) {
     live ? undefined : demoWorksheet,
   );
   const [note, setNote] = useState("");
+  const [canMake, setCanMake] = useState(false);
 
   useEffect(() => {
     if (!live || tab !== "worksheet" || worksheet !== undefined) return;
@@ -514,6 +516,7 @@ function Inspector({ grading: g }: { grading: Stage2GradingAndAffectOutput }) {
         setWorksheet(null);
         const detail =
           err instanceof ApiError ? err.detail.replace(/^WORKSHEET_/, "") : "";
+        setCanMake(MAKEABLE.has(detail || (g.worksheetStatus ?? "")));
         setNote(
           WORKSHEET_NOTES[detail] ??
             WORKSHEET_NOTES[g.worksheetStatus ?? ""] ??
@@ -585,13 +588,18 @@ function Inspector({ grading: g }: { grading: Stage2GradingAndAffectOutput }) {
               Loading the worksheet…
             </p>
           ) : (
-            <p className="flex items-start gap-2 rounded-xl bg-slate-50 p-4 text-sm text-slate-600">
+            <div className="flex items-start gap-2 rounded-xl bg-slate-50 p-4 text-sm text-slate-600">
               <Clock
                 className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600"
                 aria-hidden
               />{" "}
-              {note}
-            </p>
+              <span>
+                {note}
+                {canMake && (
+                  <MakeWorksheetButton gradingId={g.gradingId} onMade={setWorksheet} />
+                )}
+              </span>
+            </div>
           )
         ) : (
           <>

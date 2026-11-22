@@ -40,7 +40,7 @@ Google Cloud Shell from the repo folder unless it says otherwise.
 | Dashboard (cost per plan, speed, errors) | Cloud console > Monitoring > Dashboards > BirdBrains |
 | API logs | Cloud console > Cloud Run > birdbrains-api > Logs |
 | One line per graded upload | Logs filter: `jsonPayload.event="pipeline_done"` |
-| Nightly worksheet jobs | Cloud Scheduler: `birdbrains-worksheets-submit` (1:00) and `-collect` (every 30 min, 2:00 to 8:00, Toronto time) |
+| Nightly worksheet jobs | Cloud Scheduler: `birdbrains-worksheets-submit` (1:00) and `-collect` (every 30 min, all day, Toronto time; a slow batch job is picked up when it finishes) |
 | Stripe events | Stripe dashboard > Developers > Webhooks |
 
 ### Daily pilot summary

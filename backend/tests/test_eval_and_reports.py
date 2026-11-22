@@ -14,7 +14,7 @@ from birdbrains import batch_engine as B
 from birdbrains import pipeline as P
 from birdbrains.fake import FakePipeline, fake_worksheet
 from birdbrains.math_lint import lint_math, lint_worksheet
-from birdbrains.schemas import PillarEnum, ScaffoldingModeEnum
+from birdbrains.schemas import CourseEnum, PillarEnum, ScaffoldingModeEnum
 from conftest import auth, upload
 from test_billing_classroom import TOKEN, FakeClassroom
 from test_pipeline import CTX, S1, S2, StubClient
@@ -326,3 +326,41 @@ def test_mirror_shows_the_step_before_and_the_wrong_part():
     for k in ("previous_step_text", "wrong_part", "correct_part", "what_went_wrong"):
         old["diagnostic_mirror"][0].pop(k)
     assert to_api_worksheet({"worksheetId": "ws_2", "gradingId": "g_2", "content": old}).sectionA_DiagnosticMirror[0].previousStepText == ""
+
+
+def test_student_lines_keep_their_own_brackets_and_spacing():
+    """The mirror copies the student's line exactly. An open bracket there is the student's
+    mistake, not a broken worksheet; a wrong_part with different spacing is repaired."""
+    from birdbrains.math_lint import tidy_worksheet
+
+    good = fake_worksheet(None)
+    item = good.diagnostic_mirror[0].model_copy(update={
+        "previous_step_text": "y = 2(x^2 + 6x + 9 - 9",
+        "original_step_text": "y = 2(x + 3)^2 - 9 + 5",
+        "wrong_part": "-9", "correct_part": "-18"})
+    ws = tidy_worksheet(good.model_copy(update={"diagnostic_mirror": [item]}))
+    assert ws.diagnostic_mirror[0].wrong_part == "- 9" and lint_worksheet(ws) == []
+
+    lost = item.model_copy(update={"wrong_part": "- 7"})
+    ws = tidy_worksheet(good.model_copy(update={"diagnostic_mirror": [lost]}))
+    assert ws.diagnostic_mirror[0].wrong_part == "" and ws.diagnostic_mirror[0].correct_part == ""
+    assert lint_worksheet(ws) == []
+
+    broken = item.model_copy(update={"original_step_text": r"y = \frac{1}{2"})
+    assert lint_worksheet(good.model_copy(update={"diagnostic_mirror": [broken]}))
+
+
+def test_output_lines_without_grading_id_are_matched_by_their_echoed_request():
+
+
+    item = B.FlaggedGrading("grd_abcdefghijkl", CourseEnum.MPM2D, "Completing the Square",
+                            ScaffoldingModeEnum.STANDARD_PROGRESSIVE_FADE, S2)
+    request = json.loads(B.build_jsonl([item]))["request"]
+    row = {"status": "", "processed_time": "2026-11-22T06:00:00Z", "request": request,
+           "response": {"candidates": [{"content": {"parts": [{"text": fake_worksheet(item).model_dump_json()}]}}]}}
+    failed_row = {"status": "RESOURCE_EXHAUSTED", "request": request}
+    done, failed = B.parse_output_jsonl(json.dumps(row), B.request_keys([item]))
+    assert list(done) == ["grd_abcdefghijkl"] and failed == []
+    done, failed = B.parse_output_jsonl(json.dumps(failed_row), B.request_keys([item]))
+    assert done == {} and failed == ["grd_abcdefghijkl"]
+    assert B.parse_output_jsonl(json.dumps(row)) == ({}, [])  # unknown line: skipped, not crashed

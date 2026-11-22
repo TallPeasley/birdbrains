@@ -98,6 +98,10 @@ export const api = {
     return request<ProcessResult>(`/submissions/${submissionId}/photos`, t, { method: 'POST', body: form });
   },
   worksheet: (t: string, gradingId: string) => request<WS_3STAGE_V1>(`/gradings/${gradingId}/worksheet`, t),
+  /** Make the practice worksheet now instead of overnight (Pro). Returns the worksheet; ~30 s.
+   *  502 WORKSHEET_NOT_MADE if it didn't pass the checks (it stays queued for the night). */
+  generateWorksheet: (t: string, gradingId: string) =>
+    request<WS_3STAGE_V1>(`/gradings/${gradingId}/worksheet/generate`, t, { method: 'POST' }),
   parentSummary: (t: string, studentId: string) =>
     request<ParentProjectionSummary>(`/students/${studentId}/parent-summary`, t),
   /**
