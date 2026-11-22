@@ -3,6 +3,8 @@ import pytest
 we build (models, thinking budget, cache use, location, per-question isolation,
 answer keys, key-step checks, re-substitution verification) without calling Vertex."""
 import json
+
+from birdbrains.schemas import WorksheetContent
 import re
 from types import SimpleNamespace
 
@@ -368,6 +370,19 @@ def test_batch_round_trip(tmp_path):
     bad = [k for k, _ in keys(line) if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]{0,299}", k)]
     assert bad == [] and max(d for _, d in keys(line)) <= 15
     schema = line["request"]["generationConfig"]["responseJsonSchema"]
+    # Every required field is still described ("title" is a field name, not only a keyword).
+    def objects(o):
+        if isinstance(o, dict):
+            if "properties" in o:
+                yield o
+            for v in o.values():
+                yield from objects(v)
+        elif isinstance(o, list):
+            for v in o:
+                yield from objects(v)
+    for obj in objects(schema):
+        assert set(obj.get("required", [])) <= set(obj["properties"]), obj.get("required")
+    assert set(schema["properties"]) == set(WorksheetContent.model_fields)
     assert schema["properties"]["practice_set"]["items"]["properties"]["difficulty"]["enum"] == ["WARM_UP", "CORE", "STRETCH"]
 
     storage, client = LocalStorage(str(tmp_path)), StubClient()
