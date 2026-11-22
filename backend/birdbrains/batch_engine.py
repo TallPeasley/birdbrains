@@ -168,17 +168,25 @@ def batch_schema() -> dict:
     raw = WorksheetContent.model_json_schema()
     defs = raw.get("$defs", {})
 
+    dropped = ("$ref", "$defs", "title", "default")
+
     def inline(node, depth=0):
+        """``node`` is a schema object: its keys are keywords ("type", "title", ...)."""
         if depth > 20:
             raise ValueError("worksheet schema refers to itself")
         if isinstance(node, list):
             return [inline(v, depth) for v in node]
         if not isinstance(node, dict):
             return node
-        if "$ref" in node:
-            target = inline(defs[node["$ref"].rsplit("/", 1)[-1]], depth + 1)
-            return {**target, **{k: inline(v, depth) for k, v in node.items() if k not in ("$ref", "title", "default")}}
-        return {k: inline(v, depth) for k, v in node.items() if k not in ("$defs", "title", "default")}
+        out = inline(defs[node["$ref"].rsplit("/", 1)[-1]], depth + 1) if "$ref" in node else {}
+        for k, v in node.items():
+            if k in dropped:
+                continue
+            if k == "properties":  # keys here are field names (one is "title"), never dropped
+                out[k] = {name: inline(sub, depth) for name, sub in v.items()}
+            else:
+                out[k] = inline(v, depth)
+        return out
 
     return inline(raw)
 
