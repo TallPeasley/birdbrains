@@ -41,7 +41,8 @@ gcloud firestore databases describe --database="(default)" >/dev/null 2>&1 || \
 echo "== Service account"
 gcloud iam service-accounts describe "$SA" >/dev/null 2>&1 || \
   gcloud iam service-accounts create birdbrains-api --display-name="BirdBrains API"
-for role in roles/aiplatform.user roles/datastore.user roles/dlp.user; do
+# firebaseauth.admin: look up accounts by email (testing accounts) and delete them (delete my data).
+for role in roles/aiplatform.user roles/datastore.user roles/dlp.user roles/firebaseauth.admin; do
   gcloud projects add-iam-policy-binding "$PROJECT" --member="serviceAccount:$SA" --role="$role" \
     --condition=None >/dev/null
 done
