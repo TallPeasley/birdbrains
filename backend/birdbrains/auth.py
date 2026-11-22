@@ -86,3 +86,6 @@ class FirebaseAuthenticator:
             return auth.get_user_by_email(email.strip(), app=self._app).uid
         except (auth.UserNotFoundError, ValueError):
             return None
+        except Exception:
+            raise HTTPException(503, "Could not look up sign-in accounts. The API's service account needs "
+                                     "roles/firebaseauth.admin: rerun backend/deploy.sh.")
