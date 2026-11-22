@@ -1,10 +1,14 @@
 'use client';
 
 import { Camera } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 import { useRole } from '@/lib/roleContext';
 
 export default function CaptureFab() {
   const { openCapture } = useRole();
+  const pathname = usePathname();
+  // The practice tab is for answering questions; the button would cover the answer area on phones.
+  if (pathname?.startsWith('/practice')) return null;
   return (
     <button
       onClick={openCapture}
