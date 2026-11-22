@@ -113,6 +113,15 @@ def test_stage2_falls_back_to_inline_taxonomy():
     assert client.cache_creates == 1  # not retried on every request
 
 
+def test_small_taxonomy_skips_the_cache_call(monkeypatch):
+    monkeypatch.setattr(P, "CACHE_MIN_CHARS", 10**9)  # the real size: under Vertex's 4,096-token floor
+    client = StubClient()
+    P.GeminiPipeline(client=client).run_stage2(CTX, S1)
+    assert client.cache_creates == 0
+    _, contents, config = client.calls[0]
+    assert config.cached_content is None and "PRC-03" in contents
+
+
 def test_stage2_separates_multi_question_analysis_and_isolates_carry_forward():
     multi_s1 = Stage1TranscriptionOutput.model_validate({
         "submission_id": CTX.submission_id,
@@ -344,6 +353,7 @@ def test_batch_round_trip(tmp_path):
     assert line["grading_id"] == "grd_abcdefghijkl"
     prompt = line["request"]["contents"][0]["parts"][0]["text"]
     assert "PRC-03" in prompt and "vertex form constant" not in prompt  # cascading errors are left out
+    assert line["request"]["generationConfig"]["thinkingConfig"] == {"thinkingLevel": "LOW"}
 
     storage, client = LocalStorage(str(tmp_path)), StubClient()
     engine = B.GeminiBatchEngine(storage, client=client)

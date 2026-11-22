@@ -34,6 +34,36 @@ _COMMAND = re.compile(r"\\([A-Za-z]+)")
 _DANGLING = re.compile(r"[\^_](\s|$|[)\]}=+*/,.;:])")
 
 
+def _bare(text: str) -> str:
+    """Maths reduced for comparison: no spaces, $, braces or \\left/\\right."""
+    return re.sub(r"\\left|\\right|[\s${}]", "", text)
+
+
+def _answers(placeholder: str) -> list[str]:
+    return [a for a in (p.strip() for p in re.split(r"[,;]", placeholder or "")) if a]
+
+
+def gives_away(hint: str, answers: list[str]) -> bool:
+    """True when the hint states the answer. A one-digit answer is too common in a hint
+    ("take half of 4") to judge, so only answers of two characters or more count, and
+    then only when the hint holds every one of them as a whole number or expression."""
+    if not hint or not answers:
+        return False
+    # Close up spaces around operators only, so words stay apart: "are 2 and 3".
+    h = re.sub(r"\s*([=+\-*/^(),])\s*", r"\1", re.sub(r"\\left|\\right|[${}]", "", hint))
+    found = 0
+    for a in answers:
+        b = _bare(a)
+        if len(b) < 2:
+            return False
+        before = r"(?<!\w)(?<!\d\.)" if b[0].isalnum() else ""  # not inside 120 or 12.5
+        after = r"(?!\w)(?!\.\d)" if b[-1].isalnum() else ""
+        if not re.search(before + re.escape(b) + after, h):
+            return False
+        found += 1
+    return found == len(answers)
+
+
 def lint_math(text: str) -> list[str]:
     problems: list[str] = []
     body = text.replace(BLANK, "0").replace("\\$", "")
@@ -154,13 +184,23 @@ def lint_worksheet(ws: WorksheetContent) -> list[str]:
         check(f"{where} content", s.given_content)
         check(f"{where} hint", s.hint)
         has_blank = BLANK in s.given_content
+        # A short label before a colon is allowed ("Group and factor out 3: y = ..."); a
+        # paragraph is not.
+        if len(re.findall(r"(?<![\\A-Za-z])[A-Za-z]{3,}", re.sub(r"\\text\{[^}]*\}", "", s.given_content.rsplit(":", 1)[-1]))) >= 4:
+            problems.append(f"{where}: given_content is a sentence, not a line of maths")
         if s.scaffolding_type == "PARTIAL_BLANK":
             if not has_blank:
                 problems.append(f"{where}: PARTIAL_BLANK without a {BLANK} blank")
             if not (s.blank_placeholder or "").strip():
                 problems.append(f"{where}: PARTIAL_BLANK without the expected answer")
+            elif any(re.fullmatch(r"[A-Za-z]", _bare(a)) for a in _answers(s.blank_placeholder)):
+                problems.append(f"{where}: a blank's answer is just a letter; nothing to work out")
+            if gives_away(s.hint, _answers(s.blank_placeholder or "")):
+                problems.append(f"{where}: the hint gives the blank's answer away")
         elif has_blank:
             problems.append(f"{where}: {s.scaffolding_type} step contains a blank")
+        if s.scaffolding_type == "INDEPENDENT" and gives_away(s.hint, [s.given_content]):
+            problems.append(f"{where}: the hint gives the final line away")
 
     check("transfer problem", ws.independent_transfer.problem_statement)
     check("transfer answer", ws.independent_transfer.answer)
@@ -178,6 +218,9 @@ def lint_worksheet(ws: WorksheetContent) -> list[str]:
         seen.add(key)
     if not 3 <= len(ws.independent_transfer.metacognitive_checklist) <= 4:
         problems.append("transfer checklist: expected 3 or 4 items")
+    transfer_answer = ws.independent_transfer.answer or ""
     for i, line in enumerate(ws.independent_transfer.metacognitive_checklist, 1):
         check(f"checklist {i}", line)
+        if gives_away(line, _answers(transfer_answer)):
+            problems.append(f"checklist {i}: gives the transfer answer away")
     return problems

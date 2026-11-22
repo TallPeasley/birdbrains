@@ -61,3 +61,12 @@ def upload(client, student_id, uid="alex", **overrides):
             "sharpnessScore": "82"} | overrides.pop("data", {})
     files = overrides.pop("files", [("files", ("p1.jpg", photo(), "image/jpeg"))])
     return client.post("/submissions", data=data, files=files, headers=auth(uid))
+
+
+@pytest.fixture(autouse=True)
+def _cache_any_size(monkeypatch):
+    """The real taxonomy is too small for Vertex's explicit cache; tests of the cache
+    path pretend it is big enough."""
+    from birdbrains import pipeline
+
+    monkeypatch.setattr(pipeline, "CACHE_MIN_CHARS", 0)
