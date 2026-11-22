@@ -52,6 +52,20 @@ const KEY_STEP_BADGE: Record<
 export default function StepDiagnostics({ grading }: { grading: Stage2GradingAndAffectOutput }) {
   const questions = grading.questionAnalyses ?? [];
   const [selectedQuestion, setSelectedQuestion] = useState<string>('ALL');
+  // Which question cards are open. One question: open. Several: only the first one that
+  // needs work starts open, so the page stays short; the rest open with a tap.
+  const [open, setOpen] = useState<Set<string>>(() => {
+    if (questions.length <= 1) return new Set(questions.map((q) => q.questionNumber));
+    const first = questions.find((q) => !q.finalAnswerVerification.satisfiesInitialQuestion || q.entityExtractions.length > 0);
+    return new Set(first ? [first.questionNumber] : []);
+  });
+  const toggle = (n: string) =>
+    setOpen((cur) => {
+      const next = new Set(cur);
+      if (next.has(n)) next.delete(n);
+      else next.add(n);
+      return next;
+    });
 
   // Modern per-question path: every question is analysed and displayed in isolation.
   if (questions.length > 0) {
@@ -128,8 +142,28 @@ export default function StepDiagnostics({ grading }: { grading: Stage2GradingAnd
         </div>
 
         <div className="space-y-4">
+          {questions.length > 1 && (
+            <div className="flex justify-end gap-2 text-sm">
+              <button
+                type="button"
+                className="btn btn-sm btn-link"
+                onClick={() => setOpen(new Set(questions.map((q) => q.questionNumber)))}
+              >
+                Open all
+              </button>
+              <button type="button" className="btn btn-sm btn-link" onClick={() => setOpen(new Set())}>
+                Close all
+              </button>
+            </div>
+          )}
           {visible.map((q) => (
-            <QuestionCard key={q.questionNumber} question={q} multi={questions.length > 1} />
+            <QuestionCard
+              key={q.questionNumber}
+              question={q}
+              multi={questions.length > 1}
+              open={open.has(q.questionNumber) || selectedQuestion === q.questionNumber}
+              onToggle={() => toggle(q.questionNumber)}
+            />
           ))}
         </div>
       </section>
@@ -140,7 +174,17 @@ export default function StepDiagnostics({ grading }: { grading: Stage2GradingAnd
   return <LegacyStepDiagnostics grading={grading} />;
 }
 
-function QuestionCard({ question: q, multi }: { question: QuestionDiagnostic; multi: boolean }) {
+function QuestionCard({
+  question: q,
+  multi,
+  open,
+  onToggle,
+}: {
+  question: QuestionDiagnostic;
+  multi: boolean;
+  open: boolean;
+  onToggle: () => void;
+}) {
   const errorSteps = q.stepDiagnostics.filter((s) => !s.isCorrect);
   const protectedSteps = q.stepDiagnostics.filter((s) => s.isCarryForwardProtected);
   const verified = q.finalAnswerVerification.satisfiesInitialQuestion;
@@ -157,8 +201,13 @@ function QuestionCard({ question: q, multi }: { question: QuestionDiagnostic; mu
 
   return (
     <article className="card p-4 sm:p-6">
-      {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-2">
+      {/* Header: tap to open or close this question */}
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={open}
+        className="flex w-full flex-wrap items-center justify-between gap-2 text-left"
+      >
         <div className="flex flex-wrap items-center gap-2">
           <span className="inline-flex items-center rounded-lg bg-indigo-600 px-2.5 py-1 text-xs font-bold text-white">
             Question {q.questionNumber}
@@ -179,9 +228,27 @@ function QuestionCard({ question: q, multi }: { question: QuestionDiagnostic; mu
             {' / '}
             <MathNumber value={q.maxPossibleScore} />
           </span>
+          <span className="ml-2 inline-flex align-middle text-slate-400">
+            {open ? <ChevronUp className="h-4 w-4" aria-hidden /> : <ChevronDown className="h-4 w-4" aria-hidden />}
+            <span className="sr-only">{open ? 'Hide' : 'Show'} question {q.questionNumber}</span>
+          </span>
         </span>
-      </div>
+      </button>
 
+      {!open && (
+        <p className="mt-2 text-sm text-slate-500">
+          {q.stepDiagnostics.length} {q.stepDiagnostics.length === 1 ? 'step' : 'steps'}
+          {errorSteps.length > 0
+            ? `, ${errorSteps.length} with a mistake`
+            : verified
+              ? ', all correct'
+              : ''}
+          . Tap to see the full check.
+        </p>
+      )}
+
+      {open && (
+      <>
       {/* Verbatim problem statement */}
       {q.problemStatement && (
         <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50/80 px-3.5 py-2.5 text-sm text-slate-800">
@@ -425,6 +492,8 @@ function QuestionCard({ question: q, multi }: { question: QuestionDiagnostic; mu
         items={q.entityExtractions}
         heading={multi ? `What tripped you up in Question ${q.questionNumber}` : 'What tripped you up'}
       />
+      </>
+      )}
     </article>
   );
 }

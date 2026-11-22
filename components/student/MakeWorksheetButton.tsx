@@ -13,9 +13,12 @@ export const MAKEABLE = new Set(['QUEUED', 'PENDING', 'FAILED']);
 export default function MakeWorksheetButton({
   gradingId,
   onMade,
+  className = 'mt-3',
 }: {
   gradingId: string;
   onMade: (ws: WS_3STAGE_V1) => void;
+  /** Spacing around the button; the dashboard header passes '' to sit beside other buttons. */
+  className?: string;
 }) {
   const { getToken } = useSession();
   const [busy, setBusy] = useState(false);
@@ -38,7 +41,7 @@ export default function MakeWorksheetButton({
   }
 
   return (
-    <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
+    <div className={`flex flex-wrap items-center gap-3 text-sm ${className}`}>
       <button onClick={make} disabled={busy} className="btn btn-sm btn-primary">
         <Sparkles className={`h-4 w-4 ${busy ? 'animate-pulse' : ''}`} aria-hidden />
         {busy ? 'Making your worksheet… (about 30 seconds)' : 'Make my worksheet now'}

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { CalendarClock, Camera, History, RefreshCw, Sparkles, UploadCloud } from 'lucide-react';
+import { CalendarClock, Camera, History, Layers, RefreshCw, Sparkles, UploadCloud } from 'lucide-react';
 import { useRole } from '@/lib/roleContext';
 import AffectCard from '@/components/student/AffectCard';
 import PillarCards from '@/components/student/PillarCards';
@@ -215,7 +215,14 @@ export default function StudentDashboard() {
         worksheetProOnly={sheet?.proOnly ?? false}
         onWorksheetMade={
           sheet?.canMake
-            ? (made) => setWs({ gradingId: sheet.gradingId, worksheet: made, note: '', proOnly: false })
+            ? (made) => {
+                setWs({ gradingId: sheet.gradingId, worksheet: made, note: '', proOnly: false });
+                // Show it straight away: it opens at the bottom of the page, below the diagnostic.
+                window.setTimeout(
+                  () => document.getElementById('practice-worksheet')?.scrollIntoView({ behavior: 'smooth' }),
+                  100,
+                );
+              }
             : undefined
         }
         usage={state.usage}
@@ -378,12 +385,30 @@ function View({
         )}
       </header>
 
+      {/* The practice worksheet, up top so nobody has to scroll past the diagnostic to find it. */}
+      {!sample && (worksheet || onWorksheetMade) && (
+        <div className="card flex flex-wrap items-center justify-between gap-3 p-4">
+          <p className="flex items-center gap-2 text-sm font-medium text-slate-700">
+            <Layers className="h-4 w-4 text-indigo-600" aria-hidden />
+            {worksheet ? 'Your practice worksheet for this upload is ready.' : 'Practice what went wrong on this upload.'}
+          </p>
+          {worksheet ? (
+            <a href="#practice-worksheet" className="btn btn-sm btn-primary">
+              Open practice worksheet
+            </a>
+          ) : (
+            <MakeWorksheetButton gradingId={grading.gradingId} onMade={onWorksheetMade!} className="" />
+          )}
+        </div>
+      )}
+
       {usage && <UploadsLeftMeter usage={usage} compact />}
 
       <AffectCard grading={grading} />
       <PillarCards pillars={grading.pillarBreakdowns} />
       <StepDiagnostics grading={grading} />
 
+      <div id="practice-worksheet" className="scroll-mt-24" />
       {worksheet ? (
         <WorksheetViewer worksheet={worksheet} steps={grading.stepDiagnostics} />
       ) : worksheetProOnly || grading.plan === 'free' ? (
@@ -402,7 +427,6 @@ function View({
           <div>
             <h2 className="font-semibold text-slate-900">Practice worksheet</h2>
             <p className="mt-1 text-sm text-slate-600">{worksheetNote}</p>
-            {onWorksheetMade && <MakeWorksheetButton gradingId={grading.gradingId} onMade={onWorksheetMade} />}
           </div>
         </section>
       )}
