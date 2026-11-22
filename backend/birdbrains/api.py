@@ -823,14 +823,14 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         return to_api_worksheet(d.store.get("worksheets", grading_id))
 
     @app.post("/gradings/{grading_id}/worksheet/generate", response_model=ApiWorksheet)
-    def generate_worksheet(grading_id: str, user: User):
+    def generate_worksheet(grading_id: str, user: User, remake: bool = False):
         """Make the practice worksheet now instead of waiting for the nightly job. Pro
         (and testing accounts) only. A ready worksheet is returned as it is, so pressing
         twice costs nothing. If this fails the worksheet stays queued for the night."""
         grading = owned("gradings", grading_id, user)
         status = grading["worksheetStatus"]
-        if status == "READY":
-            return to_api_worksheet(d.store.get("worksheets", grading_id))
+        if status == "READY" and not (remake and is_tester(grading["studentId"])):
+            return to_api_worksheet(d.store.get("worksheets", grading_id))  # testers may remake it
         if status == "NOT_NEEDED":
             raise HTTPException(409, "WORKSHEET_NOT_NEEDED")
         if status == "PRO_ONLY" or (effective_plan(grading["studentId"]) != "pro" and not d.free_worksheets):

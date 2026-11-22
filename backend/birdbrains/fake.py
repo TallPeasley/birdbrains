@@ -285,7 +285,24 @@ def fake_worksheet(item: FlaggedGrading) -> WorksheetContent:
                     "I multiplied the value removed from the bracket by -4.",
                     "I checked my vertex by expanding back to standard form.",
                 ],
+                "answer": "y = -4(x - 3)^2 + 29, maximum point (3, 29)",
+                "worked_solution": "$y = -4(x^2 - 6x) - 7$ ; $y = -4(x^2 - 6x + 9 - 9) - 7$ ; "
+                                   "$y = -4(x - 3)^2 + 36 - 7$ ; $y = -4(x - 3)^2 + 29$",
             },
+            "practice_set": [
+                {"problem_statement": f"Write $y = {a}$ in vertex form.", "difficulty": d, "answer": ans,
+                 "worked_solution": sol}
+                for a, d, ans, sol in [
+                    ("x^2 + 4x + 1", "WARM_UP", "y = (x + 2)^2 - 3", "$y = (x^2 + 4x + 4 - 4) + 1$ ; $y = (x + 2)^2 - 3$"),
+                    ("x^2 - 6x + 2", "WARM_UP", "y = (x - 3)^2 - 7", "$y = (x^2 - 6x + 9 - 9) + 2$ ; $y = (x - 3)^2 - 7$"),
+                    ("2x^2 + 4x + 5", "WARM_UP", "y = 2(x + 1)^2 + 3", "$y = 2(x^2 + 2x + 1 - 1) + 5$ ; $y = 2(x + 1)^2 + 3$"),
+                    ("2x^2 + 12x + 7", "CORE", "y = 2(x + 3)^2 - 11", "$y = 2(x^2 + 6x + 9 - 9) + 7$ ; $y = 2(x + 3)^2 - 11$"),
+                    ("3x^2 - 12x + 4", "CORE", "y = 3(x - 2)^2 - 8", "$y = 3(x^2 - 4x + 4 - 4) + 4$ ; $y = 3(x - 2)^2 - 8$"),
+                    ("-2x^2 + 8x - 1", "CORE", "y = -2(x - 2)^2 + 7", "$y = -2(x^2 - 4x + 4 - 4) - 1$ ; $y = -2(x - 2)^2 + 7$"),
+                    ("4x^2 + 24x + 30", "STRETCH", "y = 4(x + 3)^2 - 6", "$y = 4(x^2 + 6x + 9 - 9) + 30$ ; $y = 4(x + 3)^2 - 6$"),
+                    ("-3x^2 - 18x - 20", "STRETCH", "y = -3(x + 3)^2 + 7", "$y = -3(x^2 + 6x + 9 - 9) - 20$ ; $y = -3(x + 3)^2 + 7$"),
+                ]
+            ],
         }
     )
 

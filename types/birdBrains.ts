@@ -168,6 +168,19 @@ export interface IndependentTransferProblem {
   problemStatement: string;
   targetPillarFocus: PillarCategory;
   metacognitiveChecklist: string[];
+  /** For the answer key; empty on older worksheets. */
+  answer?: string;
+  workedSolution?: string;
+}
+
+/** Section D: more problems of the same skill, easy to hard, each with its answer. */
+export interface PracticeProblem {
+  number: number;
+  problemStatement: string;
+  difficulty: 'WARM_UP' | 'CORE' | 'STRETCH';
+  answer: string;
+  /** Short solution; lines separated by " ; ". */
+  workedSolution: string;
 }
 
 export interface WS_3STAGE_V1 {
@@ -178,6 +191,8 @@ export interface WS_3STAGE_V1 {
   sectionA_DiagnosticMirror: DiagnosticMirrorItem[];
   sectionB_FadedScaffolding: FadedScaffoldingStep[];
   sectionC_IndependentTransfer: IndependentTransferProblem;
+  /** Empty or missing on worksheets made before the practice set existed. */
+  sectionD_PracticeSet?: PracticeProblem[];
 }
 
 export interface StrandMastery {

@@ -473,8 +473,68 @@
         "I factored out the negative coefficient (-4) correctly in step 1.",
         "I multiplied the value removed from the bracket by -4.",
         "I verified my vertex coordinates by expanding back to standard form."
-      ]
-    }
+      ],
+      "answer": "y = -4(x - 3)^2 + 29, maximum point (3, 29)",
+      "workedSolution": "$y = -4(x^2 - 6x) - 7$ ; $y = -4(x^2 - 6x + 9 - 9) - 7$ ; $y = -4(x - 3)^2 + 36 - 7$ ; $y = -4(x - 3)^2 + 29$"
+    },
+    "sectionD_PracticeSet": [
+      {
+        "number": 1,
+        "problemStatement": "Write $y = x^2 + 4x + 1$ in vertex form.",
+        "difficulty": "WARM_UP",
+        "answer": "y = (x + 2)^2 - 3",
+        "workedSolution": "$y = (x^2 + 4x + 4 - 4) + 1$ ; $y = (x + 2)^2 - 3$"
+      },
+      {
+        "number": 2,
+        "problemStatement": "Write $y = x^2 - 6x + 2$ in vertex form.",
+        "difficulty": "WARM_UP",
+        "answer": "y = (x - 3)^2 - 7",
+        "workedSolution": "$y = (x^2 - 6x + 9 - 9) + 2$ ; $y = (x - 3)^2 - 7$"
+      },
+      {
+        "number": 3,
+        "problemStatement": "Write $y = 2x^2 + 4x + 5$ in vertex form.",
+        "difficulty": "WARM_UP",
+        "answer": "y = 2(x + 1)^2 + 3",
+        "workedSolution": "$y = 2(x^2 + 2x + 1 - 1) + 5$ ; $y = 2(x + 1)^2 + 3$"
+      },
+      {
+        "number": 4,
+        "problemStatement": "Write $y = 2x^2 + 12x + 7$ in vertex form.",
+        "difficulty": "CORE",
+        "answer": "y = 2(x + 3)^2 - 11",
+        "workedSolution": "$y = 2(x^2 + 6x + 9 - 9) + 7$ ; $y = 2(x + 3)^2 - 11$"
+      },
+      {
+        "number": 5,
+        "problemStatement": "Write $y = 3x^2 - 12x + 4$ in vertex form.",
+        "difficulty": "CORE",
+        "answer": "y = 3(x - 2)^2 - 8",
+        "workedSolution": "$y = 3(x^2 - 4x + 4 - 4) + 4$ ; $y = 3(x - 2)^2 - 8$"
+      },
+      {
+        "number": 6,
+        "problemStatement": "Write $y = -2x^2 + 8x - 1$ in vertex form.",
+        "difficulty": "CORE",
+        "answer": "y = -2(x - 2)^2 + 7",
+        "workedSolution": "$y = -2(x^2 - 4x + 4 - 4) - 1$ ; $y = -2(x - 2)^2 + 7$"
+      },
+      {
+        "number": 7,
+        "problemStatement": "Write $y = 4x^2 + 24x + 30$ in vertex form.",
+        "difficulty": "STRETCH",
+        "answer": "y = 4(x + 3)^2 - 6",
+        "workedSolution": "$y = 4(x^2 + 6x + 9 - 9) + 30$ ; $y = 4(x + 3)^2 - 6$"
+      },
+      {
+        "number": 8,
+        "problemStatement": "Write $y = -3x^2 - 18x - 20$ in vertex form.",
+        "difficulty": "STRETCH",
+        "answer": "y = -3(x + 3)^2 + 7",
+        "workedSolution": "$y = -3(x^2 + 6x + 9 - 9) - 20$ ; $y = -3(x + 3)^2 + 7$"
+      }
+    ]
   },
   "parentProjectionSummary": {
     "studentId": "stu_alexmercer99",

@@ -302,3 +302,15 @@ def test_make_the_worksheet_now(client, family, deps):
     assert again["worksheetId"] == made["worksheetId"]
     client.post("/internal/batch/worksheets/collect", headers=token)
     assert client.get(f"/gradings/{g['gradingId']}/worksheet", headers=auth("alex")).json()["worksheetId"] == made["worksheetId"]
+
+
+def test_testers_can_remake_a_ready_worksheet(client, family, deps):
+    token = {"X-Batch-Token": "s3cret"}
+    client.post("/internal/users/alex/plan", json={"plan": "pro"}, headers=token)
+    sub = upload(client, family["studentId"]).json()
+    g = client.post(f"/submissions/{sub['submissionId']}/process", headers=auth("alex")).json()["grading"]
+    url = f"/gradings/{g['gradingId']}/worksheet/generate"
+    first = client.post(url, headers=auth("alex")).json()
+    assert client.post(url + "?remake=true", headers=auth("alex")).json()["worksheetId"] == first["worksheetId"]
+    assert client.post("/internal/testers", json={"uid": "alex"}, headers=token).status_code == 200
+    assert client.post(url + "?remake=true", headers=auth("alex")).json()["worksheetId"] != first["worksheetId"]

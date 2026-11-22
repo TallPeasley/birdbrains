@@ -163,6 +163,19 @@ def lint_worksheet(ws: WorksheetContent) -> list[str]:
             problems.append(f"{where}: {s.scaffolding_type} step contains a blank")
 
     check("transfer problem", ws.independent_transfer.problem_statement)
+    check("transfer answer", ws.independent_transfer.answer)
+    check("transfer solution", ws.independent_transfer.worked_solution, required=False)
+    if not 6 <= len(ws.practice_set) <= 12:
+        problems.append(f"practice_set: {len(ws.practice_set)} problems, expected 6 to 12")
+    seen: set[str] = set()
+    for i, p in enumerate(ws.practice_set, 1):
+        check(f"practice {i} problem", p.problem_statement)
+        check(f"practice {i} answer", p.answer)
+        check(f"practice {i} solution", p.worked_solution)
+        key = re.sub(r"\s+", "", p.problem_statement.lower())
+        if key in seen:
+            problems.append(f"practice {i}: same problem twice")
+        seen.add(key)
     if not 3 <= len(ws.independent_transfer.metacognitive_checklist) <= 4:
         problems.append("transfer checklist: expected 3 or 4 items")
     for i, line in enumerate(ws.independent_transfer.metacognitive_checklist, 1):

@@ -212,7 +212,14 @@ def to_api_worksheet(record: dict) -> ApiWorksheet:
             problemStatement=content.independent_transfer.problem_statement,
             targetPillarFocus=content.independent_transfer.target_pillar_focus,
             metacognitiveChecklist=content.independent_transfer.metacognitive_checklist,
+            answer=content.independent_transfer.answer,
+            workedSolution=content.independent_transfer.worked_solution,
         ),
+        sectionD_PracticeSet=[
+            dict(number=i, problemStatement=p.problem_statement, difficulty=p.difficulty, answer=p.answer,
+                 workedSolution=p.worked_solution)
+            for i, p in enumerate(content.practice_set, 1)
+        ],
     )
 
 
