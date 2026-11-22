@@ -64,6 +64,36 @@ def gives_away(hint: str, answers: list[str]) -> bool:
     return found == len(answers)
 
 
+_SUM = re.compile(r"-?\d+(?:\.\d+)?(?:\s*[-+*/]\s*\(?-?\d+(?:\.\d+)?\)?)+")
+
+
+def computes_answer(hint: str, answers: list[str]) -> bool:
+    """True when the hint holds plain arithmetic ("5 + 3", "2 \\times 7 \\times 10")
+    that works out to the blank's (numeric) answer: the hint has done the step."""
+    values = []
+    for a in answers:
+        try:
+            values.append(float(_bare(a).replace("\u2212", "-")))
+        except ValueError:
+            return False
+    if not values:
+        return False
+    text = re.sub(r"\\times|\\cdot|×|·", "*", hint).replace("\\div", "/").replace("÷", "/").replace("\u2212", "-")
+    found = set()
+    for m in _SUM.finditer(text.replace("$", " ")):
+        expr = m.group(0)
+        if not re.search(r"\d\s*[-+*/]", expr):
+            continue
+        try:
+            v = eval(expr, {"__builtins__": {}}, {})  # digits, + - * / ( ) only
+        except Exception:
+            continue
+        for want in values:
+            if abs(v - want) < 1e-9:
+                found.add(want)
+    return len(found) == len(set(values))
+
+
 def lint_math(text: str) -> list[str]:
     problems: list[str] = []
     body = text.replace(BLANK, "0").replace("\\$", "")
@@ -195,8 +225,11 @@ def lint_worksheet(ws: WorksheetContent) -> list[str]:
                 problems.append(f"{where}: PARTIAL_BLANK without the expected answer")
             elif any(re.fullmatch(r"[A-Za-z]", _bare(a)) for a in _answers(s.blank_placeholder)):
                 problems.append(f"{where}: a blank's answer is just a letter; nothing to work out")
-            if gives_away(s.hint, _answers(s.blank_placeholder or "")):
+            answers = _answers(s.blank_placeholder or "")
+            if gives_away(s.hint, answers) or computes_answer(s.hint, answers):
                 problems.append(f"{where}: the hint gives the blank's answer away")
+            elif gives_away(s.prompt, answers):
+                problems.append(f"{where}: the blank asks for a number the prompt already gives")
         elif has_blank:
             problems.append(f"{where}: {s.scaffolding_type} step contains a blank")
         if s.scaffolding_type == "INDEPENDENT" and gives_away(s.hint, [s.given_content]):

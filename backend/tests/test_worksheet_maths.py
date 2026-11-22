@@ -114,3 +114,18 @@ def test_prompt_names_the_most_frequent_root_error():
     s2 = s2.model_copy(update={"identified_errors": [other, root, root.model_copy()]})
     item = B.FlaggedGrading("grd_abcdefghijkl", CourseEnum.MPM2D, "x", ScaffoldingModeEnum.STANDARD_PROGRESSIVE_FADE, s2)
     assert f"Target error: {root.error_code} (2 of 3 root-cause errors)" in B.worksheet_prompt(item)
+
+
+def test_hints_that_do_the_sum_and_blanks_that_copy_the_prompt_fail_lint():
+    from birdbrains.math_lint import lint_worksheet
+
+    steps = [s.model_copy() for s in GOOD.faded_scaffolding]
+    blank = next(s for s in steps if s.scaffolding_type == "PARTIAL_BLANK")
+    blank.given_content, blank.blank_placeholder = "a^2 = [ __ ]", "28"
+    blank.hint = "Work out $52 - 24$."
+    ws = GOOD.model_copy(update={"faded_scaffolding": steps})
+    assert any("gives the blank's answer away" in p for p in lint_worksheet(ws))
+    blank.hint = "Move the known side across by subtracting."
+    blank.prompt = "Substitute $x_1 = -3$."
+    blank.given_content, blank.blank_placeholder = "x_1 = [ __ ]", "-3"
+    assert any("prompt already gives" in p for p in lint_worksheet(ws))

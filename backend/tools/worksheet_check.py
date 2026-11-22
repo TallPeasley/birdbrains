@@ -117,7 +117,7 @@ def main() -> int:
         state = engine._client.batches.get(name=job["name"]).state
         print("job state:", getattr(state, "name", state))
         texts = storage.read_texts(job["outputPrefix"], ".jsonl")
-        for text in texts[:1]:
+        for text in [t for t in texts if t.strip()][:1]:  # Vertex also writes an empty chunk file
             first = json.loads(text.splitlines()[0])
             print("raw output line keys:", sorted(first), "| has grading_id:", "grading_id" in first)
         result = engine.collect(job)

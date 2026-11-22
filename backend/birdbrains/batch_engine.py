@@ -69,8 +69,10 @@ B. faded_scaffolding: ONE new problem of the same type with different numbers,
    "4x = 20", "x = 5", "2(5) + 5 = 15". Put explanations in prompt and hint only.
    A blank stands for something the student works out (a number, a term or an
    expression), never a lone letter such as "b" or "x".
-   A hint points to the method ("What two numbers multiply to 6 and add to 5?")
-   and NEVER contains the blank's answer or the final line.
+   A hint points to the method ("What two numbers multiply to 6 and add to 5?",
+   "Subtracting a negative is the same as adding") and NEVER contains the blank's
+   answer, the final line, or the sum that gives the answer ("What is 5 + 3?").
+   A blank never asks for a number the step's own prompt already states.
 C. independent_transfer: one further problem with no support, targeting the same
    pillar, and a checklist of 3 or 4 "I ..." self-check statements. Checklist items
    are habits ("I checked my answer by substituting it back"), never this problem's
