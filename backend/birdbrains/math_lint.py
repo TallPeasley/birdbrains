@@ -184,6 +184,10 @@ def lint_worksheet(ws: WorksheetContent) -> list[str]:
         check(f"{where} content", s.given_content)
         check(f"{where} hint", s.hint)
         has_blank = BLANK in s.given_content
+        # A short label before a colon is allowed ("Group and factor out 3: y = ..."); a
+        # paragraph is not.
+        if len(re.findall(r"(?<![\\A-Za-z])[A-Za-z]{3,}", re.sub(r"\\text\{[^}]*\}", "", s.given_content.rsplit(":", 1)[-1]))) >= 4:
+            problems.append(f"{where}: given_content is a sentence, not a line of maths")
         if s.scaffolding_type == "PARTIAL_BLANK":
             if not has_blank:
                 problems.append(f"{where}: PARTIAL_BLANK without a {BLANK} blank")
@@ -214,6 +218,9 @@ def lint_worksheet(ws: WorksheetContent) -> list[str]:
         seen.add(key)
     if not 3 <= len(ws.independent_transfer.metacognitive_checklist) <= 4:
         problems.append("transfer checklist: expected 3 or 4 items")
+    transfer_answer = ws.independent_transfer.answer or ""
     for i, line in enumerate(ws.independent_transfer.metacognitive_checklist, 1):
         check(f"checklist {i}", line)
+        if gives_away(line, _answers(transfer_answer)):
+            problems.append(f"checklist {i}: gives the transfer answer away")
     return problems

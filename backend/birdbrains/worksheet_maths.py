@@ -35,6 +35,9 @@ def _clean(text: str) -> Optional[str]:
     if ":" in t:  # "Group and factor out 3: y = 3(x^2 + 4x) + 1"
         t = t.rsplit(":", 1)[1].strip()
     t = t.strip("$ ").rstrip(".")
+    # A unit after the last number ("r = 5.9 cm", "A = 12 m^2", "52°") is not maths.
+    t = re.sub(r"(\d)\s*(?:\\text\{\s*)?(?:mm|cm|km|m|kg|g|mL|L|s|min|h)(?:\^\{?[23]\}?)?\}?\s*$", r"\1", t)
+    t = re.sub(r"(\d)\s*(?:°|\^\{?\\circ\}?)", r"\1", t)
     if not t or _SKIP.search(t):
         return None
     if "=" not in t and not re.search(r"[a-zA-Z]", t.replace("sqrt", "")):

@@ -80,3 +80,37 @@ def test_hints_that_give_the_answer_and_letter_blanks_fail_lint():
     blank.blank_placeholder, blank.given_content, blank.hint = "b", "5 = 3(1) + [ __ ]", "Solve for the intercept."
     assert any("just a letter" in p for p in lint_worksheet(ws))
     assert lint_worksheet(GOOD) == []
+
+
+def test_units_paragraph_steps_checklist_and_target_error():
+    from birdbrains.math_lint import lint_worksheet
+    from birdbrains.worksheet_maths import maths_report
+
+    # "r = 5.9 cm" and degrees are read once the unit is dropped.
+    ws = with_steps(("GIVEN", "r^2 = 34.81", None), ("INDEPENDENT", "r = 5.9 cm", None))
+    assert maths_report(ws)[1] == 2
+    assert maths_report(with_steps(("GIVEN", "2 \\times 26^\\circ = 52^\\circ", None)))[0:2] == ([], 1)
+
+    steps = [s.model_copy() for s in GOOD.faded_scaffolding]
+    steps[0].given_content = "For the system we multiply the first equation by 2, then add them to get 11x = 44"
+    assert any("is a sentence" in p for p in lint_worksheet(GOOD.model_copy(update={"faded_scaffolding": steps})))
+
+    t = GOOD.independent_transfer.model_copy(update={"answer": "x = 6, y = 2"})
+    t.metacognitive_checklist = [*t.metacognitive_checklist[:2], "I found x = 6 and y = 2"]
+    assert any("checklist 3: gives" in p for p in lint_worksheet(GOOD.model_copy(update={"independent_transfer": t})))
+
+
+def test_prompt_names_the_most_frequent_root_error():
+    from birdbrains import batch_engine as B
+    from birdbrains.fake import FakePipeline
+    from birdbrains.pipeline import SubmissionContext
+    from birdbrains.schemas import CourseEnum, ScaffoldingModeEnum
+
+    fake = FakePipeline()
+    ctx = SubmissionContext("sub_abcdefghijkl", CourseEnum.MPM2D, "Completing the Square")
+    s2 = fake.run_stage2(ctx, fake.run_stage1(ctx, []))
+    root = next(e for e in s2.identified_errors if not e.is_cascading_consequence)
+    other = root.model_copy(update={"error_code": "CON-02"})
+    s2 = s2.model_copy(update={"identified_errors": [other, root, root.model_copy()]})
+    item = B.FlaggedGrading("grd_abcdefghijkl", CourseEnum.MPM2D, "x", ScaffoldingModeEnum.STANDARD_PROGRESSIVE_FADE, s2)
+    assert f"Target error: {root.error_code} (2 of 3 root-cause errors)" in B.worksheet_prompt(item)

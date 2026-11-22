@@ -8,6 +8,7 @@ worksheets. Both are driven by Cloud Scheduler through the API's /internal route
 from __future__ import annotations
 
 import hashlib
+from collections import Counter
 import json
 import logging
 import os
@@ -44,7 +45,8 @@ def _thinking_json() -> dict:
 
 WORKSHEET_SYSTEM = """\
 You write short remedial mathematics worksheets for Ontario Grade 9 (MTH1W) and
-Grade 10 (MPM2D) students, targeted at one diagnosed root-cause error.
+Grade 10 (MPM2D) students, targeted at one diagnosed root-cause error. When the
+request names a "Target error", the whole worksheet practises that error.
 
 The worksheet has four sections:
 A. diagnostic_mirror: for each line where a root-cause error first appeared, show
@@ -70,7 +72,9 @@ B. faded_scaffolding: ONE new problem of the same type with different numbers,
    A hint points to the method ("What two numbers multiply to 6 and add to 5?")
    and NEVER contains the blank's answer or the final line.
 C. independent_transfer: one further problem with no support, targeting the same
-   pillar, and a checklist of 3 or 4 "I ..." self-check statements. Give its exact
+   pillar, and a checklist of 3 or 4 "I ..." self-check statements. Checklist items
+   are habits ("I checked my answer by substituting it back"), never this problem's
+   method or numbers. Give its exact
    final `answer` and a short `worked_solution` (the key lines, 2 to 5 lines).
 D. practice_set: 8 more problems of the same skill so the student gets real
    practice: 3 WARM_UP (smaller, friendlier numbers), 3 CORE (like the original
@@ -139,9 +143,14 @@ def worksheet_prompt(item: FlaggedGrading) -> str:
     else:
         steps = [s.model_dump(mode="json") for s in item.stage2.step_evaluations]
         work_section = f"Student's steps as evaluated:\n{json.dumps(steps, indent=1)}"
+    # A full test can have a dozen root errors; one worksheet practises one skill, so
+    # name the error code the student made most often (first seen wins a tie).
+    counts = Counter(e["error_code"] for e in roots)
+    target = max(counts, key=lambda c: (counts[c], -list(counts).index(c))) if counts else ""
+    focus = f"Target error: {target} ({counts[target]} of {len(roots)} root-cause errors)\n" if target else ""
     return (
         f"Course: {item.course.value}\nUnit / topic: {item.unit_topic}\n"
-        f"Scaffolding mode: {item.scaffolding_mode.value}\n\n"
+        f"Scaffolding mode: {item.scaffolding_mode.value}\n{focus}\n"
         f"Root-cause errors:\n{json.dumps(roots, indent=1)}\n\n"
         f"{work_section}"
     )
