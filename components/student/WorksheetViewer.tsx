@@ -1,13 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { ArrowDown, CheckCircle2, Download, Eye, Lightbulb, RotateCcw, XCircle } from 'lucide-react';
+import { ArrowDown, CheckCircle2, Download, ExternalLink, Eye, PlayCircle, Lightbulb, RotateCcw, XCircle } from 'lucide-react';
 import type { FadedScaffoldingStep, PracticeProblem, StepDiagnostic, WS_3STAGE_V1 } from '@/types/birdBrains';
 import { PILLARS } from '@/lib/pillars';
 import { MathNumber, MathText } from '@/components/MathText';
 import { renderKatex } from '@/lib/katexMath';
 import { api } from '@/lib/api';
 import { useSession } from '@/lib/session';
+import { expectedBlanks, sameAnswer } from '@/lib/answerCheck';
+import { worksheet as sampleWorksheet } from '@/lib/mockData';
 
 const SECTIONS = [
   { key: 'A', title: 'Diagnostic Mirror', sub: 'Where it went wrong' },
@@ -33,7 +35,7 @@ export default function WorksheetViewer({ worksheet, steps }: { worksheet: WS_3S
         <p className="mt-1 text-sm text-slate-500">
           Target concept: <MathText text={worksheet.targetConcept} />
         </p>
-        <PdfButton worksheet={worksheet} />
+        <WorksheetActions worksheet={worksheet} />
 
         <div
           role="tablist"
@@ -205,29 +207,6 @@ function Marked({ text, part, tone }: { text: string; part?: string; tone: 'ok' 
 }
 
 const BLANK = '[ __ ]';
-const norm = (s: string) =>
-  s
-    .replace(/\\left|\\right|\\[,;! ]|[{}$\s]/g, '')
-    .replace(/\\sqrt/g, 'sqrt')
-    .replace(/−/g, '-')
-    .toLowerCase();
-
-/** Right if it matches as text (ignoring spaces and braces) or as a number. */
-function sameAnswer(given: string, expected: string): boolean {
-  if (!given.trim()) return false;
-  if (norm(given) === norm(expected)) return true;
-  const a = Number(norm(given).replace(/^[a-z]=/, ''));
-  const b = Number(norm(expected).replace(/^[a-z]=/, ''));
-  return Number.isFinite(a) && Number.isFinite(b) && Math.abs(a - b) < 1e-6;
-}
-
-/** One expected answer per blank: "4" for every box, or "4, 9" for two boxes. */
-function expectedBlanks(placeholder: string | null | undefined, count: number): string[] {
-  if (!placeholder) return [];
-  const parts = placeholder.split(/\s*[,;]\s*/);
-  return count > 1 && parts.length === count ? parts : Array(count).fill(placeholder);
-}
-
 /** The step's line typeset whole, with numbered boxes where the blanks are. */
 function BlankLine({ content }: { content: string }) {
   const html = renderKatex(content, true);
@@ -495,12 +474,11 @@ function IndependentTransfer({ worksheet }: { worksheet: WS_3STAGE_V1 }) {
   );
 }
 
-/** Download the printable worksheet with its answer key (signed-in, live site only). */
-function PdfButton({ worksheet }: { worksheet: WS_3STAGE_V1 }) {
+/** Open the practice tab, and download the printable worksheet with its answer key (signed-in, live site only). */
+function WorksheetActions({ worksheet }: { worksheet: WS_3STAGE_V1 }) {
   const { live, getToken } = useSession();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  if (!live) return null;
   async function download() {
     setBusy(true);
     setError('');
@@ -518,11 +496,20 @@ function PdfButton({ worksheet }: { worksheet: WS_3STAGE_V1 }) {
       setBusy(false);
     }
   }
+  const sample = !live || worksheet.gradingId === sampleWorksheet.gradingId;
+  // Practice opens in its own tab, one question at a time; the sample worksheet needs no account.
+  const practiceHref = sample ? '/practice' : `/practice?g=${encodeURIComponent(worksheet.gradingId)}`;
   return (
     <div className="mt-3 flex flex-wrap items-center gap-3 text-sm">
-      <button onClick={download} disabled={busy} className="btn btn-sm btn-secondary">
-        <Download className="h-4 w-4" aria-hidden /> {busy ? 'Making the PDF…' : 'Download PDF with answer key'}
-      </button>
+      <a href={practiceHref} target="_blank" rel="noopener" className="btn btn-sm btn-primary">
+        <PlayCircle className="h-4 w-4" aria-hidden /> Practise one question at a time
+        <ExternalLink className="h-3.5 w-3.5 opacity-70" aria-hidden />
+      </a>
+      {!sample && (
+        <button onClick={download} disabled={busy} className="btn btn-sm btn-secondary">
+          <Download className="h-4 w-4" aria-hidden /> {busy ? 'Making the PDF…' : 'Download PDF with answer key'}
+        </button>
+      )}
       {error && <span className="text-rose-700">{error}</span>}
     </div>
   );
