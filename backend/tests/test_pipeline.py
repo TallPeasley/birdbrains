@@ -3,6 +3,7 @@ import pytest
 we build (models, thinking budget, cache use, location, per-question isolation,
 answer keys, key-step checks, re-substitution verification) without calling Vertex."""
 import json
+import re
 from types import SimpleNamespace
 
 from birdbrains import batch_engine as B
@@ -354,6 +355,20 @@ def test_batch_round_trip(tmp_path):
     prompt = line["request"]["contents"][0]["parts"][0]["text"]
     assert "PRC-03" in prompt and "vertex form constant" not in prompt  # cascading errors are left out
     assert line["request"]["generationConfig"]["thinkingConfig"] == {"thinkingLevel": "LOW"}
+    # Vertex loads the file through BigQuery: every key a valid column name ("$ref" and
+    # "$defs" failed every real job), nesting under BigQuery's 15 levels.
+    def keys(o, depth=1):
+        if isinstance(o, dict):
+            for k, v in o.items():
+                yield k, depth
+                yield from keys(v, depth + 1)
+        elif isinstance(o, list):
+            for v in o:
+                yield from keys(v, depth)
+    bad = [k for k, _ in keys(line) if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]{0,299}", k)]
+    assert bad == [] and max(d for _, d in keys(line)) <= 15
+    schema = line["request"]["generationConfig"]["responseJsonSchema"]
+    assert schema["properties"]["practice_set"]["items"]["properties"]["difficulty"]["enum"] == ["WARM_UP", "CORE", "STRETCH"]
 
     storage, client = LocalStorage(str(tmp_path)), StubClient()
     engine = B.GeminiBatchEngine(storage, client=client)

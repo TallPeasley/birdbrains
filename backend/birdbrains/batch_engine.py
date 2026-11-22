@@ -156,6 +156,33 @@ def worksheet_prompt(item: FlaggedGrading) -> str:
     )
 
 
+def batch_schema() -> dict:
+    """The worksheet schema as one self-contained object for a batch request.
+
+    Vertex loads a batch requests.jsonl through BigQuery, so every JSON key must be a
+    valid column name. Pydantic's schema names nested models with "$defs" and "$ref",
+    which BigQuery rejects, failing the whole job before it starts (seen live on
+    2026-11-22). Each $ref is replaced by the definition it points to; titles and
+    defaults are dropped (the model needs neither, and a default can be null in one
+    place and a list in another, which a BigQuery column can't hold)."""
+    raw = WorksheetContent.model_json_schema()
+    defs = raw.get("$defs", {})
+
+    def inline(node, depth=0):
+        if depth > 20:
+            raise ValueError("worksheet schema refers to itself")
+        if isinstance(node, list):
+            return [inline(v, depth) for v in node]
+        if not isinstance(node, dict):
+            return node
+        if "$ref" in node:
+            target = inline(defs[node["$ref"].rsplit("/", 1)[-1]], depth + 1)
+            return {**target, **{k: inline(v, depth) for k, v in node.items() if k not in ("$ref", "title", "default")}}
+        return {k: inline(v, depth) for k, v in node.items() if k not in ("$defs", "title", "default")}
+
+    return inline(raw)
+
+
 def request_key(prompt: str) -> str:
     """A short fingerprint of one request's prompt. The Batch API echoes each request in
     its output line, so this finds the grading again even if the output line drops the
@@ -177,7 +204,7 @@ def _echoed_prompt(row: dict) -> str:
 def build_jsonl(items: Iterable[FlaggedGrading]) -> str:
     """One Vertex batch request per line. ``grading_id`` rides along as a top-level
     key, which the Batch API copies into the matching output line."""
-    schema = WorksheetContent.model_json_schema()
+    schema = batch_schema()
     lines = []
     for item in items:
         lines.append(
