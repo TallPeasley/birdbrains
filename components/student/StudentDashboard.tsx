@@ -8,6 +8,7 @@ import AffectCard from '@/components/student/AffectCard';
 import PillarCards from '@/components/student/PillarCards';
 import StepDiagnostics from '@/components/student/StepDiagnostics';
 import WorksheetViewer from '@/components/student/WorksheetViewer';
+import MakeWorksheetButton, { MAKEABLE } from '@/components/student/MakeWorksheetButton';
 import { LoadError, Loading, NoWorkNotice, useDashboardGate } from '@/components/DashboardStates';
 import {
   DEMO_FREE_USAGE,
@@ -21,10 +22,10 @@ import { useSession } from '@/lib/session';
 import type { ApiUsage, PlanTier, Stage2GradingAndAffectOutput, WS_3STAGE_V1 } from '@/types/birdBrains';
 
 const WORKSHEET_NOTES: Record<string, string> = {
-  WORKSHEET_QUEUED: 'Your practice worksheet is built overnight. Check back tomorrow morning.',
-  WORKSHEET_PENDING: 'Your practice worksheet is being built right now. Check back in the morning.',
+  WORKSHEET_QUEUED: 'Your practice worksheet is ready to be made. Make it now, or it will be waiting for you tomorrow morning.',
+  WORKSHEET_PENDING: 'Your practice worksheet is in tonight’s batch. Make it now if you don’t want to wait.',
   WORKSHEET_NOT_NEEDED: 'No mistakes to practise from this one. No worksheet needed!',
-  WORKSHEET_FAILED: 'We could not build a worksheet for this one. Upload your next piece of work to get a new one.',
+  WORKSHEET_FAILED: 'The last try at this worksheet did not pass our checks. Try making it again.',
 };
 
 type State =
@@ -38,6 +39,8 @@ interface WorksheetState {
   worksheet: WS_3STAGE_V1 | null;
   note: string;
   proOnly: boolean;
+  /** Not made yet, and the student can make it now instead of overnight. */
+  canMake?: boolean;
 }
 
 export default function StudentDashboard() {
@@ -92,7 +95,10 @@ export default function StudentDashboard() {
       } catch (err) {
         if (!(err instanceof ApiError) || err.status !== 404) throw err;
         if (err.detail === 'WORKSHEET_PRO_ONLY') next.proOnly = true;
-        else next.note = WORKSHEET_NOTES[err.detail] ?? WORKSHEET_NOTES.WORKSHEET_QUEUED;
+        else {
+          next.note = WORKSHEET_NOTES[err.detail] ?? WORKSHEET_NOTES.WORKSHEET_QUEUED;
+          next.canMake = MAKEABLE.has(err.detail.replace(/^WORKSHEET_/, ''));
+        }
       }
       if (!cancelled) setWs(next);
     })().catch(() => {
@@ -207,6 +213,11 @@ export default function StudentDashboard() {
         worksheet={sheet?.worksheet ?? null}
         worksheetNote={sheet ? sheet.note : 'Loading the practice worksheet…'}
         worksheetProOnly={sheet?.proOnly ?? false}
+        onWorksheetMade={
+          sheet?.canMake
+            ? (made) => setWs({ gradingId: sheet.gradingId, worksheet: made, note: '', proOnly: false })
+            : undefined
+        }
         usage={state.usage}
       />
     </div>
@@ -315,6 +326,7 @@ function View({
   worksheet,
   worksheetNote,
   worksheetProOnly,
+  onWorksheetMade,
   usage,
 }: {
   name: string;
@@ -323,6 +335,8 @@ function View({
   worksheet: WS_3STAGE_V1 | null;
   worksheetNote: string;
   worksheetProOnly: boolean;
+  /** Set when the worksheet can be made now; called with the new worksheet. */
+  onWorksheetMade?: (ws: WS_3STAGE_V1) => void;
   usage: ApiUsage | null;
   /** Sample data on the How it works page: no upload button. */
   sample?: boolean;
@@ -374,8 +388,8 @@ function View({
         <WorksheetViewer worksheet={worksheet} steps={grading.stepDiagnostics} />
       ) : worksheetProOnly || grading.plan === 'free' ? (
         <LockedProCard
-          title="Nightly 3-stage practice worksheet"
-          description="Pro builds a custom practice worksheet overnight whenever your work has a mistake to practise."
+          title="3-stage practice worksheet"
+          description="Pro builds a custom practice worksheet whenever your work has a mistake to practise."
           features={[
             'Stage A · Diagnostic Mirror: your line side-by-side with the corrected step.',
             'Stage B · Faded Scaffolding: guided practice with fill-in-the-blank checkpoints.',
@@ -388,6 +402,7 @@ function View({
           <div>
             <h2 className="font-semibold text-slate-900">Practice worksheet</h2>
             <p className="mt-1 text-sm text-slate-600">{worksheetNote}</p>
+            {onWorksheetMade && <MakeWorksheetButton gradingId={grading.gradingId} onMade={onWorksheetMade} />}
           </div>
         </section>
       )}

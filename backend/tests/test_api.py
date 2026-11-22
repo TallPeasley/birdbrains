@@ -272,3 +272,33 @@ def test_one_unreadable_batch_job_does_not_block_the_others(deps, client):
     assert out["jobsWithErrors"] == 1
     assert deps.store.get("batchjobs", "fine")["state"] == "COLLECTED"
     assert deps.store.get("batchjobs", "broken")["state"] == "SUBMITTED"  # asked again next time
+
+
+def test_make_the_worksheet_now(client, family, deps):
+    """Pro students needn't wait for the night: the worksheet is made on request, the
+    nightly job then leaves it alone, and a failure keeps it queued."""
+    sid = family["studentId"]
+    token = {"X-Batch-Token": "s3cret"}
+    free = upload(client, sid).json()
+    g_free = client.post(f"/submissions/{free['submissionId']}/process", headers=auth("alex")).json()["grading"]
+    assert client.post(f"/gradings/{g_free['gradingId']}/worksheet/generate", headers=auth("alex")).status_code == 402
+
+    client.post("/internal/users/alex/plan", json={"plan": "pro"}, headers=token)
+    sub = upload(client, sid).json()
+    g = client.post(f"/submissions/{sub['submissionId']}/process", headers=auth("alex")).json()["grading"]
+    url = f"/gradings/{g['gradingId']}/worksheet/generate"
+    assert client.post(url, headers=auth("stranger")).status_code == 404
+
+    real = deps.batch.generate_now
+    deps.batch.generate_now = lambda item: (_ for _ in ()).throw(ValueError("step 2: is not true"))
+    assert client.post(url, headers=auth("alex")).json()["detail"] == "WORKSHEET_NOT_MADE"
+    assert deps.store.get("gradings", g["gradingId"])["worksheetStatus"] == "QUEUED"
+
+    deps.batch.generate_now = real
+    assert client.post("/internal/batch/worksheets/submit", headers=token).json()["submitted"] == 1
+    made = client.post(url, headers=auth("alex")).json()  # while the nightly job is still out
+    assert made["sectionB_FadedScaffolding"][1]["scaffoldingType"] == "PARTIAL_BLANK"
+    again = client.post(url, headers=auth("jordan")).json()  # a parent can press it too; same sheet
+    assert again["worksheetId"] == made["worksheetId"]
+    client.post("/internal/batch/worksheets/collect", headers=token)
+    assert client.get(f"/gradings/{g['gradingId']}/worksheet", headers=auth("alex")).json()["worksheetId"] == made["worksheetId"]

@@ -28,6 +28,7 @@ from .schemas import (
 log = logging.getLogger(__name__)
 
 WORKSHEET_MODEL = os.environ.get("BIRDBRAINS_WORKSHEET_MODEL", STAGE2_MODEL)
+WORKSHEET_TEMPERATURE = float(os.environ.get("BIRDBRAINS_WORKSHEET_TEMPERATURE", "0.2"))
 
 WORKSHEET_SYSTEM = """\
 You write short remedial mathematics worksheets for Ontario Grade 9 (MTH1W) and
@@ -137,7 +138,7 @@ def build_jsonl(items: Iterable[FlaggedGrading]) -> str:
                         "systemInstruction": {"parts": [{"text": WORKSHEET_SYSTEM}]},
                         "contents": [{"role": "user", "parts": [{"text": worksheet_prompt(item)}]}],
                         "generationConfig": {
-                            "temperature": 0.2,
+                            "temperature": WORKSHEET_TEMPERATURE,
                             "responseMimeType": "application/json",
                             "responseJsonSchema": schema,
                         },
@@ -172,15 +173,20 @@ def parse_output_jsonl(
                 raise ValueError(f"request failed: {str(row['status'])[:200]}")
             body = row["response"]["candidates"][0]["content"]["parts"]
             raw = "".join(p.get("text", "") for p in body if not p.get("thought"))
-            content = tidy_worksheet(WorksheetContent.model_validate_json(raw))
-            problems = lint_worksheet(content) or check_worksheet_maths(content)
-            if problems:  # a retry usually fixes it; a student never sees a broken sheet
-                raise ValueError("; ".join(problems[:5]))
-            done[grading_id] = content
+            done[grading_id] = worksheet_from_text(raw)  # a retry usually fixes a broken sheet
         except Exception as exc:
             log.warning("Worksheet for %s unusable: %s", grading_id, exc)
             failed.append(grading_id)
     return done, failed
+
+
+def worksheet_from_text(raw: str) -> WorksheetContent:
+    """Validate, repair and check one worksheet; raises ValueError if a student must not see it."""
+    content = tidy_worksheet(WorksheetContent.model_validate_json(raw))
+    problems = lint_worksheet(content) or check_worksheet_maths(content)
+    if problems:
+        raise ValueError("; ".join(problems[:5]))
+    return content
 
 
 class BlobIO(Protocol):
@@ -193,6 +199,12 @@ class BatchEngine(Protocol):
     def submit(self, items: list[FlaggedGrading]) -> Optional[dict]: ...
 
     def collect(self, job: dict) -> Optional[tuple[dict[str, WorksheetContent], list[str]]]: ...
+
+    def generate_now(self, item: FlaggedGrading) -> WorksheetContent: ...
+
+
+# Tries for an on-demand worksheet: one that fails the checks is asked for again.
+NOW_ATTEMPTS = 2
 
 
 class GeminiBatchEngine:
@@ -230,6 +242,31 @@ class GeminiBatchEngine:
             "state": "SUBMITTED",
             "submittedAt": stamp,
         }
+
+    def generate_now(self, item: FlaggedGrading) -> WorksheetContent:
+        """One worksheet made on the spot (the student asked for it) with the same prompt,
+        schema and checks as the nightly job, at the normal price instead of half."""
+        from google.genai import types
+
+        from .pipeline import with_retries
+
+        config = types.GenerateContentConfig(
+            system_instruction=WORKSHEET_SYSTEM,
+            temperature=WORKSHEET_TEMPERATURE,
+            response_mime_type="application/json",
+            response_json_schema=WorksheetContent.model_json_schema(),
+        )
+        prompt = worksheet_prompt(item)
+        last: Exception = ValueError("no attempt made")
+        for attempt in range(NOW_ATTEMPTS):
+            response = with_retries(lambda: self._client.models.generate_content(
+                model=WORKSHEET_MODEL, contents=prompt, config=config), "worksheet_now")
+            try:
+                return worksheet_from_text(response.text or "")
+            except Exception as exc:
+                log.warning("On-demand worksheet for %s unusable (try %d): %s", item.grading_id, attempt + 1, exc)
+                last = exc
+        raise last
 
     def collect(self, job: dict) -> Optional[tuple[dict[str, WorksheetContent], list[str]]]:
         """None while the job is still running."""

@@ -304,6 +304,9 @@ class FakeBatchEngine:
         return {"name": name, "outputPrefix": "", "gradingIds": [i.grading_id for i in items],
                 "state": "SUBMITTED", "submittedAt": ""}
 
+    def generate_now(self, item: FlaggedGrading) -> WorksheetContent:
+        return fake_worksheet(item)
+
     def collect(self, job: dict):
         items = self._pending.pop(job["name"], [])
         return {i.grading_id: fake_worksheet(i) for i in items}, []

@@ -822,6 +822,43 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
             raise HTTPException(404, f"WORKSHEET_{grading['worksheetStatus']}")
         return to_api_worksheet(d.store.get("worksheets", grading_id))
 
+    @app.post("/gradings/{grading_id}/worksheet/generate", response_model=ApiWorksheet)
+    def generate_worksheet(grading_id: str, user: User):
+        """Make the practice worksheet now instead of waiting for the nightly job. Pro
+        (and testing accounts) only. A ready worksheet is returned as it is, so pressing
+        twice costs nothing. If this fails the worksheet stays queued for the night."""
+        grading = owned("gradings", grading_id, user)
+        status = grading["worksheetStatus"]
+        if status == "READY":
+            return to_api_worksheet(d.store.get("worksheets", grading_id))
+        if status == "NOT_NEEDED":
+            raise HTTPException(409, "WORKSHEET_NOT_NEEDED")
+        if status == "PRO_ONLY" or (effective_plan(grading["studentId"]) != "pro" and not d.free_worksheets):
+            raise HTTPException(402, "PRO_ONLY")
+        item = FlaggedGrading(
+            grading_id=grading_id,
+            course=CourseEnum(grading["course"]),
+            unit_topic=grading["unitTopic"],
+            scaffolding_mode=ScaffoldingModeEnum(grading["scaffoldingMode"]),
+            stage2=Stage2GradingAndAffectOutput.model_validate(grading["stage2"]),
+        )
+        try:
+            content = d.batch.generate_now(item)
+        except Exception as exc:
+            log.warning("On-demand worksheet failed for %s: %s", grading_id, str(exc)[:300])
+            if status == "FAILED":  # the night already gave up; give it another go
+                grading.update(worksheetStatus="QUEUED", worksheetAttempts=0)
+                d.store.put("gradings", grading_id, grading)
+            raise HTTPException(502, "WORKSHEET_NOT_MADE")
+        record = {
+            "worksheetId": new_id("wks"), "gradingId": grading_id, "studentId": grading["studentId"],
+            "createdAt": now_iso(), "content": content.model_dump(mode="json"), "tenantId": tenant_of(grading),
+        }
+        d.store.put("worksheets", grading_id, record)
+        grading["worksheetStatus"] = "READY"
+        d.store.put("gradings", grading_id, grading)
+        return to_api_worksheet(record)
+
     @app.get("/gradings/{grading_id}/worksheet.pdf")
     def get_worksheet_pdf(grading_id: str, user: User):
         """The 3-stage worksheet as a printable PDF (rendered on request)."""
@@ -1410,8 +1447,8 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
             done, bad = result
             for grading_id, content in done.items():
                 g = d.store.get("gradings", grading_id)
-                if not g or grading_id not in job["gradingIds"]:
-                    continue
+                if not g or grading_id not in job["gradingIds"] or g.get("worksheetStatus") == "READY":
+                    continue  # gone, not ours, or already made on demand
                 d.store.put("worksheets", grading_id, {
                     "worksheetId": new_id("wks"), "gradingId": grading_id, "studentId": g["studentId"],
                     "createdAt": now_iso(), "content": content.model_dump(mode="json"),
@@ -1422,7 +1459,7 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
                 ready += 1
             for grading_id in bad:
                 g = d.store.get("gradings", grading_id)
-                if not g:
+                if not g or g.get("worksheetStatus") == "READY":
                     continue
                 retry = g.get("worksheetAttempts", 0) < MAX_WORKSHEET_ATTEMPTS
                 g["worksheetStatus"] = "QUEUED" if retry else "FAILED"
