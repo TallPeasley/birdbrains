@@ -82,3 +82,51 @@ def test_tester_can_recheck_an_old_upload(client, family, deps):
     history = client.get(f"/students/{sid}/gradings", headers=auth("alex")).json()
     assert [g["gradingId"] for g in history] == [second["gradingId"]]
     assert deps.store.get("ledgers", sid) == ledger_before
+
+
+def test_tester_switches_view_and_plan_on_the_fly(client, family, deps):
+    deps.free_monthly_limit = 1
+    sid = family["studentId"]
+    # Not a tester yet: the switch is refused.
+    assert client.post("/me/tester-view", json={"role": "parent"}, headers=auth("alex")).status_code == 403
+    make_tester(client, uid="alex")
+    assert upload(client, sid).status_code == 201
+
+    # Free view: the meter shows the cap, but a tester is never stopped by it.
+    me = client.post("/me/tester-view", json={"plan": "free"}, headers=auth("alex")).json()
+    assert me["plan"] == "free" and me["role"] == "student"
+    usage = client.get(f"/students/{sid}/usage", headers=auth("alex")).json()
+    assert usage["plan"] == "free"
+    assert upload(client, sid).status_code == 201
+
+    # Parent view: linked to their own student record, listed by name.
+    me = client.post("/me/tester-view", json={"role": "parent", "plan": "pro"}, headers=auth("alex")).json()
+    assert me["role"] == "parent" and me["plan"] == "pro" and sid in me["childStudentIds"]
+    assert me["children"] == [{"studentId": sid, "name": "Alex Mercer", "course": "MPM2D"}]
+    assert client.get(f"/students/{sid}/usage", headers=auth("alex")).json()["plan"] == "pro"
+
+    # Teacher view: on their own class list, and the Pro class report works.
+    me = client.post("/me/tester-view", json={"role": "teacher"}, headers=auth("alex")).json()
+    assert me["role"] == "teacher"
+    roster = client.get("/teacher/students", headers=auth("alex")).json()
+    assert [r["studentId"] for r in roster] == [sid] and roster[0]["linkedAccount"] is True
+    assert client.get(f"/students/{sid}/progress", headers=auth("alex")).status_code == 200
+    assert client.get("/teacher/report", headers=auth("alex")).status_code == 200
+    client.post("/me/tester-view", json={"plan": "free"}, headers=auth("alex"))
+    assert client.get("/teacher/report", headers=auth("alex")).status_code == 402
+
+    # And back to student, with the same uploads.
+    me = client.post("/me/tester-view", json={"role": "student"}, headers=auth("alex")).json()
+    assert me["role"] == "student" and me["studentId"] == sid
+
+
+def test_tester_who_signed_up_as_a_parent_gets_a_student_record(client, family):
+    make_tester(client, uid="jordan")
+    me = client.post("/me/tester-view", json={"role": "student", "course": "MTH1W"}, headers=auth("jordan")).json()
+    assert me["role"] == "student" and me["studentId"] and me["course"] == "MTH1W" and me["linkCode"]
+
+
+def test_tester_flag_cannot_be_set_through_the_switch(client, family):
+    make_tester(client, uid="alex")
+    r = client.post("/me/tester-view", json={"role": "parent", "tester": True}, headers=auth("alex"))
+    assert r.status_code == 422

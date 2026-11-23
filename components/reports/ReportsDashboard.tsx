@@ -26,6 +26,7 @@ import { useSession } from '@/lib/session';
 import { useRole } from '@/lib/roleContext';
 import { Loading, SignInNotice } from '@/components/DashboardStates';
 import { PILLARS } from '@/lib/pillars';
+import { mistakeName } from '@/lib/errorCodes';
 import type { CohortReport, PlanTier, ProgressReport } from '@/types/birdBrains';
 
 const DEMO_PROGRESS: ProgressReport = {
@@ -304,14 +305,14 @@ export default function ReportsDashboard() {
                 <p className="text-xs text-slate-500">{progress.uploads} graded uploads</p>
               </div>
               <div className="card p-5">
-                <p className="eyebrow">Recurring Error Codes</p>
+                <p className="eyebrow">Mistakes that keep coming back</p>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {progress.recurringCodes.length === 0 ? (
                     <span className="text-xs text-slate-500">None yet</span>
                   ) : (
                     progress.recurringCodes.map((code) => (
                       <span key={code} className="rounded-lg bg-rose-50 px-2.5 py-1 text-xs font-bold text-rose-800 ring-1 ring-rose-200">
-                        {code}
+                        {mistakeName(code)}
                       </span>
                     ))
                   )}
@@ -395,18 +396,17 @@ export default function ReportsDashboard() {
               </section>
 
               <section className="card p-5">
-                <h2 className="text-base font-bold text-slate-900">Error Codes Breakdown</h2>
+                <h2 className="text-base font-bold text-slate-900">Mistakes by kind</h2>
                 <ul className="mt-3 divide-y divide-slate-100 text-sm">
                   {progress.errorCodes.map((ec) => (
                     <li key={ec.code} className="flex items-center justify-between py-2.5">
                       <div>
                         <span
-                          className="mr-2 inline-block rounded px-1.5 py-0.5 text-xs font-bold text-white"
+                          className="mr-2 inline-block h-2 w-2 rounded-full p-0 align-middle text-xs font-bold text-white"
                           style={{ backgroundColor: PILLARS[ec.pillar].color }}
-                        >
-                          {ec.code}
-                        </span>
-                        <span className="text-xs font-medium text-slate-700">{ec.name}</span>
+                          aria-hidden
+                        />
+                        <span className="text-xs font-medium text-slate-700">{mistakeName(ec.code, ec.name)}</span>
                       </div>
                       <span className="text-xs font-semibold text-slate-500">{ec.count}×</span>
                     </li>
@@ -472,12 +472,12 @@ export default function ReportsDashboard() {
                             {st.recurringCodes.length > 0 ? (
                               st.recurringCodes.map((c) => (
                                 <span key={c} className="rounded bg-rose-50 px-2 py-0.5 text-xs font-semibold text-rose-800">
-                                  {c}
+                                  {mistakeName(c)}
                                 </span>
                               ))
                             ) : st.topCode ? (
                               <span className="rounded bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700">
-                                {st.topCode}
+                                {mistakeName(st.topCode)}
                               </span>
                             ) : (
                               <span className="text-xs text-slate-400">None</span>
@@ -527,12 +527,11 @@ export default function ReportsDashboard() {
                     <li key={ec.code} className="flex items-center justify-between py-2.5 text-xs">
                       <div>
                         <span
-                          className="mr-2 inline-block rounded px-1.5 py-0.5 font-bold text-white"
+                          className="mr-2 inline-block h-2 w-2 rounded-full p-0 align-middle font-bold text-white"
                           style={{ backgroundColor: PILLARS[ec.pillar].color }}
-                        >
-                          {ec.code}
-                        </span>
-                        <span className="font-medium text-slate-700">{ec.name}</span>
+                          aria-hidden
+                        />
+                        <span className="font-medium text-slate-700">{mistakeName(ec.code, ec.name)}</span>
                       </div>
                       <span className="font-semibold text-slate-500">
                         {ec.students} student{ec.students === 1 ? '' : 's'} · {ec.count}×

@@ -372,7 +372,6 @@ function DiagnosisPreview() {
               {!s.ok && s.pillar && (
                 <div className="mt-2 flex flex-wrap items-center gap-2 pl-6 text-sm">
                   <PillarBadge pillar={s.pillar} />
-                  <span className="font-mono text-xs font-semibold text-slate-700">{s.code}</span>
                   <span className="text-slate-600">{s.note}</span>
                 </div>
               )}

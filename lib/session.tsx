@@ -52,6 +52,8 @@ interface SessionValue {
   signUp: (email: string, password: string, profile: NewProfile) => Promise<void>;
   createProfile: (profile: NewProfile) => Promise<void>;
   linkChild: (code: string) => Promise<void>;
+  /** Testing accounts: switch view and plan without signing out. */
+  setTesterView: (change: { role?: 'student' | 'parent' | 'teacher'; plan?: 'free' | 'pro' }) => Promise<void>;
   signOut: () => Promise<void>;
   getToken: () => Promise<string>;
   /** Bumped after an upload finishes so dashboards refetch. */
@@ -262,6 +264,10 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       createProfile,
       linkChild: async (code) => {
         setProfile(await api.linkChild(await getToken(), code));
+      },
+      setTesterView: async (change) => {
+        setProfile(await api.testerView(await getToken(), change));
+        setDataVersion((v) => v + 1); // plan or role changed: dashboards refetch
       },
       signOut: async () => {
         if (DEV_AUTH) {

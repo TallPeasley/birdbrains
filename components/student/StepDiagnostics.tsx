@@ -19,7 +19,7 @@ import type {
   StepDiagnostic,
 } from '@/types/birdBrains';
 import { PILLARS } from '@/lib/pillars';
-import { errorCodeName } from '@/lib/errorCodes';
+import { mistakeName } from '@/lib/errorCodes';
 import { errorCodeHelp, errorCodePillar } from '@/components/student/errorCodeHelp';
 import { MathNumber, MathText } from '@/components/MathText';
 
@@ -80,13 +80,10 @@ export default function StepDiagnostics({ grading }: { grading: Stage2GradingAnd
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <h2 className="text-lg font-semibold text-slate-900">
-                {questions.length > 1
-                  ? 'Question-by-question error localization'
-                  : 'Step-by-step error localization'}
+                {questions.length > 1 ? 'Your work, question by question' : 'Your work, step by step'}
               </h2>
               <p className="text-sm text-slate-500">
-                Each question is checked independently against a generated answer key, key-step
-                coverage, and re-substitution into the original prompt.
+                We check every step, then put your final answer back into the question to see if it works.
               </p>
             </div>
           </div>
@@ -186,7 +183,6 @@ function QuestionCard({
   onToggle: () => void;
 }) {
   const errorSteps = q.stepDiagnostics.filter((s) => !s.isCorrect);
-  const protectedSteps = q.stepDiagnostics.filter((s) => s.isCarryForwardProtected);
   const verified = q.finalAnswerVerification.satisfiesInitialQuestion;
 
   const missingCount = q.keyStepChecks.filter((c) => c.status === 'MISSING').length;
@@ -195,9 +191,15 @@ function QuestionCard({
     (c) => c.status === 'PRESENT' || c.status === 'EQUIVALENT_METHOD'
   ).length;
 
-  const [showKeyDetails, setShowKeyDetails] = useState<boolean>(
-    !verified || missingCount > 0 || errorKeyCount > 0
-  );
+  // Closed by default: the steps above already show where the mistake is. A skipped
+  // step only shows up here, so open it when something is missing.
+  const [showKeyDetails, setShowKeyDetails] = useState<boolean>(missingCount > 0);
+  // The steps above already say which lines were right or wrong, so by default list only
+  // the key steps that never appear in the work (when there are any).
+  const [showAllKeySteps, setShowAllKeySteps] = useState(false);
+  const visibleKeySteps =
+    showAllKeySteps || missingCount === 0 ? q.keyStepChecks : q.keyStepChecks.filter((c) => c.status === 'MISSING');
+  const hiddenKeySteps = q.keyStepChecks.length - visibleKeySteps.length;
 
   return (
     <article className="card p-4 sm:p-6">
@@ -214,11 +216,11 @@ function QuestionCard({
           </span>
           {verified ? (
             <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">
-              <CheckCircle2 className="h-3.5 w-3.5" aria-hidden /> Verified against initial question
+              <CheckCircle2 className="h-3.5 w-3.5" aria-hidden /> Answer checks out
             </span>
           ) : (
             <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-0.5 text-xs font-semibold text-rose-700 ring-1 ring-rose-200">
-              <XCircle className="h-3.5 w-3.5" aria-hidden /> Final answer fails check
+              <XCircle className="h-3.5 w-3.5" aria-hidden /> Answer doesn’t check out
             </span>
           )}
         </div>
@@ -261,6 +263,12 @@ function QuestionCard({
         </div>
       )}
 
+      {/* The mistakes first, once each; the steps below show where they happened. */}
+      <MisconceptionList
+        items={q.entityExtractions}
+        heading={multi ? `What tripped you up in Question ${q.questionNumber}` : 'What tripped you up'}
+      />
+
       {/* Final-answer re-substitution verification */}
       <div
         className={`mt-3 rounded-xl border p-3.5 text-sm ${
@@ -278,7 +286,7 @@ function QuestionCard({
           />
           <div className="min-w-0 flex-1 space-y-1.5">
             <p className="font-semibold">
-              Final-answer check (re-substituted into initial question)
+              Does your final answer work?
             </p>
             <div className="grid gap-2 sm:grid-cols-2">
               <div className="rounded-lg bg-white/80 px-2.5 py-1.5 ring-1 ring-slate-200/80">
@@ -301,7 +309,7 @@ function QuestionCard({
             <p className="text-xs leading-relaxed text-slate-700">
               <MathText text={q.finalAnswerVerification.resubstitutionCheck} />
             </p>
-            {!verified && q.finalAnswerVerification.discrepancyNote && (
+            {!verified && errorSteps.length === 0 && q.finalAnswerVerification.discrepancyNote && (
               <p className="text-xs font-medium text-rose-800">
                 <MathText text={q.finalAnswerVerification.discrepancyNote} />
               </p>
@@ -309,29 +317,6 @@ function QuestionCard({
           </div>
         </div>
       </div>
-
-      {/* Per-question carry-forward protection banner (strictly isolated to THIS question) */}
-      {protectedSteps.length > 0 && errorSteps.length > 0 && (
-        <div className="mt-3 flex items-center gap-2 rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-900 ring-1 ring-amber-200">
-          <ShieldCheck className="h-5 w-5 shrink-0 text-amber-600" aria-hidden />
-          <span>
-            <strong>Carry-forward protection (Q{q.questionNumber}):</strong>{' '}
-            {errorSteps.length === 1 ? (
-              <>
-                the slip in step <MathNumber value={errorSteps[0].stepNumber} /> didn&apos;t cost
-                you marks in step{' '}
-                <MathText text={protectedSteps.map((s) => s.stepNumber).join(', ')} />.
-              </>
-            ) : (
-              <>
-                earlier slips in Question <MathNumber value={q.questionNumber} /> didn&apos;t cost
-                you marks in step{' '}
-                <MathText text={protectedSteps.map((s) => s.stepNumber).join(', ')} />.
-              </>
-            )}
-          </span>
-        </div>
-      )}
 
       {/* Per-question step-by-step timeline */}
       {q.stepDiagnostics.length > 0 ? (
@@ -352,7 +337,7 @@ function QuestionCard({
         >
           <span className="inline-flex items-center gap-2">
             <BookOpenCheck className="h-4 w-4 text-indigo-600" aria-hidden />
-            <span>Answer key &amp; key-step coverage</span>
+            <span>Answer key and the steps we looked for</span>
           </span>
           <span className="inline-flex flex-wrap items-center gap-2 text-xs font-medium text-slate-600">
             {q.keyStepChecks.length > 0 && (
@@ -388,10 +373,18 @@ function QuestionCard({
               <div>
                 <h3 className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-slate-500">
                   <ClipboardCheck className="h-3.5 w-3.5 text-indigo-600" aria-hidden />
-                  Key steps checked on your worksheet
+                  Steps we looked for
                 </h3>
+                {!showAllKeySteps && hiddenKeySteps > 0 && (
+                  <p className="mt-1 text-xs text-slate-500">
+                    Showing the steps that were skipped. The rest match your steps above.{' '}
+                    <button type="button" className="font-semibold text-indigo-700 hover:underline" onClick={() => setShowAllKeySteps(true)}>
+                      Show all {q.keyStepChecks.length}
+                    </button>
+                  </p>
+                )}
                 <ul className="mt-2 space-y-2">
-                  {q.keyStepChecks.map((check) => {
+                  {visibleKeySteps.map((check) => {
                     const meta = KEY_STEP_BADGE[check.status];
                     return (
                       <li
@@ -440,7 +433,7 @@ function QuestionCard({
             <div className="border-t border-slate-100 pt-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                  Generated answer key
+                  Answer key
                 </h3>
                 {q.answerKey.methodUsed && (
                   <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-semibold text-slate-700">
@@ -487,11 +480,6 @@ function QuestionCard({
         )}
       </div>
 
-      {/* Per-question root-cause errors */}
-      <MisconceptionList
-        items={q.entityExtractions}
-        heading={multi ? `What tripped you up in Question ${q.questionNumber}` : 'What tripped you up'}
-      />
       </>
       )}
     </article>
@@ -527,7 +515,7 @@ function StepTimeline({ steps, keyPrefix }: { steps: StepDiagnostic[]; keyPrefix
                 </span>
                 {s.isCarryForwardProtected ? (
                   <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800">
-                    <ShieldCheck className="h-3.5 w-3.5" aria-hidden /> Carry-Forward Protected
+                    <ShieldCheck className="h-3.5 w-3.5" aria-hidden /> No marks lost
                   </span>
                 ) : s.isCorrect ? (
                   <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700">
@@ -535,7 +523,7 @@ function StepTimeline({ steps, keyPrefix }: { steps: StepDiagnostic[]; keyPrefix
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-semibold text-rose-700">
-                    <AlertCircle className="h-3.5 w-3.5" aria-hidden /> Error found here
+                    <AlertCircle className="h-3.5 w-3.5" aria-hidden /> Mistake here
                   </span>
                 )}
                 {stepPillar && (
@@ -560,6 +548,16 @@ function StepTimeline({ steps, keyPrefix }: { steps: StepDiagnostic[]; keyPrefix
   );
 }
 
+const SEVERITY: Record<string, { label: string; cls: string }> = {
+  HIGH: { label: 'Big impact', cls: 'bg-rose-100 text-rose-700' },
+  MEDIUM: { label: 'Some impact', cls: 'bg-amber-100 text-amber-800' },
+  LOW: { label: 'Small slip', cls: 'bg-slate-200 text-slate-700' },
+};
+
+/**
+ * The mistakes, in plain words, once each: the same kind of mistake twice shows as one
+ * card with both details. No internal codes (PRC-03 ...) are shown.
+ */
 function MisconceptionList({
   items,
   heading,
@@ -568,67 +566,44 @@ function MisconceptionList({
   heading: string;
 }) {
   if (items.length === 0) return null;
+  const grouped = new Map<string, { severity: string; details: string[] }>();
+  for (const m of items) {
+    const code = m.misconceptionId || 'UNKNOWN';
+    const g = grouped.get(code) ?? { severity: m.severity, details: [] };
+    if (m.severity === 'HIGH' || (m.severity === 'MEDIUM' && g.severity === 'LOW')) g.severity = m.severity;
+    const d = m.description?.trim();
+    if (d && !g.details.includes(d)) g.details.push(d);
+    grouped.set(code, g);
+  }
   return (
-    <div className="mt-4 border-t border-slate-200 pt-4">
+    <div className="mt-4 rounded-xl border border-slate-200 bg-white p-3.5">
       <h3 className="eyebrow">{heading}</h3>
       <ul className="mt-3 space-y-3">
-        {items.map((m, idx) => {
-          const code = m.misconceptionId || 'UNKNOWN';
-          const plainWords = errorCodeHelp(code);
-          const officialName = errorCodeName(code);
+        {Array.from(grouped.entries()).map(([code, g]) => {
           const pillarKey = errorCodePillar(code);
           const pillar = pillarKey ? PILLARS[pillarKey] : undefined;
           const pillarColor = pillar?.color ?? '#64748b';
-
+          const sev = SEVERITY[g.severity] ?? SEVERITY.LOW;
           return (
             <li
-              key={`${code}-${idx}`}
+              key={code}
               className="min-w-0 rounded-xl border border-slate-200 border-l-4 bg-slate-50/70 p-3.5"
               style={{ borderLeftColor: pillarColor }}
             >
               <div className="flex flex-wrap items-center gap-2">
-                <span
-                  className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold text-white"
-                  style={{ backgroundColor: pillarColor }}
-                >
-                  {pillar ? pillar.short : <MathText text={code} />}
-                </span>
-                <span
-                  className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${
-                    m.severity === 'HIGH'
-                      ? 'bg-rose-100 text-rose-700'
-                      : m.severity === 'MEDIUM'
-                        ? 'bg-amber-100 text-amber-800'
-                        : 'bg-slate-200 text-slate-700'
-                  }`}
-                >
-                  {m.severity}
-                </span>
-              </div>
-
-              <p className="mt-2 break-words text-sm font-semibold text-slate-900">
-                <MathText text={plainWords} />
-              </p>
-
-              {m.description && (
-                <p className="mt-1 break-words text-sm text-slate-600">
-                  <MathText text={m.description} />
-                </p>
-              )}
-
-              <p className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
-                <span className="font-semibold" style={{ color: pillarColor }}>
-                  <MathText text={code} />
-                </span>
-                {officialName && (
-                  <>
-                    <span aria-hidden>·</span>
-                    <span>
-                      <MathText text={officialName} />
-                    </span>
-                  </>
+                <p className="break-words text-sm font-semibold text-slate-900">{mistakeName(code)}</p>
+                <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${sev.cls}`}>{sev.label}</span>
+                {pillar && (
+                  <span className="text-[11px] font-medium" style={{ color: pillarColor }}>
+                    {pillar.short}
+                  </span>
                 )}
-              </p>
+              </div>
+              {(g.details.length ? g.details : [errorCodeHelp(code)]).map((d) => (
+                <p key={d} className="mt-1 break-words text-sm text-slate-600">
+                  <MathText text={d} />
+                </p>
+              ))}
             </li>
           );
         })}
@@ -658,7 +633,7 @@ function LegacyStepDiagnostics({ grading }: { grading: Stage2GradingAndAffectOut
     <section className="card p-4 sm:p-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold text-slate-900">Step-by-step error localization</h2>
+          <h2 className="text-lg font-semibold text-slate-900">Your work, step by step</h2>
           <p className="text-sm text-slate-500">
             Each line of your work, checked on its own and against what came before.
           </p>
@@ -667,7 +642,7 @@ function LegacyStepDiagnostics({ grading }: { grading: Stage2GradingAndAffectOut
           <div className="flex items-center gap-2 rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-900 ring-1 ring-amber-200">
             <ShieldCheck className="h-5 w-5 shrink-0 text-amber-600" aria-hidden />
             <span>
-              <strong>Carry-forward protection:</strong> the slip in step <MathText text={stepName(firstError)} />{' '}
+              <strong>No marks lost later:</strong> the slip in step <MathText text={stepName(firstError)} />{' '}
               didn&apos;t cost you marks in step <MathText text={protectedSteps.map(stepName).join(', ')} />.
             </span>
           </div>

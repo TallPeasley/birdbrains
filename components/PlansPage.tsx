@@ -33,7 +33,7 @@ const COMPARISON_ROWS: {
     pro: 'Unlimited',
   },
   {
-    feature: 'Step-by-step error localization & carry-forward protection',
+    feature: 'Step-by-step check that finds the exact line with the mistake',
     detail: 'Checks each line on its own so an early slip does not cost marks twice.',
     free: true,
     pro: true,
@@ -186,7 +186,7 @@ export default function PlansPage() {
             <ul className="mt-5 space-y-2.5 text-sm text-slate-700">
               <li className="flex items-start gap-2">
                 <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" aria-hidden />
-                <span>Step-by-step error localization with carry-forward protection</span>
+                <span>Step-by-step check that finds the exact line with the mistake, and no marks lost for later lines that follow from it</span>
               </li>
               <li className="flex items-start gap-2">
                 <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" aria-hidden />
