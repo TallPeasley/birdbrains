@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
-import { ArrowDown, CheckCircle2, Download, ExternalLink, Eye, PlayCircle, Lightbulb, RotateCcw, XCircle } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { ArrowDown, CheckCircle2, Download, ExternalLink, Eye, PlayCircle, Lightbulb, RotateCcw, Sparkles, XCircle } from 'lucide-react';
 import type { FadedScaffoldingStep, PracticeProblem, StepDiagnostic, WS_3STAGE_V1 } from '@/types/birdBrains';
 import { PILLARS } from '@/lib/pillars';
 import { MathNumber, MathText } from '@/components/MathText';
 import { renderKatex } from '@/lib/katexMath';
-import { api } from '@/lib/api';
+import { api, ApiError } from '@/lib/api';
 import { useSession } from '@/lib/session';
 import { expectedBlanks, sameAnswer } from '@/lib/answerCheck';
 import { worksheet as sampleWorksheet } from '@/lib/mockData';
@@ -20,10 +20,41 @@ const SECTIONS = [
 
 type SectionKey = (typeof SECTIONS)[number]['key'];
 
-export default function WorksheetViewer({ worksheet, steps }: { worksheet: WS_3STAGE_V1; steps?: StepDiagnostic[] }) {
+/** Worksheets whose practice set was already asked for in this visit, so a failure isn't retried on every render. */
+const practiceAsked = new Set<string>();
+
+type PracticeState = 'ready' | 'loading' | 'failed' | 'none';
+
+export default function WorksheetViewer({ worksheet: given, steps }: { worksheet: WS_3STAGE_V1; steps?: StepDiagnostic[] }) {
+  const { live, getToken } = useSession();
   const [active, setActive] = useState<SectionKey>('A');
+  const [worksheet, setWorksheet] = useState(given);
+  useEffect(() => setWorksheet(given), [given]);
   const practice = worksheet.sectionD_PracticeSet ?? [];
-  const sections = SECTIONS.filter((s) => s.key !== 'D' || practice.length > 0);
+  const sample = !live || worksheet.gradingId === sampleWorksheet.gradingId;
+  const [practiceState, setPracticeState] = useState<PracticeState>(
+    practice.length ? 'ready' : practiceAsked.has(given.gradingId) ? 'failed' : 'none',
+  );
+
+  // "Make it now" sends sections A-C first; the practice set (section D) is filled in here.
+  const addPractice = useCallback(async () => {
+    practiceAsked.add(worksheet.gradingId);
+    setPracticeState('loading');
+    try {
+      const full = await api.generatePracticeSet(await getToken(), worksheet.gradingId);
+      setWorksheet(full);
+      setPracticeState((full.sectionD_PracticeSet ?? []).length ? 'ready' : 'failed');
+    } catch (err) {
+      setPracticeState(err instanceof ApiError && err.status === 402 ? 'none' : 'failed');
+    }
+  }, [worksheet.gradingId, getToken]);
+
+  useEffect(() => {
+    if (practice.length) setPracticeState('ready');
+    else if (!sample && !practiceAsked.has(worksheet.gradingId)) void addPractice();
+  }, [practice.length, sample, worksheet.gradingId, addPractice]);
+
+  const sections = SECTIONS.filter((s) => s.key !== 'D' || practiceState !== 'none');
 
   return (
     <section className="card overflow-hidden">
@@ -70,7 +101,22 @@ export default function WorksheetViewer({ worksheet, steps }: { worksheet: WS_3S
         {active === 'A' && <DiagnosticMirror worksheet={worksheet} steps={steps} />}
         {active === 'B' && <FadedScaffolding steps={worksheet.sectionB_FadedScaffolding} />}
         {active === 'C' && <IndependentTransfer worksheet={worksheet} />}
-        {active === 'D' && <PracticeSet problems={practice} />}
+        {active === 'D' &&
+          (practiceState === 'ready' ? (
+            <PracticeSet problems={practice} />
+          ) : practiceState === 'loading' ? (
+            <p className="flex items-center gap-2 text-sm text-slate-600" role="status">
+              <Sparkles className="h-4 w-4 animate-pulse text-indigo-600" aria-hidden />
+              Writing 8 more practice problems for you. Start on sections A to C; these will appear here in a few seconds.
+            </p>
+          ) : practiceState === 'failed' ? (
+            <div className="flex flex-wrap items-center gap-3 text-sm text-slate-600">
+              <span>The practice set didn&apos;t pass our checks this time.</span>
+              <button onClick={() => void addPractice()} className="btn btn-sm btn-secondary">
+                <RotateCcw className="h-3.5 w-3.5" aria-hidden /> Try again
+              </button>
+            </div>
+          ) : null)}
       </div>
     </section>
   );

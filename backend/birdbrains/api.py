@@ -51,6 +51,7 @@ from .schemas import (
     CreateUploadRequest,
     ApiParentSummary,
     ApiWorksheet,
+    WorksheetContent,
     CreateClassRequest,
     CreateSchoolRequest,
     JoinClassRequest,
@@ -908,7 +909,8 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
             stage2=Stage2GradingAndAffectOutput.model_validate(grading["stage2"]),
         )
         try:
-            content = d.batch.generate_now(item)
+            # Sections A to C now; the site then asks .../worksheet/practice for section D.
+            content = d.batch.generate_now(item, core_only=True)
         except Exception as exc:
             log.warning("On-demand worksheet failed for %s: %s", grading_id, str(exc)[:300])
             if status == "FAILED":  # the night already gave up; give it another go
@@ -923,6 +925,38 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         grading["worksheetStatus"] = "READY"
         d.store.put("gradings", grading_id, grading)
         return to_api_worksheet(record)
+
+    @app.post("/gradings/{grading_id}/worksheet/practice", response_model=ApiWorksheet)
+    def generate_practice_set(grading_id: str, user: User):
+        """Add the 8-problem practice set (section D) to a ready worksheet that has none:
+        one made by "Make it now" (which answers with sections A to C first) or an older
+        one. A worksheet that already has its set is returned as it is."""
+        grading = owned("gradings", grading_id, user)
+        record = d.store.get("worksheets", grading_id) if grading["worksheetStatus"] == "READY" else None
+        if not record:
+            raise HTTPException(404, "WORKSHEET_NOT_READY")
+        core = WorksheetContent.model_validate(record["content"])
+        if core.practice_set:
+            return to_api_worksheet(record)
+        if effective_plan(grading["studentId"]) != "pro" and not d.free_worksheets:
+            raise HTTPException(402, "PRO_ONLY")
+        item = FlaggedGrading(
+            grading_id=grading_id,
+            course=CourseEnum(grading["course"]),
+            unit_topic=grading["unitTopic"],
+            scaffolding_mode=ScaffoldingModeEnum(grading["scaffoldingMode"]),
+            stage2=Stage2GradingAndAffectOutput.model_validate(grading["stage2"]),
+        )
+        try:
+            practice = d.batch.generate_practice(item, core)
+        except Exception as exc:
+            log.warning("Practice set failed for %s: %s", grading_id, str(exc)[:300])
+            raise HTTPException(502, "PRACTICE_NOT_MADE")
+        latest = d.store.get("worksheets", grading_id) or record  # a second tab may have added it
+        if not WorksheetContent.model_validate(latest["content"]).practice_set:
+            latest["content"]["practice_set"] = [p.model_dump(mode="json") for p in practice]
+            d.store.put("worksheets", grading_id, latest)
+        return to_api_worksheet(latest)
 
     @app.get("/gradings/{grading_id}/worksheet.pdf")
     def get_worksheet_pdf(grading_id: str, user: User):
