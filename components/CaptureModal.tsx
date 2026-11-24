@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { useRole } from '@/lib/roleContext';
 import { analyzeImage, MIN_SHORT_EDGE, type ImageQualityResult } from '@/lib/imageQuality';
-import { errorCodeName } from '@/lib/errorCodes';
+import { mistakeName, uniqueMistakes } from '@/lib/errorCodes';
 import { PILLARS } from '@/lib/pillars';
 import { demoPersonas, gradingOutput as demoGrading } from '@/lib/mockData';
 import { api, ApiError } from '@/lib/api';
@@ -807,24 +807,17 @@ function PipelineView({
           {grading && grading.entityExtractions.length > 0 && (
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
               <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Error codes spotted
+                Mistakes spotted
               </p>
               <ul className="mt-2 space-y-2">
-                {grading.entityExtractions.map((m, idx) => {
+                {uniqueMistakes(grading.entityExtractions).map((m, idx) => {
                   const prefix = m.misconceptionId.split('-')[0] as keyof typeof PILLARS;
                   const pillar = PILLARS[prefix];
-                  const official = errorCodeName(m.misconceptionId);
                   return (
                     <li key={`${m.misconceptionId}-${idx}`} className="flex flex-wrap items-center gap-2 text-xs">
-                      <span
-                        className="rounded-full px-2 py-0.5 font-mono font-semibold text-white"
-                        style={{ backgroundColor: pillar?.color ?? '#64748b' }}
-                      >
-                        {m.misconceptionId}
-                      </span>
-                      <span className="font-semibold text-slate-800">
-                        {official ?? m.misconceptionId}
-                      </span>
+                      <span className="h-2 w-2 rounded-full" style={{ backgroundColor: pillar?.color ?? '#64748b' }} aria-hidden />
+                      <span className="font-semibold text-slate-800">{mistakeName(m.misconceptionId)}</span>
+                      {m.count > 1 && <span className="text-slate-500">×{m.count}</span>}
                       {pillar && <span className="text-slate-500">· {pillar.short}</span>}
                     </li>
                   );

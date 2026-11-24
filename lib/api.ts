@@ -186,6 +186,14 @@ export const api = {
       return r.json() as Promise<{ url: string }>;
     }),
   teacherStudents: (t: string) => request<RosterStudent[]>('/teacher/students', t),
+  /** A teacher adds a student who has an account, with the link code from the student's home page. */
+  addRosterStudent: (t: string, linkCode: string) =>
+    request<RosterStudent[]>('/teacher/students', t, json({ linkCode })),
+  removeRosterStudent: (t: string, studentId: string) =>
+    request<RosterStudent[]>(`/teacher/students/${studentId}`, t, { method: 'DELETE' }),
+  /** Testing accounts only: switch view (role) and plan on the fly. */
+  testerView: (t: string, body: { role?: 'student' | 'parent' | 'teacher'; plan?: PlanTier }) =>
+    request<UserProfile>('/me/tester-view', t, json(body)),
   /** Results over time for one student (student, linked parent or their teacher). */
   progress: (t: string, studentId: string) => request<ProgressReport>(`/students/${studentId}/progress`, t),
   /** Class overview for a Pro teacher. 402 PRO_ONLY on Free. */

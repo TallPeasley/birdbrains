@@ -25,6 +25,7 @@ import { gradingOutput, worksheet as demoWorksheet } from "@/lib/mockData";
 import MakeWorksheetButton, { MAKEABLE } from "@/components/student/MakeWorksheetButton";
 import { AFFECT_META, PILLAR_ORDER, PILLARS } from "@/lib/pillars";
 import { useSession } from "@/lib/session";
+import { mistakeName, uniqueMistakes } from "@/lib/errorCodes";
 import type {
   Stage2GradingAndAffectOutput,
   WS_3STAGE_V1,
@@ -102,8 +103,10 @@ const scoreTone = (p: number) =>
  * practice worksheet and the photo. Lives on the Account page. In demo mode it shows the
  * sample grading.
  */
-export default function UploadHistory() {
-  const { live, activeStudentId, getToken, dataVersion } = useSession();
+export default function UploadHistory({ studentId }: { studentId?: string } = {}) {
+  const { live, activeStudentId: sessionStudentId, getToken, dataVersion } = useSession();
+  // Teachers pass the student they opened; everyone else sees the student in view.
+  const activeStudentId = studentId ?? sessionStudentId;
   const [history, setHistory] = useState<Stage2GradingAndAffectOutput[] | null>(
     live ? null : [gradingOutput],
   );
@@ -167,7 +170,7 @@ export default function UploadHistory() {
         const hay = [
           g.topic,
           g.course ?? "",
-          ...g.entityExtractions.map((e) => e.misconceptionId),
+          ...g.entityExtractions.map((e) => `${e.misconceptionId} ${mistakeName(e.misconceptionId)}`),
         ]
           .join(" ")
           .toLowerCase();
@@ -443,7 +446,7 @@ function HistoryCard({
 
       <div className="mt-3 flex flex-wrap items-center gap-1.5">
         {g.entityExtractions.length > 0 ? (
-          g.entityExtractions.map((e, i) => {
+          uniqueMistakes(g.entityExtractions).map((e, i) => {
             const pillar =
               PILLARS[e.misconceptionId.split("-")[0] as keyof typeof PILLARS];
             return (
@@ -456,7 +459,8 @@ function HistoryCard({
                   style={{ backgroundColor: pillar?.color ?? "#64748b" }}
                   aria-hidden
                 />
-                {e.misconceptionId}
+                {mistakeName(e.misconceptionId)}
+                {e.count > 1 && <span className="font-medium text-slate-500">×{e.count}</span>}
               </span>
             );
           })

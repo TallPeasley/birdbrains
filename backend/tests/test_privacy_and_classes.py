@@ -135,3 +135,26 @@ def test_failed_name_check_does_not_block_and_blurs_the_header(capsys):
         assert not _stripes_visible(img, 55)   # the header band is blurred anyway
         assert _stripes_visible(img, 615)      # the maths further down is untouched
     assert '"event": "privacy_fallback"' in capsys.readouterr().out
+
+
+def test_teacher_adds_and_removes_a_student_by_link_code(client, family):
+    client.post("/me", json={"role": "teacher", "name": "Ms Rivera"}, headers=auth("rivera"))
+    sid = family["studentId"]
+    assert client.get(f"/students/{sid}/progress", headers=auth("rivera")).status_code == 404
+    r = client.post("/teacher/students", json={"linkCode": family["linkCode"]}, headers=auth("rivera"))
+    assert r.status_code == 200 and r.json()[0]["name"] == "Alex Mercer" and r.json()[0]["linkedAccount"]
+    assert client.get(f"/students/{sid}/progress", headers=auth("rivera")).status_code == 200
+    # A second teacher cannot take the same student; parents cannot use the route.
+    client.post("/me", json={"role": "teacher", "name": "Mr Chen"}, headers=auth("chen"))
+    assert client.post("/teacher/students", json={"linkCode": family["linkCode"]},
+                       headers=auth("chen")).status_code == 409
+    assert client.post("/teacher/students", json={"linkCode": family["linkCode"]},
+                       headers=auth("jordan")).status_code == 403
+    assert client.post("/teacher/students", json={"linkCode": "ZZZZZZZZ"}, headers=auth("rivera")).status_code == 404
+    # Deleting the teacher account keeps the student's own account and work.
+    assert client.delete("/me", headers=auth("rivera")).status_code == 204
+    assert client.get("/me", headers=auth("alex")).status_code == 200
+    r = client.post("/teacher/students", json={"linkCode": family["linkCode"]}, headers=auth("chen"))
+    assert r.status_code == 200
+    assert client.delete(f"/teacher/students/{sid}", headers=auth("chen")).json() == []
+    assert client.get(f"/students/{sid}/progress", headers=auth("chen")).status_code == 404

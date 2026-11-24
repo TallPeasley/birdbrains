@@ -35,6 +35,11 @@ export default function Navbar() {
   // (or local builds with no API, which show mock data).
   const hasDashboard = !IS_LIVE || Boolean(profile);
   const showDashboard = hasDashboard && pathname !== '/';
+  const isTeacher = profile?.role === 'teacher';
+  // Student/Parent toggle: parents (to see their child's own view) and local demo builds.
+  // Testing accounts switch with the bar under the header instead; students and teachers have one view.
+  const showToggle = !IS_LIVE || (profile?.role === 'parent' && !profile.tester);
+  const dashboardHref = showToggle || !profile ? `/${role}` : `/${profile.role}`;
 
   return (
     <AeroGlobalHeader
@@ -45,7 +50,7 @@ export default function Navbar() {
       nav={
         <>
           {showDashboard && (
-            <Link href={`/${role}`} aria-current={pathname === `/${role}` ? 'page' : undefined}>
+            <Link href={dashboardHref} aria-current={pathname === dashboardHref ? 'page' : undefined}>
               Dashboard
             </Link>
           )}
@@ -58,7 +63,7 @@ export default function Navbar() {
           <Link href="/reports" aria-current={pathname === '/reports' ? 'page' : undefined}>
             Reports
           </Link>
-          {(demo || profile?.role === 'teacher') && (
+          {(demo || isTeacher) && !(showDashboard && isTeacher) && (
             <Link href="/teacher" aria-current={pathname === '/teacher' ? 'page' : undefined}>
               Teacher
             </Link>
@@ -71,7 +76,9 @@ export default function Navbar() {
         </>
       }
     >
-      {hasDashboard && (
+      {showToggle || (IS_LIVE && !profile) ? (
+        <>
+      {showToggle && (
         <div
           role="radiogroup"
           aria-label="Switch view"
@@ -101,6 +108,8 @@ export default function Navbar() {
           Sign in
         </Link>
       )}
+        </>
+      ) : null}
     </AeroGlobalHeader>
   );
 }

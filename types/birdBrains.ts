@@ -238,6 +238,14 @@ export interface UserProfile {
   /** Students: classes joined with a class code. */
   classIds?: string[];
   tester?: boolean; // testing account: no upload cap, repeat photos allowed (set by an admin only)
+  /** Parents (and testers): linked students by name, for the child picker. */
+  children?: LinkedStudent[];
+}
+
+export interface LinkedStudent {
+  studentId: string;
+  name: string;
+  course?: GradeCourse | null;
 }
 
 /** A class a student joined with a code (GET /me/classes). */
@@ -290,6 +298,8 @@ export interface RosterStudent {
   googleCourseId?: string | null;
   lmsProvider?: LmsProviderId | null;
   lmsCourseId?: string | null;
+  /** Added with the student's link code (they have their own account). Only these can be removed here. */
+  linkedAccount?: boolean;
 }
 
 export interface ClassroomImportResult {

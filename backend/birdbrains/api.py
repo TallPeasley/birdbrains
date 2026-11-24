@@ -66,6 +66,8 @@ from .schemas import (
     StudentLedger,
     SubmissionIngestionPayload,
     UserProfile,
+    TesterViewRequest,
+    AddRosterStudentRequest,
 )
 from .storage import BlobStorage
 from .store import Store
@@ -294,9 +296,57 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
     def healthz():
         return {"ok": True}
 
+    def profile_view(user: dict) -> dict:
+        """The profile as the site sees it: the plan the account acts on, and a
+        parent's linked students by name. The stored record is not changed."""
+        out = dict(user)
+        out["plan"] = account_plan(user)
+        if user["role"] == "parent" or user.get("tester"):
+            children = []
+            for sid in user.get("childStudentIds", []):
+                found = d.store.query("users", "studentId", sid)
+                if found:
+                    children.append({"studentId": sid, "name": found[0]["name"], "course": found[0].get("course")})
+            out["children"] = children
+        return out
+
     @app.get("/me", response_model=UserProfile)
     def me(user: User):
-        return user
+        return profile_view(user)
+
+    def ensure_own_student(user: dict, course: Optional[CourseEnum] = None) -> str:
+        """Give an account its own student record (id, course, link code) if it has none."""
+        if not user.get("studentId"):
+            code = "".join(secrets.choice(_CODE_CHARS) for _ in range(8))
+            user |= {"studentId": new_id("stu"), "course": (course or CourseEnum("MPM2D")).value, "linkCode": code}
+            d.store.put("linkcodes", code, {"studentId": user["studentId"]})
+        elif course:
+            user["course"] = course.value
+        return user["studentId"]
+
+    @app.post("/me/tester-view", response_model=UserProfile)
+    def tester_view(body: TesterViewRequest, user: User):
+        """Testing accounts switch between the student, parent and teacher views and
+        between Free and Pro. All three views show the tester's own uploads: as a
+        parent they are linked to themselves, as a teacher they are on their own list."""
+        if user.get("tester") is not True:
+            raise HTTPException(403, "Only testing accounts can switch views")
+        if body.plan:
+            user["testerPlan"] = body.plan
+        if body.role or body.course:
+            sid = ensure_own_student(user, body.course)
+            role = body.role or user["role"]
+            user["role"] = role
+            if role == "parent" and sid not in user.setdefault("childStudentIds", []):
+                user["childStudentIds"].append(sid)
+            if role == "teacher":
+                roster = d.store.get("rosters", sid)
+                if not roster or roster.get("teacherUid") != user["uid"]:
+                    d.store.put("rosters", sid, {"studentId": sid, "teacherUid": user["uid"], "name": user["name"],
+                                                 "course": user["course"], "linkedAccount": True,
+                                                 "tenantId": tenant_of(user)})
+        d.store.put("users", user["uid"], user)
+        return profile_view(user)
 
     @app.post("/me", response_model=UserProfile)
     def register(body: RegisterRequest, uid: Annotated[str, Depends(current_uid)]):
@@ -324,7 +374,7 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         if link["studentId"] not in user["childStudentIds"]:
             user["childStudentIds"].append(link["studentId"])
             d.store.put("users", user["uid"], user)
-        return user
+        return profile_view(user)
 
     def student_profile(student_id: str) -> dict:
         found = d.store.query("users", "studentId", student_id)
@@ -339,7 +389,7 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
     def update_profile(body: UpdateProfileRequest, user: User):
         user["name"] = body.name.strip()
         d.store.put("users", user["uid"], user)
-        return user
+        return profile_view(user)
 
     # ------------------------------------------------------------ plans + usage
     def linked_accounts(student_id: str) -> list[dict]:
@@ -358,11 +408,22 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         flag; no route a signed-in user can call writes it."""
         return any(a.get("tester") is True for a in linked_accounts(student_id))
 
+    def account_plan(account: dict) -> str:
+        """The plan an account acts on. Testing accounts pick Free or Pro themselves
+        (POST /me/tester-view) to see both; they are Pro until they pick."""
+        if account.get("tester") is True:
+            return account.get("testerPlan") or "pro"
+        return account.get("plan") or "free"
+
     def effective_plan(student_id: str) -> str:
         """Pro if the student, a parent linked to them, or the teacher who imported
-        them from Classroom is on Pro. Testing accounts count as Pro."""
+        them from Classroom is on Pro. A testing account linked to the student
+        decides alone (its Free/Pro switch), so a tester can see the Free view."""
         accounts = linked_accounts(student_id)
-        return "pro" if any(a.get("plan") == "pro" or a.get("tester") is True for a in accounts) else "free"
+        testers = [a for a in accounts if a.get("tester") is True]
+        if testers:
+            return "pro" if any(account_plan(a) == "pro" for a in testers) else "free"
+        return "pro" if any(account_plan(a) == "pro" for a in accounts) else "free"
 
     def usage(student_id: str) -> ApiUsage:
         now = datetime.now(timezone.utc)
@@ -370,7 +431,8 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         used = sum(1 for s in d.store.query("submissions", "studentId", student_id)
                    if s["uploadedAt"].startswith(month))
         plan = effective_plan(student_id)
-        limit = d.free_monthly_limit if plan == "free" else None
+        # Testers on the Free view see the meter but never hit the cap (see ingest).
+        limit = d.free_monthly_limit if plan == "free" and not is_tester(student_id) else None
         nxt = datetime(now.year + (now.month == 12), now.month % 12 + 1, 1, tzinfo=timezone.utc)
         return ApiUsage(studentId=student_id, plan=plan, monthlyLimit=limit, usedThisMonth=used,
                         remaining=None if limit is None else max(limit - used, 0), resetsAt=nxt.isoformat())
@@ -450,7 +512,10 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         else:
             if user["role"] == "teacher":
                 for r in d.store.query("rosters", "teacherUid", user["uid"]):
-                    purge_student(r["studentId"])
+                    if d.store.query("users", "studentId", r["studentId"]):
+                        d.store.delete("rosters", r["studentId"])  # has their own account: keep it
+                    else:
+                        purge_student(r["studentId"])
                 disconnect_classroom(user)
                 for pid in LMS_PROVIDERS:
                     disconnect_lms(user, pid)
@@ -937,7 +1002,7 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
     def classroom_teacher(user: dict) -> dict:
         if user["role"] != "teacher":
             raise HTTPException(403, "Only teacher accounts can use Google Classroom")
-        if user.get("plan") != "pro":
+        if account_plan(user) != "pro":
             raise HTTPException(402, "PRO_ONLY")
         if not d.classroom:
             raise HTTPException(503, "CLASSROOM_NOT_CONFIGURED")
@@ -969,7 +1034,7 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
 
     @app.get("/classroom/status")
     def classroom_status(user: User):
-        return {"configured": d.classroom is not None, "plan": user.get("plan", "free"),
+        return {"configured": d.classroom is not None, "plan": account_plan(user),
                 "connected": d.store.get("googletokens", user["uid"]) is not None}
 
     @app.post("/classroom/connect")
@@ -1086,7 +1151,7 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
     def lms_teacher(user: dict, provider_id: str) -> LmsProvider:
         if user["role"] != "teacher":
             raise HTTPException(403, "Only teacher accounts can connect an LMS")
-        if user.get("plan") != "pro":
+        if account_plan(user) != "pro":
             raise HTTPException(402, "PRO_ONLY")
         return lms_provider(provider_id)
 
@@ -1159,7 +1224,7 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
 
     @app.get("/lms/providers", response_model=list[ApiLmsProviderStatus])
     def lms_providers_status(user: User):
-        plan = user.get("plan", "free")
+        plan = account_plan(user)
         out = [
             ApiLmsProviderStatus(
                 id="google_classroom",
@@ -1370,6 +1435,39 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
             raise HTTPException(403, "Only teacher accounts have a class list")
         return sorted(d.store.query("rosters", "teacherUid", user["uid"]), key=lambda r: r["name"])
 
+    @app.post("/teacher/students", response_model=list[ApiRosterStudent])
+    def add_roster_student(body: AddRosterStudentRequest, user: User):
+        """A teacher adds a student who has their own account, with the link code
+        the student sees on their home page. No LMS needed."""
+        if user["role"] != "teacher":
+            raise HTTPException(403, "Only teacher accounts have a class list")
+        link = d.store.get("linkcodes", body.linkCode.strip().upper())
+        found = link and d.store.query("users", "studentId", link["studentId"])
+        if not found:
+            raise HTTPException(404, "That link code was not recognised")
+        sid = link["studentId"]
+        roster = d.store.get("rosters", sid)
+        if roster and roster.get("teacherUid") != user["uid"]:
+            raise HTTPException(409, "That student is already on another teacher's class list")
+        student = found[0]
+        d.store.put("rosters", sid, {"studentId": sid, "teacherUid": user["uid"], "name": student["name"],
+                                     "course": student.get("course") or "MPM2D", "linkedAccount": True,
+                                     "tenantId": tenant_of(user)})
+        return teacher_students(user)
+
+    @app.delete("/teacher/students/{student_id}", response_model=list[ApiRosterStudent])
+    def remove_roster_student(student_id: str, user: User):
+        """Take a student added by link code off the list. Their account and work stay."""
+        if user["role"] != "teacher":
+            raise HTTPException(403, "Only teacher accounts have a class list")
+        roster = d.store.get("rosters", student_id)
+        if not roster or roster.get("teacherUid") != user["uid"]:
+            raise HTTPException(404, "Not found")
+        if not roster.get("linkedAccount"):
+            raise HTTPException(409, "Students imported from a class list are removed in that LMS")
+        d.store.delete("rosters", student_id)
+        return teacher_students(user)
+
     # ------------------------------------------------------------------ reports
     def build_progress(student_id: str):
         from .reports import progress_report
@@ -1393,7 +1491,7 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
 
         if user["role"] != "teacher":
             raise HTTPException(403, "Only teacher accounts have a class report")
-        if user.get("plan") != "pro":
+        if account_plan(user) != "pro":
             raise HTTPException(402, "PRO_ONLY")
         roster = [r for r in d.store.query("rosters", "teacherUid", user["uid"])
                   if googleCourseId is None or r.get("googleCourseId") == googleCourseId]

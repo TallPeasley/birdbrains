@@ -8,6 +8,7 @@ import Navbar from '@/components/Navbar';
 import CaptureFab from '@/components/CaptureFab';
 import CaptureModal from '@/components/CaptureModal';
 import PwaSetup from '@/components/PwaSetup';
+import TesterBar from '@/components/TesterBar';
 import AeroFooter from '@/components/aero/AeroFooter';
 
 const DESCRIPTION =
@@ -63,6 +64,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <SessionProvider>
           <RoleProvider>
             <Navbar />
+            <TesterBar />
             <PwaSetup />
             <main id="main" className="mx-auto max-w-7xl px-4 pb-28 pt-6 sm:px-6 lg:px-8">
               {children}

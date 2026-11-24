@@ -1,6 +1,7 @@
 """Turn stored pipeline records into the JSON contracts the frontend consumes."""
 from __future__ import annotations
 
+import re
 from collections import Counter
 from datetime import datetime
 from typing import Optional
@@ -29,6 +30,53 @@ FRICTION_ALERT_STATES = {
 }
 MAX_TRAJECTORY_WEEKS = 8
 MAX_ALERTS = 5
+
+
+
+# Student-facing text never shows the internal error codes (PRC-03 ...): the model is
+# told not to write them, and any that slip through are swapped for the plain name.
+PLAIN_MISTAKE_NAMES = {
+    "CON-01": "mixed-up math rule",
+    "CON-02": "wrong formula for this question",
+    "CON-03": "values put in the wrong places",
+    "CON-04": "sign or direction set up backwards",
+    "PRC-01": "skipped step",
+    "PRC-02": "steps done out of order",
+    "PRC-03": "sign or term lost while rearranging",
+    "PRC-04": "answer not fully simplified",
+    "FAC-01": "calculation slip",
+    "FAC-02": "number copied wrong",
+    "FAC-03": "unit or constant slip",
+    "FAC-04": "rounding slip",
+    "TST-01": "answered a different question",
+    "TST-02": "missing units or final sentence",
+    "TST-03": "left blank or unfinished",
+    "TST-04": "stopped at a middle step",
+}
+_BRACKETED_CODE = re.compile(r"\s*[(\[]\s*(?:CON|PRC|FAC|TST)-0[1-4]\s*[)\]]")
+_CODE = re.compile(r"\b(?:CON|PRC|FAC|TST)-0[1-4]\b")
+_PROSE_KEYS = {"explanation", "description", "note", "discrepancyNote", "resubstitutionCheck", "feedback",
+               "supportiveFramingMessage", "answerVerification", "keyStepDescription",
+               "actionableParentInsight"}
+
+
+def plain(text: Optional[str]) -> Optional[str]:
+    """Swap any error code in a sentence for its plain name. A bracketed code after a
+    description, as in "sign dropped (PRC-03)", is just removed."""
+    if not text:
+        return text
+    text = _BRACKETED_CODE.sub("", text)
+    return _CODE.sub(lambda m: PLAIN_MISTAKE_NAMES[m.group(0)], text)
+
+
+def _plain_prose(value):
+    """Apply ``plain`` to every prose field of an API payload (codes in id fields stay)."""
+    if isinstance(value, dict):
+        return {k: plain(v) if k in _PROSE_KEYS and isinstance(v, str) else _plain_prose(v)
+                for k, v in value.items()}
+    if isinstance(value, list):
+        return [_plain_prose(v) for v in value]
+    return value
 
 
 def dominant_affect(stage2: Stage2GradingAndAffectOutput) -> AffectStateEnum:
@@ -161,7 +209,7 @@ def to_api_grading(record: dict) -> ApiGrading:
     per_pillar = Counter(e.pillar for e in roots)
     pro = record.get("plan", "pro") == "pro"  # gradings made before plans existed count as pro
     question_analyses = [_to_api_question_diagnostic(q) for q in stage2.question_analyses]
-    return ApiGrading(
+    return _plain_grading(ApiGrading(
         gradingId=record["gradingId"],
         submissionId=record["submissionId"],
         studentId=record["studentId"],
@@ -186,7 +234,12 @@ def to_api_grading(record: dict) -> ApiGrading:
         plan="pro" if pro else "free",
         course=record.get("course"),
         worksheetStatus=record.get("worksheetStatus"),
-    )
+    ))
+
+
+def _plain_grading(grading: ApiGrading) -> ApiGrading:
+    """The grading with no error codes in its sentences."""
+    return ApiGrading.model_validate(_plain_prose(grading.model_dump()))
 
 
 def to_api_worksheet(record: dict) -> ApiWorksheet:
@@ -277,7 +330,7 @@ def parent_summary(profile: dict, ledger: StudentLedger, gradings: list[dict],
                 and len(alerts) < MAX_ALERTS):
             alerts.append(
                 dict(detectedDate=g["gradedAt"][:10], frictionLevel=affect, topicContext=g["unitTopic"],
-                     actionableParentInsight=stage2.parent_insight)
+                     actionableParentInsight=plain(stage2.parent_insight))
             )
     total_errors = sum(error_counts.values())
     distribution = [

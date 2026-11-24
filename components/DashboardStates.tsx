@@ -159,6 +159,19 @@ export function useDashboardGate(variant: 'student' | 'parent' = 'student'): Rea
   const { ready, profile, activeStudentId } = useSession();
   if (!ready) return <Loading variant={variant} />;
   if (!profile) return <SignInNotice />;
+  if (profile.role === 'teacher') return <TeacherAccountNotice />;
   if (!activeStudentId) return <LinkChildForm />;
   return null;
+}
+
+/** A teacher opened a student or parent page: their students live on the teacher dashboard. */
+export function TeacherAccountNotice() {
+  return (
+    <Notice title="This is a teacher account">
+      <p>Your students, their uploads and their progress are on your teacher dashboard.</p>
+      <Link href="/teacher" className={primary}>
+        Go to my students
+      </Link>
+    </Notice>
+  );
 }

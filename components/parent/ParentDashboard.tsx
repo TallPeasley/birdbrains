@@ -17,12 +17,16 @@ import { parentSummary as demoSummary } from '@/lib/mockData';
 import { useSession } from '@/lib/session';
 import type { ApiUsage, ParentProjectionSummary, PlanTier } from '@/types/birdBrains';
 import { MathText } from '@/components/MathText';
+import StudentProgressPanel from '@/components/StudentProgressPanel';
+import UploadHistory from '@/components/account/UploadHistory';
+import { LinkChildForm } from '@/components/DashboardStates';
+import type { ProgressReport } from '@/types/birdBrains';
 
 type State =
   | { kind: 'loading' }
   | { kind: 'empty'; usage: ApiUsage | null }
   | { kind: 'error'; message: string }
-  | { kind: 'data'; summary: ParentProjectionSummary; usage: ApiUsage | null };
+  | { kind: 'data'; summary: ParentProjectionSummary; usage: ApiUsage | null; progress: ProgressReport | null };
 
 export default function ParentDashboard() {
   const { live, profile, activeStudentId, setActiveStudentId, getToken, dataVersion } = useSession();
@@ -37,12 +41,14 @@ export default function ParentDashboard() {
     (async () => {
       const token = await getToken();
       const usagePromise = api.usage(token, activeStudentId).catch(() => null);
+      const progressPromise = api.progress(token, activeStudentId).catch(() => null);
       try {
-        const [summary, usage] = await Promise.all([
+        const [summary, usage, progress] = await Promise.all([
           api.parentSummary(token, activeStudentId),
           usagePromise,
+          progressPromise,
         ]);
-        if (!cancelled) setState({ kind: 'data', summary, usage });
+        if (!cancelled) setState({ kind: 'data', summary, usage, progress });
       } catch (err) {
         if (cancelled) return;
         if (err instanceof ApiError && err.status === 404) {
@@ -61,9 +67,15 @@ export default function ParentDashboard() {
   if (!live) return <View s={demoSummary} usage={DEMO_PRO_USAGE} />;
   if (gate) return gate;
   if (state.kind === 'loading') return <Loading variant="parent" />;
+  const linked = profile?.children?.length
+    ? profile.children
+    : (profile?.childStudentIds ?? []).map((id, i) => ({ studentId: id, name: `Child ${i + 1}` }));
+  const picker = <ChildPicker linked={linked} active={activeStudentId} onPick={setActiveStudentId} />;
+
   if (state.kind === 'empty') {
     return (
       <div className="space-y-6">
+        {picker}
         {state.usage && <UploadsLeftMeter usage={state.usage} />}
         <NoWorkNotice variant="parent" />
       </div>
@@ -73,27 +85,54 @@ export default function ParentDashboard() {
     return <LoadError title="We couldn’t load the dashboard" message={state.message} onRetry={() => setAttempt((n) => n + 1)} />;
   }
 
-  const children = profile?.role === 'parent' ? profile.childStudentIds : [];
   return (
-    <>
-      {children.length > 1 && (
-        <label className="mb-4 flex items-center gap-2 text-sm text-slate-600">
+    <div className="space-y-6">
+      {picker}
+      <View s={state.summary} usage={state.usage} />
+      {state.progress && <StudentProgressPanel report={state.progress} />}
+      <UploadHistory />
+    </div>
+  );
+}
+
+/** Which child the dashboard shows, by name, plus linking another child. */
+function ChildPicker({
+  linked,
+  active,
+  onPick,
+}: {
+  linked: { studentId: string; name: string }[];
+  active: string | null;
+  onPick: (id: string) => void;
+}) {
+  const [adding, setAdding] = useState(false);
+  return (
+    <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600">
+      {linked.length > 1 ? (
+        <label className="flex items-center gap-2">
           Showing
           <select
-            value={activeStudentId ?? ''}
-            onChange={(e) => setActiveStudentId(e.target.value)}
+            value={active ?? ''}
+            onChange={(e) => onPick(e.target.value)}
             className="rounded-lg border border-slate-300 px-2 py-1 text-sm"
           >
-            {children.map((id, i) => (
-              <option key={id} value={id}>
-                Child {i + 1}
+            {linked.map((c) => (
+              <option key={c.studentId} value={c.studentId}>
+                {c.name}
               </option>
             ))}
           </select>
         </label>
+      ) : null}
+      <button type="button" onClick={() => setAdding((v) => !v)} className="btn btn-sm btn-link">
+        {adding ? 'Close' : 'Link another child'}
+      </button>
+      {adding && (
+        <div className="w-full">
+          <LinkChildForm />
+        </div>
       )}
-      <View s={state.summary} usage={state.usage} />
-    </>
+    </div>
   );
 }
 

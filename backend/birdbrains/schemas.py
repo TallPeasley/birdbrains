@@ -598,6 +598,14 @@ class ApiParentSummary(Api):
     cognitiveFrictionAlerts: List[ApiFrictionAlert]
 
 
+class ApiLinkedStudent(Api):
+    """A student a parent is linked to, by name, for the parent's child picker."""
+
+    studentId: str
+    name: str
+    course: Optional[CourseEnum] = None
+
+
 class UserProfile(Api):
     uid: str
     role: Literal["student", "parent", "teacher"]
@@ -610,6 +618,22 @@ class UserProfile(Api):
     plan: PlanTier = "free"
     classIds: List[str] = Field(default_factory=list)  # students: classes joined with a code
     tester: bool = False  # testing account: no upload cap, repeat photos allowed (admin-set only)
+    children: List[ApiLinkedStudent] = Field(default_factory=list)  # parents: linked students by name
+
+
+class TesterViewRequest(Api):
+    """Testing accounts only: switch the view (role) and the plan on the fly."""
+
+    model_config = ConfigDict(extra="forbid")
+    role: Optional[Literal["student", "parent", "teacher"]] = None
+    plan: Optional[PlanTier] = None
+    course: Optional[CourseEnum] = None  # used when a student profile has to be made
+
+
+class AddRosterStudentRequest(Api):
+    """A teacher adds a student who has an account, with the student's link code."""
+
+    linkCode: str = Field(..., min_length=6, max_length=12)
 
 
 class RegisterRequest(Api):
@@ -711,6 +735,7 @@ class ApiRosterStudent(Api):
     googleCourseId: Optional[str] = None
     lmsProvider: Optional[str] = None
     lmsCourseId: Optional[str] = None
+    linkedAccount: bool = False  # added with the student's link code: they have their own account
 
 
 class ApiImportedWork(Api):

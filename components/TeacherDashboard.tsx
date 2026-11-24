@@ -19,6 +19,7 @@ import {
 import { api, ApiError } from '@/lib/api';
 import { useSession } from '@/lib/session';
 import { Loading, SignInNotice } from '@/components/DashboardStates';
+import MyStudents from '@/components/teacher/MyStudents';
 import type {
   ClassroomCourse,
   ClassroomCoursework,
@@ -91,7 +92,7 @@ function errText(err: unknown): string {
 }
 
 export default function TeacherDashboard() {
-  const { live, ready, signedIn, profile, getToken } = useSession();
+  const { live, ready, signedIn, profile, getToken, setTesterView } = useSession();
 
   const [providers, setProviders] = useState<LmsProviderStatus[]>([]);
   const [roster, setRoster] = useState<RosterStudent[]>([]);
@@ -382,9 +383,15 @@ export default function TeacherDashboard() {
           <p className="mt-2 text-sm text-slate-600">
             This page is for teacher accounts. You are signed in as a {profile.role}.
           </p>
-          <Link href={`/${profile.role}`} className="btn-link mt-4 text-sm">
-            Go to your dashboard <ArrowRight className="h-4 w-4" aria-hidden />
-          </Link>
+          {profile.tester ? (
+            <button type="button" onClick={() => void setTesterView({ role: 'teacher' })} className="btn btn-primary mt-4">
+              Switch to the teacher view
+            </button>
+          ) : (
+            <Link href={`/${profile.role}`} className="btn-link mt-4 text-sm">
+              Go to your dashboard <ArrowRight className="h-4 w-4" aria-hidden />
+            </Link>
+          )}
         </div>
       </div>
     );
@@ -397,10 +404,12 @@ export default function TeacherDashboard() {
     <div className="mx-auto max-w-5xl space-y-6 px-4 py-8">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="eyebrow">Teacher Hub</p>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900">School & LMS Integrations</h1>
+          <p className="eyebrow">Teacher dashboard</p>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+            {profile?.name ? `${profile.name.split(' ')[0]}’s class` : 'Your class'}
+          </h1>
           <p className="mt-1 text-sm text-slate-600">
-            Connect Google Classroom, Brightspace, Canvas, or Microsoft Teams for Education to import student work and sync grades.
+            Your students’ progress and uploads, plus Google Classroom, Brightspace, Canvas and Microsoft Teams import and grade sync.
           </p>
         </div>
         <Link
@@ -423,6 +432,10 @@ export default function TeacherDashboard() {
           {banner.text}
         </div>
       )}
+
+      <MyStudents roster={roster} onRosterChange={setRoster} />
+
+      <h2 className="pt-2 text-lg font-semibold text-slate-900">School & LMS integrations</h2>
 
       {!isPro && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
@@ -669,32 +682,6 @@ export default function TeacherDashboard() {
         )}
       </section>
 
-      {/* Imported Class Roster */}
-      <section className="card p-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <BookOpen className="h-4 w-4 text-indigo-600" aria-hidden />
-            <h2 className="text-base font-semibold text-slate-900">Imported Class Roster ({roster.length})</h2>
-          </div>
-        </div>
-        {roster.length === 0 ? (
-          <p className="mt-3 text-sm text-slate-500">No students imported yet.</p>
-        ) : (
-          <div className="mt-3 divide-y divide-slate-200">
-            {roster.map((s) => (
-              <div key={s.studentId} className="flex items-center justify-between py-2.5 text-sm">
-                <div>
-                  <p className="font-medium text-slate-900">{s.name}</p>
-                  <p className="text-xs text-slate-500">
-                    {s.course} · {s.lmsProvider ?? (s.googleCourseId ? 'google_classroom' : 'lms')}
-                  </p>
-                </div>
-                <span className="font-mono text-xs text-slate-400">{s.studentId}</span>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
     </div>
   );
 }

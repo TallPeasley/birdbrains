@@ -386,3 +386,14 @@ def test_practice_set_is_required_on_new_worksheets():
     assert any("practice_set" in p for p in lint_worksheet(good.model_copy(update={"practice_set": good.practice_set[:3]})))
     nokey = good.model_copy(update={"independent_transfer": good.independent_transfer.model_copy(update={"answer": ""})})
     assert any("transfer answer" in p for p in lint_worksheet(nokey))
+
+
+def test_error_codes_never_reach_student_text():
+    from birdbrains.projections import _plain_prose, plain
+
+    assert plain("The -9 was not multiplied by 2 (PRC-03).") == "The -9 was not multiplied by 2."
+    assert plain("A FAC-01 in step 2.") == "A calculation slip in step 2."
+    out = _plain_prose({"misconceptionId": "PRC-03", "description": "Sign lost [PRC-03]",
+                        "steps": [{"explanation": "TST-03 here"}]})
+    assert out == {"misconceptionId": "PRC-03", "description": "Sign lost",
+                   "steps": [{"explanation": "left blank or unfinished here"}]}
