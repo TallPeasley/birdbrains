@@ -321,8 +321,12 @@ class FakeBatchEngine:
         return {"name": name, "outputPrefix": "", "gradingIds": [i.grading_id for i in items],
                 "state": "SUBMITTED", "submittedAt": ""}
 
-    def generate_now(self, item: FlaggedGrading) -> WorksheetContent:
-        return fake_worksheet(item)
+    def generate_now(self, item: FlaggedGrading, core_only: bool = False) -> WorksheetContent:
+        ws = fake_worksheet(item)
+        return ws.model_copy(update={"practice_set": []}) if core_only else ws
+
+    def generate_practice(self, item: FlaggedGrading, core: WorksheetContent):
+        return fake_worksheet(item).practice_set
 
     def collect(self, job: dict):
         items = self._pending.pop(job["name"], [])

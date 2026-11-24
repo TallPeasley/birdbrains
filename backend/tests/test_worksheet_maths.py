@@ -129,3 +129,36 @@ def test_hints_that_do_the_sum_and_blanks_that_copy_the_prompt_fail_lint():
     blank.prompt = "Substitute $x_1 = -3$."
     blank.given_content, blank.blank_placeholder = "x_1 = [ __ ]", "-3"
     assert any("prompt already gives" in p for p in lint_worksheet(ws))
+
+
+def test_make_it_now_asks_for_sections_a_to_c_then_the_practice_set():
+    from types import SimpleNamespace
+
+    from birdbrains import batch_engine as B
+    from birdbrains.schemas import CourseEnum, ScaffoldingModeEnum
+    from birdbrains.fake import FakePipeline
+    from birdbrains.pipeline import SubmissionContext
+
+    fake = FakePipeline()
+    ctx = SubmissionContext("sub_abcdefghijkl", CourseEnum.MPM2D, "Completing the Square")
+    item = B.FlaggedGrading("grd_abcdefghijkl", CourseEnum.MPM2D, "x", ScaffoldingModeEnum.STANDARD_PROGRESSIVE_FADE,
+                            fake.run_stage2(ctx, fake.run_stage1(ctx, [])))
+    calls = []
+
+    def generate(model, contents, config):
+        calls.append((contents, config.response_json_schema))
+        if "practice_set" in config.response_json_schema["properties"] and len(config.response_json_schema["properties"]) == 1:
+            return SimpleNamespace(text=B.PracticeSetOutput(practice_set=GOOD.practice_set).model_dump_json())
+        return SimpleNamespace(text=GOOD.model_copy(update={"practice_set": []}).model_dump_json())
+
+    engine = B.GeminiBatchEngine(None, client=SimpleNamespace(models=SimpleNamespace(generate_content=generate)))
+    core = engine.generate_now(item, core_only=True)
+    assert core.practice_set == [] and "practice_set" not in calls[0][1]["properties"]
+    assert calls[0][0].endswith(B.CORE_NOTE)
+    practice = engine.generate_practice(item, core)
+    assert len(practice) == len(GOOD.practice_set) and GOOD.title in calls[1][0]
+    # A short or empty set fails the checks and is asked for again, then given up on.
+    bad = B.PracticeSetOutput(practice_set=GOOD.practice_set[:2]).model_dump_json()
+    engine._client = SimpleNamespace(models=SimpleNamespace(generate_content=lambda **k: SimpleNamespace(text=bad)))
+    with pytest.raises(ValueError, match="2 problems"):
+        engine.generate_practice(item, core)

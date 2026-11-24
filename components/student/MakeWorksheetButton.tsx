@@ -9,7 +9,7 @@ import type { WS_3STAGE_V1 } from '@/types/birdBrains';
 /** Worksheet statuses that can be made on the spot instead of overnight. */
 export const MAKEABLE = new Set(['QUEUED', 'PENDING', 'FAILED']);
 
-/** "Make my worksheet now": builds the practice worksheet on request (about half a minute). */
+/** "Make my worksheet now": builds the practice worksheet on request (about 10 seconds; the practice set follows). */
 export default function MakeWorksheetButton({
   gradingId,
   onMade,
@@ -44,7 +44,7 @@ export default function MakeWorksheetButton({
     <div className={`flex flex-wrap items-center gap-3 text-sm ${className}`}>
       <button onClick={make} disabled={busy} className="btn btn-sm btn-primary">
         <Sparkles className={`h-4 w-4 ${busy ? 'animate-pulse' : ''}`} aria-hidden />
-        {busy ? 'Making your worksheet… (about 30 seconds)' : 'Make my worksheet now'}
+        {busy ? 'Making your worksheet… (about 10 seconds)' : 'Make my worksheet now'}
       </button>
       {error && (
         <span className="text-rose-700" role="alert">

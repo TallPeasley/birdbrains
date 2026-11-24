@@ -179,7 +179,28 @@ def tidy_worksheet(ws: WorksheetContent) -> WorksheetContent:
     return ws.model_copy(update={"diagnostic_mirror": items})
 
 
-def lint_worksheet(ws: WorksheetContent) -> list[str]:
+def lint_practice(practice: list) -> list[str]:
+    """Section D: 6 to 12 different problems, each with its answer and solution."""
+    problems: list[str] = []
+    if not 6 <= len(practice) <= 12:
+        problems.append(f"practice_set: {len(practice)} problems, expected 6 to 12")
+    seen: set[str] = set()
+    for i, p in enumerate(practice, 1):
+        for where, text in (("problem", p.problem_statement), ("answer", p.answer), ("solution", p.worked_solution)):
+            if not text.strip():
+                problems.append(f"practice {i} {where}: empty")
+            else:
+                problems += [f"practice {i} {where}: {e}" for e in lint_math(text)]
+        key = re.sub(r"\s+", "", p.problem_statement.lower())
+        if key in seen:
+            problems.append(f"practice {i}: same problem twice")
+        seen.add(key)
+    return problems
+
+
+def lint_worksheet(ws: WorksheetContent, require_practice: bool = True) -> list[str]:
+    """``require_practice=False`` for sections A to C made on their own (the practice set
+    follows in a second request)."""
     problems: list[str] = []
 
     def check(where: str, text: str, required: bool = True, copied: bool = False) -> None:
@@ -238,17 +259,8 @@ def lint_worksheet(ws: WorksheetContent) -> list[str]:
     check("transfer problem", ws.independent_transfer.problem_statement)
     check("transfer answer", ws.independent_transfer.answer)
     check("transfer solution", ws.independent_transfer.worked_solution, required=False)
-    if not 6 <= len(ws.practice_set) <= 12:
-        problems.append(f"practice_set: {len(ws.practice_set)} problems, expected 6 to 12")
-    seen: set[str] = set()
-    for i, p in enumerate(ws.practice_set, 1):
-        check(f"practice {i} problem", p.problem_statement)
-        check(f"practice {i} answer", p.answer)
-        check(f"practice {i} solution", p.worked_solution)
-        key = re.sub(r"\s+", "", p.problem_statement.lower())
-        if key in seen:
-            problems.append(f"practice {i}: same problem twice")
-        seen.add(key)
+    if require_practice:
+        problems += lint_practice(ws.practice_set)
     if not 3 <= len(ws.independent_transfer.metacognitive_checklist) <= 4:
         problems.append("transfer checklist: expected 3 or 4 items")
     transfer_answer = ws.independent_transfer.answer or ""

@@ -1,5 +1,7 @@
 import re
 
+import pytest
+
 from conftest import auth, photo, upload
 
 
@@ -290,7 +292,7 @@ def test_make_the_worksheet_now(client, family, deps):
     assert client.post(url, headers=auth("stranger")).status_code == 404
 
     real = deps.batch.generate_now
-    deps.batch.generate_now = lambda item: (_ for _ in ()).throw(ValueError("step 2: is not true"))
+    deps.batch.generate_now = lambda item, core_only=False: (_ for _ in ()).throw(ValueError("step 2: is not true"))
     assert client.post(url, headers=auth("alex")).json()["detail"] == "WORKSHEET_NOT_MADE"
     assert deps.store.get("gradings", g["gradingId"])["worksheetStatus"] == "QUEUED"
 
@@ -298,6 +300,18 @@ def test_make_the_worksheet_now(client, family, deps):
     assert client.post("/internal/batch/worksheets/submit", headers=token).json()["submitted"] == 1
     made = client.post(url, headers=auth("alex")).json()  # while the nightly job is still out
     assert made["sectionB_FadedScaffolding"][1]["scaffoldingType"] == "PARTIAL_BLANK"
+    assert made["sectionD_PracticeSet"] == []  # sections A-C come first; the site asks for D next
+    practice_url = f"/gradings/{g['gradingId']}/worksheet/practice"
+    assert client.post(practice_url, headers=auth("stranger")).status_code == 404
+    real_practice = deps.batch.generate_practice
+    deps.batch.generate_practice = lambda item, core: (_ for _ in ()).throw(ValueError("practice_set: 3 problems"))
+    assert client.post(practice_url, headers=auth("alex")).json()["detail"] == "PRACTICE_NOT_MADE"
+    deps.batch.generate_practice = real_practice
+    full = client.post(practice_url, headers=auth("alex")).json()
+    assert len(full["sectionD_PracticeSet"]) == 8 and full["worksheetId"] == made["worksheetId"]
+    deps.batch.generate_practice = lambda item, core: pytest.fail("asked twice")
+    assert len(client.post(practice_url, headers=auth("alex")).json()["sectionD_PracticeSet"]) == 8
+    deps.batch.generate_practice = real_practice
     again = client.post(url, headers=auth("jordan")).json()  # a parent can press it too; same sheet
     assert again["worksheetId"] == made["worksheetId"]
     client.post("/internal/batch/worksheets/collect", headers=token)

@@ -14,13 +14,16 @@ import logging
 import os
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Iterable, Optional, Protocol
+from typing import Iterable, List, Optional, Protocol
 
-from .math_lint import lint_worksheet, tidy_worksheet
+from pydantic import BaseModel
+
+from .math_lint import lint_practice, lint_worksheet, tidy_worksheet
 from .worksheet_maths import maths_report
 from .pipeline import STAGE2_MODEL, VERTEX_LOCATION
 from .schemas import (
     CourseEnum,
+    PracticeProblem,
     ScaffoldingModeEnum,
     Stage2GradingAndAffectOutput,
     WorksheetContent,
@@ -268,16 +271,55 @@ def parse_output_jsonl(
     return done, failed
 
 
-def worksheet_from_text(raw: str) -> WorksheetContent:
+def worksheet_from_text(raw: str, require_practice: bool = True) -> WorksheetContent:
     """Validate, repair and check one worksheet; raises ValueError if a student must not see it."""
     content = tidy_worksheet(WorksheetContent.model_validate_json(raw))
-    problems = lint_worksheet(content)
+    problems = lint_worksheet(content, require_practice=require_practice)
     if not problems:
         problems, read, steps = maths_report(content)
         log.info("Worksheet maths check read %d of %d guided steps", read, steps)
     if problems:
         raise ValueError("; ".join(problems[:5]))
     return content
+
+
+# "Make it now" asks in two parts so the student isn't kept waiting: sections A to C
+# first (8-14 s live), then the 8-problem practice set (the whole sheet in one call took
+# 17-36 s). The nightly batch still asks for everything at once.
+CORE_NOTE = ("\n\nFor this request write sections A, B and C only. The practice set (section D) "
+             "is written separately, so leave practice_set out.")
+
+
+def core_schema() -> dict:
+    schema = WorksheetContent.model_json_schema()
+    schema["properties"].pop("practice_set", None)
+    schema["required"] = [r for r in schema.get("required", []) if r != "practice_set"]
+    return schema
+
+
+class PracticeSetOutput(BaseModel):
+    practice_set: List[PracticeProblem]
+
+
+def practice_prompt(item: FlaggedGrading, core: WorksheetContent) -> str:
+    """Section D on its own, written to match the worksheet already made."""
+    made = {
+        "title": core.title,
+        "target_concept": core.target_concept,
+        "guided_problem": core.faded_scaffolding[0].prompt if core.faded_scaffolding else "",
+        "transfer_problem": core.independent_transfer.problem_statement,
+    }
+    return (worksheet_prompt(item) + "\n\nSections A to C are already written:\n" + json.dumps(made, indent=1)
+            + "\n\nWrite only section D, the practice_set, following the rules for D. Do not repeat "
+              "the guided or transfer problem.")
+
+
+def practice_from_text(raw: str) -> list[PracticeProblem]:
+    practice = PracticeSetOutput.model_validate_json(raw).practice_set
+    problems = lint_practice(practice)
+    if problems:
+        raise ValueError("; ".join(problems[:5]))
+    return practice
 
 
 class BlobIO(Protocol):
@@ -291,7 +333,9 @@ class BatchEngine(Protocol):
 
     def collect(self, job: dict) -> Optional[tuple[dict[str, WorksheetContent], list[str]]]: ...
 
-    def generate_now(self, item: FlaggedGrading) -> WorksheetContent: ...
+    def generate_now(self, item: FlaggedGrading, core_only: bool = False) -> WorksheetContent: ...
+
+    def generate_practice(self, item: FlaggedGrading, core: WorksheetContent) -> list[PracticeProblem]: ...
 
 
 # Tries for an on-demand worksheet: one that fails the checks is asked for again.
@@ -334,9 +378,8 @@ class GeminiBatchEngine:
             "submittedAt": stamp,
         }
 
-    def generate_now(self, item: FlaggedGrading) -> WorksheetContent:
-        """One worksheet made on the spot (the student asked for it) with the same prompt,
-        schema and checks as the nightly job, at the normal price instead of half."""
+    def _ask(self, prompt: str, schema: dict, parse, what: str):
+        """One on-demand request, asked again once if the answer fails the checks."""
         from google.genai import types
 
         from .pipeline import thinking_config, with_retries
@@ -346,19 +389,33 @@ class GeminiBatchEngine:
             temperature=WORKSHEET_TEMPERATURE,
             thinking_config=thinking_config(WORKSHEET_MODEL, WORKSHEET_THINKING),
             response_mime_type="application/json",
-            response_json_schema=WorksheetContent.model_json_schema(),
+            response_json_schema=schema,
         )
-        prompt = worksheet_prompt(item)
         last: Exception = ValueError("no attempt made")
         for attempt in range(NOW_ATTEMPTS):
             response = with_retries(lambda: self._client.models.generate_content(
                 model=WORKSHEET_MODEL, contents=prompt, config=config), "worksheet_now")
             try:
-                return worksheet_from_text(response.text or "")
+                return parse(response.text or "")
             except Exception as exc:
-                log.warning("On-demand worksheet for %s unusable (try %d): %s", item.grading_id, attempt + 1, exc)
+                log.warning("On-demand %s unusable (try %d): %s", what, attempt + 1, exc)
                 last = exc
         raise last
+
+    def generate_now(self, item: FlaggedGrading, core_only: bool = False) -> WorksheetContent:
+        """One worksheet made on the spot (the student asked for it) with the same prompt,
+        schema and checks as the nightly job, at the normal price instead of half.
+        ``core_only`` leaves out the practice set; ``generate_practice`` adds it."""
+        if core_only:
+            return self._ask(worksheet_prompt(item) + CORE_NOTE, core_schema(),
+                             lambda raw: worksheet_from_text(raw, require_practice=False),
+                             f"worksheet for {item.grading_id}")
+        return self._ask(worksheet_prompt(item), WorksheetContent.model_json_schema(), worksheet_from_text,
+                         f"worksheet for {item.grading_id}")
+
+    def generate_practice(self, item: FlaggedGrading, core: WorksheetContent) -> list[PracticeProblem]:
+        return self._ask(practice_prompt(item, core), PracticeSetOutput.model_json_schema(), practice_from_text,
+                         f"practice set for {item.grading_id}")
 
     def collect(self, job: dict) -> Optional[tuple[dict[str, WorksheetContent], list[str]]]:
         """None while the job is still running."""

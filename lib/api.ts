@@ -102,6 +102,11 @@ export const api = {
    *  502 WORKSHEET_NOT_MADE if it didn't pass the checks (it stays queued for the night). */
   generateWorksheet: (t: string, gradingId: string) =>
     request<WS_3STAGE_V1>(`/gradings/${gradingId}/worksheet/generate`, t, { method: 'POST' }),
+  /** Add the 8-problem practice set (section D) to a ready worksheet that has none. "Make it now"
+   *  answers with sections A-C first (~10 s); this fills in D (~10-20 s). Returns the whole worksheet.
+   *  502 PRACTICE_NOT_MADE if the set didn't pass the checks; 402 PRO_ONLY. */
+  generatePracticeSet: (t: string, gradingId: string) =>
+    request<WS_3STAGE_V1>(`/gradings/${gradingId}/worksheet/practice`, t, { method: 'POST' }),
   parentSummary: (t: string, studentId: string) =>
     request<ParentProjectionSummary>(`/students/${studentId}/parent-summary`, t),
   /**
