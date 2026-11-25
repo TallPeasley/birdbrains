@@ -346,7 +346,7 @@ export default function ReportsDashboard() {
                     <div>
                       <h3 className="text-sm font-bold text-slate-900">Mood &amp; Valence Trend (Pro)</h3>
                       <p className="text-xs text-slate-600">
-                        Track confidence and frustration trends across assignments with BirdBrains Pro.
+                        Track confidence and frustration trends across assignments with Quark Pro.
                       </p>
                     </div>
                   </div>

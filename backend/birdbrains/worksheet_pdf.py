@@ -12,7 +12,7 @@ from .pdf_math import math_html, prose_html
 from .schemas import ApiWorksheet
 
 CSS = """
-@page { size: Letter; margin: 18mm 16mm; @bottom-center { content: "BirdBrains  ·  page " counter(page); font-size: 8pt; color: #777; } }
+@page { size: Letter; margin: 18mm 16mm; @bottom-center { content: "Quark  ·  page " counter(page); font-size: 8pt; color: #777; } }
 body { font-family: "DejaVu Sans", Arial, sans-serif; font-size: 11pt; color: #111; line-height: 1.45; }
 h1 { font-size: 17pt; margin: 0 0 2mm; }
 h2 { font-size: 12.5pt; margin: 7mm 0 2mm; padding-bottom: 1mm; border-bottom: 1.5pt solid #111; }

@@ -565,7 +565,7 @@ function WorksheetActions({ worksheet }: { worksheet: WS_3STAGE_V1 }) {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `birdbrains-worksheet-${worksheet.gradingId}.pdf`;
+      a.download = `quark-worksheet-${worksheet.gradingId}.pdf`;
       a.click();
       window.setTimeout(() => URL.revokeObjectURL(url), 10_000);
     } catch {

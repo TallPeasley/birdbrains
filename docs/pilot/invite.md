@@ -5,13 +5,13 @@ Send the parent one first; a student under 13 needs a parent to sign up with the
 
 ## To parents
 
-Subject: Try BirdBrains with [student's first name] (free pilot)
+Subject: Try Quark with [student's first name] (free pilot)
 
 Hi [name],
 
-I've been building a tool called BirdBrains and I'd like [student's first name] to be one of the first to try it.
+I've been building a tool called Quark and I'd like [student's first name] to be one of the first to try it.
 
-It works like this: [student's first name] takes a photo of a page of math homework, and within about a minute BirdBrains shows which line went wrong and why. It sorts mistakes into four kinds (understanding, method, arithmetic slips, and reading the question), so you can see whether the issue is a gap or just rushing. You get a parent view with the pattern over time and one thing to try at home.
+It works like this: [student's first name] takes a photo of a page of math homework, and within about a minute Quark shows which line went wrong and why. It sorts mistakes into four kinds (understanding, method, arithmetic slips, and reading the question), so you can see whether the issue is a gap or just rushing. You get a parent view with the pattern over time and one thing to try at home.
 
 What I'm asking:
 - Sign up at https://birdbrain-514606.web.app and link your account to [student's first name]'s with the code on their account page. About 5 minutes.
@@ -33,7 +33,7 @@ Maalik
 
 Hey [name],
 
-I built something and I want you to be one of the first to try it. It's called BirdBrains.
+I built something and I want you to be one of the first to try it. It's called Quark.
 
 Take a photo of a page of your math work, upload it at https://birdbrain-514606.web.app, and it tells you which line went wrong and what kind of mistake it was. It doesn't just say "wrong": it shows the step, and it won't take marks off the lines after it if you carried the mistake forward correctly.
 

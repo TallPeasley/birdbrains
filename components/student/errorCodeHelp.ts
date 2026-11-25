@@ -2,7 +2,7 @@ import { PILLARS } from '@/lib/pillars';
 import type { PillarCategory } from '@/types/birdBrains';
 
 /**
- * Plain-words explanations for the 16 official BirdBrains error codes,
+ * Plain-words explanations for the 16 official Quark error codes,
  * written for a Grade 9–10 student. Keyed by code (CON-01 ... TST-04).
  */
 export const ERROR_CODE_HELP: Record<string, string> = {

@@ -35,7 +35,7 @@ const STEPS = [
   {
     icon: Camera,
     title: 'Snap a photo',
-    body: 'Take a picture of a test, quiz or homework page, handwriting and all. BirdBrains checks the photo is sharp before it goes anywhere.',
+    body: 'Take a picture of a test, quiz or homework page, handwriting and all. Quark checks the photo is sharp before it goes anywhere.',
   },
   {
     icon: ScanSearch,
@@ -88,7 +88,7 @@ const PRIVACY = [
 
 const FAQ: [q: string, a: string][] = [
   [
-    'Which courses does BirdBrains cover?',
+    'Which courses does Quark cover?',
     'Ontario Grade 9 (MTH1W) and Grade 10 academic math (MPM2D): linear systems, analytic geometry, quadratics, similar triangles and trigonometry.',
   ],
   [
@@ -123,7 +123,7 @@ export default function HomePage() {
             just that it did.
           </h1>
           <p className="mt-5 max-w-xl text-lg text-slate-600">
-            Snap a photo of handwritten work. BirdBrains traces every step, separates slips from real gaps, and builds a
+            Snap a photo of handwritten work. Quark traces every step, separates slips from real gaps, and builds a
             worksheet that targets exactly what to practise next.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
@@ -342,10 +342,10 @@ function DiagnosisPreview() {
   const steps: { line: string; ok: boolean; code?: string; pillar?: 'PRC' | 'FAC'; note?: string }[] = [
     { line: 'x^2 - 5x + 6 = 0', ok: true },
     { line: '(x - 2)(x - 3) = 0', ok: true },
-    { line: 'x = -2 or x = -3', ok: false, code: 'PRC-03', pillar: 'PRC', note: 'Sign flipped when solving each factor' },
+    { line: 'x = -2,\\ x = -3', ok: false, code: 'PRC-03', pillar: 'PRC', note: 'Sign flipped when solving each factor' },
   ];
   return (
-    <figure className="relative m-0" aria-label="Example of a BirdBrains diagnosis">
+    <figure className="relative m-0" aria-label="Example of a Quark diagnosis">
       <div className="aero-blueprint absolute -inset-3 rounded-2xl border border-line sm:-inset-5" aria-hidden />
       <div className="relative rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_24px_48px_-24px_rgba(15,23,42,0.35)] sm:p-6">
         <div className="flex items-center justify-between gap-2">

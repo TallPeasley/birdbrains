@@ -15,11 +15,11 @@ const DESCRIPTION =
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://birdbrain-514606.web.app'),
-  title: 'BirdBrains by Aero',
+  title: 'Quark by Aero',
   description: DESCRIPTION,
-  applicationName: 'BirdBrains',
+  applicationName: 'Quark',
   // Installed-app look on iPhone/iPad ("Add to Home Screen"); app/manifest.ts covers Android and desktop.
-  appleWebApp: { capable: true, title: 'BirdBrains', statusBarStyle: 'default' },
+  appleWebApp: { capable: true, title: 'Quark', statusBarStyle: 'default' },
   formatDetection: { telephone: false },
   icons: {
     icon: [
@@ -30,8 +30,8 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: 'website',
-    siteName: 'BirdBrains by Aero',
-    title: 'BirdBrains by Aero',
+    siteName: 'Quark by Aero',
+    title: 'Quark by Aero',
     description: DESCRIPTION,
     url: '/',
   },
@@ -48,7 +48,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" data-aero-brand="birdbrains">
       <head>
-        {/* Aero unified typeface system: the exact stack shared by Aero, Ascent, BirdBrains and Chirp. */}
+        {/* Aero unified typeface system: the exact stack shared by Aero, Ascent, Quark and Chirp. */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link

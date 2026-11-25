@@ -29,7 +29,7 @@ export default function HowItWorks() {
       <header className="max-w-3xl pt-2 lg:pt-6">
         <span className="aero-badge aero-badge--accent">Interactive demo · sample data</span>
         <h1 className="mt-4 font-display text-4xl font-extrabold leading-[1.05] tracking-display text-slate-900 sm:text-5xl">
-          How BirdBrains works
+          How Quark works
         </h1>
         <p className="mt-4 text-lg text-slate-600">
           {demoPersonas.student.name} uploaded a photo of a quadratics quiz. Below is exactly what {demoPersonas.student.name.split(' ')[0]} sees,

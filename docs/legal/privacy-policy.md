@@ -1,8 +1,8 @@
-# BirdBrains Privacy Policy
+# Quark Privacy Policy
 
 *Draft. Last updated: [date]. Effective: [launch date].*
 
-BirdBrains is run by [legal name of the business, e.g. Swift Skills] in Ontario,
+Quark is run by [legal name of the business, e.g. Swift Skills] in Ontario,
 Canada ("we"). It looks at photos of a student's math work and explains where
 the mistakes came from. This page says what we collect, why, where it is kept
 and how to delete it. We wrote it to be read by parents and by students.
@@ -41,7 +41,7 @@ working area of the page.
 were right or wrong, the type of each mistake, scores, a feedback message, a
 record of progress over time, and practice worksheets.
 
-**Mood and effort signals (Pro plan only).** On the Pro plan, BirdBrains also
+**Mood and effort signals (Pro plan only).** On the Pro plan, Quark also
 estimates how a piece of work felt for the student (for example confident,
 struggling or frustrated) from visible signs on the page such as cross-outs and
 rewrites, so that feedback and worksheets can be gentler when needed and
@@ -102,7 +102,7 @@ their own purposes. We may disclose information if the law requires it.
   of everything we hold.
 - **Delete:** "Delete my data" in Settings removes a student's photos, results,
   progress, worksheets and account. A linked parent can do this for their child.
-- **Withdraw consent:** you can stop using BirdBrains and delete the account at
+- **Withdraw consent:** you can stop using Quark and delete the account at
   any time.
 - **Ask or complain:** write to our privacy contact below. If you are not
   satisfied you can contact the Office of the Privacy Commissioner of Canada
@@ -110,11 +110,11 @@ their own purposes. We may disclose information if the law requires it.
 
 ## Children and students
 
-BirdBrains is meant for students in grades 3 to 12. A student under 13 may use
+Quark is meant for students in grades 3 to 12. A student under 13 may use
 it only if a parent or guardian creates or approves the account and agrees to
 this policy for them. Students aged 13 to 17 should read this page with a
 parent or guardian. A parent or guardian can ask to see or delete their child's
-information at any time. [If schools sign up: when a school provides BirdBrains
+information at any time. [If schools sign up: when a school provides Quark
 to its students, the school decides what is collected and authorises its use,
 and requests can also go through the school.]
 
@@ -149,7 +149,7 @@ Privacy contact: [name], [email address], [mailing address].
 5. Under-13 flow: the product does not yet ask for age or record parental consent
    (Gemini's Dec 8 consent task).
 6. Now built and not yet reflected above: Stripe payments (remove the brackets around the Stripe
-   sentence, add Stripe to the provider table) and Google Classroom import by teachers (BirdBrains
+   sentence, add Stripe to the provider table) and Google Classroom import by teachers (Quark
    then stores each imported student's name and their handed-in photos under the teacher's
    account, without that student having an account; say so, and say who consents).
 7. Lawyer review, especially if schools (MFIPPA) or US users (COPPA, FERPA) come in.

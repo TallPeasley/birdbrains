@@ -1,14 +1,14 @@
 import type { MetadataRoute } from 'next';
 
-// Web app manifest: lets phones and Chrome install BirdBrains as an app ("Add to Home Screen").
+// Web app manifest: lets phones and Chrome install Quark as an app ("Add to Home Screen").
 // Built into out/manifest.webmanifest by the static export.
 export const dynamic = 'force-static';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
     id: '/',
-    name: 'BirdBrains',
-    short_name: 'BirdBrains',
+    name: 'Quark',
+    short_name: 'Quark',
     description: 'Four-pillar math diagnostics for students and parents.',
     start_url: '/?source=pwa',
     scope: '/',

@@ -1,4 +1,4 @@
-// The 16 official BirdBrains error codes (Freelancer Manual section 2.1).
+// The 16 official Quark error codes (Freelancer Manual section 2.1).
 // The codes (CON-01 ... TST-04) stay as internal ids; people see the plain names below.
 // Mirrors ERROR_CODES in backend/birdbrains/taxonomy.py: change both together.
 

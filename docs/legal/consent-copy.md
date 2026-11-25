@@ -4,16 +4,16 @@
 > I have read and agree to the [Terms of Use](/terms) and [Privacy Policy](/privacy).
 
 **Sign-up, student under 13** (ask "How old are you?" or grade first)
-> You need a parent or guardian to set up BirdBrains with you. Ask them to create a parent account and add you.
+> You need a parent or guardian to set up Quark with you. Ask them to create a parent account and add you.
 
 **Parent creating or linking a child's account (required checkbox)**
-> I am this student's parent or guardian. I agree to the Terms of Use and Privacy Policy on their behalf, and I consent to BirdBrains analysing photos of their math work.
+> I am this student's parent or guardian. I agree to the Terms of Use and Privacy Policy on their behalf, and I consent to Quark analysing photos of their math work.
 
 **Upload screen, small print under the button**
 > Names and dates on the page are blurred before we save it. Photos are deleted after 90 days.
 
 **Pro mood insights, first time shown (parent)**
-> BirdBrains estimates how this work felt for your child from signs on the page, like cross-outs. It's an estimate to guide support, not a diagnosis.
+> Quark estimates how this work felt for your child from signs on the page, like cross-outs. It's an estimate to guide support, not a diagnosis.
 
 **Delete my data, confirmation dialog**
 > This permanently deletes [name]'s photos, results, progress, worksheets and account. It can't be undone.

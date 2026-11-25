@@ -9,7 +9,7 @@ export default function NotFound() {
           This page isn&rsquo;t on the <em className="font-serif font-normal text-brand">grid.</em>
         </h1>
         <p className="mt-3 text-slate-600">
-          The page you requested doesn&rsquo;t exist or has moved. Return to the BirdBrains home page or open a dashboard.
+          The page you requested doesn&rsquo;t exist or has moved. Return to the Quark home page or open a dashboard.
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
           <Link href="/" className="aero-btn aero-btn--primary">

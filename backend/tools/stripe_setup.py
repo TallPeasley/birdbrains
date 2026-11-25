@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Set up Stripe for BirdBrains in one go, sandbox first, then live.
+"""Set up Stripe for Quark (formerly BirdBrains) in one go, sandbox first, then live.
 
 Run it on a computer that has ``gcloud`` signed in to the BirdBrains project
 (Maalik's PC, or Cloud Shell), from the ``backend`` folder:
@@ -9,7 +9,7 @@ Run it on a computer that has ``gcloud`` signed in to the BirdBrains project
 It asks for the Stripe secret key without showing it (or reads STRIPE_SECRET_KEY),
 then, in whichever mode that key belongs to (sandbox ``sk_test_`` or live ``sk_live_``):
 
-1. finds or creates the product "BirdBrains Pro" and its monthly CAD price
+1. finds or creates the product "Quark Pro" (renaming an old "BirdBrains Pro") and its monthly CAD price
    (lookup key ``birdbrains_pro_monthly``; a different amount makes a new price and
    moves the lookup key to it, existing subscribers keep their old price),
 2. creates the customer portal settings (change card, invoices, cancel at period end),
@@ -39,7 +39,8 @@ from decimal import Decimal
 
 API = "https://api.stripe.com/v1"
 STRIPE_VERSION = "2025-03-31.basil"  # keep in step with birdbrains/billing.py
-LOOKUP_KEY = "birdbrains_pro_monthly"
+LOOKUP_KEY = "birdbrains_pro_monthly"  # internal id, kept after the Quark rename
+PRODUCT_NAME = "Quark Pro"
 REGION = "northamerica-northeast1"
 DEFAULT_API_URL = "https://birdbrains-api-28737473918.northamerica-northeast1.run.app"
 DEFAULT_SITE_URL = "https://birdbrain-514606.web.app"
@@ -119,13 +120,21 @@ def main() -> None:
     if price:
         product_id = price["product"]["id"]
         print(f"   price {price['id']}: already there (${cents / 100:.2f} CAD / month)")
+        if price["product"].get("name") != PRODUCT_NAME:
+            # The app was renamed (BirdBrains -> Quark): rename the existing product
+            # so checkout, receipts and the billing portal show the new name.
+            s.call("POST", f"/products/{product_id}", [("name", PRODUCT_NAME)])
+            print(f"   product {product_id}: renamed to {PRODUCT_NAME}")
     else:
         old = found.get("data", [])
         if old:
             product_id = old[0]["product"]["id"]
+            if old[0]["product"].get("name") != PRODUCT_NAME:
+                s.call("POST", f"/products/{product_id}", [("name", PRODUCT_NAME)])
+                print(f"   product {product_id}: renamed to {PRODUCT_NAME}")
         else:
             product_id = s.call("POST", "/products", [
-                ("name", "BirdBrains Pro"),
+                ("name", PRODUCT_NAME),
                 ("description", "Unlimited uploads, mood and friction insights, and practice worksheets."),
             ])["id"]
             print(f"   product {product_id}: created")
@@ -137,7 +146,7 @@ def main() -> None:
 
     # 2. Customer portal
     portal = s.call("POST", "/billing_portal/configurations", [
-        ("business_profile[headline]", "Manage your BirdBrains Pro plan"),
+        ("business_profile[headline]", f"Manage your {PRODUCT_NAME} plan"),
         ("default_return_url", f"{args.site_url}/account"),
         ("features[payment_method_update][enabled]", "true"),
         ("features[invoice_history][enabled]", "true"),
@@ -155,7 +164,7 @@ def main() -> None:
         if ep.get("url") == hook_url:
             s.call("DELETE", f"/webhook_endpoints/{ep['id']}")
             print(f"   old webhook {ep['id']}: replaced")
-    fields = [("url", hook_url), ("description", "BirdBrains API: sets the plan"),
+    fields = [("url", hook_url), ("description", "Quark API: sets the plan"),
               ("api_version", STRIPE_VERSION)] + [("enabled_events[]", e) for e in EVENTS]
     hook = s.call("POST", "/webhook_endpoints", fields)
     print(f"   webhook {hook['id']}: {hook_url}")

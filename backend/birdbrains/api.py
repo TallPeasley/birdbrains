@@ -252,7 +252,7 @@ def deps_from_env() -> Deps:
 def create_app(deps: Optional[Deps] = None) -> FastAPI:
     d = deps or deps_from_env()
     configure_tracing()
-    app = FastAPI(title="BirdBrains API", version="0.1.0")
+    app = FastAPI(title="Quark API", version="0.1.0")
 
     @app.exception_handler(UploadFailure)
     async def upload_failure_handler(request: Request, exc: UploadFailure):
@@ -1533,7 +1533,7 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         for rec in records:
             sub = d.store.get("submissions", rec["submissionId"])
             if not sub or sub.get("status") != "GRADED" or not sub.get("gradingId"):
-                skipped.append({"studentName": rec["studentName"], "reason": "Not graded in BirdBrains yet"})
+                skipped.append({"studentName": rec["studentName"], "reason": "Not graded in Quark yet"})
                 continue
             grading = d.store.get("gradings", sub["gradingId"])
             if not grading:
@@ -1541,7 +1541,7 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
                 continue
             score = float(grading.get("totalScoreEarned", 0.0))
             max_score = float(grading.get("totalScorePossible", 0.0))
-            feedback = grading.get("studentFacingSummary") or "Graded by BirdBrains"
+            feedback = grading.get("studentFacingSummary") or "Graded by Quark"
             try:
                 push_fn(rec, score, max_score, feedback)
                 synced.append({
@@ -1945,7 +1945,7 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         uid = body.uid or d.auth.uid_for_email(body.email)
         profile = d.store.get("users", uid) if uid else None
         if not profile:
-            raise HTTPException(404, "No BirdBrains account for that email or uid. Sign up on the site first.")
+            raise HTTPException(404, "No Quark account for that email or uid. Sign up on the site first.")
         if body.tester:
             profile["tester"] = True
         else:

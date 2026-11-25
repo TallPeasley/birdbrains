@@ -907,7 +907,7 @@ export default function AccountSettings() {
       <section className="card flex flex-wrap items-center justify-between gap-3 p-5 sm:p-6" aria-label="Sign out">
         <div>
           <h2 className="text-base font-semibold text-slate-900">
-            {live ? 'Sign out of BirdBrains' : 'Exit demo mode'}
+            {live ? 'Sign out of Quark' : 'Exit demo mode'}
           </h2>
           <p className="text-sm text-slate-500">
             {live

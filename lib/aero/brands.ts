@@ -501,41 +501,59 @@ const BRANDS: Record<AeroBrandKey, Brand> = {
     }
   },
   "birdbrains": {
-    "name": "BirdBrains",
-    "code": "BB",
+    "name": "Quark",
+    "code": "QK",
     "role": "AI diagnostic & worksheet engine",
-    "domain": "birdbrains.netlify.app",
-    "url": "https://birdbrains.netlify.app",
+    "domain": "birdbrain-514606.web.app",
+    "url": "https://birdbrain-514606.web.app",
     "primary": "#6366F1",
     "secondary": "#A855F7",
     "tertiary": "#3730A3",
     "kinetic": [
       [
-        "path",
+        "circle",
         {
-          "d": "M10 36C10 22 14 10 26 10C34 10 38 15 38 21C38 25 34 26 42 28L34 31C33 37 27 39 20 39",
+          "cx": "24",
+          "cy": "24",
+          "r": "17",
           "stroke": "#6366F1",
-          "strokeWidth": "2.6",
-          "strokeLinecap": "round",
-          "strokeLinejoin": "round"
+          "strokeWidth": "2.6"
         }
       ],
       [
         "path",
         {
-          "d": "M16 25C18 17 24 16 28 21C30 24 26 29 21 28",
+          "d": "M24 14L32.66 29H15.34Z",
           "stroke": "#A855F7",
-          "strokeWidth": "2.4",
-          "strokeLinecap": "round"
+          "strokeWidth": "2.2",
+          "strokeLinejoin": "round"
         }
       ],
       [
         "circle",
         {
-          "cx": "31",
-          "cy": "20",
-          "r": "2.2",
+          "cx": "24",
+          "cy": "14",
+          "r": "3.2",
           "fill": "#6366F1"
+        }
+      ],
+      [
+        "circle",
+        {
+          "cx": "32.66",
+          "cy": "29",
+          "r": "3.2",
+          "fill": "#A855F7"
+        }
+      ],
+      [
+        "circle",
+        {
+          "cx": "15.34",
+          "cy": "29",
+          "r": "3.2",
+          "fill": "#3730A3"
         }
       ]
     ],
@@ -545,28 +563,6 @@ const BRANDS: Record<AeroBrandKey, Brand> = {
         {
           "points": "24,6 40,15 24,24 8,15",
           "fill": "#A855F7"
-        }
-      ],
-      [
-        "line",
-        {
-          "x1": "16",
-          "y1": "10.5",
-          "x2": "32",
-          "y2": "19.5",
-          "stroke": "#FFFFFF",
-          "strokeWidth": "1.5"
-        }
-      ],
-      [
-        "line",
-        {
-          "x1": "32",
-          "y1": "10.5",
-          "x2": "16",
-          "y2": "19.5",
-          "stroke": "#FFFFFF",
-          "strokeWidth": "1.5"
         }
       ],
       [
@@ -584,46 +580,63 @@ const BRANDS: Record<AeroBrandKey, Brand> = {
         }
       ],
       [
-        "polygon",
+        "line",
         {
-          "points": "34,24 45,27 34,34",
-          "fill": "#A855F7"
-        }
-      ],
-      [
-        "polygon",
-        {
-          "points": "28,22 34,19 34,23 28,26",
-          "fill": "#FFFFFF"
-        }
-      ],
-      [
-        "circle",
-        {
-          "cx": "16",
-          "cy": "24",
-          "r": "2",
-          "fill": "#FFFFFF"
-        }
-      ],
-      [
-        "circle",
-        {
-          "cx": "16",
-          "cy": "31",
-          "r": "2",
-          "fill": "#A855F7"
+          "x1": "24",
+          "y1": "15",
+          "x2": "24",
+          "y2": "24",
+          "stroke": "#FFFFFF",
+          "strokeWidth": "1.4"
         }
       ],
       [
         "line",
         {
           "x1": "16",
-          "y1": "24",
-          "x2": "16",
-          "y2": "31",
+          "y1": "28.5",
+          "x2": "24",
+          "y2": "24",
           "stroke": "#FFFFFF",
-          "strokeWidth": "1.2"
+          "strokeWidth": "1.4"
+        }
+      ],
+      [
+        "line",
+        {
+          "x1": "32",
+          "y1": "28.5",
+          "x2": "24",
+          "y2": "24",
+          "stroke": "#FFFFFF",
+          "strokeWidth": "1.4"
+        }
+      ],
+      [
+        "circle",
+        {
+          "cx": "24",
+          "cy": "15",
+          "r": "2.4",
+          "fill": "#FFFFFF"
+        }
+      ],
+      [
+        "circle",
+        {
+          "cx": "16",
+          "cy": "28.5",
+          "r": "2.4",
+          "fill": "#FFFFFF"
+        }
+      ],
+      [
+        "circle",
+        {
+          "cx": "32",
+          "cy": "28.5",
+          "r": "2.4",
+          "fill": "#FFFFFF"
         }
       ]
     ],
@@ -631,35 +644,30 @@ const BRANDS: Record<AeroBrandKey, Brand> = {
       [
         "polygon",
         {
-          "points": "12,10 24,18 12,28",
+          "points": "24,6 6,38 24,27",
           "fill": "#6366F1"
         }
       ],
       [
         "polygon",
         {
-          "points": "36,10 24,18 36,28",
+          "points": "24,6 42,38 24,27",
           "fill": "#A855F7"
         }
       ],
       [
         "polygon",
         {
-          "points": "12,28 24,18 24,40",
+          "points": "6,38 42,38 24,27",
           "fill": "#3730A3"
         }
       ],
       [
-        "polygon",
+        "circle",
         {
-          "points": "36,28 24,18 24,40",
-          "fill": "#6366F1"
-        }
-      ],
-      [
-        "polygon",
-        {
-          "points": "20,23 28,23 24,29",
+          "cx": "24",
+          "cy": "27",
+          "r": "2.6",
           "fill": "#FFFFFF"
         }
       ]
