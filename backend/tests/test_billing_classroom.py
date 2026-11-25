@@ -181,3 +181,12 @@ def test_google_auth_url():
     url = GoogleClassroom("cid", "sec", "https://api.test/classroom/callback").auth_url("st")
     assert "access_type=offline" in url and "state=st" in url and "classroom.coursework.students.readonly" in url
     assert "redirect_uri=https%3A%2F%2Fapi.test%2Fclassroom%2Fcallback" in url
+
+
+def test_classroom_grade_sync_is_refused(client, deps):
+    """Google only lets the app that created an assignment set its grades."""
+    client.post("/me", json={"role": "teacher", "name": "Ms. Rivera"}, headers=auth("rivera"))
+    client.post("/internal/users/rivera/plan", json={"plan": "pro"}, headers=TOKEN)
+    deps.classroom = FakeClassroom()
+    r = client.post("/classroom/courses/c1/coursework/w1/sync", headers=auth("rivera"))
+    assert r.status_code == 501 and r.json()["detail"] == "CLASSROOM_GRADE_SYNC_UNSUPPORTED"

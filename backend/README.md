@@ -206,6 +206,9 @@ While the consent screen is in "Testing", only the listed test users can connect
 their connection expires after 7 days. Going public needs Google's verification; `drive.readonly`
 is a restricted scope, which also needs a yearly third-party security assessment.
 
+Grades are not sent back to Classroom: Google lets an app set grades only on assignments
+that app created, and teachers make assignments in Classroom. Teachers copy scores across.
+
 ## Photo quality
 
 - **Straightening** (`birdbrains/photo_prep.py`): every uploaded photo is flattened to a straight top-down page, cropped to the paper and evened out for lighting before it is scrubbed and stored. If no clear page outline is found (for example a close-up of one question), the photo is stored unchanged.

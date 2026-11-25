@@ -640,6 +640,12 @@ export default function TeacherDashboard() {
               </button>
             )}
 
+            {selectedProvider === 'google_classroom' ? (
+              <p className="basis-full text-xs text-slate-500">
+                Google only lets an app set grades on assignments that app created, so BirdBrains can’t send
+                scores to Google Classroom. Copy each student’s score from their results into Classroom.
+              </p>
+            ) : (
             <button
               type="button"
               disabled={!selectedCourse || !selectedWork || syncBusy}
@@ -649,6 +655,7 @@ export default function TeacherDashboard() {
               {syncBusy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Send className="h-4 w-4" aria-hidden />}
               Sync Grades to LMS
             </button>
+            )}
           </div>
         )}
 

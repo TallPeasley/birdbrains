@@ -1328,15 +1328,14 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
             })
         return {"imported": imported, "skipped": skipped}
 
-    @app.post("/classroom/courses/{course_id}/coursework/{work_id}/sync", response_model=ApiLmsSyncResult)
-    def classroom_sync(course_id: str, work_id: str, user: User, body: Optional[LmsSyncRequest] = None):
-        """Push graded BirdBrains scores back to Google Classroom as draft grades."""
-        sess = classroom_session(user)
-        return _sync_lms_grades(user, "google_classroom", course_id, work_id, body,
-                                lambda rec, score, max_score, _fb: sess.sync_grade(
-                                    course_id, work_id, rec["lmsSubmissionId"],
-                                    (score / max_score * 100.0) if max_score > 0 else 0.0,
-                                ))
+    @app.post("/classroom/courses/{course_id}/coursework/{work_id}/sync")
+    def classroom_sync(course_id: str, work_id: str, user: User):
+        """Not offered for Google Classroom. Google lets an app set grades only on
+        assignments that the same app created (studentSubmissions.patch returns
+        403 ProjectPermissionDenied otherwise), and teachers make assignments in
+        Classroom itself. Teachers copy the scores from BirdBrains instead."""
+        classroom_teacher(user)
+        raise HTTPException(501, "CLASSROOM_GRADE_SYNC_UNSUPPORTED")
 
     # ---------------------------------------- Multi-LMS (Brightspace, Canvas, Microsoft Edu)
     def lms_provider(provider_id: str) -> LmsProvider:
