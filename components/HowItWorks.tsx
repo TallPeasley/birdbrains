@@ -12,7 +12,7 @@ import type { PlanTier } from '@/types/birdBrains';
 
 const STEPS = [
   { icon: Camera, title: 'Snap a photo', body: 'A test, quiz or homework page, handwriting and all.' },
-  { icon: ScanSearch, title: 'Every step is checked', body: 'Mistakes are sorted into the four pillars.' },
+  { icon: ScanSearch, title: 'Every step is checked', body: 'Mistakes are sorted into the six pillars.' },
   { icon: FileText, title: 'Practise what matters', body: 'A worksheet aimed at exactly what went wrong.' },
 ];
 

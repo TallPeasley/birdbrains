@@ -48,7 +48,7 @@ def test_full_flow(client, family):
     assert done["submission"]["status"] == "GRADED"
     assert grading["totalScore"] == 8.0 and grading["maxPossibleScore"] == 10.0
     assert grading["affectState"] == "HIGH_FRICTION_FRUSTRATION"
-    assert [p["pillar"] for p in grading["pillarBreakdowns"]] == ["CON", "PRC", "FAC", "TST"]
+    assert [p["pillar"] for p in grading["pillarBreakdowns"]] == ["CON", "STR", "PRC", "FAC", "COM", "TST"]
     # Carry-forward: step 5 is protected and only one root cause is reported.
     assert grading["stepDiagnostics"][4]["isCarryForwardProtected"] is True
     assert len(grading["questionAnalyses"]) == 1
@@ -58,7 +58,7 @@ def test_full_flow(client, family):
     assert q1["finalAnswerVerification"]["satisfiesInitialQuestion"] is False
     assert any(c["status"] == "MISSING" for c in q1["keyStepChecks"])
     assert [e["misconceptionId"] for e in grading["entityExtractions"]] == ["PRC-03"]
-    assert grading["pillarBreakdowns"][1]["errorCount"] == 1
+    assert grading["pillarBreakdowns"][2]["errorCount"] == 1
 
     # Idempotent.
     again = client.post(f"/submissions/{sub['submissionId']}/process", headers=auth("alex")).json()

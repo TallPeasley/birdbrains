@@ -56,7 +56,7 @@ VERTEX_LOCATION = os.environ.get("BIRDBRAINS_VERTEX_LOCATION", "northamerica-nor
 # answers in Montréal (checked with tools/check_models.py on 2026-11-18); Toronto serves none.
 STAGE1_MODEL = os.environ.get("BIRDBRAINS_STAGE1_MODEL", "gemini-3.5-flash")
 STAGE2_MODEL = os.environ.get("BIRDBRAINS_STAGE2_MODEL", "gemini-3.5-flash")
-# Free plan: transcription and 4-pillar error codes with minimal thinking and no mood
+# Free plan: transcription and six-pillar error codes with minimal thinking and no mood
 # analysis. Pro thinks more. Levels: MINIMAL, LOW, MEDIUM, HIGH (Gemini 3); on a 2.5
 # model they map to a thinking budget.
 STAGE2_FREE_MODEL = os.environ.get("BIRDBRAINS_STAGE2_FREE_MODEL", "gemini-3.5-flash")
@@ -232,8 +232,8 @@ Method (follow in exact order):
    - List the matching student `line_number`(s) in `matched_student_steps` (empty
      list when `MISSING`).
    - If a required key step (`is_key_step=true`) is `MISSING`, diagnose the
-     omission with the matching error code (e.g. `PRC-01`, `PRC-04`, `TST-01`,
-     `TST-02`, or `TST-03`).
+     omission with the matching error code (e.g. `PRC-01`, `PRC-04`, `COM-01`,
+     `COM-02`, `COM-04` or `TST-03`).
 4. Evaluate each transcribed line of THIS question in order (`step_evaluations`):
    - Keep `step_number` matching the question's `line_number` (starting from 1).
    - Verify line 1 (and every initial setup line) directly against
@@ -254,12 +254,12 @@ Method (follow in exact order):
 5. `identified_errors`: list every root cause in THIS question
    (`is_cascading_consequence=false`), each with one pillar and one official error
    code from the taxonomy (including omissions caught by `key_step_checks` or
-   blank questions as `TST-03`). Also list downstream lines/conclusions affected
-   solely by an earlier root error in THIS question as `is_cascading_consequence=true`
-   with the root cause's code.
-6. `pillar_scores`: give exactly one entry per pillar (`CON`, `PRC`, `FAC`, `TST`)
-   for THIS question. Max scores are CON 3, PRC 3, FAC 2, TST 2. Deduct only for
-   root causes, never for cascading consequences. Feedback is one sentence
+   blank questions as `TST-03`). The code's prefix is its pillar. Also list
+   downstream lines/conclusions affected solely by an earlier root error in THIS
+   question as `is_cascading_consequence=true` with the root cause's code.
+6. `pillar_scores`: give exactly one entry per pillar (`CON`, `STR`, `PRC`, `FAC`,
+   `COM`, `TST`) for THIS question. Max scores are CON 2, STR 2, PRC 2, FAC 2,
+   COM 1, TST 1. Deduct only for root causes, never for cascading consequences. Feedback is one sentence
    addressed to the student.
 7. `sentiment_entities`: for each mathematical skill or object the student engaged
    with in THIS question (e.g. "distributing a leading coefficient"), give valence
@@ -269,7 +269,7 @@ Method (follow in exact order):
    this question.
 8. `recommended_scaffolding_mode`: `HIGH_SUPPORT_DEESCALATION` when
    `aggregate_valence` is -0.45 or lower; `METACOGNITIVE_SPEED_BUMP` when the
-   errors are mostly FAC/TST slips made in rushed work; otherwise
+   errors are mostly FAC/COM/TST slips made in rushed work; otherwise
    `STANDARD_PROGRESSIVE_FADE`.
 9. `supportive_framing_message`: one or two warm, specific, growth-mindset
    sentences to the student for this question. Name what they did well first, then
@@ -311,7 +311,7 @@ DEFAULT_PRICES = {
     "gemini-2.5-pro": (1.25, 0.125, 10.00),
 }
 
-_PILLAR_ORDER = (PillarEnum.CON, PillarEnum.PRC, PillarEnum.FAC, PillarEnum.TST)
+_PILLAR_ORDER = tuple(PillarEnum)  # CON, STR, PRC, FAC, COM, TST
 
 
 def prices() -> dict[str, tuple[float, float, float]]:
@@ -495,8 +495,8 @@ def question_contradictions(q: QuestionGradingOutput) -> list[str]:
         if s.error_code and s.pillar and not s.error_code.startswith(s.pillar.value):
             problems.append(f"step {s.step_number}: {s.error_code} filed under pillar {s.pillar.value}")
     pillars = sorted(p.pillar.value for p in q.pillar_scores)
-    if pillars != ["CON", "FAC", "PRC", "TST"]:
-        problems.append(f"pillar_scores has {pillars}, expected one each of CON, FAC, PRC, TST")
+    if pillars != sorted(p.value for p in PillarEnum):
+        problems.append(f"pillar_scores has {pillars}, expected one each of {', '.join(p.value for p in PillarEnum)}")
     return problems
 
 
@@ -542,6 +542,8 @@ def aggregate_question_gradings(
     pillar_scores: list[PillarScore] = []
     for pillar in _PILLAR_ORDER:
         entries = [(q.question_number, p) for q in q_list for p in q.pillar_scores if p.pillar is pillar]
+        if not entries:
+            continue
         max_total = round(sum(p.max_score for _, p in entries), 2)
         earned_total = round(sum(min(p.earned_score, p.max_score) for _, p in entries), 2)
         deducted = [(qn, p.feedback) for qn, p in entries if p.earned_score < p.max_score and p.feedback.strip()]

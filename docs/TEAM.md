@@ -200,7 +200,7 @@ duplicate photo, plan limit, name blurring).
 ### Shared vocabulary
 
 - Pillars: `CON` Conceptual, `PRC` Procedural, `FAC` Factual & Calculation, `TST` Test-Taking & Communication.
-- Error codes: 16 official codes `CON-01`…`TST-04`; names in `lib/errorCodes.ts`.
+- Error codes: 24 six-pillar codes (CON, STR, PRC, FAC, COM, TST) in `backend/birdbrains/taxonomy.py`; names in `lib/errorCodes.ts`. Retired ids CON-02, CON-03, TST-01, TST-02 are remapped on load (`LEGACY_CODES`), never reused.
   They appear as `entityExtractions[].misconceptionId`.
 - Affect states: `CONFIDENT_MASTERY`, `PRODUCTIVE_STRUGGLE`, `HIGH_FRICTION_FRUSTRATION`,
   `COGNITIVE_OVERLOAD_AVOIDANCE`, `RUSHED_CARELESSNESS`.

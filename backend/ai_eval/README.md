@@ -52,7 +52,7 @@ One JSON object per line in a `.jsonl` file under `ai_eval/gold/`:
 - `images`: photo paths relative to the file. The whole pipeline runs (reading the
   handwriting, then grading). Or give `lines` instead: the work typed out as LaTeX,
   one string per line, which tests the grading only.
-- `root_codes`: the codes a tutor would give (the 16 in `docs/TEAM.md`). `[]` for
+- `root_codes`: the codes a tutor would give (the 24 in `birdbrains/taxonomy.py`). `[]` for
   fully correct work; include some of those.
 - `carry_forward_steps`: written-line numbers (counting from 1) that are wrong only
   because of an earlier mistake.
@@ -62,6 +62,6 @@ One JSON object per line in a `.jsonl` file under `ai_eval/gold/`:
 Labelling in a spreadsheet is fine: columns `id, photo file, course, unit/topic, error
 codes, carry-forward line numbers, notes`. Claude converts it.
 
-`gold/synthetic.jsonl` holds 22 typed samples written by Claude (15 of the 16 codes,
+`gold/synthetic.jsonl` holds 22 typed samples written by Claude (15 of the 24 codes,
 three fully correct, 18 carry-forward lines). They let prompt tuning start before the
 photo set exists, but their labels have not been reviewed by a tutor.

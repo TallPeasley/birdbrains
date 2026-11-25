@@ -224,13 +224,17 @@ class FakePipeline:
                 "aggregate_friction": 0.0 if free else 0.6,
                 "recommended_scaffolding_mode": "STANDARD_PROGRESSIVE_FADE",
                 "pillar_scores": [
-                    {"pillar": "CON", "max_score": 3, "earned_score": 3,
+                    {"pillar": "CON", "max_score": 2, "earned_score": 2,
                      "feedback": "You clearly understand how vertex form is built."},
-                    {"pillar": "PRC", "max_score": 3, "earned_score": 1.5,
+                    {"pillar": "STR", "max_score": 2, "earned_score": 2,
+                     "feedback": "Completing the square was the right plan here."},
+                    {"pillar": "PRC", "max_score": 2, "earned_score": 0.5,
                      "feedback": "One slip when taking -9 out of the bracket in step 4."},
                     {"pillar": "FAC", "max_score": 2, "earned_score": 2, "feedback": "Your arithmetic was accurate throughout."},
-                    {"pillar": "TST", "max_score": 2, "earned_score": 1.5,
+                    {"pillar": "COM", "max_score": 1, "earned_score": 0.5,
                      "feedback": "State the vertex as a point at the end."},
+                    {"pillar": "TST", "max_score": 1, "earned_score": 1,
+                     "feedback": "You worked the question through to the end."},
                 ],
                 "supportive_framing_message": (
                     "Great persistence! You set up the square correctly and your thinking about vertex form is solid. "

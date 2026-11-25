@@ -40,7 +40,7 @@ const STEPS = [
   {
     icon: ScanSearch,
     title: 'See every step diagnosed',
-    body: 'Each line of working is read and checked. Mistakes are sorted into the four pillars, so a careless slip never looks like a real gap.',
+    body: 'Each line of working is read and checked. Mistakes are sorted into the six pillars, so a careless slip never looks like a real gap.',
   },
   {
     icon: FileText,
@@ -72,7 +72,7 @@ const AUDIENCES = [
     icon: School,
     who: 'Teachers',
     points: [
-      'Class-wide patterns across the four pillars',
+      'Class-wide patterns across the six pillars',
       'Connects with Google Classroom',
       'Progress reports you can share',
     ],
@@ -183,15 +183,15 @@ export default function HomePage() {
         </Link>
       </section>
 
-      {/* ── Four pillars ─────────────────────────────────────────────────── */}
+      {/* ── Six pillars ──────────────────────────────────────────────────── */}
       <section aria-labelledby="pillars-heading">
         <SectionHeading
           id="pillars-heading"
           n={2}
-          title="The 4-Pillar Diagnostic Framework"
-          sub="Every mistake is sorted into one of four kinds, because each one is fixed a different way."
+          title="The 6-Pillar Diagnostic Framework"
+          sub="Every mistake is sorted into one of six kinds, because each one is fixed a different way."
         />
-        <div className="aero-cells mt-8 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="aero-cells mt-8 sm:grid-cols-2 lg:grid-cols-3">
           {PILLAR_ORDER.map((p, i) => (
             <div key={p} className="p-5">
               <div className="flex items-center justify-between gap-2">
@@ -238,7 +238,7 @@ export default function HomePage() {
           <SectionIndex n={4} />
           <h2 className="mt-2 font-display text-2xl font-extrabold tracking-display text-slate-900">Start free</h2>
           <p className="mt-2 text-slate-600">
-            The free plan reads your work, finds the mistakes across all four pillars and explains them, up to a monthly
+            The free plan reads your work, finds the mistakes across all six pillars and explains them, up to a monthly
             limit. Pro adds unlimited uploads, mood and pacing insights, and nightly practice worksheets.
           </p>
           <div className="mt-auto pt-6">

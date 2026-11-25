@@ -11,7 +11,7 @@ import TesterBar from '@/components/TesterBar';
 import AeroFooter from '@/components/aero/AeroFooter';
 
 const DESCRIPTION =
-  'Four-pillar math diagnostics and three-stage remedial worksheets for Ontario Grade 9–10 students and parents.';
+  'Six-pillar math diagnostics and three-stage remedial worksheets for Ontario Grade 9–10 students and parents.';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://birdbrain-514606.web.app'),

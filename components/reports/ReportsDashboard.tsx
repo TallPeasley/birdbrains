@@ -53,13 +53,13 @@ const DEMO_PROGRESS: ProgressReport = {
   errorCodes: [
     { code: 'PRC-03', name: 'Outer coefficient missed on bracket exit', pillar: 'PRC', count: 3, students: 1, lastSeen: '2026-11-14' },
     { code: 'FAC-01', name: 'Signed arithmetic slip', pillar: 'FAC', count: 2, students: 1, lastSeen: '2026-11-02' },
-    { code: 'TST-02', name: 'Missing final coordinate / unit statement', pillar: 'TST', count: 1, students: 1, lastSeen: '2026-11-09' },
+    { code: 'COM-02', name: 'Missing final coordinate / unit statement', pillar: 'COM', count: 1, students: 1, lastSeen: '2026-11-09' },
   ],
   recurringCodes: ['PRC-03', 'FAC-01'],
   pillarErrorDistribution: [
     { pillar: 'PRC', percentageOfTotalErrors: 50 },
     { pillar: 'FAC', percentageOfTotalErrors: 33 },
-    { pillar: 'TST', percentageOfTotalErrors: 17 },
+    { pillar: 'COM', percentageOfTotalErrors: 17 },
   ],
 };
 
@@ -73,8 +73,8 @@ const DEMO_COHORT: CohortReport = {
       uploads: 4,
       lastUploadAt: '2026-11-14T16:10:00Z',
       averageMastery: 0.44,
-      topCode: 'CON-02',
-      recurringCodes: ['CON-02', 'PRC-03'],
+      topCode: 'CON-04',
+      recurringCodes: ['CON-04', 'PRC-03'],
       needsAttention: true,
     },
     {
@@ -105,7 +105,7 @@ const DEMO_COHORT: CohortReport = {
   ],
   errorCodes: [
     { code: 'PRC-03', name: 'Outer coefficient missed on bracket exit', pillar: 'PRC', count: 7, students: 4, lastSeen: '2026-11-14' },
-    { code: 'CON-02', name: 'Vertex sign inversion', pillar: 'CON', count: 5, students: 3, lastSeen: '2026-11-14' },
+    { code: 'CON-04', name: 'Vertex sign inversion', pillar: 'CON', count: 5, students: 3, lastSeen: '2026-11-14' },
     { code: 'FAC-01', name: 'Signed arithmetic slip', pillar: 'FAC', count: 4, students: 3, lastSeen: '2026-11-12' },
   ],
   pillarErrorDistribution: [

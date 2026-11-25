@@ -25,12 +25,12 @@ ALPHA_VALENCE = 0.35
 DEESCALATION_VALENCE = -0.45
 # The spec says "error frequency" drives the speed bump without giving numbers.
 # These are our defaults: over the last few submissions, the student is making
-# errors regularly and at least half of them are slips (FAC/TST), not gaps.
+# errors regularly and at least half of them are slips (FAC/COM/TST), not gaps.
 SPEED_BUMP_WINDOW = 3
 SPEED_BUMP_MIN_ERRORS_PER_SUBMISSION = 1.0
 SPEED_BUMP_MIN_SLIP_SHARE = 0.5
 
-SLIP_PILLARS = {PillarEnum.FAC, PillarEnum.TST}
+SLIP_PILLARS = {PillarEnum.FAC, PillarEnum.COM, PillarEnum.TST}
 
 
 def ewma(previous: Optional[float], observation: float, alpha: float) -> float:

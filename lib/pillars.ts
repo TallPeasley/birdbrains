@@ -5,32 +5,44 @@ export const PILLARS: Record<
   { label: string; short: string; description: string; color: string }
 > = {
   CON: {
-    label: 'Conceptual Understanding',
-    short: 'Conceptual',
-    description: 'Grasp of the underlying mathematical ideas and why methods work.',
+    label: 'Concepts',
+    short: 'Concepts',
+    description: 'Understanding the mathematical ideas themselves and why methods work.',
     color: '#6366f1',
   },
+  STR: {
+    label: 'Strategy & Setup',
+    short: 'Strategy',
+    description: 'Picking a method that fits and turning the question into the right equation.',
+    color: '#14b8a6',
+  },
   PRC: {
-    label: 'Procedural Accuracy',
-    short: 'Procedural',
+    label: 'Procedure',
+    short: 'Procedure',
     description: 'Carrying out the steps of a method in the right order, without dropping any.',
     color: '#8b5cf6',
   },
   FAC: {
-    label: 'Factual & Calculation Fluency',
+    label: 'Calculation & Recall',
     short: 'Calculation',
-    description: 'Recalling facts and formulas and doing the arithmetic accurately.',
+    description: 'Doing the arithmetic accurately and recalling facts, units and formulas.',
     color: '#0ea5e9',
   },
-  TST: {
-    label: 'Test-Taking & Communication',
+  COM: {
+    label: 'Communication',
     short: 'Communication',
-    description: 'Answering what was asked and showing clear, labelled, complete work.',
+    description: 'Answering what was asked, with units, reasons and work that can be followed.',
+    color: '#f59e0b',
+  },
+  TST: {
+    label: 'Test Habits',
+    short: 'Test habits',
+    description: 'Finishing questions, avoiding trap answers and checking that answers make sense.',
     color: '#64748b',
   },
 };
 
-export const PILLAR_ORDER: PillarCategory[] = ['CON', 'PRC', 'FAC', 'TST'];
+export const PILLAR_ORDER: PillarCategory[] = ['CON', 'STR', 'PRC', 'FAC', 'COM', 'TST'];
 
 /** `level` 2+ shows the supportive friction callout. */
 export const AFFECT_META: Record<

@@ -8,6 +8,7 @@ from typing import Optional
 
 from .questions import strip_label, written_label
 from .schemas import (
+    LEGACY_CODES,
     AffectStateEnum,
     ApiGrading,
     ApiParentSummary,
@@ -37,9 +38,13 @@ MAX_ALERTS = 5
 # told not to write them, and any that slip through are swapped for the plain name.
 PLAIN_MISTAKE_NAMES = {
     "CON-01": "mixed-up math rule",
-    "CON-02": "wrong formula for this question",
-    "CON-03": "values put in the wrong places",
     "CON-04": "sign or direction set up backwards",
+    "CON-05": "rule used where it does not work",
+    "CON-06": "value that is not allowed",
+    "STR-01": "wrong formula for this question",
+    "STR-02": "question set up wrong",
+    "STR-03": "no clear plan",
+    "STR-04": "method that does not fit",
     "PRC-01": "skipped step",
     "PRC-02": "steps done out of order",
     "PRC-03": "sign or term lost while rearranging",
@@ -48,13 +53,19 @@ PLAIN_MISTAKE_NAMES = {
     "FAC-02": "number copied wrong",
     "FAC-03": "unit or constant slip",
     "FAC-04": "rounding slip",
-    "TST-01": "answered a different question",
-    "TST-02": "missing units or final sentence",
+    "COM-01": "answered a different question",
+    "COM-02": "missing units or final sentence",
+    "COM-03": "hard-to-follow working",
+    "COM-04": "answer not explained",
     "TST-03": "left blank or unfinished",
-    "TST-04": "stopped at a middle step",
+    "TST-04": "middle step taken as the answer",
+    "TST-05": "gave up partway",
+    "TST-06": "answer not checked",
 }
-_BRACKETED_CODE = re.compile(r"\s*[(\[]\s*(?:CON|PRC|FAC|TST)-0[1-4]\s*[)\]]")
-_CODE = re.compile(r"\b(?:CON|PRC|FAC|TST)-0[1-4]\b")
+PLAIN_MISTAKE_NAMES.update({old: PLAIN_MISTAKE_NAMES[new] for old, new in LEGACY_CODES.items()})
+_ANY_CODE = r"(?:CON|STR|PRC|FAC|COM|TST)-0[1-9]"
+_BRACKETED_CODE = re.compile(r"\s*[(\[]\s*" + _ANY_CODE + r"\s*[)\]]")
+_CODE = re.compile(r"\b" + _ANY_CODE + r"\b")
 _PROSE_KEYS = {"explanation", "description", "note", "discrepancyNote", "resubstitutionCheck", "feedback",
                "supportiveFramingMessage", "answerVerification", "keyStepDescription",
                "actionableParentInsight"}
@@ -66,7 +77,7 @@ def plain(text: Optional[str]) -> Optional[str]:
     if not text:
         return text
     text = _BRACKETED_CODE.sub("", text)
-    return _CODE.sub(lambda m: PLAIN_MISTAKE_NAMES[m.group(0)], text)
+    return _CODE.sub(lambda m: PLAIN_MISTAKE_NAMES.get(m.group(0), "mistake"), text)
 
 
 def _plain_prose(value):

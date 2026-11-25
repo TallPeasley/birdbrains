@@ -22,6 +22,7 @@ from .math_lint import lint_practice, lint_worksheet, tidy_worksheet
 from .worksheet_maths import maths_report
 from .pipeline import STAGE2_MODEL, VERTEX_LOCATION
 from .schemas import (
+    LEGACY_CODES,
     CourseEnum,
     PracticeProblem,
     ScaffoldingModeEnum,
@@ -151,7 +152,7 @@ def worksheet_prompt(item: FlaggedGrading) -> str:
         work_section = f"Student's steps as evaluated:\n{json.dumps(steps, indent=1)}"
     # A full test can have a dozen root errors; one worksheet practises one skill, so
     # name the error code the student made most often (first seen wins a tie).
-    counts = Counter(e["error_code"] for e in roots)
+    counts = Counter(LEGACY_CODES.get(e["error_code"], e["error_code"]) for e in roots)
     target = max(counts, key=lambda c: (counts[c], -list(counts).index(c))) if counts else ""
     focus = f"Target error: {target} ({counts[target]} of {len(roots)} root-cause errors)\n" if target else ""
     return (
