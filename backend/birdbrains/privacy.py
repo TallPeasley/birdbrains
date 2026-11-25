@@ -7,14 +7,16 @@ or shown to Gemini:
 
 1. EXIF is dropped (phone photos carry GPS location and device ids) and the image
    is turned upright.
-2. Detection: Cloud DLP reads the page (in northamerica-northeast1) and reports
+2. Detection: Gemini in northamerica-northeast1 reads the page (Cloud DLP's image
+   inspection, used before, is not offered there; BIRDBRAINS_PRIVACY_DETECTOR=dlp still
+   selects it) and reports
    - printed header labels such as "Name:", "Date:", "Class", "Period",
      "Teacher", "Student #". Whatever is written after the label, on that line,
      is treated as private: the box runs from the label to the right edge.
    - names, dates, emails and phone numbers anywhere on the page.
 3. Every detected box is padded and heavily blurred (Gaussian blur over a
    pixelated copy, so handwriting cannot be recovered).
-If DLP fails, the upload still goes through (Maalik, 2026-11-18: a failed name check must
+If detection fails, the upload still goes through (Maalik, 2026-11-18: a failed name check must
 not block a student). The top FALLBACK_HEADER_FRACTION of the page, where names and dates
 are written, is blurred instead, EXIF is still dropped, and a ``privacy_fallback`` log line
 records Google's error so the cause can be fixed. Names elsewhere on the page are not
@@ -29,6 +31,7 @@ from __future__ import annotations
 import io
 import json
 import logging
+import os
 from dataclasses import dataclass
 from typing import Optional, Protocol
 
@@ -96,6 +99,94 @@ class CloudDlpDetector:
                 for b in loc.image_location.bounding_boxes:
                     boxes.append(Box(f.info_type.name, b.left, b.top, b.width, b.height))
         return boxes
+
+
+GEMINI_PRIVACY_PROMPT = """\
+This is a photo of a student's maths work. Find every piece of personal information on
+it so it can be blurred before the photo is stored:
+- names of any person (student, teacher, parent), handwritten or printed;
+- dates, email addresses, phone numbers, student or ID numbers;
+- whatever is written after a header label such as Name, Nom, Date, Class, Period, Block,
+  Teacher, Student #, Homeroom or School (kind HEADER_VALUE; box the written value).
+Do not return mathematics, question text or printed instructions. Return each item's
+box_2d as [ymin, xmin, ymax, xmax], scaled 0 to 1000 over the whole image. Return an
+empty list when there is nothing personal on the page."""
+
+_GEMINI_KINDS = ["PERSON_NAME", "DATE", "EMAIL_ADDRESS", "PHONE_NUMBER", "ID_NUMBER", "HEADER_VALUE"]
+_GEMINI_SCHEMA = {
+    "type": "object",
+    "properties": {"items": {"type": "array", "items": {
+        "type": "object",
+        "properties": {
+            "kind": {"type": "string", "enum": _GEMINI_KINDS},
+            "box_2d": {"type": "array", "items": {"type": "integer"}, "minItems": 4, "maxItems": 4},
+        },
+        "required": ["kind", "box_2d"],
+    }}},
+    "required": ["items"],
+}
+
+
+def boxes_from_gemini(items: list[dict], width: int, height: int) -> list[Box]:
+    """Gemini's [ymin, xmin, ymax, xmax] on a 0-1000 grid, to pixel boxes. A header value
+    is treated like a DLP label hit: blurred to the right edge of its line."""
+    out = []
+    for item in items:
+        try:
+            y0, x0, y1, x1 = (max(0, min(1000, int(v))) for v in item["box_2d"])
+        except (KeyError, TypeError, ValueError):
+            continue
+        if y1 <= y0 or x1 <= x0:
+            continue
+        kind = LABEL if item.get("kind") == "HEADER_VALUE" else str(item.get("kind", "PERSON_NAME"))
+        left, top = round(x0 * width / 1000), round(y0 * height / 1000)
+        out.append(Box(kind, left, top, max(1, round(x1 * width / 1000) - left), max(1, round(y1 * height / 1000) - top)))
+    return out
+
+
+class GeminiPrivateTextDetector:
+    """Finds names, dates and header values with Gemini in Montréal. Cloud DLP's image
+    inspection is not offered in northamerica-northeast1 (every upload fell back to the
+    header blur, seen in the live logs on 2026-11-25), and the photo must stay in Canada.
+    The same image goes to the same Gemini endpoint for grading, so nothing new leaves."""
+
+    def __init__(self, project: str, client=None) -> None:
+        from .pipeline import STAGE1_MODEL, VERTEX_LOCATION
+
+        self._model = os.environ.get("BIRDBRAINS_PRIVACY_MODEL", STAGE1_MODEL)
+        if client is None:
+            from google import genai
+
+            client = genai.Client(vertexai=True, project=project, location=VERTEX_LOCATION)
+        self._client = client
+
+    def detect(self, data: bytes, fmt: str) -> list[Box]:
+        from google.genai import types
+
+        from .pipeline import thinking_config, with_retries
+
+        with Image.open(io.BytesIO(data)) as img:
+            width, height = img.size
+        mime = {"JPEG": "image/jpeg", "PNG": "image/png", "WEBP": "image/webp"}.get(fmt, "image/jpeg")
+        config = types.GenerateContentConfig(
+            temperature=0.0,
+            thinking_config=thinking_config(self._model, "MINIMAL"),
+            response_mime_type="application/json",
+            response_json_schema=_GEMINI_SCHEMA,
+        )
+        contents = [types.Part.from_bytes(data=data, mime_type=mime), GEMINI_PRIVACY_PROMPT]
+        response = with_retries(lambda: self._client.models.generate_content(
+            model=self._model, contents=contents, config=config), "privacy")
+        items = json.loads(response.text or "{}").get("items", [])
+        return boxes_from_gemini(items, width, height)
+
+
+def make_detector(project: str) -> Detector:
+    """BIRDBRAINS_PRIVACY_DETECTOR: gemini (default) or dlp (Cloud DLP, where its image
+    inspection is offered)."""
+    if os.environ.get("BIRDBRAINS_PRIVACY_DETECTOR", "gemini") == "dlp":
+        return CloudDlpDetector(project)
+    return GeminiPrivateTextDetector(project)
 
 
 def _regions(boxes: list[Box], width: int, height: int) -> list[tuple[int, int, int, int]]:

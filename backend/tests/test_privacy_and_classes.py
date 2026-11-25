@@ -158,3 +158,36 @@ def test_teacher_adds_and_removes_a_student_by_link_code(client, family):
     assert r.status_code == 200
     assert client.delete(f"/teacher/students/{sid}", headers=auth("chen")).json() == []
     assert client.get(f"/students/{sid}/progress", headers=auth("chen")).status_code == 404
+
+
+def test_gemini_finds_names_in_canada_and_its_boxes_are_blurred():
+    import json
+    from types import SimpleNamespace
+
+    from birdbrains.privacy import LABEL, GeminiPrivateTextDetector, boxes_from_gemini
+
+    # Gemini's [ymin, xmin, ymax, xmax] on 0-1000 -> pixels; header values run to the edge.
+    boxes = boxes_from_gemini([{"kind": "PERSON_NAME", "box_2d": [100, 200, 150, 400]},
+                               {"kind": "HEADER_VALUE", "box_2d": [20, 100, 60, 300]},
+                               {"kind": "DATE", "box_2d": [500, 500, 400, 600]},  # upside down: dropped
+                               {"box_2d": "junk"}], 1600, 1200)
+    assert [(b.kind, b.left, b.top, b.width, b.height) for b in boxes] == [
+        ("PERSON_NAME", 320, 120, 320, 60), (LABEL, 160, 24, 320, 48)]
+
+    seen = {}
+
+    def generate(model, contents, config):
+        seen["model"], seen["contents"] = model, contents
+        return SimpleNamespace(text=json.dumps({"items": [{"kind": "PERSON_NAME", "box_2d": [400, 400, 450, 600]}]}))
+
+    detector = GeminiPrivateTextDetector("p", client=SimpleNamespace(models=SimpleNamespace(generate_content=generate)))
+    page = Image.new("RGB", (1000, 1000), "white")
+    for x in range(400, 600, 4):  # "handwriting" where the name is
+        page.paste((0, 0, 0), (x, 410, x + 2, 440))
+    raw = io.BytesIO()
+    page.save(raw, "JPEG")
+    out = Image.open(io.BytesIO(PhotoScrubber(detector).scrub(raw.getvalue(), "JPEG")))
+    assert seen["model"].startswith("gemini") and "personal information" in seen["contents"][1]
+    stripes = [out.getpixel((x, 425))[0] for x in range(410, 590, 4)]
+    assert max(stripes) - min(stripes) < 60  # the name's stripes are smeared out
+    assert out.getpixel((100, 100))[0] > 240  # the rest of the page is untouched
