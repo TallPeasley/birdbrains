@@ -66,6 +66,8 @@ To exercise real Gemini from your machine, keep `BIRDBRAINS_BACKEND=local`, set
 | `PATCH /me`, `DELETE /me` | signed-in | Change name; delete the account (a student's account takes all their data with it) |
 | `GET/POST /me/classes`, `DELETE /me/classes/{id}` | student | List, join with a class code, leave |
 | `POST /uploads`, `PUT /uploads/{id}/file?token=` | owner; link holder | One-time 15-minute upload link for the Chrome extension, then the raw photo |
+| `POST/GET/DELETE /phone-uploads[/{id}]` | owner | Phone camera link for a QR code (15 minutes, one upload; `kind` new or addPhotos), watched by the computer that made it. See docs/PHONE_UPLOAD.md |
+| `GET /phone/{id}`, `POST /phone/{id}/photos` | link holder (`X-Upload-Token`) | The phone reads what the link is for, then sends photos; they are read and graded in that request |
 | `GET /gradings/{id}/worksheet.pdf` | owner | Worksheet PDF (WeasyPrint, template in `worksheet_pdf.py`) |
 | `GET /students/{id}/usage` | owner | Plan and uploads left this month (Free: 402 `FREE_LIMIT_REACHED` when 0) |
 | `POST /billing/checkout`, `/billing/portal`, `/billing/webhook` | signed-in; Stripe | Stripe Checkout and portal links; the signed webhook sets the plan (`billing.py`) |

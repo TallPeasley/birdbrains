@@ -127,7 +127,14 @@ export const UPLOAD_ERRORS: Record<number, UploadErrorInfo> = {
   304: {
     title: "Upload link expired",
     message: "The upload link only works once, for 15 minutes.",
-    action: "Start the upload again from the extension.",
+    action: "Start the upload again from the extension, or make a new QR code.",
+    retake: false,
+    ours: false,
+  },
+  305: {
+    title: "Phone link already used",
+    message: "Photos were already sent with this QR code.",
+    action: "Make a new QR code on your computer to send more.",
     retake: false,
     ours: false,
   },

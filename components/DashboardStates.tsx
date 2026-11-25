@@ -109,7 +109,7 @@ export function NoWorkNotice({ variant = 'student' }: { variant?: 'student' | 'p
           ? 'Your child hasn’t uploaded any work yet. Once they do, or you upload a photo of their work, progress and tips for helping at home will show up here.'
           : 'Take a photo of some handwritten math work and upload it. Your results will show up here.'}
       </p>
-      <button onClick={openCapture} className={primary}>
+      <button onClick={() => openCapture()} className={primary}>
         <UploadCloud className="h-4 w-4" aria-hidden /> Upload work
       </button>
     </Notice>

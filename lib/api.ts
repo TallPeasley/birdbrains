@@ -11,6 +11,9 @@ import type {
   ProgressReport,
   CohortReport,
   ApiUploadTicket,
+  ApiPhoneUpload,
+  ApiPhoneUploadLink,
+  CreatePhoneUpload,
   ApiUsage,
   ParentProjectionSummary,
   Stage2GradingAndAffectOutput,
@@ -35,11 +38,15 @@ export class ApiError extends Error {
 }
 
 async function request<T>(path: string, token: string, init?: RequestInit): Promise<T> {
+  return send<T>(path, { Authorization: `Bearer ${token}` }, init);
+}
+
+async function send<T>(path: string, auth: Record<string, string>, init?: RequestInit): Promise<T> {
   let res: Response;
   try {
     res = await fetch(`${API_URL}${path}`, {
       ...init,
-      headers: { ...(init?.headers ?? {}), Authorization: `Bearer ${token}` },
+      headers: { ...(init?.headers ?? {}), ...auth },
     });
   } catch {
     throw new ApiError(0, 'Could not reach BirdBrains. Check your connection and try again.');
@@ -72,7 +79,30 @@ export interface ProcessResult {
   grading: Stage2GradingAndAffectOutput | null;
 }
 
+/** Calls made by a phone that scanned a QR code: no sign-in, only the link's secret. */
+export const phoneApi = {
+  get: (sessionId: string, secret: string) =>
+    send<ApiPhoneUpload>(`/phone/${encodeURIComponent(sessionId)}`, { 'X-Upload-Token': secret }),
+  /** Sends the photos and waits while they are read and graded (about a minute). */
+  send: (sessionId: string, secret: string, files: File[], sharpnessScore?: number) => {
+    const form = new FormData();
+    files.forEach((f) => form.append('files', f));
+    if (sharpnessScore !== undefined) form.set('sharpnessScore', String(sharpnessScore));
+    return send<ApiPhoneUpload>(`/phone/${encodeURIComponent(sessionId)}/photos`, { 'X-Upload-Token': secret }, {
+      method: 'POST',
+      body: form,
+    });
+  },
+};
+
 export const api = {
+  /** Make a phone camera link for a QR code (15 minutes, one upload). */
+  createPhoneUpload: (t: string, body: CreatePhoneUpload) => request<ApiPhoneUploadLink>('/phone-uploads', t, json(body)),
+  /** The computer that made the link checks whether the phone has sent photos. */
+  phoneUpload: (t: string, sessionId: string) => request<ApiPhoneUpload>(`/phone-uploads/${sessionId}`, t),
+  /** Turn a phone link off (the upload window was closed). */
+  cancelPhoneUpload: (t: string, sessionId: string) =>
+    request<void>(`/phone-uploads/${sessionId}`, t, { method: 'DELETE' }),
   me: (t: string) => request<UserProfile>('/me', t),
   register: (t: string, body: { role: 'student' | 'parent' | 'teacher'; name: string; course?: string }) =>
     request<UserProfile>('/me', t, json(body)),

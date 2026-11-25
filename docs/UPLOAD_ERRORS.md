@@ -37,7 +37,8 @@ Source of truth: `backend/birdbrains/upload_errors.py`. `lib/uploadErrors.ts` mi
 | 301 | Name check skipped | The name check could not run, so the top of the page was blurred instead. | Nothing to do. The upload went ahead. |  | yes |
 | 302 | Photo not saved | We could not save the photo. | Please try again in a minute. |  | yes |
 | 303 | Photo expired | Photos are deleted after 90 days. | The diagnostic is still there. Upload the page again if you need the photo. |  |  |
-| 304 | Upload link expired | The upload link only works once, for 15 minutes. | Start the upload again from the extension. |  |  |
+| 304 | Upload link expired | The upload link only works once, for 15 minutes. | Start the upload again from the extension, or make a new QR code. |  |  |
+| 305 | Phone link already used | Photos were already sent with this QR code. | Make a new QR code on your computer to send more. |  |  |
 
 ## 4xx Account and plan
 
@@ -68,7 +69,7 @@ Source of truth: `backend/birdbrains/upload_errors.py`. `lib/uploadErrors.ts` mi
 
 ## Where each comes from
 
-- 101, 102 (also checked in the browser), 104 to 108, 302, 304: upload (`POST /submissions`, extension link).
+- 101, 102 (also checked in the browser), 104 to 108, 302, 304, 305: upload (`POST /submissions`, extension link, phone QR link).
 - 201 to 206: the reading step. Stage 1 sets `unreadable_reason`; 201 is used when it gives none (low confidence).
 - 303: photo fetch after 90 days. 402: Free limit, also on the extension ticket.
 - 501 to 505: the grading call. 404, 403 or a region problem from Google is 501, rate limits and Google outages 502, timeouts 503, an unusable result 504, anything else 505.

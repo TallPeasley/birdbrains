@@ -56,7 +56,8 @@ UPLOAD_ERRORS: dict[int, UploadErrorInfo] = dict([
     _e(301, "Name check skipped", "The name check could not run, so the top of the page was blurred instead.", "Nothing to do. The upload went ahead.", False, True),
     _e(302, "Photo not saved", "We could not save the photo.", "Please try again in a minute.", False, True),
     _e(303, "Photo expired", "Photos are deleted after 90 days.", "The diagnostic is still there. Upload the page again if you need the photo.", False),
-    _e(304, "Upload link expired", "The upload link only works once, for 15 minutes.", "Start the upload again from the extension.", False),
+    _e(304, "Upload link expired", "The upload link only works once, for 15 minutes.", "Start the upload again from the extension, or make a new QR code.", False),
+    _e(305, "Phone link already used", "Photos were already sent with this QR code.", "Make a new QR code on your computer to send more.", False),
     # 4xx: account and plan
     _e(401, "Signed out", "You need to sign in again.", "Sign in and retry."),
     _e(402, "Free limit reached", "All Free uploads for this month are used.", "The allowance resets on the 1st, or upgrade to Pro."),
