@@ -21,6 +21,7 @@ import { useSession } from '@/lib/session';
 import { Loading, SignInNotice } from '@/components/DashboardStates';
 import MyStudents from '@/components/teacher/MyStudents';
 import type {
+  ClassroomBetaStatus,
   ClassroomCourse,
   ClassroomCoursework,
   ClassroomImportResult,
@@ -40,6 +41,7 @@ const DEMO_PROVIDERS: LmsProviderStatus[] = [
     requiresInstanceUrl: false,
     defaultPlaceholder: '',
     plan: 'pro',
+    beta: 'approved',
   },
   {
     id: 'brightspace',
@@ -100,6 +102,7 @@ export default function TeacherDashboard() {
   const [banner, setBanner] = useState<{ tone: 'ok' | 'err'; text: string } | null>(null);
   const [instanceUrls, setInstanceUrls] = useState<Record<string, string>>({});
   const [busyProvider, setBusyProvider] = useState<string | null>(null);
+  const [betaEmail, setBetaEmail] = useState('');
 
   // Import & grade sync workflow state
   const [selectedProvider, setSelectedProvider] = useState<LmsProviderId>('google_classroom');
@@ -272,6 +275,26 @@ export default function TeacherDashboard() {
       window.location.assign(url);
     } catch (err) {
       setBanner({ tone: 'err', text: errText(err) });
+      setBusyProvider(null);
+    }
+  };
+
+  const handleBetaJoin = async () => {
+    const email = betaEmail.trim();
+    if (!email) return;
+    if (!live) {
+      setProviders((prev) => prev.map((x) => (x.id === 'google_classroom' ? { ...x, beta: 'pending' } : x)));
+      return;
+    }
+    setBusyProvider('google_classroom');
+    setBanner(null);
+    try {
+      const token = await getToken();
+      const res = await api.classroomBetaJoin(token, email);
+      setProviders((prev) => prev.map((x) => (x.id === 'google_classroom' ? { ...x, beta: res.beta } : x)));
+    } catch (err) {
+      setBanner({ tone: 'err', text: errText(err) });
+    } finally {
       setBusyProvider(null);
     }
   };
@@ -458,7 +481,14 @@ export default function TeacherDashboard() {
           <div key={p.id} className="card flex flex-col justify-between gap-4 p-5">
             <div>
               <div className="flex items-center justify-between gap-2">
-                <h2 className="text-base font-semibold text-slate-900">{p.name}</h2>
+                <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900">
+                  {p.name}
+                  {p.id === 'google_classroom' && (
+                    <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold text-indigo-700 ring-1 ring-indigo-200">
+                      Beta
+                    </span>
+                  )}
+                </h2>
                 <span
                   className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                     p.connected
@@ -513,6 +543,14 @@ export default function TeacherDashboard() {
                     <Unlink className="h-3.5 w-3.5" aria-hidden /> Disconnect
                   </button>
                 </>
+              ) : p.id === 'google_classroom' && isPro && p.beta !== 'approved' ? (
+                <ClassroomBetaSignup
+                  status={p.beta ?? 'none'}
+                  email={betaEmail}
+                  onEmail={setBetaEmail}
+                  busy={busyProvider === p.id}
+                  onJoin={() => void handleBetaJoin()}
+                />
               ) : (
                 <button
                   type="button"
@@ -690,5 +728,65 @@ export default function TeacherDashboard() {
       </section>
 
     </div>
+  );
+}
+
+/** Google Classroom is a "sign up to test" beta: Google lets an unverified app connect
+ *  only for accounts we list as Test users, so each teacher is added by hand. */
+function ClassroomBetaSignup({
+  status,
+  email,
+  onEmail,
+  busy,
+  onJoin,
+}: {
+  status: ClassroomBetaStatus;
+  email: string;
+  onEmail: (v: string) => void;
+  busy: boolean;
+  onJoin: () => void;
+}) {
+  if (status === 'pending') {
+    return (
+      <p className="w-full rounded-xl bg-indigo-50 px-3 py-2 text-xs text-indigo-900">
+        You’re on the list to test Google Classroom. Once we add your Google account, the Connect button
+        appears here.
+      </p>
+    );
+  }
+  if (status === 'declined') {
+    return (
+      <p className="w-full rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-600">
+        The Google Classroom test group is full right now. We’ll open it to everyone after Google approves
+        BirdBrains.
+      </p>
+    );
+  }
+  return (
+    <form
+      className="w-full space-y-2"
+      onSubmit={(e) => {
+        e.preventDefault();
+        onJoin();
+      }}
+    >
+      <p className="text-xs text-slate-600">
+        Google Classroom is in testing. Sign up with the Google account you use for Classroom and we’ll add
+        you to the test group.
+      </p>
+      <input
+        type="email"
+        required
+        placeholder="you@school.ca"
+        value={email}
+        onChange={(e) => onEmail(e.target.value)}
+        aria-label="Google account email you use for Classroom"
+        className="w-full rounded-xl border border-slate-300 px-3 py-1.5 text-sm"
+      />
+      <button type="submit" disabled={busy || !email.trim()} className="inline-flex w-full items-center justify-center gap-1.5 btn btn-sm btn-primary">
+        {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden /> : null}
+        Sign up to test
+      </button>
+    </form>
   );
 }

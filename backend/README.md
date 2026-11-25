@@ -206,6 +206,13 @@ While the consent screen is in "Testing", only the listed test users can connect
 their connection expires after 7 days. Going public needs Google's verification; `drive.readonly`
 is a restricted scope, which also needs a yearly third-party security assessment.
 
+**Beta sign-up.** Classroom is a "sign up to test" beta. A Pro teacher enters the Google email
+they use for Classroom in the Teacher Hub; that makes a pending request. Add that email under
+Test users on the consent screen, then approve it with `python tools/classroom_beta.py --approve
+<email>` (lists pending requests with no flags; the daily stats show `classroomBetaPending`).
+Connect only works once approved. Testing accounts skip the list. The cap is
+`BIRDBRAINS_CLASSROOM_BETA_LIMIT` (default 100, Google's Test user limit).
+
 Grades are not sent back to Classroom: Google lets an app set grades only on assignments
 that app created, and teachers make assignments in Classroom. Teachers copy scores across.
 

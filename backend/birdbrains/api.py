@@ -42,6 +42,7 @@ from .schemas import (
     ApiLmsSyncResult,
     ApiProgressReport,
     ApiRosterStudent,
+    ClassroomBetaRequest,
     ClassroomImportRequest,
     LmsConnectRequest,
     LmsProviderId,
@@ -60,6 +61,7 @@ from .schemas import (
     CreateSchoolRequest,
     JoinClassRequest,
     SetPlanRequest,
+    SetClassroomBetaRequest,
     SetTesterRequest,
     UpdateProfileRequest,
     CourseEnum,
@@ -524,6 +526,7 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
                     else:
                         purge_student(r["studentId"])
                 disconnect_classroom(user)
+                d.store.delete("classroombeta", user["uid"])  # holds their Google email
                 for pid in LMS_PROVIDERS:
                     disconnect_lms(user, pid)
             d.store.delete("users", user["uid"])
@@ -1198,11 +1201,28 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         return {"received": True}
 
     # --------------------------------------------- Google Classroom (Pro teachers)
-    def classroom_teacher(user: dict) -> dict:
+    # Google Classroom is a "sign up to test" beta: until Google verifies the app,
+    # only accounts listed as Test users on the OAuth consent screen (at most 100)
+    # can connect. A Pro teacher signs up with the Google email they use for
+    # Classroom, Maalik adds that email in the Cloud console and approves the
+    # request (POST /internal/classroom-beta), and only then does Connect work.
+    def classroom_beta(user: dict) -> str:
+        if user.get("tester") is True:
+            return "approved"
+        rec = d.store.get("classroombeta", user["uid"])
+        return rec["status"] if rec else "none"
+
+    def classroom_pro_teacher(user: dict) -> dict:
         if user["role"] != "teacher":
             raise HTTPException(403, "Only teacher accounts can use Google Classroom")
         if account_plan(user) != "pro":
             raise HTTPException(402, "PRO_ONLY")
+        return user
+
+    def classroom_teacher(user: dict) -> dict:
+        classroom_pro_teacher(user)
+        if classroom_beta(user) != "approved":
+            raise HTTPException(403, "CLASSROOM_BETA_NOT_APPROVED")
         if not d.classroom:
             raise HTTPException(503, "CLASSROOM_NOT_CONFIGURED")
         return user
@@ -1234,7 +1254,22 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
     @app.get("/classroom/status")
     def classroom_status(user: User):
         return {"configured": d.classroom is not None, "plan": account_plan(user),
-                "connected": d.store.get("googletokens", user["uid"]) is not None}
+                "connected": d.store.get("googletokens", user["uid"]) is not None,
+                "beta": classroom_beta(user)}
+
+    @app.post("/classroom/beta")
+    def classroom_beta_join(body: ClassroomBetaRequest, user: User):
+        """Sign up to test Google Classroom. Pending until an admin approves it."""
+        classroom_pro_teacher(user)
+        email = body.googleEmail.strip().lower()
+        rec = d.store.get("classroombeta", user["uid"])
+        if rec and rec["status"] == "approved" and rec["googleEmail"] == email:
+            return {"beta": "approved", "googleEmail": email}
+        rec = {"uid": user["uid"], "name": user.get("name", ""), "googleEmail": email,
+               "status": "pending", "requestedAt": now_iso()}
+        d.store.put("classroombeta", user["uid"], rec)
+        log.info("Classroom beta request from %s", user["uid"])
+        return {"beta": "pending", "googleEmail": email}
 
     @app.post("/classroom/connect")
     def classroom_connect(user: User):
@@ -1431,6 +1466,7 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
                 connected=d.store.get("googletokens", user["uid"]) is not None,
                 requiresInstanceUrl=False,
                 plan=plan,
+                beta=classroom_beta(user),
             )
         ]
         for pid, meta in LMS_PROVIDERS.items():
@@ -1818,6 +1854,39 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         d.store.put("users", uid, profile)
         return profile
 
+    CLASSROOM_BETA_LIMIT = int(os.environ.get("BIRDBRAINS_CLASSROOM_BETA_LIMIT", "100"))
+
+    @app.get("/internal/classroom-beta", dependencies=[Depends(require_batch_token)])
+    def classroom_beta_list(status: Optional[str] = None):
+        """Admin: Classroom beta requests (name, Google email, status), oldest first."""
+        rows = d.store.query("classroombeta", "status", status) if status else [
+            r for st in ("pending", "approved", "declined") for r in d.store.query("classroombeta", "status", st)]
+        return sorted(rows, key=lambda r: r.get("requestedAt", ""))
+
+    @app.post("/internal/classroom-beta", dependencies=[Depends(require_batch_token)])
+    def classroom_beta_set(body: SetClassroomBetaRequest):
+        """Admin: approve or decline a request. Approve only after adding the Google
+        email under Test users on the OAuth consent screen (Google allows 100)."""
+        if body.uid:
+            rec = d.store.get("classroombeta", body.uid)
+        else:
+            email = body.googleEmail.strip().lower()
+            rec = next(iter(r for st in ("pending", "approved", "declined")
+                            for r in d.store.query("classroombeta", "status", st)
+                            if r["googleEmail"] == email), None)
+        if not rec:
+            raise HTTPException(404, "No Classroom beta request for that uid or email")
+        if body.status == "approved" and rec["status"] != "approved":
+            if len(d.store.query("classroombeta", "status", "approved")) >= CLASSROOM_BETA_LIMIT:
+                raise HTTPException(409, f"The test group is full ({CLASSROOM_BETA_LIMIT}). Decline or remove someone first.")
+        if body.status != "approved" and rec["status"] == "approved":
+            profile = d.store.get("users", rec["uid"])
+            if profile:
+                disconnect_classroom(profile)
+        rec.update(status=body.status, decidedAt=now_iso())
+        d.store.put("classroombeta", rec["uid"], rec)
+        return rec
+
     @app.get("/internal/stats", dependencies=[Depends(require_batch_token)])
     def stats(days: int = 1):
         """Numbers for the daily pilot summary. Counts and codes only: no names, no ids."""
@@ -1864,6 +1933,7 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
             "modelSecondsMedian": seconds[len(seconds) // 2] if seconds else None,
             "modelSecondsP95": seconds[max(-(-95 * len(seconds) // 100) - 1, 0)] if seconds else None,
             "worksheets": dict(Counter(g["worksheetStatus"] for g in grads)),
+            "classroomBetaPending": len(d.store.query("classroombeta", "status", "pending")),
         }
 
     return app

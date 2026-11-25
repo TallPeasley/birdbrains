@@ -9,6 +9,8 @@ def test_demo_classroom_end_to_end(client, deps):
     deps.classroom = DemoClassroom("http://localhost:8080")
     client.post("/me", json={"role": "teacher", "name": "Test Teacher"}, headers=auth("rivera"))
     client.post("/internal/users/rivera/plan", json={"plan": "pro"}, headers=TOKEN)
+    client.post("/classroom/beta", json={"googleEmail": "rivera@school.test"}, headers=auth("rivera"))
+    client.post("/internal/classroom-beta", json={"uid": "rivera", "status": "approved"}, headers=TOKEN)
     url = client.post("/classroom/connect", headers=auth("rivera")).json()["url"]
     assert url.endswith("&code=demo")
     path = url.replace("http://localhost:8080", "")

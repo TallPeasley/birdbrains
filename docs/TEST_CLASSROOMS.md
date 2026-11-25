@@ -23,7 +23,7 @@ BIRDBRAINS_CLASSROOM=demo uvicorn birdbrains.api:app --port 8080
 # frontend: NEXT_PUBLIC_API_URL=http://localhost:8080 NEXT_PUBLIC_AUTH_MODE=dev
 ```
 
-Sign in as a teacher, make the account Pro (`POST /internal/users/<uid>/plan`), press Connect Classroom. The demo skips the Google consent screen. `backend/tests/test_demo_classroom.py` runs the whole flow.
+Sign in as a teacher, make the account Pro (`POST /internal/users/<uid>/plan`), sign up to test in the Google Classroom card, approve it (`POST /internal/classroom-beta` with `{"uid": ..., "status": "approved"}`, or `tools/classroom_beta.py`), then press Connect. The demo skips the Google consent screen. `backend/tests/test_demo_classroom.py` runs the whole flow.
 
 ## 2. A real Google Classroom (needs Maalik)
 
@@ -31,7 +31,7 @@ Needs the Google OAuth client from `backend/README.md` ("Turning on Stripe and G
 1. classroom.google.com with the teacher account: create a class "BB Test MPM2D".
 2. Create two extra Google accounts as test students (any free Gmail) and invite them with the class code.
 3. Post an assignment, hand in a photo as each test student (the filled test photos in project files `test-worksheets/` work).
-4. In BirdBrains, as a Pro teacher: Connect Classroom, pick the class and the assignment, import.
+4. In BirdBrains, as a Pro teacher: sign up to test in the Google Classroom card, approve yourself with `python tools/classroom_beta.py --approve <google email>`, then Connect, pick the class and the assignment, import.
 
 Testing-mode connections expire after 7 days, so reconnect weekly.
 

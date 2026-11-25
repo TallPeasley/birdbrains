@@ -356,7 +356,11 @@ export interface LmsProviderStatus {
   defaultPlaceholder: string;
   instanceUrl?: string | null;
   plan: PlanTier;
+  /** Google Classroom only: the teacher's "sign up to test" status. Connect works once approved. */
+  beta?: ClassroomBetaStatus | null;
 }
+
+export type ClassroomBetaStatus = 'none' | 'pending' | 'approved' | 'declined';
 
 export interface LmsSyncResult {
   synced: { submissionId: string; studentName: string; score: number; maxScore: number }[];
