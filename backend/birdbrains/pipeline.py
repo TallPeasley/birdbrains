@@ -391,6 +391,9 @@ class SubmissionContext:
     submission_id: str
     course: CourseEnum
     unit_topic: str
+    # The teacher's instructions and rubric, when a student uploads a test for a
+    # Google Classroom assignment. Empty otherwise.
+    teacher_expectations: str = ""
 
 
 class PipelineEngine(Protocol):
@@ -417,7 +420,10 @@ def stage2_question_prompt(ctx: SubmissionContext, question: Stage1QuestionTrans
         f"Unit / topic tags: {ctx.unit_topic}\n"
         f"submission_id: {ctx.submission_id}\n"
         f"question_number: {question.question_number}\n\n"
-        "Stage 1 transcription for THIS question only (JSON):\n"
+        + (f"What the teacher asked for on this assignment (instructions and rubric). Use it to judge what a "
+           f"complete answer needed; still grade only what the student wrote:\n{ctx.teacher_expectations}\n\n"
+           if ctx.teacher_expectations else "")
+        + "Stage 1 transcription for THIS question only (JSON):\n"
         f"{question.model_dump_json(indent=1)}"
     )
 

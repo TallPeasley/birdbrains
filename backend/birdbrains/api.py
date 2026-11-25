@@ -21,7 +21,7 @@ from PIL import Image
 
 from . import mastery_affect_ledger as ledger_engine
 from .billing import Billing, BillingError, plan_change
-from .classroom import Classroom, ClassroomError
+from .classroom import SCOPES, STUDENT_SCOPES, Classroom, ClassroomError, expectations_text
 from .lms import LMS_PROVIDERS, LmsError, LmsProvider, normalize_instance_url
 from .upload_errors import READING_REASON_CODES, UPLOAD_ERRORS, UploadFailure, classify_pipeline_error, failure_body
 from .auth import Authenticator
@@ -37,6 +37,7 @@ from .schemas import (
     ApiGrading,
     ApiClass,
     ApiClassroomImport,
+    ApiClassroomStudentWork,
     ApiCohortReport,
     ApiLmsProviderStatus,
     ApiLmsSyncResult,
@@ -547,6 +548,9 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         # Set when the photo is work for one problem of a practice worksheet.
         worksheetGradingId: Annotated[str, Form(max_length=64)] = "",
         worksheetProblem: Annotated[str, Form(max_length=PROBLEM_LABEL_MAX)] = "",
+        # Set when a student uploads a test for one of their Google Classroom assignments.
+        classroomCourseId: Annotated[str, Form(max_length=64)] = "",
+        classroomWorkId: Annotated[str, Form(max_length=64)] = "",
     ):
         require_student_access(user, studentId)
         if not 1 <= len(files) <= MAX_FILES:
@@ -554,7 +558,8 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         blobs = [upload.file.read(MAX_FILE_BYTES + 1) for upload in files]
         course = course or CourseEnum(user.get("course") or CourseEnum.MPM2D.value)
         return ingest(user["uid"], tenant_of(user), studentId, course, unitTopic, sharpnessScore, blobs,
-                      worksheet=worksheet_context(worksheetGradingId, worksheetProblem, studentId))
+                      worksheet=worksheet_context(worksheetGradingId, worksheetProblem, studentId),
+                      classroom=classroom_context(user, classroomCourseId, classroomWorkId, studentId))
 
     def worksheet_context(grading_id: str, problem: str, student_id: str) -> Optional[dict]:
         """The worksheet problem an upload answers, kept on the submission. Only a
@@ -607,7 +612,8 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
 
     def ingest(uid: str, tenant_id: str, studentId: str, course: CourseEnum, unitTopic: str,
                sharpnessScore: Optional[float], blobs: list[bytes],
-               source: str = "web", worksheet: Optional[dict] = None) -> SubmissionIngestionPayload:
+               source: str = "web", worksheet: Optional[dict] = None,
+               classroom: Optional[dict] = None) -> SubmissionIngestionPayload:
         """Shared by the web upload and the extension's one-time upload link: plan
         limit, image checks, duplicate check, privacy scrub, then storage."""
         if usage(studentId).remaining == 0:
@@ -660,6 +666,8 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         }
         if worksheet:
             record["forWorksheet"] = worksheet
+        if classroom:
+            record["forClassroom"] = classroom
         d.store.put("submissions", submission_id, record)
         for *_, sha in stored:
             d.store.put("imagehashes", f"{studentId}_{sha}", {"studentId": studentId, "submissionId": submission_id})
@@ -750,6 +758,8 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
                 raise UploadFailure(402, 402, "FREE_LIMIT_REACHED")
             max_files = MAX_FILES
         worksheet = worksheet_context(body.worksheetGradingId or "", body.problem, student_id)
+        classroom = (classroom_context(user, body.classroomCourseId or "", body.classroomWorkId or "", student_id)
+                     if body.kind == "new" else None)
         session_id, token = new_id("phn"), secrets.token_urlsafe(32)
         expires = datetime.now(timezone.utc) + timedelta(seconds=PHONE_LINK_SECONDS)
         d.store.put("phoneuploads", session_id, {
@@ -758,7 +768,7 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
             "tenantId": tenant_of(user), "studentId": student_id, "kind": body.kind,
             "submissionId": body.submissionId if body.kind == "addPhotos" else None,
             "course": user.get("course") or CourseEnum.MPM2D.value,
-            "problem": body.problem.strip(), "worksheet": worksheet,
+            "problem": body.problem.strip(), "worksheet": worksheet, "classroom": classroom,
             "maxFiles": max_files, "state": "WAITING", "failureCode": None,
         })
         return ApiPhoneUploadLink(sessionId=session_id, token=token, expiresAt=expires.isoformat(), maxFiles=max_files)
@@ -819,7 +829,8 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
             regrade = record.get("gradingId") is not None
         else:
             payload = ingest(sess["uid"], sess["tenantId"], sess["studentId"], CourseEnum(sess["course"]),
-                             "", sharpnessScore, blobs, source="phone", worksheet=sess.get("worksheet"))
+                             "", sharpnessScore, blobs, source="phone", worksheet=sess.get("worksheet"),
+                             classroom=sess.get("classroom"))
             record = d.store.get("submissions", payload.submissionId)
             regrade = False
         mark("PROCESSING", submissionId=record["submissionId"], failureCode=None)
@@ -953,7 +964,8 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
                 record["unitTopic"] = read_topic[:200]
             if stage1.detected_course:
                 record["course"] = stage1.detected_course
-            ctx = SubmissionContext(submission_id, CourseEnum(record["course"]), record["unitTopic"] or "Not stated")
+            ctx = SubmissionContext(submission_id, CourseEnum(record["course"]), record["unitTopic"] or "Not stated",
+                                    (record.get("forClassroom") or {}).get("expectations", ""))
 
             set_status("GRADING")
             stage1 = segment_questions(stage1)  # two numbered questions read as one are split
@@ -1212,23 +1224,38 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         rec = d.store.get("classroombeta", user["uid"])
         return rec["status"] if rec else "none"
 
-    def classroom_pro_teacher(user: dict) -> dict:
-        if user["role"] != "teacher":
-            raise HTTPException(403, "Only teacher accounts can use Google Classroom")
-        if account_plan(user) != "pro":
+    def classroom_pro_member(user: dict) -> dict:
+        """Teachers on Pro, and students whose plan is Pro (their own or a parent's)."""
+        if user["role"] == "teacher":
+            plan = account_plan(user)
+        elif user["role"] == "student" and user.get("studentId"):
+            plan = effective_plan(user["studentId"])
+        else:
+            raise HTTPException(403, "Only teacher and student accounts can use Google Classroom")
+        if plan != "pro":
             raise HTTPException(402, "PRO_ONLY")
         return user
 
-    def classroom_teacher(user: dict) -> dict:
-        classroom_pro_teacher(user)
+    def classroom_ready(user: dict) -> dict:
+        classroom_pro_member(user)
         if classroom_beta(user) != "approved":
             raise HTTPException(403, "CLASSROOM_BETA_NOT_APPROVED")
         if not d.classroom:
             raise HTTPException(503, "CLASSROOM_NOT_CONFIGURED")
         return user
 
-    def classroom_session(user: dict):
-        tokens = d.store.get("googletokens", classroom_teacher(user)["uid"])
+    def classroom_teacher(user: dict) -> dict:
+        if user["role"] != "teacher":
+            raise HTTPException(403, "Only teacher accounts can do this")
+        return classroom_ready(user)
+
+    def classroom_student(user: dict) -> dict:
+        if user["role"] != "student":
+            raise HTTPException(403, "Only student accounts can do this")
+        return classroom_ready(user)
+
+    def classroom_session(user: dict, student: bool = False):
+        tokens = d.store.get("googletokens", (classroom_student if student else classroom_teacher)(user)["uid"])
         if not tokens:
             raise HTTPException(409, "CLASSROOM_NOT_CONNECTED")
         try:
@@ -1253,14 +1280,17 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
 
     @app.get("/classroom/status")
     def classroom_status(user: User):
-        return {"configured": d.classroom is not None, "plan": account_plan(user),
+        plan = effective_plan(user["studentId"]) if user["role"] == "student" and user.get("studentId") \
+            else account_plan(user)
+        return {"configured": d.classroom is not None, "plan": plan,
                 "connected": d.store.get("googletokens", user["uid"]) is not None,
                 "beta": classroom_beta(user)}
 
     @app.post("/classroom/beta")
     def classroom_beta_join(body: ClassroomBetaRequest, user: User):
-        """Sign up to test Google Classroom. Pending until an admin approves it."""
-        classroom_pro_teacher(user)
+        """Sign up to test Google Classroom (Pro teachers and students). Pending until
+        an admin approves it."""
+        classroom_pro_member(user)
         email = body.googleEmail.strip().lower()
         rec = d.store.get("classroombeta", user["uid"])
         if rec and rec["status"] == "approved" and rec["googleEmail"] == email:
@@ -1273,17 +1303,19 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
 
     @app.post("/classroom/connect")
     def classroom_connect(user: User):
-        """Returns the Google consent URL. Google sends the teacher back to /classroom/callback."""
-        classroom_teacher(user)
+        """Returns the Google consent URL. Google sends the person back to /classroom/callback.
+        Teachers grant read access to their classes and handed-in work; students only
+        to their own classes, assignments and grades."""
+        classroom_ready(user)
         state = secrets.token_urlsafe(32)
-        d.store.put("oauthstates", state, {"uid": user["uid"], "expiresAt":
+        d.store.put("oauthstates", state, {"uid": user["uid"], "role": user["role"], "expiresAt":
                     (datetime.now(timezone.utc) + timedelta(minutes=10)).isoformat()})
-        return {"url": d.classroom.auth_url(state)}
+        return {"url": d.classroom.auth_url(state, STUDENT_SCOPES if user["role"] == "student" else SCOPES)}
 
     @app.get("/classroom/callback")
     def classroom_callback(state: str = "", code: str = "", error: str = ""):
-        back = f"{d.site_url}/teacher?classroom="
         pending = d.store.get("oauthstates", state) if state else None
+        back = f"{d.site_url}/{'student' if (pending or {}).get('role') == 'student' else 'teacher'}?classroom="
         if state:
             d.store.delete("oauthstates", state)
         if (not pending or not d.classroom or not code or error
@@ -1301,6 +1333,40 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
     def classroom_disconnect(user: User):
         disconnect_classroom(user)
         return Response(status_code=204)
+
+    # Students: their own classes, what each assignment asked for, their grade, and
+    # an upload for each assignment (see classroom_context and create_submission).
+    @app.get("/classroom/my/courses")
+    def classroom_my_courses(user: User):
+        sess = classroom_session(user, student=True)
+        return google(sess.my_courses)
+
+    @app.get("/classroom/my/courses/{course_id}/work", response_model=list[ApiClassroomStudentWork])
+    def classroom_my_work(course_id: str, user: User):
+        sess = classroom_session(user, student=True)
+        work = google(lambda: sess.my_work(course_id))
+        uploads: dict[str, dict] = {}
+        for sub in d.store.query("submissions", "studentId", user["studentId"]):
+            link = sub.get("forClassroom") or {}
+            if link.get("courseId") == course_id and sub["uploadedAt"] > uploads.get(link["workId"], {}).get("uploadedAt", ""):
+                uploads[link["workId"]] = sub
+        return [ApiClassroomStudentWork(**w, submissionId=uploads.get(w["id"], {}).get("submissionId"),
+                                        gradingId=uploads.get(w["id"], {}).get("gradingId"))
+                for w in work]
+
+    def classroom_context(user: dict, course_id: str, work_id: str, student_id: str) -> Optional[dict]:
+        """The Classroom assignment a student's upload is for. Read from Google again
+        (not from the browser), so the instructions sent to grading are the teacher's."""
+        if not (course_id or work_id):
+            return None
+        if user["role"] != "student" or user.get("studentId") != student_id or not (course_id and work_id):
+            raise HTTPException(422, "A Classroom assignment upload must come from the student's own account")
+        sess = classroom_session(user, student=True)
+        work = next((w for w in google(lambda: sess.my_work(course_id)) if w["id"] == work_id), None)
+        if not work:
+            raise HTTPException(404, "That Classroom assignment was not found")
+        return {"courseId": course_id, "workId": work_id, "title": work["title"][:200],
+                "expectations": expectations_text(work)}
 
     @app.get("/classroom/courses")
     def classroom_courses(user: User):

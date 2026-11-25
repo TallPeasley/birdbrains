@@ -17,7 +17,7 @@ import random
 
 from PIL import Image, ImageDraw, ImageFont
 
-from .classroom import ClassroomError
+from .classroom import SCOPES, ClassroomError
 
 _DIR = pathlib.Path(__file__).parent / "demo"
 
@@ -73,7 +73,7 @@ class DemoClassroom:
         self.revoked: list[str] = []
 
     # --- Classroom protocol
-    def auth_url(self, state: str) -> str:
+    def auth_url(self, state: str, scopes: tuple[str, ...] = SCOPES) -> str:
         return f"{self.redirect}?state={state}&code=demo"  # skips the consent screen
 
     def exchange(self, code: str) -> str:
@@ -122,3 +122,33 @@ class DemoClassroom:
         if key and uid.endswith("0") and (_DIR / f"{key}.jpg").exists():  # the first student's real photo
             return (_DIR / f"{key}.jpg").read_bytes(), "image/jpeg"
         return _page(file_id), "image/jpeg"
+
+    # --- Student side: a student enrolled in the first two classes
+    def my_courses(self) -> list[dict]:
+        return [{"id": cid, "name": name, "section": section} for cid, name, section, _ in CLASSES[:2]]
+
+    def my_work(self, course_id: str) -> list[dict]:
+        for cid, _, _, work in CLASSES[:2]:
+            if cid == course_id:
+                out = []
+                for i, (wid, title, _) in enumerate(work):
+                    returned = i % 2 == 0
+                    out.append({
+                        "id": wid, "title": title,
+                        "description": "Show every step. Write the formula before you substitute, and give the "
+                                       "final answer with units, rounded to one decimal place.",
+                        "maxPoints": 20, "dueDate": f"2026-11-{10 + i:02d}",
+                        "link": f"https://classroom.google.com/demo/{wid}",
+                        "state": "RETURNED" if returned else "TURNED_IN",
+                        "assignedGrade": (14 + i) if returned else None,
+                        "rubric": [
+                            {"title": "Method", "description": "Chooses and sets up the right method",
+                             "levels": [{"title": "Full", "points": 8}, {"title": "Partial", "points": 4}]},
+                            {"title": "Accuracy", "description": "Arithmetic and final answer are correct",
+                             "levels": [{"title": "Full", "points": 8}, {"title": "Partial", "points": 4}]},
+                            {"title": "Communication", "description": "Steps, units and a concluding statement",
+                             "levels": [{"title": "Full", "points": 4}, {"title": "Partial", "points": 2}]},
+                        ] if i == 0 else [],
+                    })
+                return out
+        raise ClassroomError("unknown course")

@@ -88,7 +88,8 @@ class FakeClassroom:
         self.revoked = []
         self.pages = {"f_ana": photo(), "f_ben": photo()}
 
-    def auth_url(self, state):
+    def auth_url(self, state, scopes=()):
+        self.scopes = scopes
         return f"https://accounts.google.test/auth?state={state}"
 
     def exchange(self, code):
@@ -119,6 +120,19 @@ class FakeClassroom:
             {"userId": "g_cy", "state": "CREATED", "files": []},
             {"userId": "g_di", "state": "TURNED_IN", "files": [{"id": "f_pdf", "title": "x.pdf"}]},
         ]
+
+    def my_courses(self):
+        return [{"id": "c1", "name": "MPM2D-01", "section": "Period 2"}]
+
+    def my_work(self, course_id):
+        assert course_id == "c1"
+        return [{"id": "w1", "title": "Trig test", "description": "Show the formula before you substitute.",
+                 "maxPoints": 20, "dueDate": "2026-11-20", "link": "https://classroom.test/w1",
+                 "state": "RETURNED", "assignedGrade": 15,
+                 "rubric": [{"title": "Method", "description": "Right ratio chosen",
+                             "levels": [{"title": "Full", "points": 10}]}]},
+                {"id": "w2", "title": "Homework", "description": "", "maxPoints": None, "dueDate": None,
+                 "link": None, "state": "CREATED", "assignedGrade": None, "rubric": []}]
 
     def download(self, file_id):
         if file_id not in self.pages:
@@ -246,3 +260,53 @@ def test_classroom_beta_signup_and_approval(client, deps, monkeypatch):
     client.post("/internal/classroom-beta", json={"uid": "rivera", "status": "declined"}, headers=TOKEN)
     assert deps.store.get("googletokens", "rivera") is None
     assert client.get("/classroom/status", headers=auth("rivera")).json()["beta"] == "declined"
+
+
+def test_student_classroom_grades_and_upload_portal(client, family, deps):
+    """A Pro student connects their own Classroom, sees each assignment's grade and the
+    teacher's instructions, and uploads a test for it; grading gets the instructions."""
+    google = deps.classroom = FakeClassroom()
+    sid = family["studentId"]
+    join = {"googleEmail": "alex@gmail.test"}
+    assert client.post("/classroom/beta", json=join, headers=auth("alex")).json()["detail"] == "PRO_ONLY"
+    client.post("/internal/users/jordan/plan", json={"plan": "pro"}, headers=TOKEN)  # a Pro parent covers the child
+    assert client.post("/classroom/beta", json=join, headers=auth("alex")).json()["beta"] == "pending"
+    assert client.post("/classroom/beta", json=join, headers=auth("jordan")).status_code == 403  # parents can't
+    assert client.post("/classroom/connect", headers=auth("alex")).json()["detail"] == "CLASSROOM_BETA_NOT_APPROVED"
+    client.post("/internal/classroom-beta", json={"uid": "alex", "status": "approved"}, headers=TOKEN)
+
+    url = client.post("/classroom/connect", headers=auth("alex")).json()["url"]
+    assert all(".me.readonly" in sc or "courses.readonly" in sc for sc in google.scopes)   # student scopes only
+    r = client.get(f"/classroom/callback?state={url.split('state=')[1]}&code=good", follow_redirects=False)
+    assert r.headers["location"] == "https://birdbrain-514606.web.app/student?classroom=connected"
+
+    assert client.get("/classroom/my/courses", headers=auth("alex")).json()[0]["id"] == "c1"
+    assert client.get("/classroom/courses", headers=auth("alex")).status_code == 403   # teacher routes stay closed
+    work = client.get("/classroom/my/courses/c1/work", headers=auth("alex")).json()
+    assert work[0]["assignedGrade"] == 15 and work[0]["rubric"][0]["title"] == "Method"
+    assert work[0]["submissionId"] is None
+
+    seen = []
+    real = deps.pipeline.run_stage2
+    deps.pipeline.run_stage2 = lambda ctx, *a, **k: (seen.append(ctx.teacher_expectations), real(ctx, *a, **k))[1]
+    r = client.post("/submissions", data={"studentId": sid, "sharpnessScore": "90", "classroomCourseId": "c1",
+                                          "classroomWorkId": "w1"},
+                    files=[("files", ("p.jpg", photo(), "image/jpeg"))], headers=auth("alex"))
+    assert r.status_code == 201, r.text
+    sub_id = r.json()["submissionId"]
+    assert deps.store.get("submissions", sub_id)["forClassroom"]["title"] == "Trig test"
+    client.post(f"/submissions/{sub_id}/process", headers=auth("alex"))
+    assert seen and "Show the formula before you substitute." in seen[0] and "Rubric - Method" in seen[0]
+    assert "15" not in seen[0]                                     # the teacher's grade is not sent to grading
+    work = client.get("/classroom/my/courses/c1/work", headers=auth("alex")).json()
+    assert work[0]["submissionId"] == sub_id and work[0]["gradingId"]
+
+    # A parent can't upload against the child's Classroom, and unknown assignments are refused.
+    r = client.post("/submissions", data={"studentId": sid, "sharpnessScore": "90", "classroomCourseId": "c1",
+                                          "classroomWorkId": "w1"},
+                    files=[("files", ("p.jpg", photo(), "image/jpeg"))], headers=auth("jordan"))
+    assert r.status_code == 422
+    r = client.post("/submissions", data={"studentId": sid, "sharpnessScore": "90", "classroomCourseId": "c1",
+                                          "classroomWorkId": "nope"},
+                    files=[("files", ("p.jpg", photo(), "image/jpeg"))], headers=auth("alex"))
+    assert r.status_code == 404

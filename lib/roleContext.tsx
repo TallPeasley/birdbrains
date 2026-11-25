@@ -5,9 +5,13 @@ import { usePathname, useRouter } from 'next/navigation';
 
 export type Role = 'student' | 'parent';
 
-/** Opening the upload window from a worksheet problem: the upload remembers which one. */
+/** Opening the upload window from a worksheet problem or a Google Classroom assignment:
+ *  the upload remembers which one. */
 export interface CaptureContext {
-  worksheetGradingId: string;
+  worksheetGradingId?: string;
+  /** A student's own Google Classroom assignment (beta). */
+  classroomCourseId?: string;
+  classroomWorkId?: string;
   /** Shown in the upload window and on the phone, e.g. "Section C: Find the distance…". */
   problem: string;
 }
@@ -57,7 +61,7 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
       captureContext,
       openCapture: (context?: CaptureContext) => {
         // Also used straight as an onClick handler, so ignore anything that isn't a context.
-        setCaptureContext(context && typeof context === 'object' && 'worksheetGradingId' in context ? context : null);
+        setCaptureContext(context && typeof context === 'object' && 'problem' in context ? context : null);
         setCaptureOpen(true);
       },
       closeCapture: () => setCaptureOpen(false),

@@ -759,6 +759,9 @@ class CreatePhoneUploadRequest(Api):
     # The worksheet problem the photo is for, shown on the phone ("" for a whole page).
     worksheetGradingId: Optional[str] = Field(None, max_length=64)
     problem: str = Field("", max_length=PROBLEM_LABEL_MAX)
+    # A student's Google Classroom assignment the photo is for.
+    classroomCourseId: Optional[str] = Field(None, max_length=64)
+    classroomWorkId: Optional[str] = Field(None, max_length=64)
 
 
 class ApiPhoneUploadLink(Api):
@@ -819,6 +822,32 @@ LmsProviderId = Literal["google_classroom", "brightspace", "canvas", "microsoft_
 
 class LmsConnectRequest(Api):
     instanceUrl: Optional[str] = Field(default=None, max_length=255)
+
+
+class ApiClassroomRubricLevel(Api):
+    title: str = ""
+    points: Optional[float] = None
+
+
+class ApiClassroomRubricCriterion(Api):
+    title: str = ""
+    description: str = ""
+    levels: List[ApiClassroomRubricLevel] = []
+
+
+class ApiClassroomStudentWork(Api):
+    """One assignment in a student's own Google Classroom class."""
+    id: str
+    title: str
+    description: str = ""
+    maxPoints: Optional[float] = None
+    dueDate: Optional[str] = None
+    link: Optional[str] = None
+    state: Optional[str] = None          # the student's submission state in Classroom
+    assignedGrade: Optional[float] = None  # the teacher's returned grade
+    rubric: List[ApiClassroomRubricCriterion] = []
+    submissionId: Optional[str] = None   # the student's latest BirdBrains upload for it
+    gradingId: Optional[str] = None
 
 
 class ApiLmsProviderStatus(Api):

@@ -249,9 +249,13 @@ export default function CaptureModal() {
       const form = new FormData();
       form.set('studentId', targetStudentId);
       form.set('sharpnessScore', String(sharpnessScore));
-      if (captureContext) {
+      if (captureContext?.worksheetGradingId) {
         form.set('worksheetGradingId', captureContext.worksheetGradingId);
         form.set('worksheetProblem', captureContext.problem.slice(0, 500));
+      }
+      if (captureContext?.classroomCourseId && captureContext.classroomWorkId) {
+        form.set('classroomCourseId', captureContext.classroomCourseId);
+        form.set('classroomWorkId', captureContext.classroomWorkId);
       }
       files.forEach((f) => form.append('files', f.file));
 
@@ -404,7 +408,12 @@ export default function CaptureModal() {
             </h2>
             {captureContext ? (
               <p className="text-sm text-slate-600">
-                For <MathText text={captureContext.problem} />
+                For{' '}
+                {captureContext.classroomWorkId ? (
+                  `${captureContext.problem} (Google Classroom)`
+                ) : (
+                  <MathText text={captureContext.problem} />
+                )}
               </p>
             ) : (
               <p className="text-sm text-slate-500">
@@ -430,8 +439,15 @@ export default function CaptureModal() {
                 request={{
                   kind: 'new',
                   studentId: targetStudentId,
-                  ...(captureContext
+                  ...(captureContext?.worksheetGradingId
                     ? { worksheetGradingId: captureContext.worksheetGradingId, problem: captureContext.problem.slice(0, 500) }
+                    : {}),
+                  ...(captureContext?.classroomCourseId && captureContext.classroomWorkId
+                    ? {
+                        classroomCourseId: captureContext.classroomCourseId,
+                        classroomWorkId: captureContext.classroomWorkId,
+                        problem: captureContext.problem.slice(0, 500),
+                      }
                     : {}),
                 }}
                 onUpdate={(s) => void onPhoneUpdate(s)}
