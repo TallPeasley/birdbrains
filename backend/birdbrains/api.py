@@ -180,7 +180,8 @@ def deps_from_env() -> Deps:
     if env("STRIPE_SECRET_KEY") and env("STRIPE_WEBHOOK_SECRET") and env("STRIPE_PRICE_ID"):
         from .billing import StripeBilling
 
-        billing = StripeBilling(env("STRIPE_SECRET_KEY"), env("STRIPE_WEBHOOK_SECRET"), env("STRIPE_PRICE_ID"))
+        billing = StripeBilling(env("STRIPE_SECRET_KEY"), env("STRIPE_WEBHOOK_SECRET"), env("STRIPE_PRICE_ID"),
+                                env("STRIPE_PORTAL_CONFIGURATION") or None)
     if env("BIRDBRAINS_CLASSROOM") == "demo":
         if on_cloud_run:
             raise RuntimeError("The demo Classroom is not allowed on Cloud Run")
@@ -308,6 +309,7 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         parent's linked students by name. The stored record is not changed."""
         out = dict(user)
         out["plan"] = account_plan(user)
+        out["hasBilling"] = bool(user.get("stripeCustomerId"))  # the id itself stays server-side
         if user["role"] == "parent" or user.get("tester"):
             children = []
             for sid in user.get("childStudentIds", []):
@@ -480,6 +482,16 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         return my_classes(user)
 
     # ------------------------------------------------------- delete my data
+    def cancel_billing(profile: dict) -> None:
+        """An account being deleted stops paying: cancel its Stripe subscriptions now.
+        A Stripe outage must not block deletion, so a failure is logged, not raised."""
+        if d.billing and profile.get("stripeCustomerId"):
+            try:
+                n = d.billing.cancel_subscriptions(profile["stripeCustomerId"])
+                log.info("Cancelled %d Stripe subscription(s) for deleted account %s", n, profile["uid"])
+            except BillingError:
+                log.exception("Could not cancel Stripe subscriptions for deleted account %s", profile["uid"])
+
     def purge_student(student_id: str) -> None:
         """Remove every record and photo for one student, their account and links."""
         for sub in d.store.query("submissions", "studentId", student_id):
@@ -502,6 +514,7 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         for profile in d.store.query("users", "studentId", student_id):
             if profile.get("linkCode"):
                 d.store.delete("linkcodes", profile["linkCode"])
+            cancel_billing(profile)
             d.store.delete("users", profile["uid"])
             d.auth.delete_user(profile["uid"])
 
@@ -526,6 +539,7 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
                 disconnect_classroom(user)
                 for pid in LMS_PROVIDERS:
                     disconnect_lms(user, pid)
+            cancel_billing(user)
             d.store.delete("users", user["uid"])
             d.auth.delete_user(user["uid"])
         return Response(status_code=204)
@@ -1153,6 +1167,8 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
             raise HTTPException(503, "BILLING_NOT_CONFIGURED")
         if user.get("plan") == "pro":
             raise HTTPException(409, "ALREADY_PRO")
+        if user.get("studentId") and not user.get("tester") and effective_plan(user["studentId"]) == "pro":
+            raise HTTPException(409, "COVERED_BY_PARENT")  # a linked parent's Pro already covers them
         try:
             url = d.billing.checkout_url(user["uid"], user.get("stripeCustomerId"),
                                          f"{d.site_url}/account?upgrade=success", f"{d.site_url}/account?upgrade=cancelled")
@@ -1160,6 +1176,17 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
             log.exception("Stripe checkout failed")
             raise HTTPException(502, "Checkout could not be started. Please try again.")
         return {"url": url}
+
+    @app.get("/billing/price")
+    def billing_price():
+        """The Pro price for the Plans page (public). ``configured`` false = upgrades off."""
+        if not d.billing:
+            return {"configured": False}
+        try:
+            return {"configured": True, **d.billing.price_info()}
+        except BillingError:
+            log.exception("Stripe price lookup failed")
+            return {"configured": True, "amount": None, "currency": None, "interval": None}
 
     @app.post("/billing/portal")
     def billing_portal(user: User):
@@ -1184,15 +1211,21 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         except BillingError:
             raise HTTPException(400, "Invalid signature")
         change = plan_change(event)
+        created = event.get("created") if isinstance(event.get("created"), int) else 0
         if change:
             uid, customer, plan = change
             profile = d.store.get("users", uid) if uid else None
             if not profile and customer:
                 profile = next(iter(d.store.query("users", "stripeCustomerId", customer)), None)
             # Ignore events about a different customer than the one on file (e.g. an old subscription).
-            if profile and (not profile.get("stripeCustomerId") or profile["stripeCustomerId"] == customer
-                            or plan == "pro"):
-                profile.update(plan=plan, stripeCustomerId=customer or profile.get("stripeCustomerId"))
+            # Stripe does not promise delivery order: an older event never undoes a newer one.
+            stale = created and created < (profile or {}).get("stripeEventAt", 0)
+            if profile and stale:
+                log.info("Ignored older Stripe event %s for %s", event.get("type"), profile["uid"])
+            elif profile and (not profile.get("stripeCustomerId") or profile["stripeCustomerId"] == customer
+                              or plan == "pro"):
+                profile.update(plan=plan, stripeCustomerId=customer or profile.get("stripeCustomerId"),
+                               stripeEventAt=max(created, profile.get("stripeEventAt", 0)))
                 d.store.put("users", profile["uid"], profile)
                 log.info("Plan for %s set to %s by Stripe event %s", profile["uid"], plan, event.get("type"))
         return {"received": True}

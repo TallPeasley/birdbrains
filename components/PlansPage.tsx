@@ -19,6 +19,7 @@ import {
   UploadsLeftMeter,
 } from '@/components/PlanUsageBanner';
 import type { ApiUsage, PlanTier } from '@/types/birdBrains';
+import { formatPrice, ManageBillingButton, UpgradeButton, UpgradeReturnNotice, useBillingPrice } from '@/components/billing/Billing';
 
 const COMPARISON_ROWS: {
   feature: string;
@@ -78,6 +79,9 @@ export default function PlansPage() {
   const [demoTier, setDemoTier] = useState<PlanTier>('free');
   const [interestSubmitted, setInterestSubmitted] = useState(false);
   const [interestEmail, setInterestEmail] = useState('');
+  const billingPrice = useBillingPrice();
+  const proPrice = formatPrice(billingPrice);
+  const canBuy = live && !!profile && !!billingPrice?.configured && !profile.tester;
 
   useEffect(() => {
     if (!live || !activeStudentId) {
@@ -130,6 +134,8 @@ export default function PlansPage() {
           Back to dashboard
         </Link>
       </header>
+
+      {live && <UpgradeReturnNotice />}
 
       {demo && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50/70 px-4 py-3 text-xs text-amber-900">
@@ -221,7 +227,11 @@ export default function PlansPage() {
               Unlimited uploads, mood &amp; friction insights, and overnight 3-stage practice worksheets. A Pro parent covers every linked child.
             </p>
             <p className="mt-4 text-2xl font-bold text-slate-900">
-              Unlimited uploads <span className="text-sm font-normal text-slate-500">each month</span>
+              {proPrice ?? (
+                <>
+                  Unlimited uploads <span className="text-sm font-normal text-slate-500">each month</span>
+                </>
+              )}
             </p>
 
             <ul className="mt-5 space-y-2.5 text-sm text-slate-700">
@@ -246,9 +256,14 @@ export default function PlansPage() {
 
           <div className="mt-6 border-t border-indigo-100 pt-4">
             {currentPlan === 'pro' ? (
-              <span className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-emerald-50 py-2.5 text-sm font-semibold text-emerald-800 ring-1 ring-emerald-200">
-                <Check className="h-4 w-4" aria-hidden /> Active on your account
-              </span>
+              <div className="space-y-3">
+                <span className="inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-emerald-50 py-2.5 text-sm font-semibold text-emerald-800 ring-1 ring-emerald-200">
+                  <Check className="h-4 w-4" aria-hidden /> Active on your account
+                </span>
+                {live && profile?.hasBilling && <ManageBillingButton />}
+              </div>
+            ) : canBuy ? (
+              <UpgradeButton label={proPrice ? `Upgrade to Pro · ${proPrice}` : 'Upgrade to Pro'} />
             ) : interestSubmitted ? (
               <p
                 role="status"

@@ -12,7 +12,7 @@ Google Cloud Shell from the repo folder unless it says otherwise.
 - [ ] Firebase Auth: the site's domain is in Authorized domains (`web.app` is there by default; add any custom domain); email sign-up works on a phone.
 - [ ] `./backend/monitoring.sh birdbrain-514606 <your email>` has been run and the alert email is confirmed.
 - [ ] Billing budget alert exists (Billing > Budgets) for the project.
-- [ ] If Pro is paid at launch: the three Stripe secrets exist, the webhook points at `/billing/webhook`, and a test-card upgrade flips an account to Pro. Then switch Stripe to live keys and redeploy.
+- [ ] If Pro is paid at launch: `python backend/tools/stripe_setup.py --price <CAD>` run with the sandbox key, API redeployed, and a test-card (4242...) upgrade flips an account to Pro and Manage billing opens. Then run the script again with the `sk_live_` key, redeploy, and make one real purchase and refund.
 - [ ] If Classroom is on: OAuth consent screen lists the pilot teachers as test users.
 
 ### Quality gates
