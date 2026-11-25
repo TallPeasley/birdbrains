@@ -5,7 +5,6 @@ import './globals.css';
 import { RoleProvider } from '@/lib/roleContext';
 import { SessionProvider } from '@/lib/session';
 import Navbar from '@/components/Navbar';
-import CaptureFab from '@/components/CaptureFab';
 import CaptureModal from '@/components/CaptureModal';
 import PwaSetup from '@/components/PwaSetup';
 import TesterBar from '@/components/TesterBar';
@@ -70,7 +69,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               {children}
             </main>
             <AeroFooter />
-            <CaptureFab />
             <CaptureModal />
           </RoleProvider>
         </SessionProvider>

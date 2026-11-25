@@ -270,6 +270,44 @@ export interface ApiUsage {
 }
 
 /** One-time upload link for the Chrome extension (POST /uploads). */
+/** A phone camera link (the QR code on upload screens). The token goes after # in the link. */
+export interface ApiPhoneUploadLink {
+  sessionId: string;
+  token: string;
+  expiresAt: string;
+  maxFiles: number;
+}
+
+export type PhoneUploadState =
+  | 'WAITING'
+  | 'PROCESSING'
+  | 'DONE'
+  | 'NEEDS_RETAKE'
+  | 'FAILED'
+  | 'EXPIRED'
+  | 'CANCELLED';
+
+export interface ApiPhoneUpload {
+  sessionId: string;
+  kind: 'new' | 'addPhotos';
+  /** The worksheet problem the photo is for ("" for a whole page). */
+  problem: string;
+  state: PhoneUploadState;
+  expiresAt: string;
+  maxFiles: number;
+  /** Only sent to the signed-in computer that made the link. */
+  submissionId: string | null;
+  failureCode: number | null;
+}
+
+export interface CreatePhoneUpload {
+  kind: 'new' | 'addPhotos';
+  studentId?: string;
+  submissionId?: string;
+  worksheetGradingId?: string;
+  problem?: string;
+}
+
 export interface ApiUploadTicket {
   uploadId: string;
   /** Relative to the API. PUT the raw image bytes here; no Authorization header. Works once. */

@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { CalendarClock, Camera, History, Layers, RefreshCw, Sparkles, UploadCloud } from 'lucide-react';
+import { CalendarClock, Camera, History, Layers, RefreshCw, Smartphone, Sparkles, UploadCloud } from 'lucide-react';
+import PhoneQrPanel from '@/components/PhoneQrPanel';
 import { useRole } from '@/lib/roleContext';
 import AffectCard from '@/components/student/AffectCard';
 import PillarCards from '@/components/student/PillarCards';
@@ -51,6 +52,8 @@ export default function StudentDashboard() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [ws, setWs] = useState<WorksheetState | null>(null);
   const [recheck, setRecheck] = useState<{ busy: boolean; error: string }>({ busy: false, error: '' });
+  // "Add photos of this page" from a phone: the QR code is shown inline.
+  const [addByPhone, setAddByPhone] = useState(false);
   const known = useRef<Set<string>>(new Set());
   const [adding, setAdding] = useState<{ busy: boolean; error: string }>({ busy: false, error: '' });
   const addInput = useRef<HTMLInputElement>(null);
@@ -192,7 +195,30 @@ export default function StudentDashboard() {
             <Camera className={`h-4 w-4 ${adding.busy ? 'animate-pulse' : ''}`} aria-hidden />
             {adding.busy ? 'Reading all photos… (about a minute)' : 'Add photos of this page'}
           </button>
+          <button
+            onClick={() => setAddByPhone((v) => !v)}
+            aria-expanded={addByPhone}
+            className="btn btn-sm btn-secondary hidden [@media(pointer:fine)]:inline-flex"
+          >
+            <Smartphone className="h-4 w-4" aria-hidden /> {addByPhone ? 'Hide phone code' : 'Use my phone'}
+          </button>
           {adding.error && <span className="w-full text-rose-700">{adding.error}</span>}
+          {addByPhone && (
+            <div className="w-full rounded-xl bg-slate-50 p-3 ring-1 ring-slate-200">
+              <PhoneQrPanel
+                compact
+                request={{ kind: 'addPhotos', submissionId: grading.submissionId }}
+                onUpdate={(s) => {
+                  if (s.state === 'PROCESSING') setAdding({ busy: true, error: '' });
+                  else if (s.state === 'DONE' || s.state === 'FAILED' || s.state === 'NEEDS_RETAKE') {
+                    setAdding({ busy: false, error: s.state === 'DONE' ? '' : 'The photos could not be read. Try a closer, flatter shot.' });
+                    setAddByPhone(false);
+                    setAttempt((n) => n + 1);
+                  }
+                }}
+              />
+            </div>
+          )}
         </div>
       )}
       {profile?.tester && (
@@ -377,7 +403,7 @@ function View({
           </Link>
         ) : (
           <button
-            onClick={openCapture}
+            onClick={() => openCapture()}
             className="btn btn-primary"
           >
             <UploadCloud className="h-4 w-4" aria-hidden /> Upload new work

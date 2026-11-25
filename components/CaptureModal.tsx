@@ -23,7 +23,10 @@ import { demoPersonas, gradingOutput as demoGrading } from '@/lib/mockData';
 import { api, ApiError } from '@/lib/api';
 import { UPLOAD_ERRORS, uploadErrorCode } from '@/lib/uploadErrors';
 import { useSession } from '@/lib/session';
+import PhoneQrPanel from '@/components/PhoneQrPanel';
+import { MathText } from '@/components/MathText';
 import type {
+  ApiPhoneUpload,
   Stage2GradingAndAffectOutput,
   SubmissionIngestionPayload,
 } from '@/types/birdBrains';
@@ -72,7 +75,7 @@ const TIER_STYLE = {
 } as const;
 
 export default function CaptureModal() {
-  const { isCaptureOpen, closeCapture } = useRole();
+  const { isCaptureOpen, closeCapture, captureContext } = useRole();
   const { live, profile, activeStudentId, getToken, bumpData } = useSession();
   const [problem, setProblem] = useState<ProblemState | null>(null);
   const runId = useRef(0);
@@ -91,10 +94,15 @@ export default function CaptureModal() {
     setTouch(window.matchMedia('(pointer: coarse)').matches);
   }, []);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  // Set while the result on screen comes from photos sent by a phone (the QR code).
+  const phoneRun = useRef(false);
+  const phonePoll = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
 
   const reset = useCallback(() => {
     timers.current.forEach(clearTimeout);
     timers.current = [];
+    clearInterval(phonePoll.current);
+    phoneRun.current = false;
     runId.current++;
     setProblem(null);
     setFiles((prev) => {
@@ -241,6 +249,10 @@ export default function CaptureModal() {
       const form = new FormData();
       form.set('studentId', targetStudentId);
       form.set('sharpnessScore', String(sharpnessScore));
+      if (captureContext) {
+        form.set('worksheetGradingId', captureContext.worksheetGradingId);
+        form.set('worksheetProblem', captureContext.problem.slice(0, 500));
+      }
       files.forEach((f) => form.append('files', f.file));
 
       const created = await api.createSubmission(token, form);
@@ -315,6 +327,62 @@ export default function CaptureModal() {
     }
   };
 
+  /** Follow photos sent from a phone through the same progress steps as a computer upload. */
+  const onPhoneUpdate = async (s: ApiPhoneUpload) => {
+    if (s.state === 'PROCESSING' && s.submissionId) {
+      const run = ++runId.current;
+      phoneRun.current = true;
+      setProblem(null);
+      setStage('PRE_CHECKING');
+      clearInterval(phonePoll.current);
+      const id = s.submissionId;
+      phonePoll.current = setInterval(async () => {
+        try {
+          const sub = await api.getSubmission(await getToken(), id);
+          if (run !== runId.current) return;
+          if (sub.status === 'TRANSCRIBING') setStage('INGESTING');
+          else if (sub.status === 'GRADING') setStage('PROCESSING');
+        } catch {
+          /* keep showing the last step */
+        }
+      }, 1500);
+      return;
+    }
+    // A quick read can finish between two checks, so a finished link also starts a phone run.
+    if (!s.submissionId) return;
+    if (!phoneRun.current) {
+      ++runId.current;
+      phoneRun.current = true;
+    }
+    clearInterval(phonePoll.current);
+    const run = runId.current;
+    if (s.state === 'DONE') {
+      try {
+        // Already graded by the phone's request; this returns that result.
+        const result = await api.processSubmission(await getToken(), s.submissionId);
+        if (run !== runId.current) return;
+        setPayload(result.submission);
+        setGrading(result.grading);
+        setStage('DONE');
+        bumpData();
+      } catch (err) {
+        if (run !== runId.current) return;
+        setProblem({ code: 900, message: err instanceof Error ? err.message : 'Could not load the result.', failedAt: 3 });
+        setStage('ERROR');
+      }
+    } else if (s.state === 'NEEDS_RETAKE') {
+      const code = s.failureCode && UPLOAD_ERRORS[s.failureCode] ? s.failureCode : 201;
+      setProblem({ code, message: UPLOAD_ERRORS[code].message, failedAt: 2, status: 422 });
+      setStage('NEEDS_RETAKE');
+    } else if (s.state === 'FAILED') {
+      const code = s.failureCode && UPLOAD_ERRORS[s.failureCode] ? s.failureCode : 900;
+      setProblem({ code, message: UPLOAD_ERRORS[code]?.message ?? 'Something went wrong. Please try again.', failedAt: 3 });
+      setStage('ERROR');
+    }
+  };
+
+  const showPhone = live && !touch && targetStudentId !== '';
+
   if (!isCaptureOpen) return null;
   const activeIndex =
     stage === 'ERROR' || stage === 'DUPLICATE' || stage === 'NEEDS_RETAKE'
@@ -332,11 +400,17 @@ export default function CaptureModal() {
         <div className="flex items-start justify-between border-b border-slate-200 px-4 py-4 sm:px-6">
           <div>
             <h2 id="capture-title" className="text-lg font-semibold text-slate-900">
-              Upload student work
+              {captureContext ? 'Upload your work' : 'Upload student work'}
             </h2>
-            <p className="text-sm text-slate-500">
-              We check each photo is big and sharp enough to read before it is sent.
-            </p>
+            {captureContext ? (
+              <p className="text-sm text-slate-600">
+                For <MathText text={captureContext.problem} />
+              </p>
+            ) : (
+              <p className="text-sm text-slate-500">
+                We check each photo is big and sharp enough to read before it is sent.
+              </p>
+            )}
           </div>
           <button
             onClick={close}
@@ -348,6 +422,22 @@ export default function CaptureModal() {
         </div>
 
         <div className="flex-1 space-y-5 overflow-y-auto px-4 py-5 sm:px-6">
+          {/* Kept mounted through the progress steps so it keeps watching for the phone's photos. */}
+          {showPhone && (
+            <div className={stage === 'IDLE' ? 'rounded-2xl bg-indigo-50/60 p-3 ring-1 ring-indigo-100' : 'hidden'}>
+              <PhoneQrPanel
+                compact
+                request={{
+                  kind: 'new',
+                  studentId: targetStudentId,
+                  ...(captureContext
+                    ? { worksheetGradingId: captureContext.worksheetGradingId, problem: captureContext.problem.slice(0, 500) }
+                    : {}),
+                }}
+                onUpdate={(s) => void onPhoneUpdate(s)}
+              />
+            </div>
+          )}
           {stage === 'IDLE' ? (
             <>
               <div>
@@ -452,10 +542,18 @@ export default function CaptureModal() {
               problem={problem}
               onRetry={() => {
                 setProblem(null);
+                if (phoneRun.current) {
+                  reset();
+                  return;
+                }
                 submit(true);
               }}
               onRetake={() => {
                 setProblem(null);
+                if (phoneRun.current) {
+                  reset(); // the phone code stays open for another photo
+                  return;
+                }
                 reset();
                 setTimeout(() => (touch ? cameraRef : inputRef).current?.click(), 50);
               }}

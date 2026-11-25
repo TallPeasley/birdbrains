@@ -48,6 +48,10 @@ from .schemas import (
     LmsSyncRequest,
     ApiUploadTicket,
     ApiUsage,
+    ApiPhoneUpload,
+    ApiPhoneUploadLink,
+    CreatePhoneUploadRequest,
+    PROBLEM_LABEL_MAX,
     CreateUploadRequest,
     ApiParentSummary,
     ApiWorksheet,
@@ -87,6 +91,8 @@ MAX_FILE_BYTES = 12 * 1024 * 1024
 ALLOWED_TYPES = {"JPEG": "image/jpeg", "PNG": "image/png", "WEBP": "image/webp"}
 MAX_WORKSHEET_ATTEMPTS = 2
 UPLOAD_LINK_SECONDS = 15 * 60
+# Phone camera links (the QR code on the upload screens): open for 15 minutes.
+PHONE_LINK_SECONDS = 15 * 60
 _ALNUM = string.ascii_letters + string.digits
 # Every self-sign-up family lives in one consumer tenant; schools get their own.
 CONSUMER_TENANT = "ten_consumer00"
@@ -252,7 +258,7 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         CORSMiddleware,
         allow_origins=list(d.cors_origins),
         allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
-        allow_headers=["Authorization", "Content-Type"],
+        allow_headers=["Authorization", "Content-Type", "X-Upload-Token"],
     )
 
     # ------------------------------------------------------------- auth helpers
@@ -535,13 +541,27 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         # and topic from the page (see process_submission).
         course: Annotated[Optional[CourseEnum], Form()] = None,
         unitTopic: Annotated[str, Form(max_length=200)] = "",
+        # Set when the photo is work for one problem of a practice worksheet.
+        worksheetGradingId: Annotated[str, Form(max_length=64)] = "",
+        worksheetProblem: Annotated[str, Form(max_length=PROBLEM_LABEL_MAX)] = "",
     ):
         require_student_access(user, studentId)
         if not 1 <= len(files) <= MAX_FILES:
             raise UploadFailure(422, 107, f"Attach between 1 and {MAX_FILES} photos")
         blobs = [upload.file.read(MAX_FILE_BYTES + 1) for upload in files]
         course = course or CourseEnum(user.get("course") or CourseEnum.MPM2D.value)
-        return ingest(user["uid"], tenant_of(user), studentId, course, unitTopic, sharpnessScore, blobs)
+        return ingest(user["uid"], tenant_of(user), studentId, course, unitTopic, sharpnessScore, blobs,
+                      worksheet=worksheet_context(worksheetGradingId, worksheetProblem, studentId))
+
+    def worksheet_context(grading_id: str, problem: str, student_id: str) -> Optional[dict]:
+        """The worksheet problem an upload answers, kept on the submission. Only a
+        grading of the same student is accepted."""
+        if not grading_id:
+            return None
+        grading = d.store.get("gradings", grading_id)
+        if not grading or grading.get("studentId") != student_id:
+            raise HTTPException(404, "Not found")
+        return {"gradingId": grading_id, "problem": problem.strip()[:PROBLEM_LABEL_MAX]}
 
     def check_photos(blobs: list[bytes], first_index: int = 0):
         """Size, format and resolution checks. Returns (index, bytes, mime, ext, sha256)
@@ -584,7 +604,7 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
 
     def ingest(uid: str, tenant_id: str, studentId: str, course: CourseEnum, unitTopic: str,
                sharpnessScore: Optional[float], blobs: list[bytes],
-               source: str = "web") -> SubmissionIngestionPayload:
+               source: str = "web", worksheet: Optional[dict] = None) -> SubmissionIngestionPayload:
         """Shared by the web upload and the extension's one-time upload link: plan
         limit, image checks, duplicate check, privacy scrub, then storage."""
         if usage(studentId).remaining == 0:
@@ -635,6 +655,8 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
             "tenantId": tenant_id,
             "source": source,
         }
+        if worksheet:
+            record["forWorksheet"] = worksheet
         d.store.put("submissions", submission_id, record)
         for *_, sha in stored:
             d.store.put("imagehashes", f"{studentId}_{sha}", {"studentId": studentId, "submissionId": submission_id})
@@ -678,9 +700,144 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         d.store.put("uploadtickets", upload_id, ticket)
         return payload
 
+    # ------------------------------------------- phone camera links (QR codes)
+    # A signed-in computer asks for a link, shows it as a QR code, and a phone that
+    # scans it can send photos for 15 minutes without signing in. The link carries a
+    # random secret (only its hash is stored), works for one student and one upload,
+    # and lets the phone see nothing but the problem it is for. The computer watches
+    # the link and shows the result when the phone's photos are read.
+    def phone_session(session_id: str, token: Optional[str]) -> dict:
+        sess = d.store.get("phoneuploads", session_id)
+        if (not sess or not token
+                or not hmac.compare_digest(sess["tokenHash"], hashlib.sha256(token.encode()).hexdigest())):
+            raise HTTPException(404, "Not found")
+        if sess["state"] == "CANCELLED":
+            raise UploadFailure(410, 304, "UPLOAD_LINK_EXPIRED")
+        return sess
+
+    def phone_open(sess: dict) -> bool:
+        return datetime.fromisoformat(sess["expiresAt"]) > datetime.now(timezone.utc)
+
+    def phone_view(sess: dict, for_phone: bool) -> ApiPhoneUpload:
+        state = sess["state"]
+        if state in ("WAITING", "NEEDS_RETAKE") and not phone_open(sess):
+            state = "EXPIRED"
+        return ApiPhoneUpload(
+            sessionId=sess["sessionId"], kind=sess["kind"], problem=sess.get("problem", ""),
+            state=state, expiresAt=sess["expiresAt"], maxFiles=sess["maxFiles"],
+            submissionId=None if for_phone else sess.get("submissionId"),
+            failureCode=sess.get("failureCode"))
+
+    @app.post("/phone-uploads", response_model=ApiPhoneUploadLink, status_code=201)
+    def create_phone_upload(body: CreatePhoneUploadRequest, user: User):
+        if body.kind == "addPhotos":
+            if not body.submissionId:
+                raise HTTPException(422, "submissionId is required")
+            record = owned("submissions", body.submissionId, user)
+            student_id = record["studentId"]
+            max_files = max(0, MAX_TOTAL_FILES - len(record["files"]))
+            if max_files == 0 or record.get("addedPhotoRounds", 0) >= MAX_ADD_ROUNDS:
+                raise UploadFailure(422, 107, "This upload cannot take more photos. Start a new upload instead.")
+        else:
+            if not body.studentId:
+                raise HTTPException(422, "studentId is required")
+            student_id = body.studentId
+            require_student_access(user, student_id)
+            if usage(student_id).remaining == 0:
+                raise UploadFailure(402, 402, "FREE_LIMIT_REACHED")
+            max_files = MAX_FILES
+        worksheet = worksheet_context(body.worksheetGradingId or "", body.problem, student_id)
+        session_id, token = new_id("phn"), secrets.token_urlsafe(32)
+        expires = datetime.now(timezone.utc) + timedelta(seconds=PHONE_LINK_SECONDS)
+        d.store.put("phoneuploads", session_id, {
+            "sessionId": session_id, "tokenHash": hashlib.sha256(token.encode()).hexdigest(),
+            "expiresAt": expires.isoformat(), "createdAt": now_iso(), "uid": user["uid"],
+            "tenantId": tenant_of(user), "studentId": student_id, "kind": body.kind,
+            "submissionId": body.submissionId if body.kind == "addPhotos" else None,
+            "course": user.get("course") or CourseEnum.MPM2D.value,
+            "problem": body.problem.strip(), "worksheet": worksheet,
+            "maxFiles": max_files, "state": "WAITING", "failureCode": None,
+        })
+        return ApiPhoneUploadLink(sessionId=session_id, token=token, expiresAt=expires.isoformat(), maxFiles=max_files)
+
+    @app.get("/phone-uploads/{session_id}", response_model=ApiPhoneUpload)
+    def watch_phone_upload(session_id: str, user: User):
+        """The computer that made the link checks on it."""
+        sess = d.store.get("phoneuploads", session_id)
+        if not sess or sess["uid"] != user["uid"]:
+            raise HTTPException(404, "Not found")
+        return phone_view(sess, for_phone=False)
+
+    @app.delete("/phone-uploads/{session_id}", status_code=204)
+    def cancel_phone_upload(session_id: str, user: User):
+        """Closing the upload window turns the link off unless photos are on their way."""
+        sess = d.store.get("phoneuploads", session_id)
+        if not sess or sess["uid"] != user["uid"]:
+            raise HTTPException(404, "Not found")
+        if sess["state"] in ("WAITING", "NEEDS_RETAKE"):
+            sess["state"] = "CANCELLED"
+            d.store.put("phoneuploads", session_id, sess)
+        return Response(status_code=204)
+
+    @app.get("/phone/{session_id}", response_model=ApiPhoneUpload)
+    def phone_get(session_id: str, x_upload_token: Annotated[Optional[str], Header()] = None):
+        """The phone reads what the link is for. No sign-in, just the link's secret."""
+        return phone_view(phone_session(session_id, x_upload_token), for_phone=True)
+
+    @app.post("/phone/{session_id}/photos", response_model=ApiPhoneUpload)
+    def phone_photos(
+        session_id: str,
+        files: Annotated[list[UploadFile], File()],
+        sharpnessScore: Annotated[Optional[float], Form(ge=0, le=100)] = None,
+        x_upload_token: Annotated[Optional[str], Header()] = None,
+    ):
+        """The phone sends its photos; they are read and graded in the same request,
+        while the computer shows the progress. A photo that fails the size or blur
+        check leaves the link open for another try."""
+        sess = phone_session(session_id, x_upload_token)
+        if sess["state"] not in ("WAITING", "NEEDS_RETAKE"):
+            raise UploadFailure(409, 305, "PHONE_LINK_USED")
+        if not phone_open(sess):
+            raise UploadFailure(410, 304, "UPLOAD_LINK_EXPIRED")
+        if not 1 <= len(files) <= sess["maxFiles"]:
+            raise UploadFailure(422, 107, f"Attach between 1 and {sess['maxFiles']} photos")
+        blobs = [upload.file.read(MAX_FILE_BYTES + 1) for upload in files]
+
+        def mark(state: str, **extra):
+            sess.update(state=state, **extra)
+            d.store.put("phoneuploads", session_id, sess)
+
+        if sess["kind"] == "addPhotos":
+            record = d.store.get("submissions", sess["submissionId"])
+            if not record:
+                raise HTTPException(404, "Not found")
+            check_can_add(record, len(blobs))
+            append_photos(record, blobs, sharpnessScore)
+            regrade = record.get("gradingId") is not None
+        else:
+            payload = ingest(sess["uid"], sess["tenantId"], sess["studentId"], CourseEnum(sess["course"]),
+                             "", sharpnessScore, blobs, source="phone", worksheet=sess.get("worksheet"))
+            record = d.store.get("submissions", payload.submissionId)
+            regrade = False
+        mark("PROCESSING", submissionId=record["submissionId"], failureCode=None)
+        try:
+            out = run_pipeline(record, regrade=regrade)
+        except Exception:
+            mark("FAILED", failureCode=900)
+            raise
+        status = out["submission"].status
+        if status == "GRADED":
+            mark("DONE")
+        elif status == "NEEDS_RETAKE" and sess["kind"] == "new":
+            # Unreadable page: the link stays open for a clearer photo (a new upload).
+            mark("NEEDS_RETAKE", failureCode=out["submission"].failureCode)
+        else:
+            mark("FAILED", failureCode=out["submission"].failureCode or 900)
+        return phone_view(sess, for_phone=True)
+
     def submission_payload(record: dict) -> SubmissionIngestionPayload:
         urls = [f"/submissions/{record['submissionId']}/files/{i}" for i in range(len(record["files"]))]
-        return SubmissionIngestionPayload(**{k: v for k, v in record.items() if k not in ("files", "uploadedBy", "tenantId", "source")},
+        return SubmissionIngestionPayload(**{k: v for k, v in record.items() if k not in ("files", "uploadedBy", "tenantId", "source", "forWorksheet")},
                                           fileUrls=urls)
 
     @app.get("/submissions/{submission_id}", response_model=SubmissionIngestionPayload)
@@ -735,13 +892,22 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         together and the grading is replaced. The same photo may be sent again. It
         does not use a monthly upload, and the ledger is not counted twice."""
         record = owned("submissions", submission_id, user)
+        check_can_add(record, len(files))
+        blobs = [upload.file.read(MAX_FILE_BYTES + 1) for upload in files]
+        append_photos(record, blobs, sharpnessScore)
+        return run_pipeline(record, regrade=record.get("gradingId") is not None)
+
+    def check_can_add(record: dict, count: int) -> None:
         if record["status"] in ("TRANSCRIBING", "GRADING"):
             raise HTTPException(409, "ALREADY_RUNNING")
         if record.get("addedPhotoRounds", 0) >= MAX_ADD_ROUNDS:
             raise UploadFailure(422, 107, f"This upload already has photos added {MAX_ADD_ROUNDS} times. Start a new upload instead.")
-        if not 1 <= len(files) <= MAX_TOTAL_FILES - len(record["files"]):
+        if not 1 <= count <= MAX_TOTAL_FILES - len(record["files"]):
             raise UploadFailure(422, 107, f"An upload can hold at most {MAX_TOTAL_FILES} photos.")
-        blobs = [upload.file.read(MAX_FILE_BYTES + 1) for upload in files]
+
+    def append_photos(record: dict, blobs: list[bytes], sharpnessScore: Optional[float]) -> None:
+        """Check and store extra photos on an earlier upload; the caller re-reads it."""
+        submission_id = record["submissionId"]
         stored, _ = check_photos(blobs, first_index=len(record["files"]))
         if sharpnessScore is not None and sharpnessScore < MIN_SHARPNESS_SCORE:
             raise UploadFailure(422, 101, "The photo is too blurry. Please retake it.")
@@ -749,7 +915,6 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         record["addedPhotoRounds"] = record.get("addedPhotoRounds", 0) + 1
         d.store.put("submissions", submission_id, record)
         d.store.delete("transcriptions", submission_id)
-        return run_pipeline(record, regrade=record.get("gradingId") is not None)
 
     def run_pipeline(record: dict, regrade: bool = False) -> dict:
         submission_id = record["submissionId"]

@@ -5,11 +5,20 @@ import { usePathname, useRouter } from 'next/navigation';
 
 export type Role = 'student' | 'parent';
 
+/** Opening the upload window from a worksheet problem: the upload remembers which one. */
+export interface CaptureContext {
+  worksheetGradingId: string;
+  /** Shown in the upload window and on the phone, e.g. "Section C: Find the distance…". */
+  problem: string;
+}
+
 interface RoleContextValue {
   role: Role;
   setRole: (role: Role, navigate?: boolean) => void;
   isCaptureOpen: boolean;
-  openCapture: () => void;
+  /** What the open upload window is for, when it was opened from a worksheet problem. */
+  captureContext: CaptureContext | null;
+  openCapture: (context?: CaptureContext) => void;
   closeCapture: () => void;
 }
 
@@ -22,6 +31,7 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
     pathname.startsWith('/parent') ? 'parent' : 'student',
   );
   const [isCaptureOpen, setCaptureOpen] = useState(false);
+  const [captureContext, setCaptureContext] = useState<CaptureContext | null>(null);
 
   // Keep the toggle honest when someone lands directly on a dashboard URL.
   const role: Role = pathname.startsWith('/parent')
@@ -44,10 +54,15 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
       role,
       setRole,
       isCaptureOpen,
-      openCapture: () => setCaptureOpen(true),
+      captureContext,
+      openCapture: (context?: CaptureContext) => {
+        // Also used straight as an onClick handler, so ignore anything that isn't a context.
+        setCaptureContext(context && typeof context === 'object' && 'worksheetGradingId' in context ? context : null);
+        setCaptureOpen(true);
+      },
       closeCapture: () => setCaptureOpen(false),
     }),
-    [role, setRole, isCaptureOpen],
+    [role, setRole, isCaptureOpen, captureContext],
   );
 
   return <RoleContext.Provider value={value}>{children}</RoleContext.Provider>;

@@ -1,7 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { ArrowDown, CheckCircle2, Download, ExternalLink, Eye, PlayCircle, Lightbulb, RotateCcw, Sparkles, XCircle } from 'lucide-react';
+import { ArrowDown, Camera, CheckCircle2, Download, ExternalLink, Eye, PlayCircle, Lightbulb, RotateCcw, Sparkles, XCircle } from 'lucide-react';
+import { useRole } from '@/lib/roleContext';
 import type { FadedScaffoldingStep, PracticeProblem, StepDiagnostic, WS_3STAGE_V1 } from '@/types/birdBrains';
 import { PILLARS } from '@/lib/pillars';
 import { MathNumber, MathText } from '@/components/MathText';
@@ -99,11 +100,11 @@ export default function WorksheetViewer({ worksheet: given, steps }: { worksheet
 
       <div className="p-4 sm:p-6" role="tabpanel" id={`panel-${active}`} aria-labelledby={`tab-${active}`}>
         {active === 'A' && <DiagnosticMirror worksheet={worksheet} steps={steps} />}
-        {active === 'B' && <FadedScaffolding steps={worksheet.sectionB_FadedScaffolding} />}
+        {active === 'B' && <FadedScaffolding steps={worksheet.sectionB_FadedScaffolding} gradingId={worksheet.gradingId} />}
         {active === 'C' && <IndependentTransfer worksheet={worksheet} />}
         {active === 'D' &&
           (practiceState === 'ready' ? (
-            <PracticeSet problems={practice} />
+            <PracticeSet problems={practice} gradingId={worksheet.gradingId} />
           ) : practiceState === 'loading' ? (
             <p className="flex items-center gap-2 text-sm text-slate-600" role="status">
               <Sparkles className="h-4 w-4 animate-pulse text-indigo-600" aria-hidden />
@@ -260,17 +261,40 @@ function BlankLine({ content }: { content: string }) {
   return <MathText mode="math" text={content.split(BLANK).join(' ▢ ')} />;
 }
 
-function FadedScaffolding({ steps }: { steps: FadedScaffoldingStep[] }) {
+/**
+ * "Upload my work" right beside a problem: opens the upload window for this problem, with a QR
+ * code there for using a phone camera. Hidden on sample worksheets.
+ */
+function UploadWorkButton({ gradingId, problem, label = 'Upload my work' }: { gradingId: string; problem: string; label?: string }) {
+  const { live } = useSession();
+  const { openCapture } = useRole();
+  if (!live || gradingId === sampleWorksheet.gradingId) return null;
+  return (
+    <button
+      type="button"
+      onClick={() => openCapture({ worksheetGradingId: gradingId, problem })}
+      className="btn btn-sm btn-secondary"
+      title="Upload a photo of your work on paper, from this computer or your phone"
+    >
+      <Camera className="h-3.5 w-3.5" aria-hidden /> {label}
+    </button>
+  );
+}
+
+function FadedScaffolding({ steps, gradingId }: { steps: FadedScaffoldingStep[]; gradingId: string }) {
   const problem = steps[0]?.prompt;
   return (
     <div>
       {problem && (
-        <p className="mb-5 break-words rounded-xl bg-slate-100 p-4 text-sm text-slate-800">
-          <strong>Problem:</strong>{' '}
-          <span className="math">
-            <MathText text={problem} />
-          </span>
-        </p>
+        <div className="mb-5 flex flex-wrap items-start gap-3 rounded-xl bg-slate-100 p-4 text-sm text-slate-800">
+          <p className="min-w-0 flex-1 break-words">
+            <strong>Problem:</strong>{' '}
+            <span className="math">
+              <MathText text={problem} />
+            </span>
+          </p>
+          <UploadWorkButton gradingId={gradingId} problem={`Section B: ${problem}`} />
+        </div>
       )}
       <ol className="space-y-3">
         {steps.map((s) => (
@@ -461,12 +485,20 @@ function IndependentTransfer({ worksheet }: { worksheet: WS_3STAGE_V1 }) {
             ))}
           </div>
         )}
-        <p className="mt-1 text-xs text-slate-500">Prefer paper? Solve it by hand and use Upload Work to submit a photo.</p>
-        {t.answer && (
-          <div className="mt-3">
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <UploadWorkButton
+            gradingId={worksheet.gradingId}
+            problem={`Section C: ${t.problemStatement}`}
+            label="Solved it on paper? Upload a photo"
+          />
+          {t.answer && (
             <button onClick={() => setShowAnswer((v) => !v)} className="btn btn-sm btn-secondary" aria-expanded={showAnswer}>
               <Eye className="h-3.5 w-3.5" aria-hidden /> {showAnswer ? 'Hide answer' : 'Show answer'}
             </button>
+          )}
+        </div>
+        {t.answer && (
+          <div>
             {showAnswer && (
               <div className="mt-2 rounded-lg bg-emerald-50 p-3 ring-1 ring-emerald-200">
                 <p className="text-emerald-900">
@@ -584,7 +616,7 @@ const DIFFICULTY: Record<PracticeProblem['difficulty'], { label: string; cls: st
   STRETCH: { label: 'Stretch', cls: 'bg-violet-50 text-violet-700 ring-violet-200' },
 };
 
-function PracticeSet({ problems }: { problems: PracticeProblem[] }) {
+function PracticeSet({ problems, gradingId }: { problems: PracticeProblem[]; gradingId: string }) {
   return (
     <div>
       <p className="mb-4 text-sm text-slate-600">
@@ -592,14 +624,14 @@ function PracticeSet({ problems }: { problems: PracticeProblem[] }) {
       </p>
       <ol className="space-y-3">
         {problems.map((p) => (
-          <PracticeItem key={p.number} problem={p} />
+          <PracticeItem key={p.number} problem={p} gradingId={gradingId} />
         ))}
       </ol>
     </div>
   );
 }
 
-function PracticeItem({ problem: p }: { problem: PracticeProblem }) {
+function PracticeItem({ problem: p, gradingId }: { problem: PracticeProblem; gradingId: string }) {
   const [open, setOpen] = useState(false);
   const d = DIFFICULTY[p.difficulty] ?? DIFFICULTY.CORE;
   return (
@@ -614,9 +646,12 @@ function PracticeItem({ problem: p }: { problem: PracticeProblem }) {
         <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1 ${d.cls}`}>{d.label}</span>
       </div>
       <div className="mt-2 sm:pl-8">
-        <button onClick={() => setOpen((v) => !v)} className="btn btn-sm btn-secondary" aria-expanded={open}>
-          <Eye className="h-3.5 w-3.5" aria-hidden /> {open ? 'Hide answer' : 'Show answer'}
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button onClick={() => setOpen((v) => !v)} className="btn btn-sm btn-secondary" aria-expanded={open}>
+            <Eye className="h-3.5 w-3.5" aria-hidden /> {open ? 'Hide answer' : 'Show answer'}
+          </button>
+          <UploadWorkButton gradingId={gradingId} problem={`Practice ${p.number}: ${p.problemStatement}`} />
+        </div>
         {open && (
           <div className="mt-2 rounded-lg bg-emerald-50 p-3 ring-1 ring-emerald-200">
             <p className="text-emerald-900">

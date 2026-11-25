@@ -721,6 +721,40 @@ class ApiUploadTicket(Api):
     maxBytes: int
 
 
+PROBLEM_LABEL_MAX = 500
+
+
+class CreatePhoneUploadRequest(Api):
+    """Ask for a phone camera link (shown as a QR code). ``new`` starts a new upload
+    for ``studentId``; ``addPhotos`` adds photos to the earlier upload ``submissionId``."""
+    kind: Literal["new", "addPhotos"] = "new"
+    studentId: Optional[str] = Field(None, pattern=STUDENT_ID_PATTERN)
+    submissionId: Optional[str] = Field(None, max_length=64)
+    # The worksheet problem the photo is for, shown on the phone ("" for a whole page).
+    worksheetGradingId: Optional[str] = Field(None, max_length=64)
+    problem: str = Field("", max_length=PROBLEM_LABEL_MAX)
+
+
+class ApiPhoneUploadLink(Api):
+    sessionId: str
+    token: str  # goes in the QR code's link (after #) and is never stored
+    expiresAt: str
+    maxFiles: int
+
+
+class ApiPhoneUpload(Api):
+    sessionId: str
+    kind: Literal["new", "addPhotos"]
+    problem: str = ""
+    # WAITING -> PROCESSING -> DONE; NEEDS_RETAKE (unreadable, send another), FAILED,
+    # EXPIRED (15 minutes passed), CANCELLED (the upload window was closed).
+    state: Literal["WAITING", "PROCESSING", "DONE", "NEEDS_RETAKE", "FAILED", "EXPIRED", "CANCELLED"]
+    expiresAt: str
+    maxFiles: int
+    submissionId: Optional[str] = None  # only shown to the signed-in computer
+    failureCode: Optional[int] = None
+
+
 class ClassroomImportRequest(Api):
     course: CourseEnum
     unitTopic: str = Field(..., min_length=1, max_length=200)

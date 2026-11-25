@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { UploadCloud } from 'lucide-react';
+import { useRole } from '@/lib/roleContext';
 import EqaoForecast from '@/components/parent/EqaoForecast';
 import FrictionAlerts from '@/components/parent/FrictionAlerts';
 import MasteryChart from '@/components/parent/MasteryChart';
@@ -141,6 +143,15 @@ export function ParentDemo({ plan }: { plan: PlanTier }) {
   return <View s={demoSummary} usage={plan === 'free' ? DEMO_FREE_USAGE : DEMO_PRO_USAGE} sample />;
 }
 
+function ParentUploadButton() {
+  const { openCapture } = useRole();
+  return (
+    <button onClick={() => openCapture()} className="btn btn-primary">
+      <UploadCloud className="h-4 w-4" aria-hidden /> Upload work
+    </button>
+  );
+}
+
 function View({ s, usage, sample = false }: { s: ParentProjectionSummary; usage: ApiUsage | null; sample?: boolean }) {
   const isFree = usage?.plan === 'free';
   return (
@@ -152,7 +163,7 @@ function View({ s, usage, sample = false }: { s: ParentProjectionSummary; usage:
             How {s.studentName.split(' ')[0]} is doing in <MathText text={s.course} />
           </h1>
         </div>
-        {sample && <span className="aero-badge aero-badge--accent">Sample data</span>}
+        {sample ? <span className="aero-badge aero-badge--accent">Sample data</span> : <ParentUploadButton />}
         <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200">
           {s.studentName} · <MathText text={s.course === 'MPM2D' ? 'Grade 10' : 'Grade 9'} />
         </span>
