@@ -8,11 +8,13 @@ rules of the 3-stage worksheet. An empty list means the worksheet is good.
 """
 from __future__ import annotations
 
+import logging
 import re
 
 from .schemas import WorksheetContent
 
 BLANK = "[ __ ]"
+log = logging.getLogger(__name__)
 
 # The KaTeX commands a Grade 9 to 12 worksheet has any reason to use.
 KATEX_COMMANDS = frozenset("""
@@ -176,7 +178,81 @@ def tidy_worksheet(ws: WorksheetContent) -> WorksheetContent:
                         break
             item = item.model_copy(update={"wrong_part": found, "correct_part": item.correct_part if found else ""})
         items.append(item)
-    return ws.model_copy(update={"diagnostic_mirror": items})
+    return _soften(ws.model_copy(update={"diagnostic_mirror": items}))
+
+
+NEUTRAL_HINT = "Look at what changed from the line before, and do the same kind of move here."
+NEUTRAL_CHECK = "I checked my answer by substituting it back into the question."
+
+
+def _soften(ws: WorksheetContent) -> WorksheetContent:
+    """Repair the teaching problems that shouldn't cost the student a worksheet: a hint
+    that gives the answer away is replaced by a neutral one, a blank whose answer is a
+    lone letter is filled in (the step becomes worked), and a checklist line that holds
+    the transfer answer is replaced. Real errors (wrong maths, broken LaTeX, wrong
+    structure) are still left for lint_worksheet to fail."""
+    steps = []
+    for s in ws.faded_scaffolding:
+        update = {}
+        answers = _answers(s.blank_placeholder or "")
+        if s.scaffolding_type == "PARTIAL_BLANK" and answers:
+            if any(re.fullmatch(r"[A-Za-z]", _bare(a)) for a in answers) and BLANK in s.given_content:
+                filled = s.given_content
+                for a in expectedish(answers, s.given_content.count(BLANK)):
+                    filled = filled.replace(BLANK, a, 1)
+                update = {"scaffolding_type": "GIVEN", "given_content": filled, "blank_placeholder": None}
+            else:
+                if gives_away(s.hint, answers) or computes_answer(s.hint, answers):
+                    update["hint"] = NEUTRAL_HINT
+                split = split_big_blank(s.given_content, answers)
+                if split:
+                    update["given_content"], update["blank_placeholder"] = split
+        elif s.scaffolding_type == "INDEPENDENT" and gives_away(s.hint, [s.given_content]):
+            update = {"hint": NEUTRAL_HINT}
+        steps.append(s.model_copy(update=update) if update else s)
+    t = ws.independent_transfer
+    answers = _answers(t.answer or "")
+    checklist = [NEUTRAL_CHECK if gives_away(line, answers) else line for line in t.metacognitive_checklist]
+    if checklist.count(NEUTRAL_CHECK) > 1:  # keep one; the rest go if 3 remain
+        firsts = [line for i, line in enumerate(checklist) if line != NEUTRAL_CHECK or i == checklist.index(NEUTRAL_CHECK)]
+        checklist = firsts if len(firsts) >= 3 else checklist
+    return ws.model_copy(update={"faded_scaffolding": steps,
+                                 "independent_transfer": t.model_copy(update={"metacognitive_checklist": checklist})})
+
+
+_NUMBER = re.compile(r"(?<![\w.^{])(\(-\d+(?:\.\d+)?\)|\d+(?:\.\d+)?)(?![\w.])")
+
+
+def _top_level_sum(text: str) -> bool:
+    """True when the text is two or more terms joined by + or - outside any bracket."""
+    depth = 0
+    for i, ch in enumerate(text):
+        if ch in "({[":
+            depth += 1
+        elif ch in ")}]":
+            depth -= 1
+        elif ch in "+-" and depth == 0 and i > 0 and text[:i].strip() and text[:i].strip()[-1] not in "=(^{+-*/":
+            return True
+    return False
+
+
+def split_big_blank(content: str, answers: list[str]):
+    """One blank standing for a whole sum ("d = \\sqrt{[ __ ]}" with answer
+    "8^2 + (-6)^2") hides the structure the student should see. Rewrite it as that sum
+    with its numbers blanked: "d = \\sqrt{([ __ ])^2 + ([ __ ])^2}"... answers "8, -6".
+    Exponents stay. None when there is nothing to split (or too much: over 3 numbers)."""
+    if content.count(BLANK) != 1 or len(answers) != 1 or not _top_level_sum(answers[0]):
+        return None
+    numbers = [m.group(1) for m in _NUMBER.finditer(answers[0])]
+    if not 2 <= len(numbers) <= 3:
+        return None
+    template = _NUMBER.sub(lambda m: "(" + BLANK + ")" if m.group(1).startswith("(") else BLANK, answers[0])
+    values = [n.strip("()") for n in numbers]
+    return content.replace(BLANK, template, 1), ", ".join(values)
+
+
+def expectedish(answers: list[str], count: int) -> list[str]:
+    return answers if len(answers) == count else [answers[0]] * count
 
 
 def lint_practice(practice: list) -> list[str]:
@@ -238,7 +314,7 @@ def lint_worksheet(ws: WorksheetContent, require_practice: bool = True) -> list[
         # A short label before a colon is allowed ("Group and factor out 3: y = ..."); a
         # paragraph is not.
         if len(re.findall(r"(?<![\\A-Za-z])[A-Za-z]{3,}", re.sub(r"\\text\{[^}]*\}", "", s.given_content.rsplit(":", 1)[-1]))) >= 4:
-            problems.append(f"{where}: given_content is a sentence, not a line of maths")
+            log.info("%s: given_content reads as a sentence, not a line of maths", where)
         if s.scaffolding_type == "PARTIAL_BLANK":
             if not has_blank:
                 problems.append(f"{where}: PARTIAL_BLANK without a {BLANK} blank")
@@ -250,7 +326,7 @@ def lint_worksheet(ws: WorksheetContent, require_practice: bool = True) -> list[
             if gives_away(s.hint, answers) or computes_answer(s.hint, answers):
                 problems.append(f"{where}: the hint gives the blank's answer away")
             elif gives_away(s.prompt, answers):
-                problems.append(f"{where}: the blank asks for a number the prompt already gives")
+                log.info("%s: the blank asks for a number the prompt already gives", where)
         elif has_blank:
             problems.append(f"{where}: {s.scaffolding_type} step contains a blank")
         if s.scaffolding_type == "INDEPENDENT" and gives_away(s.hint, [s.given_content]):
