@@ -93,7 +93,8 @@ def test_units_paragraph_steps_checklist_and_target_error():
 
     steps = [s.model_copy() for s in GOOD.faded_scaffolding]
     steps[0].given_content = "For the system we multiply the first equation by 2, then add them to get 11x = 44"
-    assert any("is a sentence" in p for p in lint_worksheet(GOOD.model_copy(update={"faded_scaffolding": steps})))
+    # A paragraph step is only logged now: failing it cost students their worksheet.
+    assert lint_worksheet(GOOD.model_copy(update={"faded_scaffolding": steps})) == []
 
     t = GOOD.independent_transfer.model_copy(update={"answer": "x = 6, y = 2"})
     t.metacognitive_checklist = [*t.metacognitive_checklist[:2], "I found x = 6 and y = 2"]
@@ -128,7 +129,42 @@ def test_hints_that_do_the_sum_and_blanks_that_copy_the_prompt_fail_lint():
     blank.hint = "Move the known side across by subtracting."
     blank.prompt = "Substitute $x_1 = -3$."
     blank.given_content, blank.blank_placeholder = "x_1 = [ __ ]", "-3"
-    assert any("prompt already gives" in p for p in lint_worksheet(ws))
+    assert lint_worksheet(ws) == []  # logged, not failed
+
+
+def test_tidy_repairs_teaching_problems_instead_of_failing_the_sheet():
+    from birdbrains.math_lint import NEUTRAL_CHECK, NEUTRAL_HINT, lint_worksheet, tidy_worksheet
+
+    steps = [s.model_copy() for s in GOOD.faded_scaffolding]
+    blanks = [s for s in steps if s.scaffolding_type == "PARTIAL_BLANK"]
+    blanks[0].given_content, blanks[0].blank_placeholder, blanks[0].hint = "a^2 = [ __ ]", "28", "Work out $52 - 24$."
+    blanks[1].given_content, blanks[1].blank_placeholder = "5 = 3(1) + [ __ ]", "b"
+    steps[-1].hint = f"You should get ${steps[-1].given_content}$."
+    t = GOOD.independent_transfer.model_copy(update={"answer": "x = 6, y = 2"})
+    t.metacognitive_checklist = [*t.metacognitive_checklist[:2], "I found x = 6 and y = 2"]
+    ws = GOOD.model_copy(update={"faded_scaffolding": steps, "independent_transfer": t})
+    assert lint_worksheet(ws)  # as the model wrote it
+    fixed = tidy_worksheet(ws)
+    assert lint_worksheet(fixed) == []
+    a, b = [s for s in fixed.faded_scaffolding if s.step_number in (blanks[0].step_number, blanks[1].step_number)]
+    assert a.hint == NEUTRAL_HINT and a.blank_placeholder == "28"
+    assert b.scaffolding_type == "GIVEN" and b.given_content == "5 = 3(1) + b" and b.blank_placeholder is None
+    assert fixed.faded_scaffolding[-1].hint == NEUTRAL_HINT
+    assert fixed.independent_transfer.metacognitive_checklist[-1] == NEUTRAL_CHECK
+
+
+def test_one_blank_for_a_whole_sum_is_split_so_the_structure_shows():
+    from birdbrains.math_lint import split_big_blank, tidy_worksheet
+
+    # Live, Nov 25: "d = \sqrt{[ __ ]}" showed a lone box under the root.
+    assert split_big_blank("d = \\sqrt{[ __ ]}", ["8^2 + (-6)^2"]) == ("d = \\sqrt{[ __ ]^2 + ([ __ ])^2}", "8, -6")
+    assert split_big_blank("y = 3(x + [ __ ])^2", ["2"]) is None
+    assert split_big_blank("[ __ ] = 0", ["(x + 2)(x + 3)"]) is None
+    steps = with_steps(("GIVEN", "d = \\sqrt{(5 - (-3))^2 + (-1 - 5)^2}", None),
+                       ("PARTIAL_BLANK", "d = \\sqrt{[ __ ]}", "8^2 + (-6)^2"), ("INDEPENDENT", "d = 10", None))
+    step = tidy_worksheet(steps).faded_scaffolding[1]
+    assert step.given_content.count("[ __ ]") == 2 and step.blank_placeholder == "8, -6"
+    assert check_worksheet_maths(tidy_worksheet(steps)) == []
 
 
 def test_make_it_now_asks_for_sections_a_to_c_then_the_practice_set():
@@ -162,3 +198,15 @@ def test_make_it_now_asks_for_sections_a_to_c_then_the_practice_set():
     engine._client = SimpleNamespace(models=SimpleNamespace(generate_content=lambda **k: SimpleNamespace(text=bad)))
     with pytest.raises(ValueError, match="2 problems"):
         engine.generate_practice(item, core)
+
+
+def test_saved_worksheets_are_repaired_when_shown():
+    from birdbrains.projections import to_api_worksheet
+
+    ws = with_steps(("GIVEN", "d = \\sqrt{(5 - (-3))^2 + (-1 - 5)^2}", None),
+                    ("PARTIAL_BLANK", "d = \\sqrt{[ __ ]}", "8^2 + (-6)^2"),
+                    ("PARTIAL_BLANK", "d = \\sqrt{[ __ ]}", "64 + 36"), ("INDEPENDENT", "d = 10", None))
+    api = to_api_worksheet({"worksheetId": "wks_1", "gradingId": "grd_1", "content": ws.model_dump(mode="json")})
+    two, three = api.sectionB_FadedScaffolding[1:3]
+    assert two.givenContent == "d = \\sqrt{[ __ ]^2 + ([ __ ])^2}" and two.blankPlaceholder == "8, -6"
+    assert three.givenContent == "d = \\sqrt{[ __ ] + [ __ ]}" and three.blankPlaceholder == "64, 36"

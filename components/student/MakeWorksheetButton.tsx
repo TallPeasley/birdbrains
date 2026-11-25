@@ -30,10 +30,13 @@ export default function MakeWorksheetButton({
     try {
       onMade(await api.generateWorksheet(await getToken(), gradingId));
     } catch (err) {
+      const status = err instanceof ApiError ? err.status : 0;
       setError(
-        err instanceof ApiError && err.status === 402
+        status === 402
           ? 'Making worksheets is part of Pro.'
-          : 'That worksheet did not pass our checks. Try again, or it will be made overnight.',
+          : status === 502
+            ? 'That worksheet did not pass our checks. Try again, or it will be made overnight.'
+            : `The worksheet could not be made (${status || 'no connection'}). Try again, or it will be made overnight.`,
       );
     } finally {
       setBusy(false);
