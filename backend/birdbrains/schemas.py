@@ -696,6 +696,32 @@ class SetTesterRequest(Api):
         return self
 
 
+ClassroomBetaStatus = Literal["none", "pending", "approved", "declined"]
+
+
+class ClassroomBetaRequest(Api):
+    """A Pro teacher asks to join the Google Classroom test group. Google only lets
+    accounts listed as Test users connect, so Maalik adds this email by hand."""
+
+    model_config = ConfigDict(extra="forbid")
+    googleEmail: str = Field(..., min_length=3, max_length=254, pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+
+class SetClassroomBetaRequest(Api):
+    """Admin: approve or decline a Classroom beta request, by uid or Google email."""
+
+    model_config = ConfigDict(extra="forbid")
+    uid: Optional[str] = Field(None, max_length=128)
+    googleEmail: Optional[str] = Field(None, max_length=254)
+    status: Literal["approved", "declined", "pending"]
+
+    @model_validator(mode="after")
+    def _one_of(self):
+        if not (self.uid or self.googleEmail):
+            raise ValueError("Give uid or googleEmail")
+        return self
+
+
 class ApiUsage(Api):
     """Upload allowance for one student this calendar month (UTC)."""
 
@@ -734,6 +760,9 @@ class CreatePhoneUploadRequest(Api):
     # The worksheet problem the photo is for, shown on the phone ("" for a whole page).
     worksheetGradingId: Optional[str] = Field(None, max_length=64)
     problem: str = Field("", max_length=PROBLEM_LABEL_MAX)
+    # A student's Google Classroom assignment the photo is for.
+    classroomCourseId: Optional[str] = Field(None, max_length=64)
+    classroomWorkId: Optional[str] = Field(None, max_length=64)
 
 
 class ApiPhoneUploadLink(Api):
@@ -796,6 +825,32 @@ class LmsConnectRequest(Api):
     instanceUrl: Optional[str] = Field(default=None, max_length=255)
 
 
+class ApiClassroomRubricLevel(Api):
+    title: str = ""
+    points: Optional[float] = None
+
+
+class ApiClassroomRubricCriterion(Api):
+    title: str = ""
+    description: str = ""
+    levels: List[ApiClassroomRubricLevel] = []
+
+
+class ApiClassroomStudentWork(Api):
+    """One assignment in a student's own Google Classroom class."""
+    id: str
+    title: str
+    description: str = ""
+    maxPoints: Optional[float] = None
+    dueDate: Optional[str] = None
+    link: Optional[str] = None
+    state: Optional[str] = None          # the student's submission state in Classroom
+    assignedGrade: Optional[float] = None  # the teacher's returned grade
+    rubric: List[ApiClassroomRubricCriterion] = []
+    submissionId: Optional[str] = None   # the student's latest BirdBrains upload for it
+    gradingId: Optional[str] = None
+
+
 class ApiLmsProviderStatus(Api):
     id: LmsProviderId
     name: str
@@ -805,6 +860,7 @@ class ApiLmsProviderStatus(Api):
     defaultPlaceholder: str = ""
     instanceUrl: Optional[str] = None
     plan: PlanTier
+    beta: Optional[ClassroomBetaStatus] = None  # Google Classroom only: the teacher's test-group status
 
 
 class LmsSyncRequest(Api):

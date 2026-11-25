@@ -21,6 +21,13 @@ SCOPES = (
     "https://www.googleapis.com/auth/classroom.rosters.readonly",
     "https://www.googleapis.com/auth/drive.readonly",
 )
+# A student connecting their own Classroom: their classes, the assignments set in
+# them (with the teacher's instructions and rubric) and their own grades. Both are
+# "sensitive", not restricted, scopes: no yearly security assessment for these.
+STUDENT_SCOPES = (
+    "https://www.googleapis.com/auth/classroom.courses.readonly",
+    "https://www.googleapis.com/auth/classroom.coursework.me.readonly",
+)
 IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp"}
 MAX_DOWNLOAD_BYTES = 12 * 1024 * 1024
 
@@ -45,9 +52,18 @@ class ClassroomSession(Protocol):
     def download(self, file_id: str) -> tuple[bytes, str]:
         """(bytes, mime type). Raises ClassroomError if it is not a supported image."""
 
+    # Student side (STUDENT_SCOPES)
+    def my_courses(self) -> list[dict]:
+        """[{id, name, section}] for courses the student is enrolled in (active only)."""
+
+    def my_work(self, course_id: str) -> list[dict]:
+        """Assignments in one course with the student's own submission:
+        [{id, title, description, maxPoints, dueDate, link, state, assignedGrade, rubric}]
+        where rubric is [{title, description, levels: [{title, points}]}] or []."""
+
 
 class Classroom(Protocol):
-    def auth_url(self, state: str) -> str: ...
+    def auth_url(self, state: str, scopes: tuple[str, ...] = SCOPES) -> str: ...
 
     def exchange(self, code: str) -> str:
         """Authorization code -> refresh token."""
@@ -74,9 +90,9 @@ class GoogleClassroom:
     def __init__(self, client_id: str, client_secret: str, redirect_uri: str) -> None:
         self._id, self._secret, self._redirect = client_id, client_secret, redirect_uri
 
-    def auth_url(self, state: str) -> str:
+    def auth_url(self, state: str, scopes: tuple[str, ...] = SCOPES) -> str:
         q = {"client_id": self._id, "redirect_uri": self._redirect, "response_type": "code",
-             "scope": " ".join(SCOPES), "access_type": "offline", "prompt": "consent", "state": state}
+             "scope": " ".join(scopes), "access_type": "offline", "prompt": "consent", "state": state}
         return "https://accounts.google.com/o/oauth2/v2/auth?" + urllib.parse.urlencode(q)
 
     def _token(self, fields: dict) -> dict:
@@ -139,14 +155,38 @@ class GoogleSession:
             out.append({"id": s["id"], "userId": s["userId"], "state": s.get("state"), "files": files})
         return out
 
-    def sync_grade(self, course_id: str, work_id: str, submission_id: str, grade: float) -> None:
-        """Set draftGrade on a Classroom student submission (requires classroom.coursework.students)."""
-        url = (f"{self.API}/courses/{urllib.parse.quote(course_id)}/courseWork/"
-               f"{urllib.parse.quote(work_id)}/studentSubmissions/{urllib.parse.quote(submission_id)}"
-               f"?updateMask=draftGrade")
-        body = json.dumps({"draftGrade": round(grade, 2)}).encode()
-        headers = {**self._auth, "Content-Type": "application/json"}
-        _call(urllib.request.Request(url, data=body, headers=headers, method="PATCH"))
+    def my_courses(self) -> list[dict]:
+        rows = self._pages(f"{self.API}/courses", "courses", {"studentId": "me", "courseStates": "ACTIVE"})
+        return [{"id": c["id"], "name": c.get("name", ""), "section": c.get("section")} for c in rows]
+
+    def my_work(self, course_id: str) -> list[dict]:
+        base = f"{self.API}/courses/{urllib.parse.quote(course_id)}/courseWork"
+        work = self._pages(base, "courseWork")
+        mine = {s["courseWorkId"]: s for s in self._pages(f"{base}/-/studentSubmissions", "studentSubmissions",
+                                                          {"userId": "me"})}
+        out = []
+        for w in work:
+            sub = mine.get(w["id"], {})
+            due = w.get("dueDate")
+            out.append({
+                "id": w["id"], "title": w.get("title", ""), "description": w.get("description", ""),
+                "maxPoints": w.get("maxPoints"),
+                "dueDate": f"{due['year']:04d}-{due['month']:02d}-{due['day']:02d}" if due else None,
+                "link": w.get("alternateLink"), "state": sub.get("state"),
+                "assignedGrade": sub.get("assignedGrade"), "rubric": self._rubric(base, w["id"]),
+            })
+        return out
+
+    def _rubric(self, base: str, work_id: str) -> list[dict]:
+        """The teacher's rubric, if there is one. Rubrics are not on every school's
+        plan, so any error just means no rubric."""
+        try:
+            rows = self._pages(f"{base}/{urllib.parse.quote(work_id)}/rubrics", "rubrics")
+        except ClassroomError:
+            return []
+        return [{"title": c.get("title", ""), "description": c.get("description", ""),
+                 "levels": [{"title": lv.get("title", ""), "points": lv.get("points")} for lv in c.get("levels", [])]}
+                for r in rows[:1] for c in r.get("criteria", [])]
 
     def download(self, file_id: str) -> tuple[bytes, str]:
         base = f"https://www.googleapis.com/drive/v3/files/{urllib.parse.quote(file_id)}"
@@ -154,3 +194,18 @@ class GoogleSession:
         if meta.get("mimeType") not in IMAGE_TYPES:
             raise ClassroomError("not a photo (JPEG, PNG or WebP)")
         return _call(urllib.request.Request(f"{base}?alt=media", headers=self._auth), MAX_DOWNLOAD_BYTES), meta["mimeType"]
+
+
+def expectations_text(work: dict, limit: int = 3000) -> str:
+    """The teacher's side of an assignment, for the grading prompt: title, points,
+    instructions and rubric. Never the student's name or grade."""
+    parts = [f"Assignment: {work.get('title', '')}"]
+    if work.get("maxPoints"):
+        parts.append(f"Out of {work['maxPoints']:g} points")
+    if (work.get("description") or "").strip():
+        parts.append("Instructions: " + work["description"].strip())
+    for c in work.get("rubric") or []:
+        levels = "; ".join(f"{lv['title']} {lv['points']:g}" if lv.get("points") is not None else lv["title"]
+                           for lv in c.get("levels", []))
+        parts.append(f"Rubric - {c['title']}: {c.get('description', '')}" + (f" ({levels})" if levels else ""))
+    return "\n".join(parts)[:limit]

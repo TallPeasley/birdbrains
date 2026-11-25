@@ -20,6 +20,7 @@ import { api, ApiError } from '@/lib/api';
 import { useSession } from '@/lib/session';
 import { Loading, SignInNotice } from '@/components/DashboardStates';
 import MyStudents from '@/components/teacher/MyStudents';
+import ClassroomBetaSignup from '@/components/ClassroomBetaSignup';
 import type {
   ClassroomCourse,
   ClassroomCoursework,
@@ -40,6 +41,7 @@ const DEMO_PROVIDERS: LmsProviderStatus[] = [
     requiresInstanceUrl: false,
     defaultPlaceholder: '',
     plan: 'pro',
+    beta: 'approved',
   },
   {
     id: 'brightspace',
@@ -100,6 +102,7 @@ export default function TeacherDashboard() {
   const [banner, setBanner] = useState<{ tone: 'ok' | 'err'; text: string } | null>(null);
   const [instanceUrls, setInstanceUrls] = useState<Record<string, string>>({});
   const [busyProvider, setBusyProvider] = useState<string | null>(null);
+  const [betaEmail, setBetaEmail] = useState('');
 
   // Import & grade sync workflow state
   const [selectedProvider, setSelectedProvider] = useState<LmsProviderId>('google_classroom');
@@ -272,6 +275,26 @@ export default function TeacherDashboard() {
       window.location.assign(url);
     } catch (err) {
       setBanner({ tone: 'err', text: errText(err) });
+      setBusyProvider(null);
+    }
+  };
+
+  const handleBetaJoin = async () => {
+    const email = betaEmail.trim();
+    if (!email) return;
+    if (!live) {
+      setProviders((prev) => prev.map((x) => (x.id === 'google_classroom' ? { ...x, beta: 'pending' } : x)));
+      return;
+    }
+    setBusyProvider('google_classroom');
+    setBanner(null);
+    try {
+      const token = await getToken();
+      const res = await api.classroomBetaJoin(token, email);
+      setProviders((prev) => prev.map((x) => (x.id === 'google_classroom' ? { ...x, beta: res.beta } : x)));
+    } catch (err) {
+      setBanner({ tone: 'err', text: errText(err) });
+    } finally {
       setBusyProvider(null);
     }
   };
@@ -458,7 +481,14 @@ export default function TeacherDashboard() {
           <div key={p.id} className="card flex flex-col justify-between gap-4 p-5">
             <div>
               <div className="flex items-center justify-between gap-2">
-                <h2 className="text-base font-semibold text-slate-900">{p.name}</h2>
+                <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900">
+                  {p.name}
+                  {p.id === 'google_classroom' && (
+                    <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[11px] font-semibold text-indigo-700 ring-1 ring-indigo-200">
+                      Beta
+                    </span>
+                  )}
+                </h2>
                 <span
                   className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                     p.connected
@@ -513,6 +543,14 @@ export default function TeacherDashboard() {
                     <Unlink className="h-3.5 w-3.5" aria-hidden /> Disconnect
                   </button>
                 </>
+              ) : p.id === 'google_classroom' && isPro && p.beta !== 'approved' ? (
+                <ClassroomBetaSignup
+                  status={p.beta ?? 'none'}
+                  email={betaEmail}
+                  onEmail={setBetaEmail}
+                  busy={busyProvider === p.id}
+                  onJoin={() => void handleBetaJoin()}
+                />
               ) : (
                 <button
                   type="button"
@@ -640,6 +678,12 @@ export default function TeacherDashboard() {
               </button>
             )}
 
+            {selectedProvider === 'google_classroom' ? (
+              <p className="basis-full text-xs text-slate-500">
+                Google only lets an app set grades on assignments that app created, so BirdBrains can’t send
+                scores to Google Classroom. Copy each student’s score from their results into Classroom.
+              </p>
+            ) : (
             <button
               type="button"
               disabled={!selectedCourse || !selectedWork || syncBusy}
@@ -649,6 +693,7 @@ export default function TeacherDashboard() {
               {syncBusy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Send className="h-4 w-4" aria-hidden />}
               Sync Grades to LMS
             </button>
+            )}
           </div>
         )}
 

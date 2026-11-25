@@ -216,8 +216,8 @@ Test card in the sandbox: `4242 4242 4242 4242`, any future date, any CVC.
 
 **Google Classroom**
 1. Cloud console (project `birdbrain-514606`) > APIs & Services > OAuth consent screen: External,
-   app name BirdBrains, add the four scopes listed in `birdbrains/classroom.py`, and add your test
-   teacher account under Test users.
+   app name BirdBrains, add the five scopes in `SCOPES` and `STUDENT_SCOPES` in `birdbrains/classroom.py`,
+   and add your test accounts under Test users.
 2. Credentials > Create credentials > OAuth client ID > Web application. Authorized redirect URI:
    `<API URL>/classroom/callback`. Copy the client id and secret.
 3. `mk birdbrains-google-oauth-client-id ...`, `mk birdbrains-google-oauth-client-secret ...`, rerun `deploy.sh`.
@@ -225,6 +225,22 @@ Test card in the sandbox: `4242 4242 4242 4242`, any future date, any CVC.
 While the consent screen is in "Testing", only the listed test users can connect (up to 100) and
 their connection expires after 7 days. Going public needs Google's verification; `drive.readonly`
 is a restricted scope, which also needs a yearly third-party security assessment.
+
+**Beta sign-up.** Classroom is a "sign up to test" beta for Pro teachers and Pro students (Google's
+100 Test users are shared by both). They enter the Google email they use for Classroom (Teacher Hub,
+or the student dashboard); that makes a pending request. Add that email under
+Test users on the consent screen, then approve it with `python tools/classroom_beta.py --approve
+<email>` (lists pending requests with no flags; the daily stats show `classroomBetaPending`).
+Connect only works once approved. Testing accounts skip the list.
+
+**Students** connect with only `classroom.courses.readonly` and `classroom.coursework.me.readonly`
+(their classes, assignments, their own grades, the teacher's instructions and rubric). Each
+assignment gets an upload; the teacher's instructions and rubric (never the grade) go into
+grading (`SubmissionContext.teacher_expectations`). Rubrics are read when Google allows it. The cap is
+`BIRDBRAINS_CLASSROOM_BETA_LIMIT` (default 100, Google's Test user limit).
+
+Grades are not sent back to Classroom: Google lets an app set grades only on assignments
+that app created, and teachers make assignments in Classroom. Teachers copy scores across.
 
 ## Photo quality
 

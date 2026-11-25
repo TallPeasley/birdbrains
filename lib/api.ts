@@ -1,6 +1,8 @@
 import type {
   ApiClass,
+  ClassroomBetaStatus,
   ClassroomCourse,
+  ClassroomStudentWork,
   ClassroomCoursework,
   ClassroomImportResult,
   LmsProviderId,
@@ -164,8 +166,15 @@ export const api = {
   billingPortal: (t: string) => request<{ url: string }>('/billing/portal', t, { method: 'POST' }),
   /** Google Classroom (Pro teacher accounts). */
   classroomStatus: (t: string) =>
-    request<{ configured: boolean; plan: PlanTier; connected: boolean }>('/classroom/status', t),
+    request<{ configured: boolean; plan: PlanTier; connected: boolean; beta: ClassroomBetaStatus }>('/classroom/status', t),
   /** Returns Google's consent URL; Google returns the teacher to /teacher?classroom=connected|failed. */
+  /** Sign up to test Google Classroom with the Google email used for Classroom. */
+  classroomBetaJoin: (t: string, googleEmail: string) =>
+    request<{ beta: ClassroomBetaStatus; googleEmail: string }>('/classroom/beta', t, json({ googleEmail })),
+  /** Students: their own Classroom classes and assignments (grades, instructions, rubric). */
+  classroomMyCourses: (t: string) => request<ClassroomCourse[]>('/classroom/my/courses', t),
+  classroomMyWork: (t: string, courseId: string) =>
+    request<ClassroomStudentWork[]>(`/classroom/my/courses/${encodeURIComponent(courseId)}/work`, t),
   classroomConnect: (t: string) => request<{ url: string }>('/classroom/connect', t, { method: 'POST' }),
   classroomDisconnect: (t: string) => request<void>('/classroom', t, { method: 'DELETE' }),
   classroomCourses: (t: string) => request<ClassroomCourse[]>('/classroom/courses', t),

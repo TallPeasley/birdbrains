@@ -231,6 +231,8 @@ def test_teacher_class_report(client, family, deps):
     assert client.get("/teacher/report", headers=auth("rivera")).json()["students"] == []
 
     deps.classroom = FakeClassroom()
+    client.post("/classroom/beta", json={"googleEmail": "rivera@school.test"}, headers=auth("rivera"))
+    client.post("/internal/classroom-beta", json={"uid": "rivera", "status": "approved"}, headers=TOKEN)
     state = client.post("/classroom/connect", headers=auth("rivera")).json()["url"].split("state=")[1]
     client.get(f"/classroom/callback?state={state}&code=good", follow_redirects=False)
     res = client.post("/classroom/courses/c1/coursework/w1/import", json={"course": "MPM2D", "unitTopic": "Quadratic Relations"},

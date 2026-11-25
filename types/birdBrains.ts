@@ -316,6 +316,8 @@ export interface CreatePhoneUpload {
   submissionId?: string;
   worksheetGradingId?: string;
   problem?: string;
+  classroomCourseId?: string;
+  classroomWorkId?: string;
 }
 
 export interface ApiUploadTicket {
@@ -336,6 +338,24 @@ export interface ClassroomCourse {
 export interface ClassroomCoursework {
   id: string;
   title: string;
+}
+
+/** One assignment in a student's own Google Classroom class (beta). */
+export interface ClassroomStudentWork {
+  id: string;
+  title: string;
+  description: string;
+  maxPoints: number | null;
+  dueDate: string | null;
+  link: string | null;
+  /** The student's submission state in Classroom: CREATED, TURNED_IN, RETURNED, ... */
+  state: string | null;
+  /** The grade the teacher returned, out of maxPoints. */
+  assignedGrade: number | null;
+  rubric: { title: string; description: string; levels: { title: string; points: number | null }[] }[];
+  /** The student's latest BirdBrains upload for this assignment. */
+  submissionId: string | null;
+  gradingId: string | null;
 }
 
 /** A student a teacher imported from Google Classroom or another LMS. */
@@ -366,7 +386,11 @@ export interface LmsProviderStatus {
   defaultPlaceholder: string;
   instanceUrl?: string | null;
   plan: PlanTier;
+  /** Google Classroom only: the teacher's "sign up to test" status. Connect works once approved. */
+  beta?: ClassroomBetaStatus | null;
 }
+
+export type ClassroomBetaStatus = 'none' | 'pending' | 'approved' | 'declined';
 
 export interface LmsSyncResult {
   synced: { submissionId: string; studentName: string; score: number; maxScore: number }[];
