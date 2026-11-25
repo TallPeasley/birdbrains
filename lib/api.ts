@@ -15,6 +15,7 @@ import type {
   ApiPhoneUploadLink,
   CreatePhoneUpload,
   ApiUsage,
+  BillingPrice,
   ParentProjectionSummary,
   Stage2GradingAndAffectOutput,
   SubmissionIngestionPayload,
@@ -155,6 +156,8 @@ export const api = {
     if (!res.ok) throw new ApiError(res.status, 'The worksheet PDF is not available yet.');
     return res.blob();
   },
+  /** The Pro price (public). configured false = online upgrades are off. Amount is in cents. */
+  billingPrice: () => send<BillingPrice>('/billing/price', {}),
   /** Upgrade to Pro: returns the Stripe Checkout URL; send the browser there (window.location). */
   startCheckout: (t: string) => request<{ url: string }>('/billing/checkout', t, { method: 'POST' }),
   /** Manage or cancel the subscription: returns the Stripe portal URL. 404 NO_SUBSCRIPTION if never subscribed. */

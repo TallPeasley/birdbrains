@@ -25,6 +25,7 @@ import { useRole } from '@/lib/roleContext';
 import { useSession } from '@/lib/session';
 import { Loading, SignInNotice } from '@/components/DashboardStates';
 import UploadHistory from '@/components/account/UploadHistory';
+import { ManageBillingButton, UpgradeReturnNotice } from '@/components/billing/Billing';
 import type { ApiClass, ApiUsage, UserProfile } from '@/types/birdBrains';
 
 const DEMO_PROFILES: { student: UserProfile; parent: UserProfile } = {
@@ -444,6 +445,8 @@ export default function AccountSettings() {
         </dl>
       </section>
 
+      {live && <UpgradeReturnNotice />}
+
       {/* Plan and monthly uploads */}
       <section className="card p-5 sm:p-6" aria-labelledby="plan-heading">
         <div className="flex flex-wrap items-start justify-between gap-2">
@@ -522,6 +525,19 @@ export default function AccountSettings() {
               ? 'Free accounts include 10 uploads per calendar month.'
               : 'Link a child account below to view their monthly upload allowance.'}
           </p>
+        )}
+
+        {live && (
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            {activeProfile?.hasBilling ? (
+              <ManageBillingButton />
+            ) : effectivePlan !== 'pro' ? (
+              <Link href="/plans" className="btn btn-primary">
+                <Sparkles className="h-4 w-4" aria-hidden />
+                See Pro
+              </Link>
+            ) : null}
+          </div>
         )}
       </section>
 

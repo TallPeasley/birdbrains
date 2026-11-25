@@ -618,6 +618,7 @@ class UserProfile(Api):
     plan: PlanTier = "free"
     classIds: List[str] = Field(default_factory=list)  # students: classes joined with a code
     tester: bool = False  # testing account: no upload cap, repeat photos allowed (admin-set only)
+    hasBilling: bool = False  # has a Stripe customer: show "Manage billing"
     children: List[ApiLinkedStudent] = Field(default_factory=list)  # parents: linked students by name
 
 

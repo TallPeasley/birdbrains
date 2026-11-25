@@ -55,6 +55,8 @@ interface SessionValue {
   /** Testing accounts: switch view and plan without signing out. */
   setTesterView: (change: { role?: 'student' | 'parent' | 'teacher'; plan?: 'free' | 'pro' }) => Promise<void>;
   signOut: () => Promise<void>;
+  /** Fetch the profile again (e.g. after Stripe Checkout changes the plan). */
+  refreshProfile: () => Promise<void>;
   getToken: () => Promise<string>;
   /** Bumped after an upload finishes so dashboards refetch. */
   dataVersion: number;
@@ -268,6 +270,9 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       setTesterView: async (change) => {
         setProfile(await api.testerView(await getToken(), change));
         setDataVersion((v) => v + 1); // plan or role changed: dashboards refetch
+      },
+      refreshProfile: async () => {
+        await loadProfile();
       },
       signOut: async () => {
         if (DEV_AUTH) {

@@ -70,6 +70,7 @@ To exercise real Gemini from your machine, keep `BIRDBRAINS_BACKEND=local`, set
 | `GET /phone/{id}`, `POST /phone/{id}/photos` | link holder (`X-Upload-Token`) | The phone reads what the link is for, then sends photos; they are read and graded in that request |
 | `GET /gradings/{id}/worksheet.pdf` | owner | Worksheet PDF (WeasyPrint, template in `worksheet_pdf.py`) |
 | `GET /students/{id}/usage` | owner | Plan and uploads left this month (Free: 402 `FREE_LIMIT_REACHED` when 0) |
+| `GET /billing/price` | public | Pro price for the Plans page (`configured: false` when Stripe is off) |
 | `POST /billing/checkout`, `/billing/portal`, `/billing/webhook` | signed-in; Stripe | Stripe Checkout and portal links; the signed webhook sets the plan (`billing.py`) |
 | `/classroom/*`, `GET /teacher/students` | Pro teacher | Google Classroom connect, courses, assignments, import handed-in photos (`classroom.py`) |
 | `GET /students/{id}/progress` | owner | Results over time: mastery per strand, timeline, recurring error codes (`reports.py`) |
@@ -96,7 +97,8 @@ To exercise real Gemini from your machine, keep `BIRDBRAINS_BACKEND=local`, set
 | `BIRDBRAINS_HEADER_MASK` | `0` | Optional backstop: share of the page, from the top, blacked out before storage. Detected name/date/class fields are blurred regardless |
 | `BIRDBRAINS_FREE_MONTHLY_SUBMISSIONS` | `10` | Uploads per student per calendar month on the Free plan |
 | `BIRDBRAINS_FREE_WORKSHEETS` | `0` | `1` gives Free gradings nightly worksheets too |
-| `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID` | unset (upgrades off) | Stripe key, webhook signing secret and the Pro price id. `deploy.sh` reads them from Secret Manager |
+| `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID` | unset (upgrades off) | Stripe key, webhook signing secret and the Pro price id. `deploy.sh` reads them from Secret Manager (`tools/stripe_setup.py` writes them) |
+| `STRIPE_PORTAL_CONFIGURATION` | unset (account default) | Customer portal settings id (`bpc_...`) |
 | `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, `BIRDBRAINS_PUBLIC_URL` | unset (Classroom off) | Google OAuth web client and the API's own URL (for the redirect) |
 | `BIRDBRAINS_SITE_URL` | Firebase Hosting site | Where Stripe and Google send people back to |
 | `MLFLOW_TRACKING_URI` | unset (tracing off) | Where `@mlflow.trace` spans go |
@@ -184,15 +186,33 @@ mk() { printf '%s' "$2" | gcloud secrets create "$1" --data-file=- \
   --replication-policy=user-managed --locations=northamerica-northeast1; }
 ```
 
-**Stripe** (start in test mode)
-1. Stripe dashboard > Product catalog: product "BirdBrains Pro" with a monthly recurring price. Copy the price id (`price_...`).
-2. Developers > API keys: copy the secret key (`sk_test_...`).
-3. Developers > Webhooks > Add endpoint: URL `<API URL>/billing/webhook`, events
-   `checkout.session.completed`, `customer.subscription.created`, `customer.subscription.updated`,
-   `customer.subscription.deleted`. Copy the signing secret (`whsec_...`).
-4. Settings > Billing > Customer portal: turn it on (lets people cancel).
-5. `mk birdbrains-stripe-price-id price_...`, `mk birdbrains-stripe-secret-key sk_test_...`,
-   `mk birdbrains-stripe-webhook-secret whsec_...`, then rerun `deploy.sh`.
+**Stripe** (sandbox first, then live). One script does the whole Stripe side:
+
+```bash
+cd backend && python tools/stripe_setup.py --project birdbrain-514606 --price 12.99
+./deploy.sh birdbrain-514606
+```
+
+It asks for the secret key without echoing it (Stripe dashboard > Developers > API keys),
+creates or reuses product "BirdBrains Pro" with a monthly CAD price (lookup key
+`birdbrains_pro_monthly`), creates customer portal settings (card, invoices, cancel at period
+end), points a webhook at `<API URL>/billing/webhook`, and stores four secrets:
+`birdbrains-stripe-secret-key`, `-webhook-secret`, `-price-id`, `-portal-config`.
+Run it again with the `sk_live_` key before launch, then redeploy. Changing `--price` makes a
+new price; existing subscribers keep theirs.
+
+How it behaves:
+- The signed webhook is the only thing that sets `plan`. Events are applied newest-first by
+  their `created` time (`stripeEventAt`), so a late, older event never undoes a newer one.
+- `past_due` keeps Pro while Stripe retries the card; `unpaid`, `canceled` or deletion makes it Free.
+- A student already covered by a Pro parent gets 409 `COVERED_BY_PARENT` instead of a second subscription.
+- Deleting an account (`DELETE /me`, or a student's data) cancels its Stripe subscriptions at once.
+- `GET /billing/price` (public) gives the Plans page the price; it is cached for an hour.
+- Calls pin `Stripe-Version` (`STRIPE_API_VERSION` in `billing.py`) and send an `Idempotency-Key`.
+- No sales tax is charged (sole proprietor under the $30,000 small-supplier threshold). Once over it,
+  register for GST/HST and turn on Stripe Tax (`automatic_tax[enabled]=true` in `checkout_url`).
+
+Test card in the sandbox: `4242 4242 4242 4242`, any future date, any CVC.
 
 **Google Classroom**
 1. Cloud console (project `birdbrain-514606`) > APIs & Services > OAuth consent screen: External,

@@ -25,8 +25,12 @@ class FakeStripe(StripeBilling):
         super().__init__("sk_test_x", "whsec_test", "price_x")
         self.calls = []
 
-    def _post(self, path, fields):
-        self.calls.append((path, fields))
+    def _request(self, method, path, fields=None):
+        self.calls.append((path, fields) if method == "POST" else (f"{method} {path}", fields))
+        if path.startswith("/prices/"):
+            return {"unit_amount": 1299, "currency": "cad", "recurring": {"interval": "month"}}
+        if path == "/subscriptions":
+            return {"data": [{"id": "sub_live", "status": "active"}, {"id": "sub_old", "status": "canceled"}]}
         return {"url": f"https://checkout.stripe.test{path}"}
 
 
@@ -74,6 +78,37 @@ def test_stripe_upgrade_and_cancel(client, family, deps):
     assert client.get("/me", headers=auth("jordan")).json()["plan"] == "free"
 
 
+def _hook(client, event):
+    body = json.dumps(event).encode()
+    return client.post("/billing/webhook", content=body, headers={"Stripe-Signature": _signed(body)})
+
+
+def test_price_child_covered_order_and_delete(client, family, deps):
+    assert client.get("/billing/price").json() == {"configured": False}
+    deps.billing = stripe = FakeStripe()
+    assert client.get("/billing/price").json() == {"configured": True, "amount": 1299, "currency": "cad",
+                                                   "interval": "month"}
+    client.get("/billing/price")
+    assert sum(1 for p, _ in stripe.calls if p.startswith("GET /prices/")) == 1   # cached
+
+    sub = lambda status, t, kind="customer.subscription.updated": {"type": kind, "created": t, "data": {
+        "object": {"customer": "cus_1", "status": status, "metadata": {"uid": "jordan"}}}}
+    assert _hook(client, sub("active", 200)).status_code == 200
+    me = client.get("/me", headers=auth("jordan")).json()
+    assert me["plan"] == "pro" and me["hasBilling"] is True
+    # the child is already covered: no second subscription
+    assert client.post("/billing/checkout", headers=auth("alex")).json()["detail"] == "COVERED_BY_PARENT"
+    _hook(client, sub("canceled", 300, "customer.subscription.deleted"))
+    _hook(client, sub("active", 250))                        # late, older event: ignored
+    assert client.get("/me", headers=auth("jordan")).json()["plan"] == "free"
+    _hook(client, sub("active", 400))
+    assert client.get("/me", headers=auth("jordan")).json()["plan"] == "pro"
+
+    assert client.delete("/me", headers=auth("jordan")).status_code == 204
+    assert ("DELETE /subscriptions/sub_live", None) in stripe.calls
+    assert not any(p == "DELETE /subscriptions/sub_old" for p, _ in stripe.calls)
+
+
 def test_plan_change_mapping():
     sub = lambda kind, status: {"type": kind, "data": {"object": {"customer": "c", "status": status}}}
     assert plan_change(sub("customer.subscription.updated", "active")) == (None, "c", "pro")
@@ -81,6 +116,9 @@ def test_plan_change_mapping():
     assert plan_change({"type": "invoice.paid", "data": {"object": {}}}) is None
     unpaid = {"type": "checkout.session.completed", "data": {"object": {"mode": "subscription", "payment_status": "unpaid"}}}
     assert plan_change(unpaid) is None
+    later = {"type": "checkout.session.async_payment_succeeded", "data": {"object": {
+        "mode": "subscription", "payment_status": "paid", "client_reference_id": "u", "customer": "c"}}}
+    assert plan_change(later) == ("u", "c", "pro")
 
 
 class FakeClassroom:

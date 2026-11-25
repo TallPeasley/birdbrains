@@ -82,6 +82,7 @@ optional_secret() {  # ENV_NAME secret-name
 optional_secret STRIPE_SECRET_KEY          birdbrains-stripe-secret-key
 optional_secret STRIPE_WEBHOOK_SECRET      birdbrains-stripe-webhook-secret
 optional_secret STRIPE_PRICE_ID            birdbrains-stripe-price-id
+optional_secret STRIPE_PORTAL_CONFIGURATION birdbrains-stripe-portal-config
 optional_secret GOOGLE_OAUTH_CLIENT_ID      birdbrains-google-oauth-client-id
 optional_secret GOOGLE_OAUTH_CLIENT_SECRET  birdbrains-google-oauth-client-secret
 optional_secret BRIGHTSPACE_OAUTH_CLIENT_ID     birdbrains-brightspace-oauth-client-id

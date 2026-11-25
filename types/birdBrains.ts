@@ -238,6 +238,8 @@ export interface UserProfile {
   /** Students: classes joined with a class code. */
   classIds?: string[];
   tester?: boolean; // testing account: no upload cap, repeat photos allowed (set by an admin only)
+  /** Has a Stripe customer, so "Manage billing" can open Stripe's portal. */
+  hasBilling?: boolean;
   /** Parents (and testers): linked students by name, for the child picker. */
   children?: LinkedStudent[];
 }
@@ -258,6 +260,14 @@ export interface ApiClass {
 }
 
 export type PlanTier = 'free' | 'pro';
+
+export interface BillingPrice {
+  configured: boolean;
+  /** Cents, e.g. 1299 = $12.99. Null if Stripe could not be reached. */
+  amount?: number | null;
+  currency?: string | null;
+  interval?: string | null;
+}
 
 /** Upload allowance for one student this calendar month (GET /students/{id}/usage). */
 export interface ApiUsage {
