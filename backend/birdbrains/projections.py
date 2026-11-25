@@ -243,7 +243,11 @@ def _plain_grading(grading: ApiGrading) -> ApiGrading:
 
 
 def to_api_worksheet(record: dict) -> ApiWorksheet:
-    content = WorksheetContent.model_validate(record["content"])
+    from .math_lint import tidy_worksheet
+
+    # Repairs apply to worksheets saved before they existed too (e.g. one blank for a
+    # whole sum under a root, Nov 25), so nobody has to remake a sheet to get them.
+    content = tidy_worksheet(WorksheetContent.model_validate(record["content"]))
     return ApiWorksheet(
         worksheetId=record["worksheetId"],
         gradingId=record["gradingId"],

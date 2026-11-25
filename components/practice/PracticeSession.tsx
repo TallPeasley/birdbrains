@@ -10,7 +10,7 @@ import { useSearchParams } from 'next/navigation';
 import { CheckCircle2, Clock, Lightbulb, ListChecks, RotateCcw, Trophy, XCircle } from 'lucide-react';
 import type { WS_3STAGE_V1 } from '@/types/birdBrains';
 import { MathText } from '@/components/MathText';
-import { BLANK, renderKatex } from '@/lib/katexMath';
+import { BLANK, isWordy, renderKatex } from '@/lib/katexMath';
 import { expectedBlanks, sameAnswer } from '@/lib/answerCheck';
 import { api, ApiError } from '@/lib/api';
 import { useSession } from '@/lib/session';
@@ -22,8 +22,8 @@ export interface PracticeQuestion {
   tag: string;
   /** The problem the guided steps belong to, shown above them. */
   context?: string;
-  /** The line the student already has, for guided steps. */
-  soFar?: string;
+  /** Every step worked before this one (prompt and line), so the student sees how they connect. */
+  worked?: { step: number; prompt: string; line: string }[];
   prompt: string;
   /** A line with [ __ ] boxes to fill; absent for a typed answer. */
   line?: string;
@@ -44,7 +44,7 @@ export function practiceQuestions(ws: WS_3STAGE_V1): PracticeQuestion[] {
   const out: PracticeQuestion[] = [];
   const steps = ws.sectionB_FadedScaffolding ?? [];
   const problem = steps[0]?.prompt;
-  let previous: string | undefined;
+  const worked: { step: number; prompt: string; line: string }[] = [];
   for (const s of steps) {
     const boxes = s.givenContent.split(BLANK).length - 1;
     const filled = boxes
@@ -55,7 +55,7 @@ export function practiceQuestions(ws: WS_3STAGE_V1): PracticeQuestion[] {
         key: `B${s.stepNumber}`,
         tag: `Guided step ${s.stepNumber}`,
         context: problem,
-        soFar: previous,
+        worked: [...worked],
         prompt: s.prompt,
         line: s.givenContent,
         expected: expectedBlanks(s.blankPlaceholder, boxes),
@@ -67,14 +67,14 @@ export function practiceQuestions(ws: WS_3STAGE_V1): PracticeQuestion[] {
         key: `B${s.stepNumber}`,
         tag: `Guided step ${s.stepNumber}: on your own`,
         context: problem,
-        soFar: previous,
+        worked: [...worked],
         prompt: s.prompt,
         expected: [s.givenContent],
         answer: s.givenContent,
         hint: s.hint,
       });
     }
-    previous = filled;
+    worked.push({ step: s.stepNumber, prompt: s.stepNumber === 1 ? 'Set up' : s.prompt, line: filled });
   }
   const practice = [...(ws.sectionD_PracticeSet ?? [])].sort(
     (a, b) => (DIFFICULTY_ORDER[a.difficulty] ?? 1) - (DIFFICULTY_ORDER[b.difficulty] ?? 1) || a.number - b.number,
@@ -336,10 +336,20 @@ export function Player({ worksheet, sample }: { worksheet: WS_3STAGE_V1; sample:
                   <MathText text={q.context} />
                 </p>
               )}
-              {q.soFar && (
-                <p className="mt-2 break-words text-sm text-slate-500">
-                  So far: <MathText text={q.soFar} />
-                </p>
+              {q.worked && q.worked.length > 0 && (
+                <ol className="mt-3 space-y-2 border-l-2 border-slate-200 pl-4" aria-label="Steps so far">
+                  {q.worked.map((w) => (
+                    <li key={w.step} className="min-w-0">
+                      <p className="text-xs font-semibold text-slate-500">
+                        Step {w.step}: <MathText text={w.prompt} />
+                      </p>
+                      <div className="mt-0.5 overflow-x-auto text-slate-800">
+                        <WorkedLine line={w.line} />
+                      </div>
+                    </li>
+                  ))}
+                  <li className="text-xs font-semibold text-indigo-700">Step {(q.worked.at(-1)?.step ?? 0) + 1}: your turn ↓</li>
+                </ol>
               )}
 
               <p className="mt-5 break-words text-lg text-slate-900 sm:text-xl">
@@ -491,6 +501,21 @@ function Stat({ label, short, icon, children }: { label: string; short?: string;
       </p>
       <div className="mt-1">{children}</div>
     </div>
+  );
+}
+
+/** A worked line: "Group and factor out 3: y = ..." keeps its words as text and typesets the maths. */
+function WorkedLine({ line }: { line: string }) {
+  const at = line.lastIndexOf(':');
+  const label = at > 0 && /[A-Za-z]{3,}/.test(line.slice(0, at)) ? line.slice(0, at + 1) : '';
+  const maths = label ? line.slice(at + 1).trim() : line;
+  if (isWordy(maths)) return <MathText text={line} />; // "Step 1: Group and factor out 3 -> y = ..."
+  const html = renderKatex(maths);
+  return (
+    <>
+      {label && <span className="mr-1 text-sm text-slate-600">{label}</span>}
+      {html ? <span className="bb-katex text-base" dangerouslySetInnerHTML={{ __html: html }} /> : <MathText mode="math" text={maths} />}
+    </>
   );
 }
 

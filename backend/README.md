@@ -12,7 +12,7 @@ birdbrains/
   batch_engine.py            Nightly worksheet generation through the Vertex AI Batch API
   projections.py             Stored records -> grading, worksheet and parent-summary payloads
   api.py                     FastAPI routes, upload checks, access control, classes, delete-my-data
-  privacy.py                 Photo scrubbing before storage: EXIF removed, name/date/class fields found with Cloud DLP and blurred
+  privacy.py                 Photo scrubbing before storage: EXIF removed, name/date/class fields found with Gemini in Montréal (or Cloud DLP, BIRDBRAINS_PRIVACY_DETECTOR=dlp) and blurred
   store.py / storage.py      Firestore + Cloud Storage, with in-memory / local-disk twins
   auth.py                    Firebase ID-token verification (dev tokens for local use only)
   fake.py                    Deterministic stand-in for Gemini (local runs and tests)
@@ -87,6 +87,7 @@ To exercise real Gemini from your machine, keep `BIRDBRAINS_BACKEND=local`, set
 |---|---|---|
 | `BIRDBRAINS_BACKEND` | `gcp` | `gcp` (Firestore + Cloud Storage) or `local` |
 | `BIRDBRAINS_MODEL` | `gemini` | `gemini` or `fake` |
+| `BIRDBRAINS_PRIVACY_DETECTOR` | `gemini` | what finds names and dates on photos before storage: `gemini` (Montréal) or `dlp` (Cloud DLP; its image inspection is not offered in Montréal) |
 | `BIRDBRAINS_AUTH` | `firebase` | `firebase` or `dev`. `dev`/`local` are refused on Cloud Run |
 | `GOOGLE_CLOUD_PROJECT`, `BIRDBRAINS_BUCKET` | | Required with `gcp` |
 | `BIRDBRAINS_CORS_ORIGINS` | Firebase Hosting site (+ old Netlify address) + localhost:3000 | Comma-separated origins allowed to call the API |

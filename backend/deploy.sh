@@ -112,7 +112,7 @@ done
 # /health checks a Firebase sign-in token (or the batch token) itself.
 gcloud run deploy "$SERVICE" --source . --region "$REGION" --service-account "$SA" \
   --allow-unauthenticated --memory 1Gi --timeout 300 --max-instances 5 \
-  --set-env-vars "^;^GOOGLE_CLOUD_PROJECT=$PROJECT;BIRDBRAINS_BUCKET=$BUCKET;BIRDBRAINS_CORS_ORIGINS=$CORS;BIRDBRAINS_SITE_URL=$ORIGIN$EXTRA" \
+  --set-env-vars "^;^GOOGLE_CLOUD_PROJECT=$PROJECT;BIRDBRAINS_BUCKET=$BUCKET;BIRDBRAINS_CORS_ORIGINS=$CORS;BIRDBRAINS_SITE_URL=$ORIGIN;XDG_CACHE_HOME=/tmp$EXTRA" \
   --set-secrets "$SECRETS"
 URL="$(gcloud run services describe "$SERVICE" --region "$REGION" --format='value(status.url)')"
 # The API needs its own public address for the Google sign-in return link.

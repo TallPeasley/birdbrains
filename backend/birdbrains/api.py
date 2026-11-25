@@ -26,7 +26,7 @@ from .lms import LMS_PROVIDERS, LmsError, LmsProvider, normalize_instance_url
 from .upload_errors import READING_REASON_CODES, UPLOAD_ERRORS, UploadFailure, classify_pipeline_error, failure_body
 from .auth import Authenticator
 from .batch_engine import BatchEngine, FlaggedGrading, is_flagged
-from .privacy import CloudDlpDetector, PhotoScrubber
+from .privacy import PhotoScrubber, make_detector
 from .photo_prep import straighten
 from .pipeline import ImageRef, Meter, PipelineEngine, SubmissionContext, configure_tracing
 from .known_worksheets import apply_known_worksheet
@@ -173,7 +173,7 @@ def deps_from_env() -> Deps:
         auth = DevAuthenticator()
 
     header = float(os.environ.get("BIRDBRAINS_HEADER_MASK", "0"))
-    scrubber = PhotoScrubber(CloudDlpDetector(project) if backend == "gcp" else None, header_fraction=header)
+    scrubber = PhotoScrubber(make_detector(project) if backend == "gcp" else None, header_fraction=header)
 
     env = os.environ.get
     billing = classroom = None
