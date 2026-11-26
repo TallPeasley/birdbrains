@@ -2,7 +2,7 @@ import type { PillarCategory } from '@/types/birdBrains';
 import { PILLARS } from '@/lib/pillars';
 
 /**
- * A 4-pillar badge in the Aero telemetry face (JetBrains Mono): a colour swatch plus the pillar code
+ * A pillar badge in the Aero telemetry face (JetBrains Mono): a colour swatch plus the pillar code
  * (CON, PRC, FAC, TST), and optionally the short pillar name. The codes are the pipeline's own; do not rename them here.
  */
 export default function PillarBadge({

@@ -17,12 +17,27 @@ from typing import List, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from .codes import ERROR_CODE_PATTERN, LEGACY_CODES
+
 STUDENT_ID_PATTERN = r"^stu_[a-zA-Z0-9]{12}$"
 SUBMISSION_ID_PATTERN = r"^sub_[a-zA-Z0-9]{12}$"
 GRADING_ID_PATTERN = r"^grd_[a-zA-Z0-9]{12}$"
 WORKSHEET_ID_PATTERN = r"^wks_[a-zA-Z0-9]{12}$"
 TENANT_ID_PATTERN = r"^ten_[a-zA-Z0-9]{10}$"
-ERROR_CODE_PATTERN = r"^(CON|PRC|FAC|TST)-0[1-4]$"  # the 16 official codes
+# The six-pillar error codes live in error_codes.json (see codes.py). Old ids are
+# upgraded on load through LEGACY_CODES so gradings stored before 2026-11-26 load.
+
+
+def _upgrade_legacy_code(data):
+    """Before validation: swap a retired code for its new id and file it under the new
+    code's pillar. Leaves anything else alone."""
+    if isinstance(data, dict):
+        code = data.get("error_code")
+        if code in LEGACY_CODES:
+            data = {**data, "error_code": LEGACY_CODES[code]}
+            if data.get("pillar") is not None:
+                data["pillar"] = LEGACY_CODES[code][:3]
+    return data
 
 
 class Strict(BaseModel):
@@ -31,10 +46,12 @@ class Strict(BaseModel):
 
 # --------------------------------------------------------------------------- enums
 class PillarEnum(str, Enum):
-    CON = "CON"  # Conceptual Errors
-    PRC = "PRC"  # Procedural Errors
-    FAC = "FAC"  # Factual & Calculation Fluency
-    TST = "TST"  # Test-Taking & Communication Habits
+    CON = "CON"  # Concepts
+    STR = "STR"  # Strategy & Setup
+    PRC = "PRC"  # Procedure
+    FAC = "FAC"  # Calculation & Recall
+    COM = "COM"  # Communication
+    TST = "TST"  # Test Habits
 
 
 class AffectStateEnum(str, Enum):
@@ -236,6 +253,8 @@ class StepEvaluation(Strict):
     # and numbered within their own question; carry-forward never crosses questions.
     question_label: str = ""
 
+    _legacy = model_validator(mode="before")(_upgrade_legacy_code)
+
 
 class SentimentEntityExtraction(Strict):
     entity_name: str
@@ -251,6 +270,8 @@ class RootCauseErrorItem(Strict):
     target_entity: str
     is_cascading_consequence: bool
     severity: SeverityEnum = SeverityEnum.MEDIUM  # extension
+
+    _legacy = model_validator(mode="before")(_upgrade_legacy_code)
 
 
 class PillarScore(Strict):  # extension
@@ -369,7 +390,7 @@ class LedgerObservation(Strict):
     mastery_after: float = Field(..., ge=0.0, le=1.0)
     valence_after: float = Field(..., ge=-1.0, le=1.0)
     root_error_count: int = Field(..., ge=0)
-    slip_error_count: int = Field(..., ge=0)  # FAC + TST root errors
+    slip_error_count: int = Field(..., ge=0)  # FAC + COM + TST root errors
 
 
 class StudentLedger(Strict):

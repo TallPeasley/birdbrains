@@ -136,7 +136,7 @@ def run(args) -> None:
               f"{use['usedThisMonth']} of {use['monthlyLimit']} used")
         if free_grading:
             check("Free result has error codes and feedback but no mood", free_grading["plan"] == "free"
-                  and free_grading["affectState"] is None and len(free_grading["pillarBreakdowns"]) == 4)
+                  and free_grading["affectState"] is None and len(free_grading["pillarBreakdowns"]) == 6)
             ws = student.http.get(f"/gradings/{free_grading['gradingId']}/worksheet").json().get("detail", "")
             check("Free gets no nightly worksheet", ws in ("WORKSHEET_PRO_ONLY", "WORKSHEET_NOT_NEEDED"), ws)
         n = 0

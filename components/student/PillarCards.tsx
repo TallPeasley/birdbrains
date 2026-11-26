@@ -6,8 +6,8 @@ export default function PillarCards({ pillars }: { pillars: PillarBreakdown[] })
   const sorted = [...pillars].sort((a, b) => PILLAR_ORDER.indexOf(a.pillar) - PILLAR_ORDER.indexOf(b.pillar));
   return (
     <section>
-      <h2 className="eyebrow mb-3">Four-pillar breakdown</h2>
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <h2 className="eyebrow mb-3">Six-pillar breakdown</h2>
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {sorted.map((p) => {
           const pct = (p.earnedScore / p.maxScore) * 100;
           const mastered = pct === 100;

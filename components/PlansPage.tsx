@@ -40,7 +40,7 @@ const COMPARISON_ROWS: {
     pro: true,
   },
   {
-    feature: '4-pillar breakdown & 16 error codes',
+    feature: '6-pillar breakdown & 48 error codes',
     detail: 'Conceptual, Procedural, Calculation, and Communication scores with feedback.',
     free: true,
     pro: true,
@@ -123,7 +123,7 @@ export default function PlansPage() {
             Free vs. Pro
           </h1>
           <p className="mt-1 max-w-2xl text-sm text-slate-600">
-            Every account starts on Free with 4-pillar step diagnostics. Pro covers the student or every child linked to a Pro parent account.
+            Every account starts on Free with 6-pillar step diagnostics. Pro covers the student or every child linked to a Pro parent account.
           </p>
         </div>
         <Link
@@ -183,7 +183,7 @@ export default function PlansPage() {
               <PlanBadge plan="free" />
             </div>
             <p className="mt-1 text-sm text-slate-600">
-              Core 4-pillar step diagnostics and mastery tracking for students and parents.
+              Core 6-pillar step diagnostics and mastery tracking for students and parents.
             </p>
             <p className="mt-4 text-2xl font-bold text-slate-900">
               10 uploads <span className="text-sm font-normal text-slate-500">/ student / month</span>
@@ -196,7 +196,7 @@ export default function PlansPage() {
               </li>
               <li className="flex items-start gap-2">
                 <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" aria-hidden />
-                <span>4-pillar scores, 16 official error codes, and supportive feedback</span>
+                <span>6-pillar scores, 48 error codes, and supportive feedback</span>
               </li>
               <li className="flex items-start gap-2">
                 <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" aria-hidden />

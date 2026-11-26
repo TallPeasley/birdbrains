@@ -9,7 +9,7 @@ export default function manifest(): MetadataRoute.Manifest {
     id: '/',
     name: 'BirdBrains',
     short_name: 'BirdBrains',
-    description: 'Four-pillar math diagnostics for students and parents.',
+    description: 'Six-pillar math diagnostics for students and parents.',
     start_url: '/?source=pwa',
     scope: '/',
     display: 'standalone',

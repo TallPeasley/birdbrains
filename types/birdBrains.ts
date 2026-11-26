@@ -12,9 +12,9 @@ export type ScaffoldingMode =
   | 'STANDARD_PROGRESSIVE_FADE';
 export type SubmissionStatus = 'UPLOADED' | 'TRANSCRIBING' | 'GRADING' | 'GRADED' | 'NEEDS_RETAKE' | 'FAILED';
 export type EQAOLevel = 'LEVEL_1' | 'LEVEL_2' | 'LEVEL_3' | 'LEVEL_4';
-/** Four-Pillar Taxonomy from the AI pipeline spec: Conceptual, Procedural,
- *  Factual & Calculation Fluency, Test-Taking & Communication Habits. */
-export type PillarCategory = 'CON' | 'PRC' | 'FAC' | 'TST';
+/** Six-pillar taxonomy (backend/birdbrains/taxonomy.py): Concepts, Strategy & Setup,
+ *  Procedure, Calculation & Recall, Communication, Test Habits. */
+export type PillarCategory = 'CON' | 'STR' | 'PRC' | 'FAC' | 'COM' | 'TST';
 
 export interface SubmissionIngestionPayload {
   submissionId: string;

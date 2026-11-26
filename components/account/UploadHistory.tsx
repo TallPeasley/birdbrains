@@ -25,7 +25,7 @@ import { gradingOutput, worksheet as demoWorksheet } from "@/lib/mockData";
 import MakeWorksheetButton, { MAKEABLE } from "@/components/student/MakeWorksheetButton";
 import { AFFECT_META, PILLAR_ORDER, PILLARS } from "@/lib/pillars";
 import { useSession } from "@/lib/session";
-import { mistakeName, uniqueMistakes } from "@/lib/errorCodes";
+import { codePillar, mistakeName, uniqueMistakes } from "@/lib/errorCodes";
 import type {
   Stage2GradingAndAffectOutput,
   WS_3STAGE_V1,
@@ -247,7 +247,7 @@ export default function UploadHistory({ studentId }: { studentId?: string } = {}
                   type="search"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search topic or code (e.g. PRC-03)"
+                  placeholder="Search topic or mistake (e.g. rounding)"
                   className="w-full rounded-lg border border-slate-200 bg-white py-1.5 pl-9 pr-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
                 />
               </label>
@@ -414,7 +414,7 @@ function HistoryCard({
         />
       </div>
 
-      <div className="mt-3 grid grid-cols-4 gap-1.5">
+      <div className="mt-3 grid grid-cols-3 gap-1.5">
         {pillars.map((b) => {
           const w = b!.maxScore
             ? Math.round((b!.earnedScore / b!.maxScore) * 100)
@@ -425,7 +425,7 @@ function HistoryCard({
               className="rounded-lg border border-slate-100 bg-slate-50 p-1.5"
             >
               <div className="mb-1 flex items-center justify-between text-[10px] font-semibold text-slate-600">
-                <span>{b!.pillar}</span>
+                <span className="truncate">{PILLARS[b!.pillar].short}</span>
                 <span className="latex-num">
                   {b!.earnedScore}/{b!.maxScore}
                 </span>
@@ -448,7 +448,7 @@ function HistoryCard({
         {g.entityExtractions.length > 0 ? (
           uniqueMistakes(g.entityExtractions).map((e, i) => {
             const pillar =
-              PILLARS[e.misconceptionId.split("-")[0] as keyof typeof PILLARS];
+              PILLARS[codePillar(e.misconceptionId) ?? "CON"];
             return (
               <span
                 key={`${e.misconceptionId}-${i}`}

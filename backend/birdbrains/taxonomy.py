@@ -1,86 +1,77 @@
-"""Four-Pillar Taxonomy and Curriculum Registry.
+"""Six-Pillar Taxonomy and Curriculum Registry.
 
-This text is what gets placed in the 24-hour Gemini context cache. The 16 error
-codes are the official list from the Freelancer Specification and Pipeline
-Manual, section 2.1. Keep ``lib/errorCodes.ts`` in the frontend in step with
-``ERROR_CODES`` below.
+This text is what gets placed in the 24-hour Gemini context cache. The error codes
+themselves live in ``error_codes.json`` (loaded by ``codes.py``), which the site
+imports too, so the backend and the site can never drift apart. Maalik approved the
+six pillars on 2026-11-25 and readable ids with fuller detail on 2026-11-26.
 """
 from __future__ import annotations
 
+from .codes import CODES, LEGACY_CODES, ErrorCode, current_code  # noqa: F401  (re-exported)
 from .schemas import CourseEnum
 
 PILLAR_NAMES = {
-    "CON": "Conceptual Errors",
-    "PRC": "Procedural Errors",
-    "FAC": "Factual & Calculation Fluency",
-    "TST": "Test-Taking & Communication Habits",
+    "CON": "Concepts",
+    "STR": "Strategy & Setup",
+    "PRC": "Procedure",
+    "FAC": "Calculation & Recall",
+    "COM": "Communication",
+    "TST": "Test Habits",
 }
 
-# code -> (short name, what it means, remediation trigger)
-ERROR_CODES: dict[str, tuple[str, str, str]] = {
-    "CON-01": ("Foundational Misconception",
-               "Flawed mental model (e.g. adding denominators directly).",
-               "Tier 1: concrete visual or area diagram."),
-    "CON-02": ("Formula/Law Misselection",
-               "Applies a theorem or formula that is not valid for the problem's conditions.",
-               "Tier 1: boundary discrimination comparison."),
-    "CON-03": ("Representation / Variable Confusion",
-               "Mismaps word-problem constraints or a graph to the equation.",
-               "Tier 1: dimensional analysis table."),
-    "CON-04": ("Sign / Vector Direction Misconception",
-               "Misassigns a coordinate frame, direction or the meaning of a sign.",
-               "Tier 1: reference frame sketch."),
-    "PRC-01": ("Algorithmic Step Omission",
-               "Skips a mandatory step of the procedure.",
-               "Tier 2: faded worked example (80% completed)."),
-    "PRC-02": ("Order of Operations / Sequencing",
-               "Applies valid rules in an invalid order.",
-               "Tier 2: Parsons problem (reorder the steps)."),
-    "PRC-03": ("Algebraic Manipulation / Sign Failure",
-               "Drops a sign or factor while distributing, or fails to flip an inequality.",
-               "Tier 2: sign-tracking highlight checkpoints."),
-    "PRC-04": ("Incomplete Simplification",
-               "Stops before reaching the simplified or requested form.",
-               "Tier 2: completion checklist."),
-    "FAC-01": ("Basic Arithmetic / Math Fact Slip",
-               "Isolated arithmetic error with a sound procedure.",
-               "Tier 3: 5-item rapid micro-drill."),
-    "FAC-02": ("Transcription / Copy Error",
-               "Miscopies a digit or sign between consecutive lines.",
-               "Tier 3: given-data check habit."),
-    "FAC-03": ("Unit Conversion / Constant Recall",
-               "Unit conversion slip or misremembered constant or formula value.",
-               "Tier 3: dimensional conversion bridge."),
-    "FAC-04": ("Rounding / Significant Figures",
-               "Rounds too early or breaks a precision rule.",
-               "Tier 3: precision constraint rules."),
-    "TST-01": ("Prompt Constraint Misread",
-               "Answers a different target than asked (solves for x instead of 2x+5).",
-               "Tier 4: pre-submission prompt deconstruction box."),
-    "TST-02": ("Missing Units / Communication Gap",
-               "Omits final units or the required concluding statement.",
-               "Tier 4: concluding statement and unit slot."),
-    "TST-03": ("Unanswered / Time-Attrition Blank",
-               "Leaves a question blank from time pressure or a frustration block.",
-               "Prerequisite baseline probe."),
-    "TST-04": ("Distractor Trap / Illegible Work",
-               "Falls for an intermediate-value trap or misreads own handwriting.",
-               "Grid workspace; ask for a clearer retake if the page is hard to read."),
+PILLAR_SCOPES = {
+    "CON": "The student holds a wrong idea about the mathematics itself.",
+    "STR": "The ideas are sound, but the plan is wrong: the wrong method or formula, "
+           "or the question turned into the wrong equation.",
+    "PRC": "The plan is right, but carrying out the method goes wrong.",
+    "FAC": "Method and plan are sound; a number, fact, formula, unit or rounding slips.",
+    "COM": "The maths may be right, but the answer does not say what was asked, "
+           "or the work cannot be followed.",
+    "TST": "How the student handles the test: blanks, skipped parts, traps, giving up, "
+           "not checking, guessing.",
 }
+
+# Points per pillar on one question (sum 10). Deductions are for root causes only.
+PILLAR_MAX_SCORES = {"CON": 2, "STR": 2, "PRC": 2, "FAC": 2, "COM": 1, "TST": 1}
+
+# code -> (name, description, remediation). Kept for callers that index by code.
+ERROR_CODES: dict[str, tuple[str, str, str]] = {
+    c.id: (c.name, c.description, c.remediation) for c in CODES.values()
+}
+
+
+def pillar_of(code: str) -> str:
+    return current_code(code)[:3]
+
+
+def _code_text(c: ErrorCode) -> list[str]:
+    lines = [f"- {c.id} ({c.name}): {c.description}", f"  Example: {c.example}"]
+    for t in c.tell_apart:
+        lines.append(f"  Not this: {t.how} -> {t.code}." if t.code else f"  Not this: {t.how}.")
+    lines.append(f"  Remediation: {c.remediation}")
+    return lines
 
 
 def _taxonomy_text() -> str:
     lines = [
-        "# BirdBrains Four-Pillar Error Taxonomy",
+        "# Six-Pillar Error Taxonomy",
         "",
-        "Every root-cause error is assigned exactly one pillar and exactly one of the 16",
-        "error codes below. Never invent a code outside this list.",
+        f"Every root-cause error is assigned exactly one pillar and exactly one of the {len(CODES)}",
+        "error codes below. The code's first three letters ARE its pillar. Never invent a",
+        "code outside this list. When two codes seem to fit, follow the 'Not this' lines.",
+        "",
+        "To choose the pillar, ask in order: Is the student's idea of the maths wrong",
+        "(CON)? Is the idea right but the plan or setup wrong (STR)? Is the plan right but",
+        "the method carried out wrongly (PRC)? Is it a slip in a number, fact, formula,",
+        "unit or rounding (FAC)? Is the maths right but the answer not what was asked,",
+        "unjustified or unreadable (COM)? Or is it how the test was handled: blank,",
+        "skipped, trap, abandoned, unchecked, guessed (TST)?",
     ]
     for pillar, title in PILLAR_NAMES.items():
-        lines += ["", f"## {pillar}: {title}"]
-        for code, (name, meaning, trigger) in ERROR_CODES.items():
-            if code.startswith(pillar):
-                lines.append(f"- {code} {name}: {meaning} Remediation: {trigger}")
+        lines += ["", f"## {pillar}: {title}", PILLAR_SCOPES[pillar]]
+        for c in CODES.values():
+            if c.pillar == pillar:
+                lines += _code_text(c)
     lines += [
         "",
         "## Carry-forward protection",
@@ -92,7 +83,8 @@ def _taxonomy_text() -> str:
     return "\n".join(lines) + "\n"
 
 
-FOUR_PILLAR_TAXONOMY = _taxonomy_text()
+SIX_PILLAR_TAXONOMY = _taxonomy_text()
+FOUR_PILLAR_TAXONOMY = SIX_PILLAR_TAXONOMY  # old name, kept for imports
 
 # course -> strand -> units. Strand names follow the Ontario curriculum
 # (MTH1W, 2021; MPM2D, 2005 revised).
@@ -138,4 +130,4 @@ def curriculum_registry_text() -> str:
 
 
 def cached_context_text() -> str:
-    return FOUR_PILLAR_TAXONOMY + "\n" + curriculum_registry_text()
+    return SIX_PILLAR_TAXONOMY + "\n" + curriculum_registry_text()

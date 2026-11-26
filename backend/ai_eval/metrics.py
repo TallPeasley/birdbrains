@@ -5,7 +5,7 @@ import math
 from dataclasses import dataclass, field
 from typing import Optional
 
-from birdbrains.schemas import Stage2GradingAndAffectOutput
+from birdbrains.schemas import PillarEnum, Stage2GradingAndAffectOutput
 
 from .gold import GoldSample
 
@@ -77,8 +77,9 @@ def consistency_problems(stage2: Stage2GradingAndAffectOutput) -> list[str]:
             elif s.is_carry_forward_consistent and not seen_err:
                 problems.append(f"{qtag} step {s.step_number}: carry-forward set with no prior error in {qtag}")
     pillars = sorted(p.pillar.value for p in stage2.pillar_scores)
-    if pillars != ["CON", "FAC", "PRC", "TST"]:
-        problems.append(f"pillar_scores has {pillars}, expected one each of CON, FAC, PRC, TST")
+    want = sorted(p.value for p in PillarEnum)
+    if pillars != want:
+        problems.append(f"pillar_scores has {pillars}, expected one each of {', '.join(want)}")
     for p in stage2.pillar_scores:
         if p.earned_score > p.max_score:
             problems.append(f"{p.pillar.value} score {p.earned_score} is above its maximum {p.max_score}")
