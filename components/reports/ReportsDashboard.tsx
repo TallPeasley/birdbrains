@@ -51,15 +51,15 @@ const DEMO_PROGRESS: ProgressReport = {
     { date: 'Nov 14', strand: 'Quadratic Relations', scoreFraction: 0.88, masteryAfter: 0.82, rootErrors: 1, valence: 0.6 },
   ],
   errorCodes: [
-    { code: 'PRC-03', name: 'Outer coefficient missed on bracket exit', pillar: 'PRC', count: 3, students: 1, lastSeen: '2026-11-14' },
-    { code: 'FAC-01', name: 'Signed arithmetic slip', pillar: 'FAC', count: 2, students: 1, lastSeen: '2026-11-02' },
-    { code: 'TST-02', name: 'Missing final coordinate / unit statement', pillar: 'TST', count: 1, students: 1, lastSeen: '2026-11-09' },
+    { code: 'PRC_SIGN_OR_FACTOR_DROPPED', name: 'Outer coefficient missed on bracket exit', pillar: 'PRC', count: 3, students: 1, lastSeen: '2026-11-14' },
+    { code: 'FAC_ARITHMETIC_SLIP', name: 'Signed arithmetic slip', pillar: 'FAC', count: 2, students: 1, lastSeen: '2026-11-02' },
+    { code: 'COM_MISSING_UNITS', name: 'Missing final coordinate / unit statement', pillar: 'COM', count: 1, students: 1, lastSeen: '2026-11-09' },
   ],
-  recurringCodes: ['PRC-03', 'FAC-01'],
+  recurringCodes: ['PRC_SIGN_OR_FACTOR_DROPPED', 'FAC_ARITHMETIC_SLIP'],
   pillarErrorDistribution: [
     { pillar: 'PRC', percentageOfTotalErrors: 50 },
     { pillar: 'FAC', percentageOfTotalErrors: 33 },
-    { pillar: 'TST', percentageOfTotalErrors: 17 },
+    { pillar: 'COM', percentageOfTotalErrors: 17 },
   ],
 };
 
@@ -73,8 +73,8 @@ const DEMO_COHORT: CohortReport = {
       uploads: 4,
       lastUploadAt: '2026-11-14T16:10:00Z',
       averageMastery: 0.44,
-      topCode: 'CON-02',
-      recurringCodes: ['CON-02', 'PRC-03'],
+      topCode: 'CON_SIGN_DIRECTION_MEANING',
+      recurringCodes: ['CON_SIGN_DIRECTION_MEANING', 'PRC_SIGN_OR_FACTOR_DROPPED'],
       needsAttention: true,
     },
     {
@@ -83,8 +83,8 @@ const DEMO_COHORT: CohortReport = {
       uploads: 5,
       lastUploadAt: '2026-11-14T19:05:00Z',
       averageMastery: 0.78,
-      topCode: 'PRC-03',
-      recurringCodes: ['PRC-03'],
+      topCode: 'PRC_SIGN_OR_FACTOR_DROPPED',
+      recurringCodes: ['PRC_SIGN_OR_FACTOR_DROPPED'],
       needsAttention: true,
     },
     {
@@ -104,9 +104,9 @@ const DEMO_COHORT: CohortReport = {
     { strandName: 'Trigonometry', mastery: 0.65 },
   ],
   errorCodes: [
-    { code: 'PRC-03', name: 'Outer coefficient missed on bracket exit', pillar: 'PRC', count: 7, students: 4, lastSeen: '2026-11-14' },
-    { code: 'CON-02', name: 'Vertex sign inversion', pillar: 'CON', count: 5, students: 3, lastSeen: '2026-11-14' },
-    { code: 'FAC-01', name: 'Signed arithmetic slip', pillar: 'FAC', count: 4, students: 3, lastSeen: '2026-11-12' },
+    { code: 'PRC_SIGN_OR_FACTOR_DROPPED', name: 'Outer coefficient missed on bracket exit', pillar: 'PRC', count: 7, students: 4, lastSeen: '2026-11-14' },
+    { code: 'CON_SIGN_DIRECTION_MEANING', name: 'Vertex sign inversion', pillar: 'CON', count: 5, students: 3, lastSeen: '2026-11-14' },
+    { code: 'FAC_ARITHMETIC_SLIP', name: 'Signed arithmetic slip', pillar: 'FAC', count: 4, students: 3, lastSeen: '2026-11-12' },
   ],
   pillarErrorDistribution: [
     { pillar: 'PRC', percentageOfTotalErrors: 44 },

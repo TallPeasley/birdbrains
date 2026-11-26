@@ -260,8 +260,8 @@ function renderLatexNodes(rawInput: string, strictMath: boolean, keyPrefix = 'm'
       continue;
     }
 
-    // 3. Protected curriculum / taxonomy codes (e.g. CON-01, PRC-03, MTH1W, MPM2D, LEVEL_3, tp_quad_99)
-    const codeMatch = rest.match(/^((?:CON|PRC|FAC|TST)-0[1-4]|MTH1W|MPM2D|EQAO|tp_[A-Za-z0-9_]+|grd_[A-Za-z0-9_]+|sub_[A-Za-z0-9_]+|stu_[A-Za-z0-9_]+|wks_[A-Za-z0-9_]+)\b/);
+    // 3. Protected curriculum / taxonomy codes (e.g. PRC_STEP_OMITTED, CON-01, MTH1W, MPM2D, LEVEL_3, tp_quad_99)
+    const codeMatch = rest.match(/^((?:CON|STR|PRC|FAC|COM|TST)(?:-0[1-9]|_[A-Z][A-Z_]*)|MTH1W|MPM2D|EQAO|tp_[A-Za-z0-9_]+|grd_[A-Za-z0-9_]+|sub_[A-Za-z0-9_]+|stu_[A-Za-z0-9_]+|wks_[A-Za-z0-9_]+)\b/);
     if (codeMatch) {
       const token = codeMatch[1];
       // Render digits within the code in .latex-num while keeping letters intact

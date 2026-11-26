@@ -17,7 +17,8 @@ import {
 } from 'lucide-react';
 import { useRole } from '@/lib/roleContext';
 import { analyzeImage, MIN_SHORT_EDGE, type ImageQualityResult } from '@/lib/imageQuality';
-import { mistakeName, uniqueMistakes } from '@/lib/errorCodes';
+import { codePillar, mistakeName, uniqueMistakes } from '@/lib/errorCodes';
+import { QuirksEarned } from '@/components/student/Quirks';
 import { PILLARS } from '@/lib/pillars';
 import { demoPersonas, gradingOutput as demoGrading } from '@/lib/mockData';
 import { api, ApiError } from '@/lib/api';
@@ -918,15 +919,17 @@ function PipelineView({
             Your work has been checked. See which steps went well and where you got stuck on the student dashboard.
           </div>
 
+          {grading && <QuirksEarned quirks={grading.quirks} compact />}
+
           {grading && grading.entityExtractions.length > 0 && (
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
               <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Mistakes spotted
+                Antiquirks to fix
               </p>
               <ul className="mt-2 space-y-2">
                 {uniqueMistakes(grading.entityExtractions).map((m, idx) => {
-                  const prefix = m.misconceptionId.split('-')[0] as keyof typeof PILLARS;
-                  const pillar = PILLARS[prefix];
+                  const prefix = codePillar(m.misconceptionId);
+                  const pillar = prefix ? PILLARS[prefix] : undefined;
                   return (
                     <li key={`${m.misconceptionId}-${idx}`} className="flex flex-wrap items-center gap-2 text-xs">
                       <span className="h-2 w-2 rounded-full" style={{ backgroundColor: pillar?.color ?? '#64748b' }} aria-hidden />

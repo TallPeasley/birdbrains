@@ -11,15 +11,22 @@
     "pillarBreakdowns": [
       {
         "pillar": "CON",
-        "maxScore": 6.0,
-        "earnedScore": 6.0,
+        "maxScore": 4.0,
+        "earnedScore": 4.0,
         "errorCount": 0,
         "feedback": "Flawless grasp of vertex form conversion logic and maintaining equation equivalence."
       },
       {
+        "pillar": "STR",
+        "maxScore": 4.0,
+        "earnedScore": 4.0,
+        "errorCount": 0,
+        "feedback": "You picked a method that fits the question."
+      },
+      {
         "pillar": "PRC",
-        "maxScore": 6.0,
-        "earnedScore": 4.5,
+        "maxScore": 4.0,
+        "earnedScore": 2.5,
         "errorCount": 1,
         "feedback": "Forgot to distribute the leading coefficient when extracting the constant in Step 4."
       },
@@ -31,15 +38,24 @@
         "feedback": "Arithmetic and number facts were accurate throughout; (6/2)^2 = 9 recalled correctly."
       },
       {
-        "pillar": "TST",
-        "maxScore": 4.0,
-        "earnedScore": 3.5,
+        "pillar": "COM",
+        "maxScore": 2.0,
+        "earnedScore": 1.5,
         "errorCount": 0,
         "feedback": "Final vertex form stated clearly, though the vertex was not written as a point and step reasoning could be labeled."
+      },
+      {
+        "pillar": "TST",
+        "maxScore": 2.0,
+        "earnedScore": 2.0,
+        "errorCount": 0,
+        "feedback": "You worked every part through to an answer."
       }
     ],
+    "quirks": [{"quirkId": "QK_CON_RULE_APPLIED", "pillar": "CON", "stepNumber": 3, "evidence": "You completed the square inside the bracket with (6/2)^2 = 9.", "questionLabel": "1"}, {"quirkId": "QK_FAC_FORMULA_RECALLED", "pillar": "FAC", "stepNumber": 1, "evidence": "You wrote the distance formula from memory, exactly right.", "questionLabel": "2"}, {"quirkId": "QK_PRC_FULLY_SIMPLIFIED", "pillar": "PRC", "stepNumber": 2, "evidence": "You left the length as an exact root, \\sqrt{20}.", "questionLabel": "2"}],
     "questionAnalyses": [
       {
+        "quirks": [{"quirkId": "QK_CON_RULE_APPLIED", "pillar": "CON", "stepNumber": 3, "evidence": "You completed the square inside the bracket with (6/2)^2 = 9."}],
         "questionNumber": "1",
         "problemStatement": "Convert y = 2x^2 + 12x + 5 to vertex form and state the vertex.",
         "totalScore": 8.0,
@@ -189,7 +205,7 @@
         ],
         "entityExtractions": [
           {
-            "misconceptionId": "PRC-03",
+            "misconceptionId": "PRC_SIGN_OR_FACTOR_DROPPED",
             "description": "Failure to distribute leading coefficient to subtracted square term when extracting from bracket.",
             "severity": "HIGH"
           }
@@ -197,15 +213,22 @@
         "pillarBreakdowns": [
           {
             "pillar": "CON",
-            "maxScore": 3.0,
-            "earnedScore": 3.0,
+            "maxScore": 2.0,
+            "earnedScore": 2.0,
             "errorCount": 0,
             "feedback": "Flawless grasp of vertex form conversion logic and maintaining equation equivalence."
           },
           {
+            "pillar": "STR",
+            "maxScore": 2.0,
+            "earnedScore": 2.0,
+            "errorCount": 0,
+            "feedback": "You picked a method that fits the question."
+          },
+          {
             "pillar": "PRC",
-            "maxScore": 3.0,
-            "earnedScore": 1.5,
+            "maxScore": 2.0,
+            "earnedScore": 0.5,
             "errorCount": 1,
             "feedback": "Forgot to distribute the leading coefficient when extracting the constant in Step 4."
           },
@@ -217,16 +240,24 @@
             "feedback": "Arithmetic and number facts were accurate throughout; (6/2)^2 = 9 recalled correctly."
           },
           {
-            "pillar": "TST",
-            "maxScore": 2.0,
-            "earnedScore": 1.5,
+            "pillar": "COM",
+            "maxScore": 1.0,
+            "earnedScore": 0.5,
             "errorCount": 0,
             "feedback": "Final vertex form stated clearly, though the vertex was not written as a point and step reasoning could be labeled."
+          },
+          {
+            "pillar": "TST",
+            "maxScore": 1.0,
+            "earnedScore": 1.0,
+            "errorCount": 0,
+            "feedback": "You worked every part through to an answer."
           }
         ],
         "supportiveFramingMessage": "Great persistence! You executed the core algebraic steps correctly. A minor procedural slip on step 4 created downstream errors, but your conceptual understanding of quadratic structures shines through."
       },
       {
+        "quirks": [{"quirkId": "QK_FAC_FORMULA_RECALLED", "pillar": "FAC", "stepNumber": 1, "evidence": "You wrote the distance formula from memory, exactly right."}, {"quirkId": "QK_PRC_FULLY_SIMPLIFIED", "pillar": "PRC", "stepNumber": 2, "evidence": "You left the length as an exact root, \\sqrt{20}."}],
         "questionNumber": "2",
         "problemStatement": "Find the length of the segment from A(1, 2) to B(5, 4). Leave your answer as a square root.",
         "totalScore": 10.0,
@@ -302,15 +333,22 @@
         "pillarBreakdowns": [
           {
             "pillar": "CON",
-            "maxScore": 3.0,
-            "earnedScore": 3.0,
+            "maxScore": 2.0,
+            "earnedScore": 2.0,
             "errorCount": 0,
             "feedback": "Clean work here."
           },
           {
+            "pillar": "STR",
+            "maxScore": 2.0,
+            "earnedScore": 2.0,
+            "errorCount": 0,
+            "feedback": "You picked a method that fits the question."
+          },
+          {
             "pillar": "PRC",
-            "maxScore": 3.0,
-            "earnedScore": 3.0,
+            "maxScore": 2.0,
+            "earnedScore": 2.0,
             "errorCount": 0,
             "feedback": "Clean work here."
           },
@@ -322,11 +360,18 @@
             "feedback": "Clean work here."
           },
           {
-            "pillar": "TST",
-            "maxScore": 2.0,
-            "earnedScore": 2.0,
+            "pillar": "COM",
+            "maxScore": 1.0,
+            "earnedScore": 1.0,
             "errorCount": 0,
             "feedback": "Clean work here."
+          },
+          {
+            "pillar": "TST",
+            "maxScore": 1.0,
+            "earnedScore": 1.0,
+            "errorCount": 0,
+            "feedback": "You worked every part through to an answer."
           }
         ],
         "supportiveFramingMessage": "The distance formula was set up and simplified cleanly."
@@ -401,7 +446,7 @@
     ],
     "entityExtractions": [
       {
-        "misconceptionId": "PRC-03",
+        "misconceptionId": "PRC_SIGN_OR_FACTOR_DROPPED",
         "description": "Failure to distribute leading coefficient to subtracted square term when extracting from bracket.",
         "severity": "HIGH"
       }
@@ -628,8 +673,8 @@
         "percentageOfTotalErrors": 55
       },
       {
-        "pillar": "TST",
-        "percentageOfTotalErrors": 25
+        "pillar": "COM",
+        "percentageOfTotalErrors": 20
       },
       {
         "pillar": "FAC",
@@ -638,6 +683,14 @@
       {
         "pillar": "CON",
         "percentageOfTotalErrors": 8
+      },
+      {
+        "pillar": "STR",
+        "percentageOfTotalErrors": 3
+      },
+      {
+        "pillar": "TST",
+        "percentageOfTotalErrors": 2
       }
     ],
     "cognitiveFrictionAlerts": [

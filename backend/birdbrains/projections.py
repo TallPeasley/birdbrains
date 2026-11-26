@@ -7,6 +7,8 @@ from datetime import datetime
 from typing import Optional
 
 from .questions import strip_label, written_label
+from .codes import CODES, LEGACY_CODES
+from .quirks import QUIRKS
 from .schemas import (
     AffectStateEnum,
     ApiGrading,
@@ -35,29 +37,15 @@ MAX_ALERTS = 5
 
 # Student-facing text never shows the internal error codes (PRC-03 ...): the model is
 # told not to write them, and any that slip through are swapped for the plain name.
-PLAIN_MISTAKE_NAMES = {
-    "CON-01": "mixed-up math rule",
-    "CON-02": "wrong formula for this question",
-    "CON-03": "values put in the wrong places",
-    "CON-04": "sign or direction set up backwards",
-    "PRC-01": "skipped step",
-    "PRC-02": "steps done out of order",
-    "PRC-03": "sign or term lost while rearranging",
-    "PRC-04": "answer not fully simplified",
-    "FAC-01": "calculation slip",
-    "FAC-02": "number copied wrong",
-    "FAC-03": "unit or constant slip",
-    "FAC-04": "rounding slip",
-    "TST-01": "answered a different question",
-    "TST-02": "missing units or final sentence",
-    "TST-03": "left blank or unfinished",
-    "TST-04": "stopped at a middle step",
-}
-_BRACKETED_CODE = re.compile(r"\s*[(\[]\s*(?:CON|PRC|FAC|TST)-0[1-4]\s*[)\]]")
-_CODE = re.compile(r"\b(?:CON|PRC|FAC|TST)-0[1-4]\b")
+PLAIN_MISTAKE_NAMES = {c.id: c.plain_name.lower() for c in CODES.values()}
+PLAIN_MISTAKE_NAMES.update({old: PLAIN_MISTAKE_NAMES[new] for old, new in LEGACY_CODES.items()})
+# Any current id, any old id, and any leftover dash-style id the model might invent.
+_ANY_CODE = "(?:" + "|".join(sorted(PLAIN_MISTAKE_NAMES, key=len, reverse=True)) + r"|(?:CON|STR|PRC|FAC|COM|TST)-0[1-9])"
+_BRACKETED_CODE = re.compile(r"\s*[(\[]\s*" + _ANY_CODE + r"\s*[)\]]")
+_CODE = re.compile(r"\b" + _ANY_CODE + r"\b")
 _PROSE_KEYS = {"explanation", "description", "note", "discrepancyNote", "resubstitutionCheck", "feedback",
                "supportiveFramingMessage", "answerVerification", "keyStepDescription",
-               "actionableParentInsight"}
+               "actionableParentInsight", "evidence"}
 
 
 def plain(text: Optional[str]) -> Optional[str]:
@@ -66,7 +54,7 @@ def plain(text: Optional[str]) -> Optional[str]:
     if not text:
         return text
     text = _BRACKETED_CODE.sub("", text)
-    return _CODE.sub(lambda m: PLAIN_MISTAKE_NAMES[m.group(0)], text)
+    return _CODE.sub(lambda m: PLAIN_MISTAKE_NAMES.get(m.group(0), "mistake"), text)
 
 
 def _plain_prose(value):
@@ -131,6 +119,25 @@ def page_questions(stage2: Stage2GradingAndAffectOutput) -> list[dict]:
         return [dict(label=q.question_number if multi else "", text=q.problem_statement)
                 for q in stage2.question_analyses if multi or q.problem_statement]
     return [dict(label=q.label, text=q.printed_text) for q in stage2.questions]
+
+
+def question_quirks(q: QuestionGradingOutput, label: str = "") -> list[dict]:
+    """The quirks one question earned (unknown ids dropped)."""
+    return [
+        dict(quirkId=e.quirk_id, pillar=QUIRKS[e.quirk_id].pillar, questionLabel=label,
+             stepNumber=e.step_number, evidence=e.evidence)
+        for e in q.earned_quirks if e.quirk_id in QUIRKS
+    ]
+
+
+def grading_quirks(stage2: Stage2GradingAndAffectOutput) -> list[dict]:
+    """Quirks earned on one upload, one entry per kind (the first question that earned it)."""
+    multi = len(stage2.question_analyses) > 1
+    out: dict[str, dict] = {}
+    for q in stage2.question_analyses:
+        for item in question_quirks(q, q.question_number if multi else ""):
+            out.setdefault(item["quirkId"], item)
+    return list(out.values())
 
 
 def _to_api_question_diagnostic(q: QuestionGradingOutput) -> ApiQuestionDiagnostic:
@@ -200,6 +207,7 @@ def _to_api_question_diagnostic(q: QuestionGradingOutput) -> ApiQuestionDiagnost
             for p in q.pillar_scores
         ],
         supportiveFramingMessage=q.supportive_framing_message,
+        quirks=question_quirks(q),
     )
 
 
@@ -229,6 +237,7 @@ def to_api_grading(record: dict) -> ApiGrading:
         entityExtractions=[
             dict(misconceptionId=e.error_code, description=e.description, severity=e.severity) for e in roots
         ],
+        quirks=grading_quirks(stage2),
         scaffoldingMode=record["scaffoldingMode"] if pro else None,
         gradedAt=record["gradedAt"],
         plan="pro" if pro else "free",

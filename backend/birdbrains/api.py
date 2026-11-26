@@ -32,9 +32,12 @@ from .pipeline import ImageRef, Meter, PipelineEngine, SubmissionContext, config
 from .known_worksheets import apply_known_worksheet
 from .questions import segment_questions, split_by_question
 from .projections import parent_summary, to_api_grading, to_api_worksheet
+from .quirks import collection as quirk_collection_counts, grading_quirk_ids
 from .schemas import (
+    LEGACY_CODES,
     STUDENT_ID_PATTERN,
     ApiGrading,
+    ApiQuirkCount,
     ApiClass,
     ApiClassroomImport,
     ApiClassroomStudentWork,
@@ -1062,6 +1065,17 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         require_student_access(user, student_id)
         return [to_api_grading(g) for g in student_gradings(student_id)[:50]]
 
+    @app.get("/students/{student_id}/quirks", response_model=list[ApiQuirkCount])
+    def quirk_collection(student_id: str, user: User):
+        """The student's quirk collection: every quirk, with how many uploads earned it
+        and when it was first earned (null when not yet). Counted from every grading."""
+        require_student_access(user, student_id)
+        pairs = []
+        for g in student_gradings(student_id):
+            stage2 = Stage2GradingAndAffectOutput.model_validate(g["stage2"])
+            pairs.append((g["gradedAt"], grading_quirk_ids(stage2.question_analyses)))
+        return quirk_collection_counts(pairs)
+
     @app.get("/students/{student_id}/gradings/latest", response_model=ApiGrading)
     def latest_grading(student_id: str, user: User):
         require_student_access(user, student_id)
@@ -2005,7 +2019,8 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         seconds: list[float] = []
         clean = 0
         for g in grads:
-            roots = [e["error_code"] for e in g["stage2"]["identified_errors"] if not e["is_cascading_consequence"]]
+            roots = [LEGACY_CODES.get(e["error_code"], e["error_code"])
+                     for e in g["stage2"]["identified_errors"] if not e["is_cascading_consequence"]]
             codes.update(roots)
             clean += not roots
             cost[g.get("plan", "free")] += (g.get("cost") or {}).get("usd", 0.0)

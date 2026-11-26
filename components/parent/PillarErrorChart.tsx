@@ -71,7 +71,11 @@ export default function PillarErrorChart({ data }: { data: ParentProjectionSumma
           Most mistakes are <strong className="text-slate-900">{PILLARS[top.pillar].short.toLowerCase()}</strong>
           {top.pillar === 'PRC' || top.pillar === 'FAC'
             ? ': slips in carrying out steps, not gaps in understanding. Slowing down and checking each line helps most.'
-            : '.'}
+            : top.pillar === 'STR'
+              ? ': the ideas are there, but the plan or setup goes wrong. Naming the method before starting helps most.'
+              : top.pillar === 'COM' || top.pillar === 'TST'
+                ? ': the maths is often right, but the answer is incomplete or unchecked. A final read of the question helps most.'
+                : '.'}
         </p>
       )}
     </section>

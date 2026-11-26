@@ -21,6 +21,7 @@ import type {
 import { PILLARS } from '@/lib/pillars';
 import { mistakeName } from '@/lib/errorCodes';
 import { errorCodeHelp, errorCodePillar } from '@/components/student/errorCodeHelp';
+import { QuirksEarned } from '@/components/student/Quirks';
 import { MathNumber, MathText } from '@/components/MathText';
 
 const KEY_STEP_BADGE: Record<
@@ -263,10 +264,14 @@ function QuestionCard({
         </div>
       )}
 
-      {/* The mistakes first, once each; the steps below show where they happened. */}
+      {/* Quirks (what went well) on pages with several questions; a single question's
+          quirks are shown once at the top of the dashboard. */}
+      {multi && <QuirksEarned quirks={q.quirks} heading={`Quirks earned in Question ${q.questionNumber}`} />}
+
+      {/* The antiquirks (mistakes) first, once each; the steps below show where they happened. */}
       <MisconceptionList
         items={q.entityExtractions}
-        heading={multi ? `What tripped you up in Question ${q.questionNumber}` : 'What tripped you up'}
+        heading={multi ? `Antiquirks to fix in Question ${q.questionNumber}` : 'Antiquirks to fix'}
       />
 
       {/* Final-answer re-substitution verification */}
@@ -555,8 +560,8 @@ const SEVERITY: Record<string, { label: string; cls: string }> = {
 };
 
 /**
- * The mistakes, in plain words, once each: the same kind of mistake twice shows as one
- * card with both details. No internal codes (PRC-03 ...) are shown.
+ * The mistakes ("antiquirks"), in plain words, once each: the same kind of mistake twice shows as one
+ * card with both details. No internal codes (PRC_SIGN_OR_FACTOR_DROPPED ...) are shown.
  */
 function MisconceptionList({
   items,
@@ -670,7 +675,7 @@ function LegacyStepDiagnostics({ grading }: { grading: Stage2GradingAndAffectOut
           </div>
         ))}
       </div>
-      <MisconceptionList items={grading.entityExtractions} heading="What tripped you up" />
+      <MisconceptionList items={grading.entityExtractions} heading="Antiquirks to fix" />
     </section>
   );
 }

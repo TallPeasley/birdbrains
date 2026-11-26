@@ -1,0 +1,222 @@
+{
+  "version": 1,
+  "about": "Quirks: strengths the grader can award, 4 per pillar. Mistakes (error_codes.json) are shown to people as antiquirks. Ids are internal; people see plain_name, earned_line and how_to_earn. `opposes` lists the antiquirk codes that cancel the quirk on the same question.",
+  "quirks": [
+    {
+      "id": "QK_CON_RULE_APPLIED",
+      "pillar": "CON",
+      "plain_name": "Used the right rule",
+      "earned_line": "You used a maths rule correctly in a spot where it is easy to slip.",
+      "how_to_earn": "Use a rule like the power laws or the distributive property correctly where it matters.",
+      "description": "The student correctly applied a key rule that the question hinges on (exponent laws, distributing over a bracket, combining like terms, a trig ratio, the zero-product property) at a point where students commonly slip.",
+      "opposes": ["CON_FOUNDATIONAL_MISCONCEPTION", "CON_OVERGENERALISED_RULE", "CON_EXPONENT_LAW", "CON_LIKE_TERMS"]
+    },
+    {
+      "id": "QK_CON_BALANCED",
+      "pillar": "CON",
+      "plain_name": "Kept both sides balanced",
+      "earned_line": "Every time you changed one side of the equation, you changed the other side the same way.",
+      "how_to_earn": "Solve an equation in several steps, doing the same thing to both sides every time.",
+      "description": "Across a multi-step equation solution (at least two rearranging steps), every operation was applied to both sides of the equation.",
+      "opposes": ["CON_EQUATION_BALANCE"]
+    },
+    {
+      "id": "QK_CON_EXPLAINED_WHY",
+      "pillar": "CON",
+      "plain_name": "Explained why it works",
+      "earned_line": "You wrote down why a step works, not just what you did.",
+      "how_to_earn": "Add a short reason beside a step, like \"opposite angles are equal\" or \"the slopes are equal so the lines are parallel\".",
+      "description": "The student wrote a correct reason, property or justification in words or symbols (e.g. naming the theorem, the angle property, why lines are parallel), showing understanding beyond the procedure.",
+      "opposes": ["CON_FOUNDATIONAL_MISCONCEPTION", "CON_SIGN_DIRECTION_MEANING", "CON_GRAPH_FEATURE_MEANING"]
+    },
+    {
+      "id": "QK_CON_RESTRICTION_NOTED",
+      "pillar": "CON",
+      "plain_name": "Spotted a restriction",
+      "earned_line": "You noticed a value that is not allowed and dealt with it.",
+      "how_to_earn": "Reject an answer that does not make sense, like a negative length, or note a value the variable cannot be.",
+      "description": "The student explicitly noticed and handled a restriction: rejected an extraneous or impossible root (negative length, negative time), stated a domain restriction, or noted a value that makes a denominator zero.",
+      "opposes": ["CON_DOMAIN_RESTRICTION"]
+    },
+    {
+      "id": "QK_STR_CLEAR_SETUP",
+      "pillar": "STR",
+      "plain_name": "Clear setup",
+      "earned_line": "You turned the question into the right equation and said what your letters stand for.",
+      "how_to_earn": "Start a word problem with \"Let x be ...\" and write the right equation from the words.",
+      "description": "The student set the problem up correctly from words or context and made the setup readable: defined variables (\"let x be ...\") or clearly listed the givens, and the first equation or formula is correct.",
+      "opposes": ["STR_SETUP_FROM_WORDS", "STR_WRONG_SUBSTITUTION", "STR_FORMULA_MISSELECTION", "STR_NO_VIABLE_PLAN"]
+    },
+    {
+      "id": "QK_STR_SMART_METHOD",
+      "pillar": "STR",
+      "plain_name": "Smart method",
+      "earned_line": "You picked a method that made the question quicker and cleaner.",
+      "how_to_earn": "Choose the method that fits, like elimination when the numbers line up, or factoring when the quadratic factors nicely.",
+      "description": "The student chose a notably efficient and suitable method for this question (e.g. elimination when coefficients already match, factoring instead of the formula when it factors, a shortcut property) and it worked. Do not award it for the only reasonable method.",
+      "opposes": ["STR_UNSUITABLE_METHOD", "STR_NO_VIABLE_PLAN", "STR_FORMULA_MISSELECTION"]
+    },
+    {
+      "id": "QK_STR_USED_DIAGRAM",
+      "pillar": "STR",
+      "plain_name": "Drew a diagram",
+      "earned_line": "You drew or labelled a diagram to plan your answer.",
+      "how_to_earn": "Sketch the triangle, graph or situation and label what you know before you start.",
+      "description": "The student drew, or correctly labelled, a diagram or sketch of their own (triangle with sides marked, a quick graph, a number line) that supports the solution. The transcription or affect markers must show it.",
+      "opposes": ["STR_DIAGRAM_MISREAD", "COM_MISSING_LABELS"]
+    },
+    {
+      "id": "QK_STR_ALL_CASES",
+      "pillar": "STR",
+      "plain_name": "Found every case",
+      "earned_line": "You found every answer, not just the first one.",
+      "how_to_earn": "When there can be more than one answer, like the two roots of a quadratic or a plus-or-minus square root, find them all.",
+      "description": "The question has more than one case or solution (two roots, plus-or-minus square root, two possible triangles, both intersection points) and the student found all of them.",
+      "opposes": ["STR_MISSING_CASE", "STR_IGNORED_CONDITION"]
+    },
+    {
+      "id": "QK_PRC_EVERY_STEP_SHOWN",
+      "pillar": "PRC",
+      "plain_name": "Showed every step",
+      "earned_line": "Each line of your work follows clearly from the one before.",
+      "how_to_earn": "Write one change per line so anyone can follow how you got from the question to the answer.",
+      "description": "Every key step in the answer key is PRESENT or EQUIVALENT_METHOD in key_step_checks, with no jumps, and the work is long enough (at least three lines) for this to matter.",
+      "opposes": ["PRC_STEP_OMITTED", "COM_UNSUPPORTED_ANSWER"]
+    },
+    {
+      "id": "QK_PRC_SIGNS_CARRIED",
+      "pillar": "PRC",
+      "plain_name": "Kept every sign",
+      "earned_line": "You kept every negative sign and term through a long rearrangement.",
+      "how_to_earn": "Rearrange an equation with negatives in it without losing a sign or a term.",
+      "description": "The student rearranged or expanded an expression containing negative terms over several lines without dropping a sign, term or factor.",
+      "opposes": ["PRC_SIGN_OR_FACTOR_DROPPED", "PRC_INVERSE_OPERATION", "PRC_INEQUALITY_DIRECTION", "FAC_SIGNED_NUMBER"]
+    },
+    {
+      "id": "QK_PRC_CLEAN_FACTORING",
+      "pillar": "PRC",
+      "plain_name": "Factored cleanly",
+      "earned_line": "You factored correctly the first time.",
+      "how_to_earn": "Factor a trinomial, a difference of squares or a common factor correctly.",
+      "description": "The student factored an expression correctly (common factor, trinomial, difference of squares, grouping) where factoring was part of the method.",
+      "opposes": ["PRC_FACTORING_ERROR"]
+    },
+    {
+      "id": "QK_PRC_FULLY_SIMPLIFIED",
+      "pillar": "PRC",
+      "plain_name": "Fully simplified",
+      "earned_line": "You simplified your answer all the way down.",
+      "how_to_earn": "Finish by collecting like terms and reducing fractions and roots as far as they go.",
+      "description": "The final answer is in fully simplified form where simplifying took real work (reduced fraction, simplified radical, collected like terms, combined systems cleanly).",
+      "opposes": ["PRC_INCOMPLETE_SIMPLIFICATION", "PRC_SYSTEM_COMBINING", "COM_WRONG_FORM"]
+    },
+    {
+      "id": "QK_FAC_ACCURATE_ARITHMETIC",
+      "pillar": "FAC",
+      "plain_name": "Accurate arithmetic",
+      "earned_line": "All your calculations were right, even the long ones.",
+      "how_to_earn": "Get through a question with several calculations and no arithmetic slips.",
+      "description": "The question involved substantial arithmetic (several multiplications, divisions or multi-digit operations) and every calculation was correct.",
+      "opposes": ["FAC_ARITHMETIC_SLIP", "FAC_COPY_ERROR", "FAC_CALCULATOR_ENTRY", "PRC_ORDER_OF_OPERATIONS"]
+    },
+    {
+      "id": "QK_FAC_NEGATIVES_HANDLED",
+      "pillar": "FAC",
+      "plain_name": "Handled negatives",
+      "earned_line": "You worked with negative numbers without a slip.",
+      "how_to_earn": "Multiply, divide or subtract negative numbers correctly.",
+      "description": "The student computed correctly with negative numbers in places where sign slips are common (subtracting a negative, squaring a negative, multiplying two negatives).",
+      "opposes": ["FAC_SIGNED_NUMBER", "CON_SIGN_DIRECTION_MEANING"]
+    },
+    {
+      "id": "QK_FAC_RIGHT_ROUNDING",
+      "pillar": "FAC",
+      "plain_name": "Rounded correctly",
+      "earned_line": "You kept full accuracy until the end and rounded the way the question asked.",
+      "how_to_earn": "Keep the full number on your calculator until the last step, then round as the question says.",
+      "description": "The answer required rounding or a decimal approximation and the student kept accuracy through the work and rounded correctly at the end.",
+      "opposes": ["FAC_ROUNDING", "FAC_CALCULATOR_ENTRY"]
+    },
+    {
+      "id": "QK_FAC_FORMULA_RECALLED",
+      "pillar": "FAC",
+      "plain_name": "Remembered the formula",
+      "earned_line": "You wrote a formula from memory and got it exactly right.",
+      "how_to_earn": "Write a formula like the quadratic formula, distance formula or a trig ratio correctly from memory.",
+      "description": "The student wrote out a formula that the question did not give (quadratic formula, distance or midpoint formula, slope, Pythagorean theorem, a trig ratio, sine or cosine law) and it is exactly right.",
+      "opposes": ["FAC_FORMULA_RECALL", "FAC_FACT_RECALL"]
+    },
+    {
+      "id": "QK_COM_UNITS_INCLUDED",
+      "pillar": "COM",
+      "plain_name": "Included units",
+      "earned_line": "Your final answer has the right units.",
+      "how_to_earn": "Put units like cm, m² or degrees on answers that need them.",
+      "description": "The answer needed units (lengths, areas, angles, money, time) and the student wrote the correct units on the final answer.",
+      "opposes": ["COM_MISSING_UNITS", "FAC_UNIT_CONVERSION"]
+    },
+    {
+      "id": "QK_COM_CONCLUSION_WRITTEN",
+      "pillar": "COM",
+      "plain_name": "Wrote a final sentence",
+      "earned_line": "You finished with a sentence that answers the question.",
+      "how_to_earn": "End a word problem with a sentence like \"The ladder reaches 4.2 m up the wall.\"",
+      "description": "The question was a word or context problem and the student ended with a clear concluding statement that answers what was asked, in context.",
+      "opposes": ["COM_MISSING_CONCLUSION", "COM_ANSWERED_DIFFERENT_QUESTION"]
+    },
+    {
+      "id": "QK_COM_NEAT_WORK",
+      "pillar": "COM",
+      "plain_name": "Neat, easy-to-follow work",
+      "earned_line": "Your work is neat and easy to follow from top to bottom.",
+      "how_to_earn": "Write one step per line, lined up, with your final answer clearly marked.",
+      "description": "The work is laid out in a clean, ordered way (one step per line, equals signs lined up, final answer boxed or underlined) and the affect markers show clean, continuous flow rather than cramped or scratched-out writing.",
+      "opposes": ["COM_ILLEGIBLE_WORK", "COM_NOTATION_MISUSE"]
+    },
+    {
+      "id": "QK_COM_CORRECT_NOTATION",
+      "pillar": "COM",
+      "plain_name": "Wrote the maths correctly",
+      "earned_line": "You used equals signs, brackets and symbols the right way.",
+      "how_to_earn": "Use an equals sign only between things that are equal, and keep brackets where they belong.",
+      "description": "The student used notation correctly throughout a non-trivial solution: no run-on equals signs, brackets kept where needed, correct symbols for angles, roots, plus-or-minus and labels.",
+      "opposes": ["COM_NOTATION_MISUSE", "COM_MISSING_LABELS"]
+    },
+    {
+      "id": "QK_TST_CHECKED_ANSWER",
+      "pillar": "TST",
+      "plain_name": "Checked the answer",
+      "earned_line": "You checked your answer by putting it back into the question.",
+      "how_to_earn": "When you finish, substitute your answer back in to see if it works.",
+      "description": "The student's own work shows a check: substituting the answer back into the original equation(s), checking against an estimate, or verifying a constraint. It must be written on the page.",
+      "opposes": ["TST_UNCHECKED_ANSWER", "TST_DISTRACTOR_TRAP"]
+    },
+    {
+      "id": "QK_TST_ANSWERED_ALL_PARTS",
+      "pillar": "TST",
+      "plain_name": "Answered every part",
+      "earned_line": "You answered every part of the question.",
+      "how_to_earn": "Answer every part, (a), (b) and (c), even if you are not sure of one.",
+      "description": "The question has two or more parts or asks for two or more things, and the student attempted every one.",
+      "opposes": ["TST_SKIPPED_PART", "TST_BLANK", "COM_ANSWERED_DIFFERENT_QUESTION"]
+    },
+    {
+      "id": "QK_TST_KEPT_GOING",
+      "pillar": "TST",
+      "plain_name": "Kept going",
+      "earned_line": "You kept working through a hard question instead of giving up.",
+      "how_to_earn": "Stick with a tough question and reach an answer, even if you get stuck along the way.",
+      "description": "The affect markers or the work show the student hit difficulty (scratch-outs, a question mark, a restart) but persisted and reached a final answer.",
+      "opposes": ["TST_ABANDONED_WORK", "TST_BLANK", "TST_UNWORKED_GUESS"]
+    },
+    {
+      "id": "QK_TST_CAUGHT_OWN_MISTAKE",
+      "pillar": "TST",
+      "plain_name": "Caught your own mistake",
+      "earned_line": "You spotted a mistake in your own work and fixed it.",
+      "how_to_earn": "Look back over your work, find something that is wrong and correct it.",
+      "description": "The page shows the student crossed out or corrected a wrong line and replaced it with a correct one. Do not award it if the crossed-out work was actually right.",
+      "opposes": ["TST_ERASED_CORRECT_WORK"]
+    }
+  ]
+}

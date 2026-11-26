@@ -43,6 +43,7 @@ from .schemas import (
     Stage2GradingAndAffectOutput,
 )
 from .taxonomy import CURRICULUM, cached_context_text
+from .quirks import clean_question_quirks
 
 log = logging.getLogger(__name__)
 
@@ -56,7 +57,7 @@ VERTEX_LOCATION = os.environ.get("BIRDBRAINS_VERTEX_LOCATION", "northamerica-nor
 # answers in Montréal (checked with tools/check_models.py on 2026-11-18); Toronto serves none.
 STAGE1_MODEL = os.environ.get("BIRDBRAINS_STAGE1_MODEL", "gemini-3.5-flash")
 STAGE2_MODEL = os.environ.get("BIRDBRAINS_STAGE2_MODEL", "gemini-3.5-flash")
-# Free plan: transcription and 4-pillar error codes with minimal thinking and no mood
+# Free plan: transcription and six-pillar error codes with minimal thinking and no mood
 # analysis. Pro thinks more. Levels: MINIMAL, LOW, MEDIUM, HIGH (Gemini 3); on a 2.5
 # model they map to a thinking budget.
 STAGE2_FREE_MODEL = os.environ.get("BIRDBRAINS_STAGE2_FREE_MODEL", "gemini-3.5-flash")
@@ -232,8 +233,10 @@ Method (follow in exact order):
    - List the matching student `line_number`(s) in `matched_student_steps` (empty
      list when `MISSING`).
    - If a required key step (`is_key_step=true`) is `MISSING`, diagnose the
-     omission with the matching error code (e.g. `PRC-01`, `PRC-04`, `TST-01`,
-     `TST-02`, or `TST-03`).
+     omission with the matching error code (e.g. `PRC_STEP_OMITTED`,
+     `PRC_INCOMPLETE_SIMPLIFICATION`, `COM_ANSWERED_DIFFERENT_QUESTION`,
+     `COM_MISSING_CONCLUSION`, `COM_UNSUPPORTED_ANSWER`, `TST_SKIPPED_PART` or
+     `TST_BLANK`).
 4. Evaluate each transcribed line of THIS question in order (`step_evaluations`):
    - Keep `step_number` matching the question's `line_number` (starting from 1).
    - Verify line 1 (and every initial setup line) directly against
@@ -254,32 +257,39 @@ Method (follow in exact order):
 5. `identified_errors`: list every root cause in THIS question
    (`is_cascading_consequence=false`), each with one pillar and one official error
    code from the taxonomy (including omissions caught by `key_step_checks` or
-   blank questions as `TST-03`). Also list downstream lines/conclusions affected
-   solely by an earlier root error in THIS question as `is_cascading_consequence=true`
-   with the root cause's code.
-6. `pillar_scores`: give exactly one entry per pillar (`CON`, `PRC`, `FAC`, `TST`)
-   for THIS question. Max scores are CON 3, PRC 3, FAC 2, TST 2. Deduct only for
-   root causes, never for cascading consequences. Feedback is one sentence
+   blank questions as `TST_BLANK`). The code's prefix is its pillar. Also list
+   downstream lines/conclusions affected solely by an earlier root error in THIS
+   question as `is_cascading_consequence=true` with the root cause's code.
+6. `earned_quirks`: what the student did WELL on THIS question, from the quirk list
+   in the cached context. Up to 3, each with clear evidence on the page: the
+   `step_number` that shows it (or null for the whole question) and one short
+   `evidence` sentence to the student naming exactly what they did ("You kept the
+   negative sign on -3x through every line."). Never award a quirk the question's
+   errors contradict, never for a blank question, and never just to soften bad news.
+   An empty list is fine. Quirks never change the pillar scores.
+7. `pillar_scores`: give exactly one entry per pillar (`CON`, `STR`, `PRC`, `FAC`,
+   `COM`, `TST`) for THIS question. Max scores are CON 2, STR 2, PRC 2, FAC 2,
+   COM 1, TST 1. Deduct only for root causes, never for cascading consequences. Feedback is one sentence
    addressed to the student.
-7. `sentiment_entities`: for each mathematical skill or object the student engaged
+8. `sentiment_entities`: for each mathematical skill or object the student engaged
    with in THIS question (e.g. "distributing a leading coefficient"), give valence
    (-1 frustrated / avoidant to +1 fluent / confident), friction_intensity (0 to 1)
    and an affect state. Base this on the affect markers and on the pattern of work,
    not on the mark alone. `aggregate_valence` and `aggregate_friction` summarise
    this question.
-8. `recommended_scaffolding_mode`: `HIGH_SUPPORT_DEESCALATION` when
+9. `recommended_scaffolding_mode`: `HIGH_SUPPORT_DEESCALATION` when
    `aggregate_valence` is -0.45 or lower; `METACOGNITIVE_SPEED_BUMP` when the
-   errors are mostly FAC/TST slips made in rushed work; otherwise
+   errors are mostly FAC/COM/TST slips made in rushed work; otherwise
    `STANDARD_PROGRESSIVE_FADE`.
-9. `supportive_framing_message`: one or two warm, specific, growth-mindset
-   sentences to the student for this question. Name what they did well first, then
-   the main thing to fix.
-10. `parent_insight`: one sentence for a parent describing the pattern on this
+10. `supportive_framing_message`: one or two warm, specific, growth-mindset
+   sentences to the student for this question. Name what they did well first (a quirk
+   you awarded, if any), then the main thing to fix.
+11. `parent_insight`: one sentence for a parent describing the pattern on this
     question and one concrete thing to try at home. No jargon, no codes.
 
 Writing for people (every explanation, note, description, feedback, message and
 insight):
-- Plain words only. Never write an error code (`PRC-03`), a pillar code (`CON`,
+- Plain words only. Never write an error code (`PRC_SIGN_OR_FACTOR_DROPPED`), a pillar code (`CON`,
   `FAC`) or a field name in any sentence: the codes go in the code fields alone.
 - Say each mistake once. Explain it fully in the `explanation` of the step where it
   happens. Everywhere else (`discrepancy_note`, key-step `note`, carry-forward and
@@ -294,11 +304,11 @@ that appear inside it.
 # Appended to the Stage 2 prompt on the Free plan. It sits in the request, not the
 # system prompt, so both plans share the same instructions and exemplars.
 FREE_MODE_NOTE = """\
-Plan: FREE. Skip method step 7 and the mood part of step 8: return
+Plan: FREE. Skip method step 8 and the mood part of step 9: return
 sentiment_entities as an empty list, aggregate_valence 0, aggregate_friction 0 and
 recommended_scaffolding_mode STANDARD_PROGRESSIVE_FADE. Everything else (answer key,
 final-answer re-substitution verification, key-step coverage checks, step evaluations,
-errors, pillar scores, the message to the student and the parent insight) is
+errors, earned quirks, pillar scores, the message to the student and the parent insight) is
 required as usual. Keep explanations to one sentence each.
 """
 
@@ -311,7 +321,7 @@ DEFAULT_PRICES = {
     "gemini-2.5-pro": (1.25, 0.125, 10.00),
 }
 
-_PILLAR_ORDER = (PillarEnum.CON, PillarEnum.PRC, PillarEnum.FAC, PillarEnum.TST)
+_PILLAR_ORDER = tuple(PillarEnum)  # CON, STR, PRC, FAC, COM, TST
 
 
 def prices() -> dict[str, tuple[float, float, float]]:
@@ -459,6 +469,7 @@ def sanitize_question_grading(
         "problem_statement": q.problem_statement.strip() or source.problem_statement,
         "step_evaluations": clean_steps,
     }
+    q = clean_question_quirks(q.model_copy(update={"step_evaluations": clean_steps}))
     if free:
         update |= {
             "sentiment_entities": [],
@@ -495,8 +506,8 @@ def question_contradictions(q: QuestionGradingOutput) -> list[str]:
         if s.error_code and s.pillar and not s.error_code.startswith(s.pillar.value):
             problems.append(f"step {s.step_number}: {s.error_code} filed under pillar {s.pillar.value}")
     pillars = sorted(p.pillar.value for p in q.pillar_scores)
-    if pillars != ["CON", "FAC", "PRC", "TST"]:
-        problems.append(f"pillar_scores has {pillars}, expected one each of CON, FAC, PRC, TST")
+    if pillars != sorted(p.value for p in PillarEnum):
+        problems.append(f"pillar_scores has {pillars}, expected one each of {', '.join(p.value for p in PillarEnum)}")
     return problems
 
 
@@ -542,6 +553,8 @@ def aggregate_question_gradings(
     pillar_scores: list[PillarScore] = []
     for pillar in _PILLAR_ORDER:
         entries = [(q.question_number, p) for q in q_list for p in q.pillar_scores if p.pillar is pillar]
+        if not entries:
+            continue
         max_total = round(sum(p.max_score for _, p in entries), 2)
         earned_total = round(sum(min(p.earned_score, p.max_score) for _, p in entries), 2)
         deducted = [(qn, p.feedback) for qn, p in entries if p.earned_score < p.max_score and p.feedback.strip()]
@@ -652,7 +665,7 @@ class GeminiPipeline:
                 cache = self._client.caches.create(
                     model=model,
                     config=types.CreateCachedContentConfig(
-                        display_name=f"birdbrains-taxonomy-curriculum-v2-{model}",
+                        display_name=f"birdbrains-taxonomy-curriculum-v4-{model}",
                         system_instruction=STAGE2_SYSTEM,
                         contents=[types.Content(role="user", parts=[types.Part.from_text(text=cached_context_text())])],
                         ttl=f"{CACHE_TTL_SECONDS}s",

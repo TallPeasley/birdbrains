@@ -12,9 +12,9 @@ export type ScaffoldingMode =
   | 'STANDARD_PROGRESSIVE_FADE';
 export type SubmissionStatus = 'UPLOADED' | 'TRANSCRIBING' | 'GRADING' | 'GRADED' | 'NEEDS_RETAKE' | 'FAILED';
 export type EQAOLevel = 'LEVEL_1' | 'LEVEL_2' | 'LEVEL_3' | 'LEVEL_4';
-/** Four-Pillar Taxonomy from the AI pipeline spec: Conceptual, Procedural,
- *  Factual & Calculation Fluency, Test-Taking & Communication Habits. */
-export type PillarCategory = 'CON' | 'PRC' | 'FAC' | 'TST';
+/** Six-pillar taxonomy (backend/birdbrains/taxonomy.py): Concepts, Strategy & Setup,
+ *  Procedure, Calculation & Recall, Communication, Test Habits. */
+export type PillarCategory = 'CON' | 'STR' | 'PRC' | 'FAC' | 'COM' | 'TST';
 
 export interface SubmissionIngestionPayload {
   submissionId: string;
@@ -88,6 +88,28 @@ export interface FinalAnswerVerification {
   discrepancyNote: string;
 }
 
+/** A strength earned on an upload (a "quirk"; mistakes are shown as antiquirks).
+ *  `quirkId` is internal: show `quirkName(quirkId)` from lib/quirks.ts. */
+export interface EarnedQuirk {
+  quirkId: string;
+  pillar: PillarCategory;
+  /** The question that earned it, on pages with several questions. */
+  questionLabel?: string;
+  stepNumber?: number | null;
+  /** One sentence to the student naming exactly what they did. */
+  evidence?: string;
+}
+
+/** One slot of a student's quirk collection (every quirk is listed, earned or not). */
+export interface QuirkCount {
+  quirkId: string;
+  pillar: PillarCategory;
+  /** Uploads that earned it (0 = not yet). */
+  count: number;
+  firstEarnedAt?: string | null;
+  lastEarnedAt?: string | null;
+}
+
 export interface QuestionDiagnostic {
   questionNumber: string;
   problemStatement: string;
@@ -104,6 +126,7 @@ export interface QuestionDiagnostic {
   }[];
   pillarBreakdowns: PillarBreakdown[];
   supportiveFramingMessage?: string;
+  quirks?: EarnedQuirk[];
 }
 
 export interface Stage2GradingAndAffectOutput {
@@ -129,6 +152,8 @@ export interface Stage2GradingAndAffectOutput {
     description: string;
     severity: 'LOW' | 'MEDIUM' | 'HIGH';
   }[];
+  /** Strengths earned on this upload, one per kind. Missing on gradings made before 2026-11-26. */
+  quirks?: EarnedQuirk[];
   /** Set by the backend. */
   /** null on the Free plan. */
   scaffoldingMode?: ScaffoldingMode | null;
@@ -438,6 +463,8 @@ export interface ProgressReport {
   /** Codes given on two or more uploads. */
   recurringCodes: string[];
   pillarErrorDistribution: { pillar: PillarCategory; percentageOfTotalErrors: number }[];
+  /** Quirks (strengths) earned at least once. Missing from older API versions. */
+  quirkCounts?: QuirkCount[];
 }
 
 /** GET /teacher/report: a Pro teacher's class at a glance. */

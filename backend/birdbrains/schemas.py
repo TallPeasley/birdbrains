@@ -17,12 +17,28 @@ from typing import List, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from .codes import ERROR_CODE_PATTERN, LEGACY_CODES
+from .quirks import QUIRK_PATTERN
+
 STUDENT_ID_PATTERN = r"^stu_[a-zA-Z0-9]{12}$"
 SUBMISSION_ID_PATTERN = r"^sub_[a-zA-Z0-9]{12}$"
 GRADING_ID_PATTERN = r"^grd_[a-zA-Z0-9]{12}$"
 WORKSHEET_ID_PATTERN = r"^wks_[a-zA-Z0-9]{12}$"
 TENANT_ID_PATTERN = r"^ten_[a-zA-Z0-9]{10}$"
-ERROR_CODE_PATTERN = r"^(CON|PRC|FAC|TST)-0[1-4]$"  # the 16 official codes
+# The six-pillar error codes live in error_codes.json (see codes.py). Old ids are
+# upgraded on load through LEGACY_CODES so gradings stored before 2026-11-26 load.
+
+
+def _upgrade_legacy_code(data):
+    """Before validation: swap a retired code for its new id and file it under the new
+    code's pillar. Leaves anything else alone."""
+    if isinstance(data, dict):
+        code = data.get("error_code")
+        if code in LEGACY_CODES:
+            data = {**data, "error_code": LEGACY_CODES[code]}
+            if data.get("pillar") is not None:
+                data["pillar"] = LEGACY_CODES[code][:3]
+    return data
 
 
 class Strict(BaseModel):
@@ -31,10 +47,12 @@ class Strict(BaseModel):
 
 # --------------------------------------------------------------------------- enums
 class PillarEnum(str, Enum):
-    CON = "CON"  # Conceptual Errors
-    PRC = "PRC"  # Procedural Errors
-    FAC = "FAC"  # Factual & Calculation Fluency
-    TST = "TST"  # Test-Taking & Communication Habits
+    CON = "CON"  # Concepts
+    STR = "STR"  # Strategy & Setup
+    PRC = "PRC"  # Procedure
+    FAC = "FAC"  # Calculation & Recall
+    COM = "COM"  # Communication
+    TST = "TST"  # Test Habits
 
 
 class AffectStateEnum(str, Enum):
@@ -236,6 +254,8 @@ class StepEvaluation(Strict):
     # and numbered within their own question; carry-forward never crosses questions.
     question_label: str = ""
 
+    _legacy = model_validator(mode="before")(_upgrade_legacy_code)
+
 
 class SentimentEntityExtraction(Strict):
     entity_name: str
@@ -251,6 +271,17 @@ class RootCauseErrorItem(Strict):
     target_entity: str
     is_cascading_consequence: bool
     severity: SeverityEnum = SeverityEnum.MEDIUM  # extension
+
+    _legacy = model_validator(mode="before")(_upgrade_legacy_code)
+
+
+class EarnedQuirk(Strict):  # extension
+    """A strength the student showed (a "quirk"; mistakes are shown as antiquirks).
+    Ids come from quirks.json and never change a mark."""
+
+    quirk_id: str = Field(..., pattern=QUIRK_PATTERN)
+    step_number: Optional[int] = Field(default=None, ge=1)
+    evidence: str
 
 
 class PillarScore(Strict):  # extension
@@ -276,6 +307,8 @@ class QuestionGradingOutput(Strict):
     key_step_checks: List[KeyStepCheck]
     step_evaluations: List[StepEvaluation]
     identified_errors: List[RootCauseErrorItem]
+    # Strengths ("quirks"), at most 3 per question; empty on gradings made before 2026-11-26.
+    earned_quirks: List[EarnedQuirk] = Field(default_factory=list)
     pillar_scores: List[PillarScore]
     sentiment_entities: List[SentimentEntityExtraction]
     aggregate_valence: float = Field(..., ge=-1.0, le=1.0)
@@ -369,7 +402,7 @@ class LedgerObservation(Strict):
     mastery_after: float = Field(..., ge=0.0, le=1.0)
     valence_after: float = Field(..., ge=-1.0, le=1.0)
     root_error_count: int = Field(..., ge=0)
-    slip_error_count: int = Field(..., ge=0)  # FAC + TST root errors
+    slip_error_count: int = Field(..., ge=0)  # FAC + COM + TST root errors
 
 
 class StudentLedger(Strict):
@@ -414,6 +447,26 @@ class ApiPillarBreakdown(Api):
     earnedScore: float
     errorCount: int
     feedback: str
+
+
+class ApiEarnedQuirk(Api):
+    """A quirk earned on one upload. ``quirkId`` is internal; the site shows its plain name."""
+
+    quirkId: str
+    pillar: PillarEnum
+    questionLabel: str = ""
+    stepNumber: Optional[int] = None
+    evidence: str = ""
+
+
+class ApiQuirkCount(Api):
+    """One slot of a student's quirk collection (every quirk is listed, earned or not)."""
+
+    quirkId: str
+    pillar: PillarEnum
+    count: int
+    firstEarnedAt: Optional[str] = None
+    lastEarnedAt: Optional[str] = None
 
 
 class ApiQuestion(Api):
@@ -481,6 +534,7 @@ class ApiQuestionDiagnostic(Api):
     entityExtractions: List[ApiEntityExtraction]
     pillarBreakdowns: List[ApiPillarBreakdown]
     supportiveFramingMessage: str = ""
+    quirks: List[ApiEarnedQuirk] = Field(default_factory=list)
 
 
 PlanTier = Literal["free", "pro"]
@@ -505,6 +559,9 @@ class ApiGrading(Api):
     # The questions on the page, in order. Empty (or one entry) for a single question.
     questions: List[ApiQuestion] = []
     entityExtractions: List[ApiEntityExtraction]
+    # Strengths earned on this upload, one per kind (the site calls them quirks;
+    # entityExtractions are shown as antiquirks).
+    quirks: List[ApiEarnedQuirk] = Field(default_factory=list)
     scaffoldingMode: Optional[ScaffoldingModeEnum]  # null on the Free plan
     gradedAt: str
     plan: PlanTier = "pro"  # the plan the work was graded under
@@ -919,6 +976,8 @@ class ApiProgressReport(Api):
     errorCodes: List[ApiErrorCodeCount]
     recurringCodes: List[str]  # given on two or more uploads
     pillarErrorDistribution: List[ApiPillarErrorShare]
+    # Quirks (strengths) earned so far, only those earned at least once.
+    quirkCounts: List[ApiQuirkCount] = Field(default_factory=list)
 
 
 class ApiCohortStudent(Api):

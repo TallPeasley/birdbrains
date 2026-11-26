@@ -5,6 +5,7 @@ import { BarChart3, Repeat } from 'lucide-react';
 import { mistakeName } from '@/lib/errorCodes';
 import { PILLARS } from '@/lib/pillars';
 import type { ProgressReport } from '@/types/birdBrains';
+import { TopStrengths } from '@/components/student/Quirks';
 
 function when(iso: string | null): string {
   if (!iso) return 'never';
@@ -70,9 +71,13 @@ export default function StudentProgressPanel({ report, showReportLink = true }: 
       )}
 
       <div className="mt-5">
-        <h3 className="text-sm font-semibold text-slate-800">Most common mistakes</h3>
+        <TopStrengths rows={report.quirkCounts ?? []} name={report.studentName.split(' ')[0]} />
+      </div>
+
+      <div className="mt-5">
+        <h3 className="text-sm font-semibold text-slate-800">Most common antiquirks (mistakes)</h3>
         {mistakes.length === 0 ? (
-          <p className="mt-2 text-sm text-slate-500">No mistakes found yet.</p>
+          <p className="mt-2 text-sm text-slate-500">No antiquirks found yet.</p>
         ) : (
           <ul className="mt-2 divide-y divide-slate-100">
             {mistakes.map((m) => (

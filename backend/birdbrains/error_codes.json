@@ -1,0 +1,917 @@
+{
+ "version": 3,
+ "codes": [
+  {
+   "id": "CON_FOUNDATIONAL_MISCONCEPTION",
+   "pillar": "CON",
+   "name": "Foundational Misconception",
+   "plain_name": "Mixed-up math rule",
+   "student_help": "A core math rule was mixed up, like adding the bottoms of two fractions.",
+   "description": "A flawed mental model of what a quantity or operation means, applied consistently.",
+   "example": "1/2 + 1/3 = 2/5 (adds numerators and denominators).",
+   "tell_apart": [
+    {
+     "code": "FAC_ARITHMETIC_SLIP",
+     "how": "A one-off number slip with the right idea"
+    },
+    {
+     "code": "CON_OVERGENERALISED_RULE",
+     "how": "A rule stretched beyond where it holds"
+    }
+   ],
+   "remediation": "Concrete visual or area model of the idea, then the same item again.",
+   "legacy_ids": [
+    "CON-01"
+   ]
+  },
+  {
+   "id": "CON_SIGN_DIRECTION_MEANING",
+   "pillar": "CON",
+   "name": "Sign / Direction Meaning",
+   "plain_name": "Sign or direction understood backwards",
+   "student_help": "A plus or minus sign, or a direction on a graph, was understood the wrong way.",
+   "description": "Misunderstands what a sign, direction or shift means, rather than slipping while calculating.",
+   "example": "Says y = (x - 3)^2 moves the parabola 3 left; reads a negative slope as rising.",
+   "tell_apart": [
+    {
+     "code": "PRC_SIGN_OR_FACTOR_DROPPED",
+     "how": "Losing a sign while rearranging"
+    },
+    {
+     "code": "FAC_SIGNED_NUMBER",
+     "how": "A slip adding negatives"
+    }
+   ],
+   "remediation": "Reference-frame sketch: plot two points and check the direction.",
+   "legacy_ids": [
+    "CON-04"
+   ]
+  },
+  {
+   "id": "CON_OVERGENERALISED_RULE",
+   "pillar": "CON",
+   "name": "Overgeneralised Rule",
+   "plain_name": "Rule used where it does not work",
+   "student_help": "A rule was used where it does not work, like squaring each term of (a + b) separately.",
+   "description": "Treats an operation as if it splits over a sum when it does not (false linearity), or cancels terms instead of factors.",
+   "example": "(x + 3)^2 = x^2 + 9; sqrt(x^2 + 16) = x + 4; (x + 6)/6 = x.",
+   "tell_apart": [
+    {
+     "code": "CON_EXPONENT_LAW",
+     "how": "Misusing a power law such as x^2 * x^3 = x^6"
+    }
+   ],
+   "remediation": "Counterexample check: test the rule with small numbers before using it.",
+   "legacy_ids": []
+  },
+  {
+   "id": "CON_EXPONENT_LAW",
+   "pillar": "CON",
+   "name": "Exponent Law Misuse",
+   "plain_name": "Power rule mixed up",
+   "student_help": "A power rule was mixed up, like adding exponents when they should multiply.",
+   "description": "Misapplies the laws of exponents or what an exponent applies to.",
+   "example": "x^2 * x^3 = x^6; (2x)^2 = 2x^2; x^0 = 0; -3^2 = 9.",
+   "tell_apart": [
+    {
+     "code": "CON_OVERGENERALISED_RULE",
+     "how": "A rule split over a sum, like (a + b)^2 = a^2 + b^2,"
+    }
+   ],
+   "remediation": "Expand the power as repeated multiplication, then compare with the law.",
+   "legacy_ids": []
+  },
+  {
+   "id": "CON_LIKE_TERMS",
+   "pillar": "CON",
+   "name": "Like Terms Confusion",
+   "plain_name": "Unlike terms combined",
+   "student_help": "Terms that are not alike were added together, like x^2 and x.",
+   "description": "Combines or cancels terms that have different variables or powers.",
+   "example": "3x^2 + 2x = 5x^3; 4x + 3 = 7x.",
+   "tell_apart": [
+    {
+     "code": "PRC_SIGN_OR_FACTOR_DROPPED",
+     "how": "Dropping a term while collecting is PRC_STEP_OMITTED or PRC_SIGN_OR_FACTOR_DROPPED"
+    }
+   ],
+   "remediation": "Colour-code terms by variable and power before collecting.",
+   "legacy_ids": []
+  },
+  {
+   "id": "CON_EQUATION_BALANCE",
+   "pillar": "CON",
+   "name": "Equation Balance",
+   "plain_name": "Changed only one side",
+   "student_help": "Something was done to one side of the equation but not the other.",
+   "description": "Does not keep an equation balanced: operates on one side only, or treats = as 'the answer comes next'.",
+   "example": "3x + 4 = 10 -> 3x = 10 (subtracts 4 on the left only); 2x + 3 = 11 = 8 = 4.",
+   "tell_apart": [
+    {
+     "code": "PRC_INVERSE_OPERATION",
+     "how": "Using the wrong inverse operation on both sides (2x = 8 -> x = 6)"
+    },
+    {
+     "code": "COM_NOTATION_MISUSE",
+     "how": "Run-on equals chains in otherwise correct work"
+    }
+   ],
+   "remediation": "Balance-scale model: write the operation on both sides of every line.",
+   "legacy_ids": []
+  },
+  {
+   "id": "CON_DOMAIN_RESTRICTION",
+   "pillar": "CON",
+   "name": "Domain / Restriction Blindness",
+   "plain_name": "Value that is not allowed",
+   "student_help": "The answer uses a value that is not allowed here, like dividing by zero or a negative length.",
+   "description": "Ignores where an expression or situation is defined: divides by something that may be zero, roots a negative, keeps an impossible length or angle.",
+   "example": "Divides both sides of x^2 = 3x by x and loses x = 0; keeps a side length of -4 cm.",
+   "tell_apart": [
+    {
+     "code": "TST_UNCHECKED_ANSWER",
+     "how": "Not noticing an absurd final answer the student could have checked"
+    },
+    {
+     "code": "STR_MISSING_CASE",
+     "how": "Leaving out the negative root of x^2 = 9"
+    }
+   ],
+   "remediation": "'What values are allowed?' check before and after solving.",
+   "legacy_ids": []
+  },
+  {
+   "id": "CON_GRAPH_FEATURE_MEANING",
+   "pillar": "CON",
+   "name": "Graph Feature Meaning",
+   "plain_name": "Graph feature read wrong",
+   "student_help": "A part of the graph was read as something else, like the y-intercept as a zero.",
+   "description": "Misunderstands what a graph feature means: intercepts vs zeros, slope vs intercept, vertex vs root, axis of symmetry.",
+   "example": "Gives the y-intercept as a zero of the parabola; reads the slope of y = 2x + 5 as 5.",
+   "tell_apart": [
+    {
+     "code": "COM_ILLEGIBLE_WORK",
+     "how": "Reading a value off the graph inaccurately with the right idea is FAC_ARITHMETIC_SLIP or COM_ILLEGIBLE_WORK"
+    },
+    {
+     "code": "STR_SETUP_FROM_WORDS",
+     "how": "Picking the wrong equation for a graph in a setup"
+    }
+   ],
+   "remediation": "Label each feature on a sketch and say what it means in words.",
+   "legacy_ids": []
+  },
+  {
+   "id": "STR_FORMULA_MISSELECTION",
+   "pillar": "STR",
+   "name": "Formula / Law Misselection",
+   "plain_name": "Wrong formula for this question",
+   "student_help": "The formula or rule used here does not fit this type of question.",
+   "description": "Applies a formula, theorem or law whose conditions the problem does not meet.",
+   "example": "Uses the sine law with three sides and no angle (needs the cosine law); uses SOH CAH TOA in a non-right triangle.",
+   "tell_apart": [
+    {
+     "code": "STR_WRONG_SUBSTITUTION",
+     "how": "Right formula, wrong values in its slots"
+    },
+    {
+     "code": "FAC_FORMULA_RECALL",
+     "how": "A misremembered version of the right formula"
+    }
+   ],
+   "remediation": "Condition table: for each formula, list when it applies, then match the question.",
+   "legacy_ids": [
+    "CON-02"
+   ]
+  },
+  {
+   "id": "STR_SETUP_FROM_WORDS",
+   "pillar": "STR",
+   "name": "Word Problem Setup",
+   "plain_name": "Question set up wrong",
+   "student_help": "The words of the question were turned into the wrong equation.",
+   "description": "Translates a word problem, table or graph into an equation or model that does not match it.",
+   "example": "'5 less than twice a number is 11' written as 5 - 2x = 11; perimeter used where area is described.",
+   "tell_apart": [
+    {
+     "code": "TST_MISREAD_GIVEN",
+     "how": "A correct model with one given value misread"
+    },
+    {
+     "code": "STR_DIAGRAM_MISREAD",
+     "how": "A mislabelled diagram"
+    }
+   ],
+   "remediation": "Dimensional analysis table: name each quantity, its unit and how they relate before writing the equation.",
+   "legacy_ids": [
+    "CON-03"
+   ]
+  },
+  {
+   "id": "STR_DIAGRAM_MISREAD",
+   "pillar": "STR",
+   "name": "Diagram Misread",
+   "plain_name": "Diagram labelled wrong",
+   "student_help": "The diagram was labelled the wrong way, like calling the wrong side the hypotenuse.",
+   "description": "Misidentifies parts of a diagram: opposite vs adjacent, hypotenuse, matching angles or sides in similar triangles.",
+   "example": "Uses the side next to the angle as 'opposite'; matches the wrong sides in a similar-triangle ratio.",
+   "tell_apart": [
+    {
+     "code": "STR_FORMULA_MISSELECTION",
+     "how": "Choosing trig when the triangle is not right-angled"
+    }
+   ],
+   "remediation": "Mark the angle, then label opp, adj, hyp (or matching sides) on the diagram first.",
+   "legacy_ids": []
+  },
+  {
+   "id": "STR_WRONG_SUBSTITUTION",
+   "pillar": "STR",
+   "name": "Wrong Substitution",
+   "plain_name": "Values put in the wrong places",
+   "student_help": "The right formula was used, but values went into the wrong spots.",
+   "description": "Puts known values into the wrong variables of a correct formula.",
+   "example": "Midpoint with ((x1 + y1)/2, (x2 + y2)/2); b and c swapped in the quadratic formula.",
+   "tell_apart": [
+    {
+     "code": "STR_FORMULA_MISSELECTION",
+     "how": "Using a formula that does not apply"
+    },
+    {
+     "code": "FAC_COPY_ERROR",
+     "how": "Copying a value wrong"
+    }
+   ],
+   "remediation": "Write 'a = , b = , c = ' (or x1, y1 ...) before substituting.",
+   "legacy_ids": []
+  },
+  {
+   "id": "STR_NO_VIABLE_PLAN",
+   "pillar": "STR",
+   "name": "No Viable Plan",
+   "plain_name": "No clear plan",
+   "student_help": "The first move here could not lead to the answer. Plan the method before writing.",
+   "description": "Starts with a move that cannot reach the answer, or moves symbols around with no method.",
+   "example": "Tries to solve x^2 + 5x + 6 = 0 by moving terms until x is alone; square-roots one term of a sum.",
+   "tell_apart": [
+    {
+     "code": "STR_UNSUITABLE_METHOD",
+     "how": "A valid method that is just long or not the one asked for"
+    }
+   ],
+   "remediation": "Plan-first prompt: name the method in words before writing any maths.",
+   "legacy_ids": []
+  },
+  {
+   "id": "STR_UNSUITABLE_METHOD",
+   "pillar": "STR",
+   "name": "Unsuitable Method",
+   "plain_name": "Method that does not fit",
+   "student_help": "This method works, but it is not the one asked for, or it makes the question much longer.",
+   "description": "Uses a valid path that is not the one the question asked for, or one that makes the work much longer and error-prone.",
+   "example": "Question says 'solve by elimination' and the student graphs; completes the square on an easily factorable quadratic and then slips.",
+   "tell_apart": [
+    {
+     "code": "STR_NO_VIABLE_PLAN",
+     "how": "A method that cannot work at all"
+    }
+   ],
+   "remediation": "Method comparison: solve the same item two ways side by side.",
+   "legacy_ids": []
+  },
+  {
+   "id": "STR_MISSING_CASE",
+   "pillar": "STR",
+   "name": "Missing Case",
+   "plain_name": "A case left out",
+   "student_help": "One possible answer or case was left out, like the negative square root.",
+   "description": "Does not consider every case the problem allows: the +/- root, both factors, a second triangle.",
+   "example": "x^2 = 49 -> x = 7 only; sets only one factor of (x - 2)(x + 5) = 0 to zero.",
+   "tell_apart": [
+    {
+     "code": "CON_DOMAIN_RESTRICTION",
+     "how": "Dismissing a valid answer because of a wrong restriction"
+    },
+    {
+     "code": "TST_SKIPPED_PART",
+     "how": "Skipping a whole sub-question"
+    }
+   ],
+   "remediation": "'How many answers could there be?' check before finishing.",
+   "legacy_ids": []
+  },
+  {
+   "id": "STR_IGNORED_CONDITION",
+   "pillar": "STR",
+   "name": "Ignored Condition",
+   "plain_name": "Given condition not used",
+   "student_help": "A condition the question gave was not used, like 'x is positive' or a point on the line.",
+   "description": "Leaves a stated condition or given piece of information out of the model, so the answer does not meet it.",
+   "example": "Finds the line through (2, 3) with slope 4 but never uses the point; keeps a negative width when the question says it is positive.",
+   "tell_apart": [
+    {
+     "code": "TST_MISREAD_GIVEN",
+     "how": "Misreading the value of a given"
+    }
+   ],
+   "remediation": "Underline every given and tick it off when it is used.",
+   "legacy_ids": []
+  },
+  {
+   "id": "PRC_STEP_OMITTED",
+   "pillar": "PRC",
+   "name": "Step Omission",
+   "plain_name": "Skipped a step",
+   "student_help": "A needed step in the method was skipped.",
+   "description": "Skips a required step of the procedure, so the result does not follow.",
+   "example": "Completing the square without adding and subtracting (b/2)^2; finds x in a system but never finds y.",
+   "tell_apart": [
+    {
+     "code": "PRC_INCOMPLETE_SIMPLIFICATION",
+     "how": "Stopping before the requested final form"
+    }
+   ],
+   "remediation": "Faded worked example (about 80% done), then the full procedure.",
+   "legacy_ids": [
+    "PRC-01"
+   ]
+  },
+  {
+   "id": "PRC_ORDER_OF_OPERATIONS",
+   "pillar": "PRC",
+   "name": "Order of Operations",
+   "plain_name": "Steps done out of order",
+   "student_help": "The steps were done in the wrong order.",
+   "description": "Applies valid rules in an invalid order (BEDMAS, or method steps out of sequence).",
+   "example": "2 + 3 * 4 = 20; takes the square root before isolating the squared term.",
+   "tell_apart": [
+    {
+     "code": "PRC_INVERSE_OPERATION",
+     "how": "Doing the inverse operation wrongly"
+    }
+   ],
+   "remediation": "Parsons problem: put the given steps in order.",
+   "legacy_ids": [
+    "PRC-02"
+   ]
+  },
+  {
+   "id": "PRC_SIGN_OR_FACTOR_DROPPED",
+   "pillar": "PRC",
+   "name": "Sign or Factor Dropped",
+   "plain_name": "Sign or term lost while rearranging",
+   "student_help": "A sign or a number got lost when expanding or moving terms around.",
+   "description": "Drops a sign, factor or term while expanding, factoring out, or moving terms, even though the method is right.",
+   "example": "-(x - 3) = -x - 3; 2(x^2 + 6x) + 5 written as 2(x + 3)^2 - 9 + 5 instead of - 18 + 5.",
+   "tell_apart": [
+    {
+     "code": "CON_SIGN_DIRECTION_MEANING",
+     "how": "A consistent belief about signs"
+    },
+    {
+     "code": "FAC_SIGNED_NUMBER",
+     "how": "Adding or subtracting negatives wrongly"
+    }
+   ],
+   "remediation": "Sign-tracking checkpoints: highlight every sign before and after the step.",
+   "legacy_ids": [
+    "PRC-03"
+   ]
+  },
+  {
+   "id": "PRC_INVERSE_OPERATION",
+   "pillar": "PRC",
+   "name": "Wrong Inverse Operation",
+   "plain_name": "Undid a step the wrong way",
+   "student_help": "A step was undone with the wrong operation, like subtracting instead of dividing.",
+   "description": "Uses the wrong inverse when isolating a variable.",
+   "example": "2x = 8 -> x = 6; x/3 = 4 -> x = 4/3; x^2 = 16 -> x = 8.",
+   "tell_apart": [
+    {
+     "code": "CON_EQUATION_BALANCE",
+     "how": "Applying the operation to one side only"
+    }
+   ],
+   "remediation": "Write the operation being undone, then its inverse, next to each line.",
+   "legacy_ids": []
+  },
+  {
+   "id": "PRC_INEQUALITY_DIRECTION",
+   "pillar": "PRC",
+   "name": "Inequality Direction",
+   "plain_name": "Inequality sign not flipped",
+   "student_help": "The inequality sign should have flipped when multiplying or dividing by a negative.",
+   "description": "Does not reverse the inequality when multiplying or dividing by a negative (or reverses it when it should not).",
+   "example": "-2x > 6 -> x > -3.",
+   "tell_apart": [
+    {
+     "code": "PRC_SIGN_OR_FACTOR_DROPPED",
+     "how": "Other sign slips while rearranging"
+    }
+   ],
+   "remediation": "Test a number from the answer in the original inequality.",
+   "legacy_ids": []
+  },
+  {
+   "id": "PRC_FACTORING_ERROR",
+   "pillar": "PRC",
+   "name": "Factoring Error",
+   "plain_name": "Factored wrong",
+   "student_help": "The expression was factored into pieces that do not multiply back to it.",
+   "description": "Factors incorrectly: wrong pair of numbers, common factor only partly removed, or a difference of squares as a perfect square.",
+   "example": "x^2 + 5x + 6 = (x + 1)(x + 6); x^2 - 9 = (x - 3)^2.",
+   "tell_apart": [
+    {
+     "code": "PRC_SIGN_OR_FACTOR_DROPPED",
+     "how": "Solving each correct factor with the wrong sign"
+    },
+    {
+     "code": "PRC_INCOMPLETE_SIMPLIFICATION",
+     "how": "Not factoring fully"
+    }
+   ],
+   "remediation": "Expand the factors back out to check before moving on.",
+   "legacy_ids": []
+  },
+  {
+   "id": "PRC_SYSTEM_COMBINING",
+   "pillar": "PRC",
+   "name": "Combining Equations",
+   "plain_name": "Equations combined wrong",
+   "student_help": "When combining the two equations, they were added when they should have been subtracted, or the reverse.",
+   "description": "In a linear system, combines equations with the wrong operation or substitutes back into the equation it came from.",
+   "example": "4y and -4y with the equations subtracted instead of added; substitutes y = 2x - 1 back into the equation it came from and gets 0 = 0.",
+   "tell_apart": [
+    {
+     "code": "PRC_SIGN_OR_FACTOR_DROPPED",
+     "how": "Not multiplying every term when scaling an equation"
+    }
+   ],
+   "remediation": "Write which variable will cancel and why before combining.",
+   "legacy_ids": []
+  },
+  {
+   "id": "PRC_INCOMPLETE_SIMPLIFICATION",
+   "pillar": "PRC",
+   "name": "Incomplete Simplification",
+   "plain_name": "Not fully simplified",
+   "student_help": "The work stopped a step or two before the answer was fully simplified.",
+   "description": "Stops before reaching the simplified or requested form.",
+   "example": "Leaves 6/8; leaves sqrt(50) instead of 5 sqrt(2); stops at 2x = 10.",
+   "tell_apart": [
+    {
+     "code": "COM_WRONG_FORM",
+     "how": "Giving an answer in a different form than asked (decimal for exact)"
+    }
+   ],
+   "remediation": "Completion checklist: fractions reduced, radicals simplified, variable alone.",
+   "legacy_ids": [
+    "PRC-04"
+   ]
+  },
+  {
+   "id": "FAC_ARITHMETIC_SLIP",
+   "pillar": "FAC",
+   "name": "Arithmetic Slip",
+   "plain_name": "Calculation slip",
+   "student_help": "The steps make sense, with a small calculation slip in the numbers.",
+   "description": "An isolated arithmetic error with a sound method.",
+   "example": "7 * 8 = 54 in the middle of a correct solution; 52/13 = 3.",
+   "tell_apart": [
+    {
+     "code": "FAC_SIGNED_NUMBER",
+     "how": "A slip with negative numbers"
+    },
+    {
+     "code": "FAC_FACT_RECALL",
+     "how": "A wrong recalled fact used repeatedly"
+    }
+   ],
+   "remediation": "5-item rapid micro-drill on the same kind of calculation.",
+   "legacy_ids": [
+    "FAC-01"
+   ]
+  },
+  {
+   "id": "FAC_SIGNED_NUMBER",
+   "pillar": "FAC",
+   "name": "Signed Number Slip",
+   "plain_name": "Negative number slip",
+   "student_help": "A slip happened when adding, subtracting or multiplying negative numbers.",
+   "description": "Arithmetic slip with negatives in otherwise correct work.",
+   "example": "-3 - 5 = -2; (-4)(-2) = -8; (-4)^2 = -16 on a calculator line.",
+   "tell_apart": [
+    {
+     "code": "CON_SIGN_DIRECTION_MEANING",
+     "how": "Not understanding what a negative means"
+    },
+    {
+     "code": "PRC_SIGN_OR_FACTOR_DROPPED",
+     "how": "Losing a sign during expansion"
+    }
+   ],
+   "remediation": "Number-line check for each signed step.",
+   "legacy_ids": []
+  },
+  {
+   "id": "FAC_COPY_ERROR",
+   "pillar": "FAC",
+   "name": "Copy Error",
+   "plain_name": "Copied a number wrong",
+   "student_help": "A number or sign changed when copying from one line to the next.",
+   "description": "Miscopies a digit, sign or term from one of the student's own lines to the next.",
+   "example": "Line 3 says 3x + 12; line 4 starts 3x + 21.",
+   "tell_apart": [
+    {
+     "code": "TST_MISREAD_GIVEN",
+     "how": "Misreading the printed question"
+    }
+   ],
+   "remediation": "Given-data check habit: compare each new line with the one above.",
+   "legacy_ids": [
+    "FAC-02"
+   ]
+  },
+  {
+   "id": "FAC_FACT_RECALL",
+   "pillar": "FAC",
+   "name": "Math Fact Recall",
+   "plain_name": "Math fact misremembered",
+   "student_help": "A basic fact was remembered wrong, like a times-table fact or a perfect square.",
+   "description": "Misremembers a basic fact: times tables, squares and roots, exact trig values.",
+   "example": "sqrt(81) = 8; 12^2 = 124; sin 30 deg = 0.6.",
+   "tell_apart": [
+    {
+     "code": "FAC_FORMULA_RECALL",
+     "how": "A misremembered formula"
+    }
+   ],
+   "remediation": "Short fact fluency drill, then the item again.",
+   "legacy_ids": []
+  },
+  {
+   "id": "FAC_FORMULA_RECALL",
+   "pillar": "FAC",
+   "name": "Formula Recall",
+   "plain_name": "Formula remembered wrong",
+   "student_help": "The right formula was chosen but remembered with a piece missing or changed.",
+   "description": "Picks the right formula but recalls it wrongly.",
+   "example": "Quadratic formula without 2a in the denominator; distance formula without the square root.",
+   "tell_apart": [
+    {
+     "code": "STR_FORMULA_MISSELECTION",
+     "how": "Choosing a formula that does not apply"
+    }
+   ],
+   "remediation": "Formula card rebuild: write the formula from memory, then compare.",
+   "legacy_ids": []
+  },
+  {
+   "id": "FAC_UNIT_CONVERSION",
+   "pillar": "FAC",
+   "name": "Unit Conversion",
+   "plain_name": "Unit slip",
+   "student_help": "A unit conversion was off, like centimetres to metres.",
+   "description": "Converts units wrongly or mixes units in one calculation.",
+   "example": "150 cm = 15 m; adds 2 m and 30 cm as 32.",
+   "tell_apart": [
+    {
+     "code": "COM_MISSING_UNITS",
+     "how": "Leaving units off the answer"
+    }
+   ],
+   "remediation": "Dimensional conversion bridge: write the conversion factor as a fraction.",
+   "legacy_ids": [
+    "FAC-03"
+   ]
+  },
+  {
+   "id": "FAC_ROUNDING",
+   "pillar": "FAC",
+   "name": "Rounding / Precision",
+   "plain_name": "Rounding slip",
+   "student_help": "A number was rounded too early or to the wrong decimal place.",
+   "description": "Rounds too early, or breaks the precision the question asks for.",
+   "example": "Rounds sin 37 deg to 0.6 mid-question and ends up 2 cm off; gives 3 decimals when asked for 1.",
+   "tell_apart": [
+    {
+     "code": "COM_WRONG_FORM",
+     "how": "Giving a decimal when an exact answer is asked for"
+    }
+   ],
+   "remediation": "Precision rule: keep full values until the last line.",
+   "legacy_ids": [
+    "FAC-04"
+   ]
+  },
+  {
+   "id": "FAC_CALCULATOR_ENTRY",
+   "pillar": "FAC",
+   "name": "Calculator Entry",
+   "plain_name": "Calculator used wrong",
+   "student_help": "The calculator was set up or used wrong, like being in radians instead of degrees.",
+   "description": "Wrong calculator mode, missing brackets when keying, or misread display.",
+   "example": "sin 30 = -0.988 (radian mode); keys -3^2 and gets -9 when (-3)^2 = 9 was meant.",
+   "tell_apart": [
+    {
+     "code": "FAC_ARITHMETIC_SLIP",
+     "how": "A hand-arithmetic slip"
+    }
+   ],
+   "remediation": "Calculator check: key a known value (sin 30 = 0.5) first.",
+   "legacy_ids": []
+  },
+  {
+   "id": "COM_ANSWERED_DIFFERENT_QUESTION",
+   "pillar": "COM",
+   "name": "Answered a Different Question",
+   "plain_name": "Answered a different question",
+   "student_help": "The work solved for something slightly different from what the question asked.",
+   "description": "Gives a correct answer to a different target than the one asked.",
+   "example": "Asked for the vertex, gives the zeros; asked for 2x + 5, stops at x.",
+   "tell_apart": [
+    {
+     "code": "COM_WRONG_FORM",
+     "how": "The right target in the wrong format"
+    },
+    {
+     "code": "TST_SKIPPED_PART",
+     "how": "Skipping a whole sub-part"
+    }
+   ],
+   "remediation": "Pre-submission prompt check: circle what is asked, then reread the final line.",
+   "legacy_ids": [
+    "TST-01"
+   ]
+  },
+  {
+   "id": "COM_WRONG_FORM",
+   "pillar": "COM",
+   "name": "Wrong Answer Form",
+   "plain_name": "Answer in the wrong form",
+   "student_help": "The answer is right, but not in the form the question asked for.",
+   "description": "Gives the right quantity in a form other than the one requested.",
+   "example": "Asked for vertex form, gives standard form; asked for an exact answer, gives 1.414; gives x = 2, y = 3 when a point is asked for.",
+   "tell_apart": [
+    {
+     "code": "PRC_INCOMPLETE_SIMPLIFICATION",
+     "how": "Stopping before simplifying"
+    }
+   ],
+   "remediation": "Underline the requested form in the question and match it.",
+   "legacy_ids": []
+  },
+  {
+   "id": "COM_MISSING_UNITS",
+   "pillar": "COM",
+   "name": "Missing Units",
+   "plain_name": "Missing units",
+   "student_help": "The final answer is missing its units.",
+   "description": "Omits units on a measurement answer.",
+   "example": "Area = 24 (no cm^2); time = 3.5.",
+   "tell_apart": [
+    {
+     "code": "FAC_UNIT_CONVERSION",
+     "how": "A wrong unit conversion"
+    }
+   ],
+   "remediation": "Unit slot: draw a box for the unit next to every final answer.",
+   "legacy_ids": [
+    "TST-02"
+   ]
+  },
+  {
+   "id": "COM_MISSING_CONCLUSION",
+   "pillar": "COM",
+   "name": "Missing Conclusion",
+   "plain_name": "Missing final sentence",
+   "student_help": "The question needed a closing sentence that answers it in words.",
+   "description": "Omits the concluding statement a word problem or proof requires.",
+   "example": "Word problem ends at t = 4 with no 'The ball lands after 4 s.'",
+   "tell_apart": [
+    {
+     "code": "COM_UNSUPPORTED_ANSWER",
+     "how": "Missing reasoning for a claim"
+    }
+   ],
+   "remediation": "Concluding statement frame: 'Therefore, ...' using the question's words.",
+   "legacy_ids": []
+  },
+  {
+   "id": "COM_NOTATION_MISUSE",
+   "pillar": "COM",
+   "name": "Notation Misuse",
+   "plain_name": "Maths written the wrong way",
+   "student_help": "The maths is written in a way that says something different, like a long chain of equals signs.",
+   "description": "Misuses notation so the written statement is false or ambiguous, even if the thinking is right.",
+   "example": "2x + 3 = 11 - 3 = 8 / 2 = 4; writes x + 2 * 3 meaning (x + 2) * 3; equals sign between an equation and its solution.",
+   "tell_apart": [
+    {
+     "code": "CON_EQUATION_BALANCE",
+     "how": "Doing an operation to one side only (a real balance error)"
+    }
+   ],
+   "remediation": "One-equation-per-line layout model.",
+   "legacy_ids": []
+  },
+  {
+   "id": "COM_ILLEGIBLE_WORK",
+   "pillar": "COM",
+   "name": "Illegible Work",
+   "plain_name": "Hard-to-read working",
+   "student_help": "Part of the working is too hard to read or follow.",
+   "description": "Handwriting or layout makes a line impossible to read or follow.",
+   "example": "Overwritten digits that could be 1 or 7; steps scattered around the page with no order.",
+   "tell_apart": [
+    {
+     "code": null,
+     "how": "When the photo itself is blurry, it is an upload problem, not an error code"
+    }
+   ],
+   "remediation": "Grid workspace; ask for a clearer retake if the page is hard to read.",
+   "legacy_ids": []
+  },
+  {
+   "id": "COM_UNSUPPORTED_ANSWER",
+   "pillar": "COM",
+   "name": "Unsupported Answer",
+   "plain_name": "Answer not explained",
+   "student_help": "The answer is there, but the reason the question asked for is missing.",
+   "description": "Gives an answer, claim or 'show that' conclusion without the reasoning or working the question requires.",
+   "example": "'Show the triangles are similar' answered 'they are similar'; correct root written with no work when work is required.",
+   "tell_apart": [
+    {
+     "code": "TST_UNWORKED_GUESS",
+     "how": "A wrong answer with no work, likely guessed,"
+    }
+   ],
+   "remediation": "'Because ...' justification frame after every claim.",
+   "legacy_ids": []
+  },
+  {
+   "id": "COM_MISSING_LABELS",
+   "pillar": "COM",
+   "name": "Missing Labels / Definitions",
+   "plain_name": "Labels missing",
+   "student_help": "A graph, diagram or variable is missing labels, so it is unclear what it shows.",
+   "description": "Leaves out axis labels, scales, diagram labels or the 'let x be ...' definition that the work needs.",
+   "example": "Graph with no axis labels or scale; uses x and y in a word problem without saying what they are.",
+   "tell_apart": [
+    {
+     "code": "COM_MISSING_UNITS",
+     "how": "Units missing on a final answer"
+    }
+   ],
+   "remediation": "Label checklist: axes, scale, units, and 'let x = ...'.",
+   "legacy_ids": []
+  },
+  {
+   "id": "TST_BLANK",
+   "pillar": "TST",
+   "name": "Blank / Time Attrition",
+   "plain_name": "Left blank",
+   "student_help": "This part was left blank.",
+   "description": "Leaves a question or part with no attempt, from time pressure or a frustration block.",
+   "example": "Question 5 is empty; the last two parts have nothing written.",
+   "tell_apart": [
+    {
+     "code": "TST_ABANDONED_WORK",
+     "how": "Starting and then stopping"
+    }
+   ],
+   "remediation": "Prerequisite baseline probe on the skill, then a first-step warm-up.",
+   "legacy_ids": [
+    "TST-03"
+   ]
+  },
+  {
+   "id": "TST_SKIPPED_PART",
+   "pillar": "TST",
+   "name": "Skipped Part",
+   "plain_name": "Part of the question skipped",
+   "student_help": "One part of the question was skipped while the others were answered.",
+   "description": "Answers some parts of a multi-part question and leaves another out, likely without noticing.",
+   "example": "Finds x in (a) and the vertex in (c) but never answers (b).",
+   "tell_apart": [
+    {
+     "code": "COM_ANSWERED_DIFFERENT_QUESTION",
+     "how": "Answering a different target"
+    },
+    {
+     "code": "TST_BLANK",
+     "how": "Leaving the whole question empty"
+    }
+   ],
+   "remediation": "Tick each part number as it is answered.",
+   "legacy_ids": []
+  },
+  {
+   "id": "TST_DISTRACTOR_TRAP",
+   "pillar": "TST",
+   "name": "Distractor Trap",
+   "plain_name": "Middle step taken as the answer",
+   "student_help": "A middle step was treated as the final answer.",
+   "description": "Takes an intermediate value or a tempting wrong option as the final answer.",
+   "example": "Finds the discriminant and gives it as the root; picks the multiple-choice option that matches a half-way value.",
+   "tell_apart": [
+    {
+     "code": "COM_ANSWERED_DIFFERENT_QUESTION",
+     "how": "Answering a different target from the start"
+    }
+   ],
+   "remediation": "'Is this what was asked?' stop sign before the final line.",
+   "legacy_ids": [
+    "TST-04"
+   ]
+  },
+  {
+   "id": "TST_ABANDONED_WORK",
+   "pillar": "TST",
+   "name": "Abandoned Work",
+   "plain_name": "Gave up partway",
+   "student_help": "A good start was stopped or crossed out before reaching an answer.",
+   "description": "Starts a valid approach, then stops or crosses it out partway with no answer.",
+   "example": "Sets up the quadratic formula correctly, substitutes, then stops.",
+   "tell_apart": [
+    {
+     "code": "TST_BLANK",
+     "how": "No attempt at all"
+    }
+   ],
+   "remediation": "First-step confidence warm-up, then the same problem.",
+   "legacy_ids": []
+  },
+  {
+   "id": "TST_ERASED_CORRECT_WORK",
+   "pillar": "TST",
+   "name": "Erased Correct Work",
+   "plain_name": "Crossed out right work",
+   "student_help": "Correct work was crossed out and replaced with something wrong.",
+   "description": "Strikes out or erases correct work and replaces it with an incorrect answer.",
+   "example": "x = 4 crossed out, replaced with x = -4 which does not satisfy the equation.",
+   "tell_apart": [
+    {
+     "code": "TST_ABANDONED_WORK",
+     "how": "Crossing out work and giving no answer"
+    }
+   ],
+   "remediation": "Check-before-changing habit: substitute both answers before crossing one out.",
+   "legacy_ids": []
+  },
+  {
+   "id": "TST_UNCHECKED_ANSWER",
+   "pillar": "TST",
+   "name": "Unchecked Answer",
+   "plain_name": "Answer not checked",
+   "student_help": "A quick check would show this answer cannot be right, like a negative length.",
+   "description": "Gives an answer a quick check would show is impossible or absurd, and does not notice.",
+   "example": "A side length of -3 cm; a probability of 1.4; a root that does not satisfy the equation.",
+   "tell_apart": [
+    {
+     "code": "CON_DOMAIN_RESTRICTION",
+     "how": "Not knowing the value is disallowed"
+    }
+   ],
+   "remediation": "Substitute-back or estimate check before finishing.",
+   "legacy_ids": []
+  },
+  {
+   "id": "TST_MISREAD_GIVEN",
+   "pillar": "TST",
+   "name": "Misread Given",
+   "plain_name": "Read the question wrong",
+   "student_help": "A number or sign in the question was read wrong.",
+   "description": "Misreads a number, sign or symbol printed in the question.",
+   "example": "Question says y = 2x^2 - 12x; work starts from y = 2x^2 + 12x.",
+   "tell_apart": [
+    {
+     "code": "FAC_COPY_ERROR",
+     "how": "Miscopying between the student's own lines"
+    },
+    {
+     "code": "STR_SETUP_FROM_WORDS",
+     "how": "Misunderstanding the words"
+    }
+   ],
+   "remediation": "Given-data check: compare line 1 with the question.",
+   "legacy_ids": []
+  },
+  {
+   "id": "TST_UNWORKED_GUESS",
+   "pillar": "TST",
+   "name": "Unworked Guess",
+   "plain_name": "Guessed with no work",
+   "student_help": "An answer was written with no working, and it is not right.",
+   "description": "Writes a wrong final answer with no working shown, suggesting a guess.",
+   "example": "'x = 5' alone under a two-step equation whose answer is 3.",
+   "tell_apart": [
+    {
+     "code": "COM_UNSUPPORTED_ANSWER",
+     "how": "A correct answer missing the required reasoning"
+    }
+   ],
+   "remediation": "Show-one-step rule: write at least the first step before any answer.",
+   "legacy_ids": []
+  }
+ ]
+}
