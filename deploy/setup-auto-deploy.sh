@@ -37,6 +37,12 @@ for role in roles/run.admin roles/artifactregistry.writer roles/firebasehosting.
   retry gcloud projects add-iam-policy-binding "$PROJECT" --member="serviceAccount:$DEPLOYER" --role="$role" \
     --condition=None
 done
+# The site is also published to the boson-quark Firebase project (the main address).
+for role in roles/firebasehosting.admin roles/serviceusage.serviceUsageConsumer; do
+  gcloud projects add-iam-policy-binding boson-quark --member="serviceAccount:$DEPLOYER" \
+    --role="$role" --condition=None >/dev/null 2>&1 || \
+    echo "   Could not give the build $role in boson-quark. Sign in as an owner of boson-quark and rerun." >&2
+done
 # Needed to deploy a service that runs as the API's account. Only that one account, not the project.
 retry gcloud iam service-accounts add-iam-policy-binding "$RUNTIME_SA" --member="serviceAccount:$DEPLOYER" \
   --role=roles/iam.serviceAccountUser

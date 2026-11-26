@@ -26,3 +26,25 @@ The trigger only fires when files that matter change (`--included-files` in `dep
 
 ## Status
 Written and syntax-checked, but NOT yet run against real GCP/Firebase. Expect to fix a permission or flag on the first run.
+
+## Site address (since 2026-11-26)
+
+The main address is https://boson-quark.web.app (Firebase project `boson-quark`). The API, Firestore,
+Storage and Firebase Auth stay in `birdbrain-514606`, so the site is still built with that project's
+Firebase web config. `deploy-web.sh` (and Cloud Build) publish the same build to both
+`boson-quark` and `birdbrain-514606`, so https://birdbrain-514606.web.app keeps working; canonical
+links point search engines at the new address. The API's `BIRDBRAINS_SITE_URL` (Stripe and Classroom
+return pages) is the new address, and CORS allows both.
+
+One-time console steps (cannot be done from the repo):
+
+1. Firebase console, project **birdbrain-514606** > Authentication > Settings > Authorized domains >
+   Add domain: `boson-quark.web.app`. Without it Google and Microsoft sign-in fail on the new address.
+2. Google Cloud console, project **birdbrain-514606** > APIs & Services > Credentials > the
+   "Browser key (auto created by Firebase)": if it has Website restrictions, add `https://boson-quark.web.app/*`.
+3. Google Auth Platform (birdbrain-514606) > Branding: set the home page to `https://boson-quark.web.app`
+   and add `boson-quark.web.app` under Authorized domains. The Classroom redirect URI is the API's
+   `/classroom/callback` and does not change.
+4. Stripe > Settings > Billing > Customer portal: rerun `python backend/tools/stripe_setup.py --price 10`
+   (it now sets the portal's return link to the new address), or change "Default redirect link" by hand.
+5. Signed-in people are signed in per address: anyone who opens the new address signs in once again.

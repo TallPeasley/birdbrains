@@ -1,5 +1,7 @@
 {
   "projects": {
-    "default": "birdbrain-514606"
+    "default": "boson-quark",
+    "quark": "boson-quark",
+    "legacy": "birdbrain-514606"
   }
 }
