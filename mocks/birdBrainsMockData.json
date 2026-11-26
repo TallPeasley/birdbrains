@@ -52,8 +52,10 @@
         "feedback": "You worked every part through to an answer."
       }
     ],
+    "quirks": [{"quirkId": "QK_CON_RULE_APPLIED", "pillar": "CON", "stepNumber": 3, "evidence": "You completed the square inside the bracket with (6/2)^2 = 9.", "questionLabel": "1"}, {"quirkId": "QK_FAC_FORMULA_RECALLED", "pillar": "FAC", "stepNumber": 1, "evidence": "You wrote the distance formula from memory, exactly right.", "questionLabel": "2"}, {"quirkId": "QK_PRC_FULLY_SIMPLIFIED", "pillar": "PRC", "stepNumber": 2, "evidence": "You left the length as an exact root, \\sqrt{20}.", "questionLabel": "2"}],
     "questionAnalyses": [
       {
+        "quirks": [{"quirkId": "QK_CON_RULE_APPLIED", "pillar": "CON", "stepNumber": 3, "evidence": "You completed the square inside the bracket with (6/2)^2 = 9."}],
         "questionNumber": "1",
         "problemStatement": "Convert y = 2x^2 + 12x + 5 to vertex form and state the vertex.",
         "totalScore": 8.0,
@@ -255,6 +257,7 @@
         "supportiveFramingMessage": "Great persistence! You executed the core algebraic steps correctly. A minor procedural slip on step 4 created downstream errors, but your conceptual understanding of quadratic structures shines through."
       },
       {
+        "quirks": [{"quirkId": "QK_FAC_FORMULA_RECALLED", "pillar": "FAC", "stepNumber": 1, "evidence": "You wrote the distance formula from memory, exactly right."}, {"quirkId": "QK_PRC_FULLY_SIMPLIFIED", "pillar": "PRC", "stepNumber": 2, "evidence": "You left the length as an exact root, \\sqrt{20}."}],
         "questionNumber": "2",
         "problemStatement": "Find the length of the segment from A(1, 2) to B(5, 4). Leave your answer as a square root.",
         "totalScore": 10.0,

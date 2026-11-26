@@ -20,6 +20,7 @@ import type {
   BillingPrice,
   ParentProjectionSummary,
   Stage2GradingAndAffectOutput,
+  QuirkCount,
   SubmissionIngestionPayload,
   UserProfile,
   WS_3STAGE_V1,
@@ -120,6 +121,8 @@ export const api = {
   /** Past uploads, newest first (up to 50). */
   gradings: (t: string, studentId: string) =>
     request<Stage2GradingAndAffectOutput[]>(`/students/${studentId}/gradings`, t),
+  /** Every quirk with how many uploads earned it (0 = not yet). Students and their parents/teachers. */
+  quirks: (t: string, studentId: string) => request<QuirkCount[]>(`/students/${studentId}/quirks`, t),
   /** Testing accounts: grade an earlier upload again with the current grader. Replaces its old result. */
   regrade: (t: string, submissionId: string) =>
     request<ProcessResult>(`/submissions/${submissionId}/regrade`, t, { method: 'POST' }),

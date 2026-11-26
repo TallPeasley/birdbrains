@@ -18,6 +18,7 @@ from typing import List, Literal, Optional
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from .codes import ERROR_CODE_PATTERN, LEGACY_CODES
+from .quirks import QUIRK_PATTERN
 
 STUDENT_ID_PATTERN = r"^stu_[a-zA-Z0-9]{12}$"
 SUBMISSION_ID_PATTERN = r"^sub_[a-zA-Z0-9]{12}$"
@@ -274,6 +275,15 @@ class RootCauseErrorItem(Strict):
     _legacy = model_validator(mode="before")(_upgrade_legacy_code)
 
 
+class EarnedQuirk(Strict):  # extension
+    """A strength the student showed (a "quirk"; mistakes are shown as antiquirks).
+    Ids come from quirks.json and never change a mark."""
+
+    quirk_id: str = Field(..., pattern=QUIRK_PATTERN)
+    step_number: Optional[int] = Field(default=None, ge=1)
+    evidence: str
+
+
 class PillarScore(Strict):  # extension
     pillar: PillarEnum
     max_score: float = Field(..., ge=0.0)
@@ -297,6 +307,8 @@ class QuestionGradingOutput(Strict):
     key_step_checks: List[KeyStepCheck]
     step_evaluations: List[StepEvaluation]
     identified_errors: List[RootCauseErrorItem]
+    # Strengths ("quirks"), at most 3 per question; empty on gradings made before 2026-11-26.
+    earned_quirks: List[EarnedQuirk] = Field(default_factory=list)
     pillar_scores: List[PillarScore]
     sentiment_entities: List[SentimentEntityExtraction]
     aggregate_valence: float = Field(..., ge=-1.0, le=1.0)
@@ -437,6 +449,26 @@ class ApiPillarBreakdown(Api):
     feedback: str
 
 
+class ApiEarnedQuirk(Api):
+    """A quirk earned on one upload. ``quirkId`` is internal; the site shows its plain name."""
+
+    quirkId: str
+    pillar: PillarEnum
+    questionLabel: str = ""
+    stepNumber: Optional[int] = None
+    evidence: str = ""
+
+
+class ApiQuirkCount(Api):
+    """One slot of a student's quirk collection (every quirk is listed, earned or not)."""
+
+    quirkId: str
+    pillar: PillarEnum
+    count: int
+    firstEarnedAt: Optional[str] = None
+    lastEarnedAt: Optional[str] = None
+
+
 class ApiQuestion(Api):
     label: str
     text: str = ""
@@ -502,6 +534,7 @@ class ApiQuestionDiagnostic(Api):
     entityExtractions: List[ApiEntityExtraction]
     pillarBreakdowns: List[ApiPillarBreakdown]
     supportiveFramingMessage: str = ""
+    quirks: List[ApiEarnedQuirk] = Field(default_factory=list)
 
 
 PlanTier = Literal["free", "pro"]
@@ -526,6 +559,9 @@ class ApiGrading(Api):
     # The questions on the page, in order. Empty (or one entry) for a single question.
     questions: List[ApiQuestion] = []
     entityExtractions: List[ApiEntityExtraction]
+    # Strengths earned on this upload, one per kind (the site calls them quirks;
+    # entityExtractions are shown as antiquirks).
+    quirks: List[ApiEarnedQuirk] = Field(default_factory=list)
     scaffoldingMode: Optional[ScaffoldingModeEnum]  # null on the Free plan
     gradedAt: str
     plan: PlanTier = "pro"  # the plan the work was graded under
@@ -940,6 +976,8 @@ class ApiProgressReport(Api):
     errorCodes: List[ApiErrorCodeCount]
     recurringCodes: List[str]  # given on two or more uploads
     pillarErrorDistribution: List[ApiPillarErrorShare]
+    # Quirks (strengths) earned so far, only those earned at least once.
+    quirkCounts: List[ApiQuirkCount] = Field(default_factory=list)
 
 
 class ApiCohortStudent(Api):
