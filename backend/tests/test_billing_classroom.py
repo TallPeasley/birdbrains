@@ -51,7 +51,7 @@ def test_stripe_upgrade_and_cancel(client, family, deps):
     assert url.endswith("/checkout/sessions")
     fields = stripe.calls[0][1]
     assert fields["client_reference_id"] == "jordan" and fields["mode"] == "subscription"
-    assert fields["success_url"] == "https://birdbrain-514606.web.app/account?upgrade=success"
+    assert fields["success_url"] == "https://boson-quark.web.app/account?upgrade=success"
     assert client.post("/billing/portal", headers=auth("jordan")).json()["detail"] == "NO_SUBSCRIPTION"
 
     def hook(event, header=None):
@@ -195,7 +195,7 @@ def test_classroom_connect_and_import(client, family, deps):
     r = client.get(f"/classroom/callback?state=forged&code=good", follow_redirects=False)
     assert r.headers["location"].endswith("classroom=failed")
     r = client.get(f"/classroom/callback?state={state}&code=good", follow_redirects=False)
-    assert r.status_code == 303 and r.headers["location"] == "https://birdbrain-514606.web.app/teacher?classroom=connected"
+    assert r.status_code == 303 and r.headers["location"] == "https://boson-quark.web.app/teacher?classroom=connected"
     r = client.get(f"/classroom/callback?state={state}&code=good", follow_redirects=False)  # state is single-use
     assert r.headers["location"].endswith("classroom=failed")
     assert client.get("/classroom/status", headers=auth("rivera")).json() == {"configured": True, "plan": "pro", "connected": True, "beta": "approved"}
@@ -316,7 +316,7 @@ def test_student_classroom_grades_and_upload_portal(client, family, deps):
     url = client.post("/classroom/connect", headers=auth("alex")).json()["url"]
     assert all(".me.readonly" in sc or "courses.readonly" in sc for sc in google.scopes)   # student scopes only
     r = client.get(f"/classroom/callback?state={url.split('state=')[1]}&code=good", follow_redirects=False)
-    assert r.headers["location"] == "https://birdbrain-514606.web.app/student?classroom=connected"
+    assert r.headers["location"] == "https://boson-quark.web.app/student?classroom=connected"
 
     assert client.get("/classroom/my/courses", headers=auth("alex")).json()[0]["id"] == "c1"
     assert client.get("/classroom/courses", headers=auth("alex")).status_code == 403   # teacher routes stay closed

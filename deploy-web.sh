@@ -3,19 +3,30 @@
 #
 #   ./deploy-web.sh [gcp-project-id]
 #
+# The API, Firestore and sign-in live in the GCP project (birdbrain-514606). The site is
+# published to every Firebase project in HOSTING_PROJECTS: boson-quark first (the main
+# address, https://boson-quark.web.app), then the GCP project itself so the first address
+# keeps working. Override with HOSTING_PROJECTS="boson-quark" ./deploy-web.sh to skip one.
+#
 # Run from Cloud Shell (or any machine with gcloud, node 20+ and npm), signed in as a
 # project owner. It:
 #   1. reads the API URL from Cloud Run and the Firebase web config from Firebase,
 #   2. builds the static site with those values,
 #   3. lets the API accept calls from the new address (CORS) and send people back to it,
-#   4. deploys to https://<project>.web.app.
+#   4. deploys to https://boson-quark.web.app and https://<project>.web.app.
 # Safe to run again; each run is one new Hosting release (roll back in the console).
 set -euo pipefail
 
 PROJECT="${1:-birdbrain-514606}"
 REGION="northamerica-northeast1"
 SERVICE="birdbrains-api"
-SITE="https://${PROJECT}.web.app"
+HOSTING_PROJECTS="${HOSTING_PROJECTS:-boson-quark $PROJECT}"
+MAIN_HOSTING="${HOSTING_PROJECTS%% *}"
+SITE="https://${MAIN_HOSTING}.web.app"
+# Every address the site is served from may call the API.
+ORIGINS=""
+for h in $HOSTING_PROJECTS; do ORIGINS="$ORIGINS,https://$h.web.app,https://$h.firebaseapp.com"; done
+ORIGINS="${ORIGINS#,}"
 # Kept allowed while the old Netlify address is still in use. Drop it once Netlify is gone.
 OLD_SITE="https://birdbrains.netlify.app"
 cd "$(dirname "$0")"
@@ -48,14 +59,17 @@ echo "== Building the site"
 npm ci --no-audit --no-fund
 npm run build
 
-echo "== Pointing the API at the new site address"
+echo "== Pointing the API at the site address ($SITE)"
 # ^;^ switches gcloud's list separator so the comma-separated origin list survives.
 gcloud run services update "$SERVICE" --region "$REGION" \
-  --update-env-vars "^;^BIRDBRAINS_CORS_ORIGINS=$SITE,https://${PROJECT}.firebaseapp.com,$OLD_SITE;BIRDBRAINS_SITE_URL=$SITE" >/dev/null
+  --update-env-vars "^;^BIRDBRAINS_CORS_ORIGINS=$ORIGINS,$OLD_SITE;BIRDBRAINS_SITE_URL=$SITE" >/dev/null
 
-echo "== Deploying to Firebase Hosting"
 # Uses your gcloud sign-in. If firebase-tools asks you to log in, run: npx firebase-tools login --no-localhost
-npx --yes firebase-tools@14 deploy --only hosting --project "$PROJECT" --non-interactive
+for h in $HOSTING_PROJECTS; do
+  echo "== Deploying to Firebase Hosting: $h"
+  npx --yes firebase-tools@14 deploy --only hosting --project "$h" --non-interactive
+done
 
 echo
 echo "Site is live at: $SITE"
+for h in $HOSTING_PROJECTS; do [ "$h" = "$MAIN_HOSTING" ] || echo "         and at: https://$h.web.app"; done

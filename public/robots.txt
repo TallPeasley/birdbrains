@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://birdbrain-514606.web.app/sitemap.xml
+Sitemap: https://boson-quark.web.app/sitemap.xml
