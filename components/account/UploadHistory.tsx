@@ -15,7 +15,6 @@ import {
   RefreshCw,
   Search,
   Sparkles,
-  Star,
 } from "lucide-react";
 import PillarCards from "@/components/student/PillarCards";
 import StepDiagnostics from "@/components/student/StepDiagnostics";
@@ -27,7 +26,7 @@ import MakeWorksheetButton, { MAKEABLE } from "@/components/student/MakeWorkshee
 import { AFFECT_META, PILLAR_ORDER, PILLARS } from "@/lib/pillars";
 import { useSession } from "@/lib/session";
 import { codePillar, mistakeName, uniqueMistakes } from "@/lib/errorCodes";
-import { quirkName, uniqueQuirks } from "@/lib/quirks";
+import { PillarQuirkChips } from "@/components/student/Quirks";
 import type {
   Stage2GradingAndAffectOutput,
   WS_3STAGE_V1,
@@ -468,18 +467,10 @@ function HistoryCard({
           })
         ) : (
           <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700 ring-1 ring-emerald-200">
-            No antiquirks
+            No mistakes
           </span>
         )}
-        {uniqueQuirks(g.quirks).map((q) => (
-          <span
-            key={q.quirkId}
-            className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-800 ring-1 ring-emerald-200"
-          >
-            <Star className="h-2.5 w-2.5 fill-emerald-500 text-emerald-600" aria-hidden />
-            {quirkName(q.quirkId)}
-          </span>
-        ))}
+        <PillarQuirkChips pillars={g.pillarQuirks} />
         {affect ? (
           <span
             className={`rounded-md px-2 py-0.5 text-[11px] font-medium ring-1 ${affect.badge}`}

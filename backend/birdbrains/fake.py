@@ -214,12 +214,23 @@ class FakePipeline:
                         "severity": "LOW",
                     },
                 ],
-                "earned_quirks": [
-                    {"quirk_id": "QK_CON_RULE_APPLIED", "step_number": 3,
-                     "evidence": "You completed the square inside the bracket with (6/2)^2 = 9."},
-                    {"quirk_id": "QK_FAC_ACCURATE_ARITHMETIC", "step_number": None,
-                     "evidence": "Every calculation you did was right."},
-                ],
+                "requirement_checks": fake_checks({
+                    "QK_CON_RULE_APPLIED": ("MET", 3, "You completed the square inside the bracket with (6/2)^2 = 9."),
+                    "QK_CON_BALANCED": ("MET", 2, "You kept the equation equal when you factored out the 2."),
+                    "QK_CON_EXPLAINED_WHY": ("MISSED", None, "Say why you add and subtract 9."),
+                    "QK_STR_SMART_METHOD": ("MET", None, "Completing the square was the right plan for vertex form."),
+                    "QK_PRC_EVERY_STEP_SHOWN": ("MISSED", None, "The vertex was not written at the end."),
+                    "QK_PRC_SIGNS_CARRIED": ("MISSED", 4, "The -9 leaving the bracket lost its factor of 2."),
+                    "QK_PRC_FULLY_SIMPLIFIED": ("MET", 5, "You combined the constants into one number."),
+                    "QK_FAC_ACCURATE_ARITHMETIC": ("MET", None, "Every calculation you did was right."),
+                    "QK_FAC_NEGATIVES_HANDLED": ("MET", 5, "-9 + 5 = -4 was handled correctly."),
+                    "QK_COM_CONCLUSION_WRITTEN": ("MISSED", None, "Finish by stating the vertex."),
+                    "QK_COM_NEAT_WORK": ("MET", None, "One step per line, easy to follow."),
+                    "QK_COM_CORRECT_NOTATION": ("MET", None, "Brackets and equals signs used correctly."),
+                    "QK_TST_KEPT_GOING": ("MET", None, "You worked the question through to the end."),
+                    "QK_TST_CHECKED_ANSWER": ("MISSED", None, "Expand your answer to check it matches."),
+                    "QK_TST_ANSWERED_ALL_PARTS": ("MISSED", None, "The question also asked for the vertex."),
+                }),
                 "sentiment_entities": [] if free else [
                     {"entity_name": "completing the square", "valence_score": 0.4,
                      "friction_intensity": 0.3, "affect_state": "PRODUCTIVE_STRUGGLE"},
@@ -253,6 +264,17 @@ class FakePipeline:
             }
         )
         return aggregate_question_gradings(ctx.submission_id, [q_out], free=free)
+
+
+def fake_checks(given: dict) -> list[dict]:
+    """All 24 quirk checks: the given ones, the rest NOT_TESTED."""
+    from .quirks import CHECKS
+
+    out = []
+    for cid in CHECKS:
+        status, step, evidence = given.get(cid, ("NOT_TESTED", None, ""))
+        out.append({"check_id": cid, "status": status, "step_number": step, "evidence": evidence})
+    return out
 
 
 def fake_worksheet(item: FlaggedGrading) -> WorksheetContent:

@@ -43,7 +43,7 @@ from .schemas import (
     Stage2GradingAndAffectOutput,
 )
 from .taxonomy import CURRICULUM, cached_context_text
-from .quirks import clean_question_quirks
+from .quirks import clean_requirement_checks
 
 log = logging.getLogger(__name__)
 
@@ -260,13 +260,15 @@ Method (follow in exact order):
    blank questions as `TST_BLANK`). The code's prefix is its pillar. Also list
    downstream lines/conclusions affected solely by an earlier root error in THIS
    question as `is_cascading_consequence=true` with the root cause's code.
-6. `earned_quirks`: what the student did WELL on THIS question, from the quirk list
-   in the cached context. Up to 3, each with clear evidence on the page: the
-   `step_number` that shows it (or null for the whole question) and one short
-   `evidence` sentence to the student naming exactly what they did ("You kept the
-   negative sign on -3x through every line."). Never award a quirk the question's
-   errors contradict, never for a blank question, and never just to soften bad news.
-   An empty list is fine. Quirks never change the pillar scores.
+6. `requirement_checks`: judge THIS question against all 24 quirk checks in the
+   cached context, one entry per check id in list order. `status` is MET (the work
+   clearly shows it), MISSED (the question called for it and the student fell short)
+   or NOT_TESTED (this question gives no chance to show it). For MET and MISSED give
+   the `step_number` that shows it (or null for the whole question) and one short
+   `evidence` sentence to the student ("You kept the negative sign on -3x through
+   every line."). A check is MISSED whenever this question has a root error it is
+   about. Never mark MET without clear evidence or just to soften bad news; nothing is
+   MET on a blank question. These checks never change the pillar scores.
 7. `pillar_scores`: give exactly one entry per pillar (`CON`, `STR`, `PRC`, `FAC`,
    `COM`, `TST`) for THIS question. Max scores are CON 2, STR 2, PRC 2, FAC 2,
    COM 1, TST 1. Deduct only for root causes, never for cascading consequences. Feedback is one sentence
@@ -282,8 +284,8 @@ Method (follow in exact order):
    errors are mostly FAC/COM/TST slips made in rushed work; otherwise
    `STANDARD_PROGRESSIVE_FADE`.
 10. `supportive_framing_message`: one or two warm, specific, growth-mindset
-   sentences to the student for this question. Name what they did well first (a quirk
-   you awarded, if any), then the main thing to fix.
+   sentences to the student for this question. Name what they did well first (a check
+   they MET, if any), then the main thing to fix.
 11. `parent_insight`: one sentence for a parent describing the pattern on this
     question and one concrete thing to try at home. No jargon, no codes.
 
@@ -308,7 +310,7 @@ Plan: FREE. Skip method step 8 and the mood part of step 9: return
 sentiment_entities as an empty list, aggregate_valence 0, aggregate_friction 0 and
 recommended_scaffolding_mode STANDARD_PROGRESSIVE_FADE. Everything else (answer key,
 final-answer re-substitution verification, key-step coverage checks, step evaluations,
-errors, earned quirks, pillar scores, the message to the student and the parent insight) is
+errors, requirement checks, pillar scores, the message to the student and the parent insight) is
 required as usual. Keep explanations to one sentence each.
 """
 
@@ -469,7 +471,7 @@ def sanitize_question_grading(
         "problem_statement": q.problem_statement.strip() or source.problem_statement,
         "step_evaluations": clean_steps,
     }
-    q = clean_question_quirks(q.model_copy(update={"step_evaluations": clean_steps}))
+    q = clean_requirement_checks(q.model_copy(update={"step_evaluations": clean_steps}))
     if free:
         update |= {
             "sentiment_entities": [],
@@ -665,7 +667,7 @@ class GeminiPipeline:
                 cache = self._client.caches.create(
                     model=model,
                     config=types.CreateCachedContentConfig(
-                        display_name=f"birdbrains-taxonomy-curriculum-v4-{model}",
+                        display_name=f"birdbrains-taxonomy-curriculum-v5-{model}",
                         system_instruction=STAGE2_SYSTEM,
                         contents=[types.Content(role="user", parts=[types.Part.from_text(text=cached_context_text())])],
                         ttl=f"{CACHE_TTL_SECONDS}s",

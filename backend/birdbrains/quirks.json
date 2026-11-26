@@ -1,6 +1,6 @@
 {
-  "version": 1,
-  "about": "Quirks: strengths the grader can award, 4 per pillar. Mistakes (error_codes.json) are shown to people as antiquirks. Ids are internal; people see plain_name, earned_line and how_to_earn. `opposes` lists the antiquirk codes that cancel the quirk on the same question.",
+  "version": 2,
+  "about": "The 4 checks per pillar (24 in all). The grader marks every check MET, MISSED or NOT_TESTED on every question. Of the checks that apply, meeting at least two thirds earns the pillar's quirk; meeting a quarter or fewer gives its antiquirk; otherwise neutral (so 3-4 of 4 = quirk, 0-1 of 4 = antiquirk). Ids are internal; people see plain_name, earned_line and how_to_earn. A check is MISSED when the question has a root error listed in its `opposes`.",
   "quirks": [
     {
       "id": "QK_CON_RULE_APPLIED",
