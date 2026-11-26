@@ -556,7 +556,7 @@ const SEVERITY: Record<string, { label: string; cls: string }> = {
 
 /**
  * The mistakes, in plain words, once each: the same kind of mistake twice shows as one
- * card with both details. No internal codes (PRC-03 ...) are shown.
+ * card with both details. No internal codes (PRC_SIGN_OR_FACTOR_DROPPED ...) are shown.
  */
 function MisconceptionList({
   items,

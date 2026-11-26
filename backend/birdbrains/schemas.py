@@ -17,15 +17,15 @@ from typing import List, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from .codes import ERROR_CODE_PATTERN, LEGACY_CODES
+
 STUDENT_ID_PATTERN = r"^stu_[a-zA-Z0-9]{12}$"
 SUBMISSION_ID_PATTERN = r"^sub_[a-zA-Z0-9]{12}$"
 GRADING_ID_PATTERN = r"^grd_[a-zA-Z0-9]{12}$"
 WORKSHEET_ID_PATTERN = r"^wks_[a-zA-Z0-9]{12}$"
 TENANT_ID_PATTERN = r"^ten_[a-zA-Z0-9]{10}$"
-# The 24 six-pillar error codes (see taxonomy.ERROR_CODES). Ids of codes that moved
-# pillar are retired; LEGACY_CODES maps them so gradings stored before 2026-11-25 load.
-ERROR_CODE_PATTERN = r"^(CON-0[1456]|STR-0[1-4]|PRC-0[1-4]|FAC-0[1-4]|COM-0[1-4]|TST-0[3-6])$"
-LEGACY_CODES = {"CON-02": "STR-01", "CON-03": "STR-02", "TST-01": "COM-01", "TST-02": "COM-02"}
+# The six-pillar error codes live in error_codes.json (see codes.py). Old ids are
+# upgraded on load through LEGACY_CODES so gradings stored before 2026-11-26 load.
 
 
 def _upgrade_legacy_code(data):

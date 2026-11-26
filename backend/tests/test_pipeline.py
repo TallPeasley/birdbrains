@@ -99,7 +99,7 @@ def test_stage2_uses_cache_and_thinking_level():
     assert config.thinking_config.thinking_level.value == "LOW"
     assert config.response_schema is QuestionGradingOutput
     assert client.cache_creates == 1 and client.cache_config.ttl == "86400s"
-    assert "CON-01" in client.cache_config.contents[0].parts[0].text
+    assert "CON_FOUNDATIONAL_MISCONCEPTION" in client.cache_config.contents[0].parts[0].text
     assert out.submission_id == CTX.submission_id
     assert len(out.question_analyses) == 1
     assert out.question_analyses[0].answer_key.final_answer
@@ -112,7 +112,7 @@ def test_stage2_falls_back_to_inline_taxonomy():
     pipe.run_stage2(CTX, S1)
     pipe.run_stage2(CTX, S1)
     _, contents, config = client.calls[0]
-    assert config.cached_content is None and "PRC-03" in contents and config.system_instruction
+    assert config.cached_content is None and "PRC_SIGN_OR_FACTOR_DROPPED" in contents and config.system_instruction
     assert client.cache_creates == 1  # not retried on every request
 
 
@@ -122,7 +122,7 @@ def test_small_taxonomy_skips_the_cache_call(monkeypatch):
     P.GeminiPipeline(client=client).run_stage2(CTX, S1)
     assert client.cache_creates == 0
     _, contents, config = client.calls[0]
-    assert config.cached_content is None and "PRC-03" in contents
+    assert config.cached_content is None and "PRC_SIGN_OR_FACTOR_DROPPED" in contents
 
 
 def test_stage2_separates_multi_question_analysis_and_isolates_carry_forward():
@@ -191,12 +191,12 @@ def test_stage2_separates_multi_question_analysis_and_isolates_carry_forward():
             {"step_number": 2, "student_latex": "3x + 4y = 20", "is_correct": True, "is_carry_forward_consistent": False,
              "pillar": None, "error_code": None, "explanation": "Copied equation 2 accurately."},
             {"step_number": 3, "student_latex": "7x = 12", "is_correct": False, "is_carry_forward_consistent": False,
-             "pillar": "PRC", "error_code": "PRC-03", "explanation": "To eliminate -4y and +4y, add the equations (13x = 52), do not subtract."},
+             "pillar": "PRC", "error_code": "PRC_SIGN_OR_FACTOR_DROPPED", "explanation": "To eliminate -4y and +4y, add the equations (13x = 52), do not subtract."},
             {"step_number": 4, "student_latex": "x = \\frac{12}{7}", "is_correct": True, "is_carry_forward_consistent": True,
-             "pillar": "PRC", "error_code": "PRC-03", "explanation": "Follows validly from step 3."},
+             "pillar": "PRC", "error_code": "PRC_SIGN_OR_FACTOR_DROPPED", "explanation": "Follows validly from step 3."},
         ],
         "identified_errors": [
-            {"pillar": "PRC", "error_code": "PRC-03", "description": "Subtracted x-terms and constants while cancelling opposite-sign y-terms.",
+            {"pillar": "PRC", "error_code": "PRC_SIGN_OR_FACTOR_DROPPED", "description": "Subtracted x-terms and constants while cancelling opposite-sign y-terms.",
              "target_entity": "elimination addition vs subtraction", "is_cascading_consequence": False, "severity": "HIGH"},
         ],
         "pillar_scores": [
@@ -322,7 +322,7 @@ def test_stage2_retries_when_resubstitution_contradicts_all_correct_steps():
     out = P.GeminiPipeline(client=client).run_stage2(CTX, S1)
     assert attempts[0] == 2
     assert "SELF-CHECK FAILURE" in client.calls[1][1]
-    assert [e.error_code for e in out.identified_errors if not e.is_cascading_consequence] == ["PRC-03"]
+    assert [e.error_code for e in out.identified_errors if not e.is_cascading_consequence] == ["PRC_SIGN_OR_FACTOR_DROPPED"]
 
 
 def test_legacy_stage1_and_stage2_remain_compatible():
@@ -359,7 +359,7 @@ def test_batch_round_trip(tmp_path):
     line = json.loads(B.build_jsonl([item]).strip())
     assert line["grading_id"] == "grd_abcdefghijkl"
     prompt = line["request"]["contents"][0]["parts"][0]["text"]
-    assert "PRC-03" in prompt and "vertex form constant" not in prompt  # cascading errors are left out
+    assert "PRC_SIGN_OR_FACTOR_DROPPED" in prompt and "vertex form constant" not in prompt  # cascading errors are left out
     assert line["request"]["generationConfig"]["thinkingConfig"] == {"thinkingLevel": "LOW"}
     # Vertex loads the file through BigQuery: every key a valid column name ("$ref" and
     # "$defs" failed every real job), nesting under BigQuery's 15 levels.

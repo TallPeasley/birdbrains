@@ -111,7 +111,7 @@ def test_prompt_names_the_most_frequent_root_error():
     ctx = SubmissionContext("sub_abcdefghijkl", CourseEnum.MPM2D, "Completing the Square")
     s2 = fake.run_stage2(ctx, fake.run_stage1(ctx, []))
     root = next(e for e in s2.identified_errors if not e.is_cascading_consequence)
-    other = root.model_copy(update={"error_code": "CON-02"})
+    other = root.model_copy(update={"error_code": "STR_FORMULA_MISSELECTION"})
     s2 = s2.model_copy(update={"identified_errors": [other, root, root.model_copy()]})
     item = B.FlaggedGrading("grd_abcdefghijkl", CourseEnum.MPM2D, "x", ScaffoldingModeEnum.STANDARD_PROGRESSIVE_FADE, s2)
     assert f"Target error: {root.error_code} (2 of 3 root-cause errors)" in B.worksheet_prompt(item)

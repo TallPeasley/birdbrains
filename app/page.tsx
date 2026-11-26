@@ -342,7 +342,7 @@ function DiagnosisPreview() {
   const steps: { line: string; ok: boolean; code?: string; pillar?: 'PRC' | 'FAC'; note?: string }[] = [
     { line: 'x^2 - 5x + 6 = 0', ok: true },
     { line: '(x - 2)(x - 3) = 0', ok: true },
-    { line: 'x = -2 or x = -3', ok: false, code: 'PRC-03', pillar: 'PRC', note: 'Sign flipped when solving each factor' },
+    { line: 'x = -2 or x = -3', ok: false, code: 'PRC_SIGN_OR_FACTOR_DROPPED', pillar: 'PRC', note: 'Sign flipped when solving each factor' },
   ];
   return (
     <figure className="relative m-0" aria-label="Example of a BirdBrains diagnosis">

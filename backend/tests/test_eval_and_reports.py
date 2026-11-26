@@ -145,7 +145,7 @@ def test_gold_set_loads_and_covers_the_codes():
     gold = load_gold(GOLD)
     assert len(gold) == 22 and len({s.id for s in gold}) == 22
     codes = {c for s in gold for c in s.root_codes}
-    assert len(codes) == 15 and "TST-04" not in codes
+    assert len(codes) == 15 and "TST_DISTRACTOR_TRAP" not in codes
     assert sum(1 for s in gold if not s.root_codes) == 3          # fully correct work is in the set too
     for s in gold:
         assert all(1 < n <= len(s.lines) for n in s.carry_forward_steps), s.id
@@ -168,26 +168,26 @@ def test_metrics():
     assert all(s.gates().values()) and s.carry_forward_lines == 18
 
     answers = {x.id: (sorted(x.root_codes), True) for x in gold}
-    answers["S-10"] = (["PRC-03"], False)       # right pillar family? no: FAC-01 expected, PRC-03 given
-    answers["S-17"] = (["FAC-01"], True)        # an error invented on correct work
+    answers["S-10"] = (["PRC_SIGN_OR_FACTOR_DROPPED"], False)       # right pillar family? no: FAC_ARITHMETIC_SLIP expected, PRC_SIGN_OR_FACTOR_DROPPED given
+    answers["S-17"] = (["FAC_ARITHMETIC_SLIP"], True)        # an error invented on correct work
     answers["S-01"] = ("boom", True)            # schema failure
-    answers["S-09"] = (["PRC-01"], True)        # right pillar, wrong code
+    answers["S-09"] = (["PRC_STEP_OMITTED"], True)        # right pillar, wrong code
     worse = summarise(run_all(KeyedEngine(answers), gold, "pro"))
     assert worse.schema_pass_rate == pytest.approx(21 / 22)
     assert worse.exact_match_rate == pytest.approx(18 / 22)
     assert worse.code_f1 < worse.pillar_f1 < 1                    # S-09 costs code F1 only
     assert worse.carry_forward_accuracy == pytest.approx(16 / 18)  # S-10's line and S-01's line
-    assert worse.per_code["FAC-01"].fp == 1 and worse.per_code["PRC-04"].fn == 1
+    assert worse.per_code["FAC_ARITHMETIC_SLIP"].fp == 1 and worse.per_code["PRC_INCOMPLETE_SIMPLIFICATION"].fn == 1
     assert not worse.gates()["Schema pass rate 100%"]
     report = markdown_report(worse, run_all(KeyedEngine(answers), gold, "pro"), "pro", "keyed", "synthetic")
-    assert "**S-17**" in report and "label says no errors; the model said FAC-01" in report and "FAIL: Schema" in report
+    assert "**S-17**" in report and "label says no errors; the model said FAC_ARITHMETIC_SLIP" in report and "FAIL: Schema" in report
 
     f = F1(tp=3, fp=1, fn=2)
     assert (f.precision, f.recall) == (0.75, 0.6) and f.f1 == pytest.approx(2 / 3)
     assert percentile([float(i) for i in range(1, 21)], 0.95) == 19 and percentile([], 0.95) == 0
     assert consistency_problems(S2) == []
     wrong_pillar = S2.model_copy(update={"identified_errors": [S2.identified_errors[0].model_copy(update={"pillar": PillarEnum.CON})]})
-    assert "PRC-03 filed under pillar CON" in consistency_problems(wrong_pillar)[0]
+    assert "PRC_SIGN_OR_FACTOR_DROPPED filed under pillar CON" in consistency_problems(wrong_pillar)[0]
 
 
 def test_cli_writes_reports(tmp_path, capsys):
@@ -208,9 +208,9 @@ def test_student_progress_report(client, family):
         client.post(f"/submissions/{sub['submissionId']}/process", headers=auth("alex"))
     rep = client.get(f"/students/{sid}/progress", headers=auth("jordan")).json()     # the linked parent can read it
     assert rep["uploads"] == 2 and rep["plan"] == "free" and rep["studentName"] == "Alex Mercer"
-    assert rep["errorCodes"] == [{"code": "PRC-03", "name": "Algebraic Manipulation / Sign Failure", "pillar": "PRC",
+    assert rep["errorCodes"] == [{"code": "PRC_SIGN_OR_FACTOR_DROPPED", "name": "Sign or Factor Dropped", "pillar": "PRC",
                                   "count": 2, "students": 1, "lastSeen": rep["lastUploadAt"]}]
-    assert rep["recurringCodes"] == ["PRC-03"]
+    assert rep["recurringCodes"] == ["PRC_SIGN_OR_FACTOR_DROPPED"]
     assert [p["rootErrors"] for p in rep["timeline"]] == [1, 1] and rep["timeline"][0]["valence"] is None  # Free: no mood
     assert rep["masteryByStrand"] == [{"strandName": "Quadratic Relations", "mastery": 0.8}]
     assert {p["pillar"]: p["percentageOfTotalErrors"] for p in rep["pillarErrorDistribution"]}["PRC"] == 100
@@ -243,9 +243,9 @@ def test_teacher_class_report(client, family, deps):
     rep = client.get("/teacher/report?googleCourseId=c1", headers=auth("rivera")).json()
     assert rep["uploads"] == 1 and [s["studentName"] for s in rep["students"]] == ["Ana Silva", "Ben Okoro"]
     row = rep["students"][0]
-    assert row["topCode"] == "PRC-03" and row["averageMastery"] == 0.8 and not row["needsAttention"]
+    assert row["topCode"] == "PRC_SIGN_OR_FACTOR_DROPPED" and row["averageMastery"] == 0.8 and not row["needsAttention"]
     assert rep["students"][1]["uploads"] == 0 and rep["students"][1]["averageMastery"] is None
-    assert rep["errorCodes"][0]["code"] == "PRC-03" and rep["errorCodes"][0]["students"] == 1
+    assert rep["errorCodes"][0]["code"] == "PRC_SIGN_OR_FACTOR_DROPPED" and rep["errorCodes"][0]["students"] == 1
     assert client.get("/teacher/report?googleCourseId=other", headers=auth("rivera")).json()["students"] == []
     one = client.get(f"/students/{ana['studentId']}/progress", headers=auth("rivera")).json()
     assert one["plan"] == "pro" and one["timeline"][0]["valence"] is not None
@@ -300,14 +300,14 @@ def test_internal_stats_has_numbers_but_no_names_or_ids(client, family, deps):
     assert s["uploads"] == 2 and s["uploadsByStatus"] == {"GRADED": 1, "UPLOADED": 1}
     assert s["activeStudents"] == 1 and s["activeStudentsByPlan"] == {"free": 1} and s["freeStudentsAtCap"] == 0
     assert s["graded"] == 1 and s["gradedByPlan"] == {"free": 1} and s["gradedWithNoErrors"] == 0
-    assert s["topErrorCodes"] == [{"code": "PRC-03", "count": 1}] and s["worksheets"] == {"PRO_ONLY": 1}
+    assert s["topErrorCodes"] == [{"code": "PRC_SIGN_OR_FACTOR_DROPPED", "count": 1}] and s["worksheets"] == {"PRO_ONLY": 1}
     text = json.dumps(s)
     for private in ("Alex", "Mercer", "Jordan", sid, sub["submissionId"]):
         assert private not in text
 
     from tools.pilot_summary import render
     out = render(s)
-    assert "Uploads: 2 from 1 students (1 free)" in out and "1 x PRC-03 Algebraic Manipulation" in out
+    assert "Uploads: 2 from 1 students (1 free)" in out and "1 x PRC_SIGN_OR_FACTOR_DROPPED Sign or Factor Dropped" in out
     old = deps.store.get("submissions", sub["submissionId"]) | {"uploadedAt": "2026-01-01T00:00:00+00:00"}
     deps.store.put("submissions", sub["submissionId"], old)
     assert client.get("/internal/stats", headers=TOKEN).json()["uploads"] == 1
@@ -393,9 +393,9 @@ def test_practice_set_is_required_on_new_worksheets():
 def test_error_codes_never_reach_student_text():
     from birdbrains.projections import _plain_prose, plain
 
-    assert plain("The -9 was not multiplied by 2 (PRC-03).") == "The -9 was not multiplied by 2."
-    assert plain("A FAC-01 in step 2.") == "A calculation slip in step 2."
-    out = _plain_prose({"misconceptionId": "PRC-03", "description": "Sign lost [PRC-03]",
-                        "steps": [{"explanation": "TST-03 here"}]})
-    assert out == {"misconceptionId": "PRC-03", "description": "Sign lost",
-                   "steps": [{"explanation": "left blank or unfinished here"}]}
+    assert plain("The -9 was not multiplied by 2 (PRC_SIGN_OR_FACTOR_DROPPED).") == "The -9 was not multiplied by 2."
+    assert plain("A FAC_ARITHMETIC_SLIP in step 2.") == "A calculation slip in step 2."
+    out = _plain_prose({"misconceptionId": "PRC_SIGN_OR_FACTOR_DROPPED", "description": "Sign lost [PRC_SIGN_OR_FACTOR_DROPPED]",
+                        "steps": [{"explanation": "TST_BLANK here"}]})
+    assert out == {"misconceptionId": "PRC_SIGN_OR_FACTOR_DROPPED", "description": "Sign lost",
+                   "steps": [{"explanation": "left blank here"}]}

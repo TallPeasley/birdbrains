@@ -57,7 +57,7 @@ def test_full_flow(client, family):
     assert q1["answerKey"]["finalAnswer"]
     assert q1["finalAnswerVerification"]["satisfiesInitialQuestion"] is False
     assert any(c["status"] == "MISSING" for c in q1["keyStepChecks"])
-    assert [e["misconceptionId"] for e in grading["entityExtractions"]] == ["PRC-03"]
+    assert [e["misconceptionId"] for e in grading["entityExtractions"]] == ["PRC_SIGN_OR_FACTOR_DROPPED"]
     assert grading["pillarBreakdowns"][2]["errorCount"] == 1
 
     # Idempotent.
@@ -147,7 +147,7 @@ def test_free_plan(client, family, deps):
     grading = client.post(f"/submissions/{sub['submissionId']}/process", headers=auth("alex")).json()["grading"]
     # Diagnosis and feedback yes; mood, scaffolding mode and worksheets no.
     assert grading["plan"] == "free" and grading["affectState"] is None and grading["scaffoldingMode"] is None
-    assert grading["entityExtractions"][0]["misconceptionId"] == "PRC-03"
+    assert grading["entityExtractions"][0]["misconceptionId"] == "PRC_SIGN_OR_FACTOR_DROPPED"
     assert grading["supportiveFramingMessage"]
     stored = deps.store.get("gradings", grading["gradingId"])
     assert stored["stage2"]["sentiment_entities"] == []  # no affect telemetry kept

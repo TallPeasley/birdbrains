@@ -232,8 +232,10 @@ Method (follow in exact order):
    - List the matching student `line_number`(s) in `matched_student_steps` (empty
      list when `MISSING`).
    - If a required key step (`is_key_step=true`) is `MISSING`, diagnose the
-     omission with the matching error code (e.g. `PRC-01`, `PRC-04`, `COM-01`,
-     `COM-02`, `COM-04` or `TST-03`).
+     omission with the matching error code (e.g. `PRC_STEP_OMITTED`,
+     `PRC_INCOMPLETE_SIMPLIFICATION`, `COM_ANSWERED_DIFFERENT_QUESTION`,
+     `COM_MISSING_CONCLUSION`, `COM_UNSUPPORTED_ANSWER`, `TST_SKIPPED_PART` or
+     `TST_BLANK`).
 4. Evaluate each transcribed line of THIS question in order (`step_evaluations`):
    - Keep `step_number` matching the question's `line_number` (starting from 1).
    - Verify line 1 (and every initial setup line) directly against
@@ -254,7 +256,7 @@ Method (follow in exact order):
 5. `identified_errors`: list every root cause in THIS question
    (`is_cascading_consequence=false`), each with one pillar and one official error
    code from the taxonomy (including omissions caught by `key_step_checks` or
-   blank questions as `TST-03`). The code's prefix is its pillar. Also list
+   blank questions as `TST_BLANK`). The code's prefix is its pillar. Also list
    downstream lines/conclusions affected solely by an earlier root error in THIS
    question as `is_cascading_consequence=true` with the root cause's code.
 6. `pillar_scores`: give exactly one entry per pillar (`CON`, `STR`, `PRC`, `FAC`,
@@ -279,7 +281,7 @@ Method (follow in exact order):
 
 Writing for people (every explanation, note, description, feedback, message and
 insight):
-- Plain words only. Never write an error code (`PRC-03`), a pillar code (`CON`,
+- Plain words only. Never write an error code (`PRC_SIGN_OR_FACTOR_DROPPED`), a pillar code (`CON`,
   `FAC`) or a field name in any sentence: the codes go in the code fields alone.
 - Say each mistake once. Explain it fully in the `explanation` of the step where it
   happens. Everywhere else (`discrepancy_note`, key-step `note`, carry-forward and
@@ -654,7 +656,7 @@ class GeminiPipeline:
                 cache = self._client.caches.create(
                     model=model,
                     config=types.CreateCachedContentConfig(
-                        display_name=f"birdbrains-taxonomy-curriculum-v2-{model}",
+                        display_name=f"birdbrains-taxonomy-curriculum-v3-{model}",
                         system_instruction=STAGE2_SYSTEM,
                         contents=[types.Content(role="user", parts=[types.Part.from_text(text=cached_context_text())])],
                         ttl=f"{CACHE_TTL_SECONDS}s",

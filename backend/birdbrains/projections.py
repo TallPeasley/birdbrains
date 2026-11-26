@@ -7,8 +7,8 @@ from datetime import datetime
 from typing import Optional
 
 from .questions import strip_label, written_label
+from .codes import CODES, LEGACY_CODES
 from .schemas import (
-    LEGACY_CODES,
     AffectStateEnum,
     ApiGrading,
     ApiParentSummary,
@@ -36,34 +36,10 @@ MAX_ALERTS = 5
 
 # Student-facing text never shows the internal error codes (PRC-03 ...): the model is
 # told not to write them, and any that slip through are swapped for the plain name.
-PLAIN_MISTAKE_NAMES = {
-    "CON-01": "mixed-up math rule",
-    "CON-04": "sign or direction set up backwards",
-    "CON-05": "rule used where it does not work",
-    "CON-06": "value that is not allowed",
-    "STR-01": "wrong formula for this question",
-    "STR-02": "question set up wrong",
-    "STR-03": "no clear plan",
-    "STR-04": "method that does not fit",
-    "PRC-01": "skipped step",
-    "PRC-02": "steps done out of order",
-    "PRC-03": "sign or term lost while rearranging",
-    "PRC-04": "answer not fully simplified",
-    "FAC-01": "calculation slip",
-    "FAC-02": "number copied wrong",
-    "FAC-03": "unit or constant slip",
-    "FAC-04": "rounding slip",
-    "COM-01": "answered a different question",
-    "COM-02": "missing units or final sentence",
-    "COM-03": "hard-to-follow working",
-    "COM-04": "answer not explained",
-    "TST-03": "left blank or unfinished",
-    "TST-04": "middle step taken as the answer",
-    "TST-05": "gave up partway",
-    "TST-06": "answer not checked",
-}
+PLAIN_MISTAKE_NAMES = {c.id: c.plain_name.lower() for c in CODES.values()}
 PLAIN_MISTAKE_NAMES.update({old: PLAIN_MISTAKE_NAMES[new] for old, new in LEGACY_CODES.items()})
-_ANY_CODE = r"(?:CON|STR|PRC|FAC|COM|TST)-0[1-9]"
+# Any current id, any old id, and any leftover dash-style id the model might invent.
+_ANY_CODE = "(?:" + "|".join(sorted(PLAIN_MISTAKE_NAMES, key=len, reverse=True)) + r"|(?:CON|STR|PRC|FAC|COM|TST)-0[1-9])"
 _BRACKETED_CODE = re.compile(r"\s*[(\[]\s*" + _ANY_CODE + r"\s*[)\]]")
 _CODE = re.compile(r"\b" + _ANY_CODE + r"\b")
 _PROSE_KEYS = {"explanation", "description", "note", "discrepancyNote", "resubstitutionCheck", "feedback",

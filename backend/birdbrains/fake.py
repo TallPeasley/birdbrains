@@ -191,15 +191,15 @@ class FakePipeline:
                     step(1, True, False, None, None, "Original equation correctly written."),
                     step(2, True, False, None, None, "Factored 2 out of the first two terms accurately."),
                     step(3, True, False, None, None, "Completed the square inside the bracket using (6/2)^2 = 9."),
-                    step(4, False, False, "PRC", "PRC-03",
+                    step(4, False, False, "PRC", "PRC_SIGN_OR_FACTOR_DROPPED",
                          "The -9 leaving the bracket was not multiplied by the outer factor of 2. It should be -18."),
-                    step(5, True, True, "PRC", "PRC-03",
+                    step(5, True, True, "PRC", "PRC_SIGN_OR_FACTOR_DROPPED",
                          "Carry-forward protection: -9 + 5 = -4 is consistent with step 4, so no marks are lost here."),
                 ],
                 "identified_errors": [
                     {
                         "pillar": "PRC",
-                        "error_code": "PRC-03",
+                        "error_code": "PRC_SIGN_OR_FACTOR_DROPPED",
                         "description": "Did not distribute the leading coefficient to the term removed from the bracket.",
                         "target_entity": "distributing a leading coefficient",
                         "is_cascading_consequence": False,
@@ -207,7 +207,7 @@ class FakePipeline:
                     },
                     {
                         "pillar": "PRC",
-                        "error_code": "PRC-03",
+                        "error_code": "PRC_SIGN_OR_FACTOR_DROPPED",
                         "description": "Final constant is off because of the step 4 slip.",
                         "target_entity": "vertex form constant",
                         "is_cascading_consequence": True,

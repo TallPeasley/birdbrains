@@ -247,7 +247,7 @@ export default function UploadHistory({ studentId }: { studentId?: string } = {}
                   type="search"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search topic or code (e.g. PRC-03)"
+                  placeholder="Search topic or mistake (e.g. rounding)"
                   className="w-full rounded-lg border border-slate-200 bg-white py-1.5 pl-9 pr-3 text-sm text-slate-800 placeholder:text-slate-400 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
                 />
               </label>

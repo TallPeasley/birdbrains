@@ -203,7 +203,7 @@
         ],
         "entityExtractions": [
           {
-            "misconceptionId": "PRC-03",
+            "misconceptionId": "PRC_SIGN_OR_FACTOR_DROPPED",
             "description": "Failure to distribute leading coefficient to subtracted square term when extracting from bracket.",
             "severity": "HIGH"
           }
@@ -443,7 +443,7 @@
     ],
     "entityExtractions": [
       {
-        "misconceptionId": "PRC-03",
+        "misconceptionId": "PRC_SIGN_OR_FACTOR_DROPPED",
         "description": "Failure to distribute leading coefficient to subtracted square term when extracting from bracket.",
         "severity": "HIGH"
       }
