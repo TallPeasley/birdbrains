@@ -59,19 +59,23 @@ def test_full_flow(client, family):
     assert any(c["status"] == "MISSING" for c in q1["keyStepChecks"])
     assert [e["misconceptionId"] for e in grading["entityExtractions"]] == ["PRC_SIGN_OR_FACTOR_DROPPED"]
     assert grading["pillarBreakdowns"][2]["errorCount"] == 1
-    # Quirks: strengths earned alongside the antiquirks (all plans).
-    assert [q["quirkId"] for q in grading["quirks"]] == ["QK_CON_RULE_APPLIED", "QK_FAC_ACCURATE_ARITHMETIC"]
-    assert grading["quirks"][0]["stepNumber"] == 3 and grading["quirks"][0]["pillar"] == "CON"
-    assert len(q1["quirks"]) == 2
+    # Quirks and antiquirks: all six pillars, each from its 4 checks (all plans).
+    pq = {p["pillar"]: p for p in grading["pillarQuirks"]}
+    assert list(pq) == ["CON", "STR", "PRC", "FAC", "COM", "TST"]
+    assert all(len(p["checks"]) == 4 for p in pq.values())
+    assert (pq["CON"]["status"], pq["CON"]["met"], pq["CON"]["tested"]) == ("QUIRK", 2, 3)
+    assert (pq["PRC"]["status"], pq["PRC"]["met"], pq["PRC"]["tested"]) == ("NEUTRAL", 1, 3)
+    assert pq["FAC"]["status"] == "QUIRK" and pq["TST"]["status"] == "NEUTRAL"
+    assert len(q1["pillarQuirks"]) == 6
 
     # Idempotent.
     again = client.post(f"/submissions/{sub['submissionId']}/process", headers=auth("alex")).json()
     assert again["grading"]["gradingId"] == grading["gradingId"]
     assert client.get(f"/students/{sid}/gradings/latest", headers=auth("alex")).json()["gradingId"] == grading["gradingId"]
-    collection = {r["quirkId"]: r for r in client.get(f"/students/{sid}/quirks", headers=auth("jordan")).json()}
-    assert len(collection) == 24
-    assert collection["QK_CON_RULE_APPLIED"]["count"] == 1 and collection["QK_CON_RULE_APPLIED"]["firstEarnedAt"]
-    assert collection["QK_TST_CHECKED_ANSWER"]["count"] == 0
+    tallies = {r["pillar"]: r for r in client.get(f"/students/{sid}/quirks", headers=auth("jordan")).json()}
+    assert len(tallies) == 6
+    assert tallies["CON"]["quirks"] == 1 and tallies["CON"]["firstQuirkAt"] and tallies["CON"]["antiquirks"] == 0
+    assert tallies["PRC"]["neutral"] == 1 and tallies["PRC"]["lastStatus"] == "NEUTRAL"
 
     # Worksheet arrives with the nightly batch.
     ws_url = f"/gradings/{grading['gradingId']}/worksheet"
@@ -158,7 +162,7 @@ def test_free_plan(client, family, deps):
     assert grading["plan"] == "free" and grading["affectState"] is None and grading["scaffoldingMode"] is None
     assert grading["entityExtractions"][0]["misconceptionId"] == "PRC_SIGN_OR_FACTOR_DROPPED"
     assert grading["supportiveFramingMessage"]
-    assert len(grading["quirks"]) == 2  # quirks are on every plan (Maalik, 2026-11-26)
+    assert len(grading["pillarQuirks"]) == 6  # quirks are on every plan (Maalik, 2026-11-26)
     stored = deps.store.get("gradings", grading["gradingId"])
     assert stored["stage2"]["sentiment_entities"] == []  # no affect telemetry kept
     assert deps.store.get("ledgers", sid)["valence_ewma"] is None

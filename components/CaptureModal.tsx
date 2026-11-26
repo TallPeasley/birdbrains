@@ -18,7 +18,7 @@ import {
 import { useRole } from '@/lib/roleContext';
 import { analyzeImage, MIN_SHORT_EDGE, type ImageQualityResult } from '@/lib/imageQuality';
 import { codePillar, mistakeName, uniqueMistakes } from '@/lib/errorCodes';
-import { QuirksEarned } from '@/components/student/Quirks';
+import { PillarQuirkChips } from '@/components/student/Quirks';
 import { PILLARS } from '@/lib/pillars';
 import { demoPersonas, gradingOutput as demoGrading } from '@/lib/mockData';
 import { api, ApiError } from '@/lib/api';
@@ -919,12 +919,17 @@ function PipelineView({
             Your work has been checked. See which steps went well and where you got stuck on the student dashboard.
           </div>
 
-          {grading && <QuirksEarned quirks={grading.quirks} compact />}
+          {grading?.pillarQuirks?.length ? (
+            <div className="rounded-2xl border border-slate-200 bg-white p-4">
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Quirks and antiquirks</p>
+              <PillarQuirkChips pillars={grading.pillarQuirks} className="mt-2" />
+            </div>
+          ) : null}
 
           {grading && grading.entityExtractions.length > 0 && (
             <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
               <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-                Antiquirks to fix
+                Mistakes spotted
               </p>
               <ul className="mt-2 space-y-2">
                 {uniqueMistakes(grading.entityExtractions).map((m, idx) => {

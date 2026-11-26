@@ -275,13 +275,28 @@ class RootCauseErrorItem(Strict):
     _legacy = model_validator(mode="before")(_upgrade_legacy_code)
 
 
-class EarnedQuirk(Strict):  # extension
-    """A strength the student showed (a "quirk"; mistakes are shown as antiquirks).
-    Ids come from quirks.json and never change a mark."""
+class CheckStatusEnum(str, Enum):
+    MET = "MET"
+    MISSED = "MISSED"
+    NOT_TESTED = "NOT_TESTED"
 
-    quirk_id: str = Field(..., pattern=QUIRK_PATTERN)
+
+class PillarQuirkStatusEnum(str, Enum):
+    QUIRK = "QUIRK"
+    NEUTRAL = "NEUTRAL"
+    ANTIQUIRK = "ANTIQUIRK"
+    NOT_SHOWN = "NOT_SHOWN"
+
+
+class RequirementCheck(Strict):  # extension
+    """One of the 24 quirk checks (4 per pillar, ids in quirks.json) judged on one
+    question. Of a pillar's checks that apply, 2/3+ met = quirk, 1/4 or fewer =
+    antiquirk. Never changes a mark."""
+
+    check_id: str = Field(..., pattern=QUIRK_PATTERN)
+    status: CheckStatusEnum
     step_number: Optional[int] = Field(default=None, ge=1)
-    evidence: str
+    evidence: str = ""
 
 
 class PillarScore(Strict):  # extension
@@ -307,8 +322,8 @@ class QuestionGradingOutput(Strict):
     key_step_checks: List[KeyStepCheck]
     step_evaluations: List[StepEvaluation]
     identified_errors: List[RootCauseErrorItem]
-    # Strengths ("quirks"), at most 3 per question; empty on gradings made before 2026-11-26.
-    earned_quirks: List[EarnedQuirk] = Field(default_factory=list)
+    # The 24 quirk checks, one entry each (quirks.py scores them per pillar).
+    requirement_checks: List[RequirementCheck] = Field(default_factory=list)
     pillar_scores: List[PillarScore]
     sentiment_entities: List[SentimentEntityExtraction]
     aggregate_valence: float = Field(..., ge=-1.0, le=1.0)
@@ -316,6 +331,15 @@ class QuestionGradingOutput(Strict):
     recommended_scaffolding_mode: ScaffoldingModeEnum
     supportive_framing_message: str
     parent_insight: str
+
+    @model_validator(mode="before")
+    @classmethod
+    def _drop_old_quirks(cls, data):
+        """Gradings stored with the first quirks design (``earned_quirks``, 2026-11-26)
+        still load; that field is dropped."""
+        if isinstance(data, dict) and "earned_quirks" in data:
+            data = {k: v for k, v in data.items() if k != "earned_quirks"}
+        return data
 
 
 class Stage2GradingAndAffectOutput(Strict):
@@ -449,24 +473,44 @@ class ApiPillarBreakdown(Api):
     feedback: str
 
 
-class ApiEarnedQuirk(Api):
-    """A quirk earned on one upload. ``quirkId`` is internal; the site shows its plain name."""
+class ApiQuirkCheck(Api):
+    """One check of a pillar on an upload or a question. ``checkId`` is internal."""
 
-    quirkId: str
-    pillar: PillarEnum
+    checkId: str
+    status: CheckStatusEnum
     questionLabel: str = ""
     stepNumber: Optional[int] = None
     evidence: str = ""
 
 
-class ApiQuirkCount(Api):
-    """One slot of a student's quirk collection (every quirk is listed, earned or not)."""
+class ApiPillarQuirk(Api):
+    """A pillar's quirk result: QUIRK (2/3+ of applicable checks met), ANTIQUIRK
+    (1/4 or fewer), NEUTRAL, or NOT_SHOWN (no check applied)."""
 
-    quirkId: str
     pillar: PillarEnum
-    count: int
-    firstEarnedAt: Optional[str] = None
-    lastEarnedAt: Optional[str] = None
+    status: PillarQuirkStatusEnum
+    met: int
+    tested: int
+    checks: List[ApiQuirkCheck]
+
+
+class ApiCheckTally(Api):
+    checkId: str
+    met: int
+    missed: int
+
+
+class ApiPillarTally(Api):
+    """A pillar over all of a student's uploads: quirks and antiquirks earned."""
+
+    pillar: PillarEnum
+    quirks: int
+    antiquirks: int
+    neutral: int
+    firstQuirkAt: Optional[str] = None
+    lastStatus: Optional[PillarQuirkStatusEnum] = None
+    lastAt: Optional[str] = None
+    checks: List[ApiCheckTally]
 
 
 class ApiQuestion(Api):
@@ -534,7 +578,8 @@ class ApiQuestionDiagnostic(Api):
     entityExtractions: List[ApiEntityExtraction]
     pillarBreakdowns: List[ApiPillarBreakdown]
     supportiveFramingMessage: str = ""
-    quirks: List[ApiEarnedQuirk] = Field(default_factory=list)
+    # All six pillars: quirk / neutral / antiquirk with their 4 checks.
+    pillarQuirks: List[ApiPillarQuirk] = Field(default_factory=list)
 
 
 PlanTier = Literal["free", "pro"]
@@ -559,9 +604,10 @@ class ApiGrading(Api):
     # The questions on the page, in order. Empty (or one entry) for a single question.
     questions: List[ApiQuestion] = []
     entityExtractions: List[ApiEntityExtraction]
-    # Strengths earned on this upload, one per kind (the site calls them quirks;
-    # entityExtractions are shown as antiquirks).
-    quirks: List[ApiEarnedQuirk] = Field(default_factory=list)
+    # All six pillars on this upload: quirk / neutral / antiquirk with their 4 checks.
+    # Empty on gradings made before the checks existed. entityExtractions are the
+    # detailed reasons (error codes) behind missed checks.
+    pillarQuirks: List[ApiPillarQuirk] = Field(default_factory=list)
     scaffoldingMode: Optional[ScaffoldingModeEnum]  # null on the Free plan
     gradedAt: str
     plan: PlanTier = "pro"  # the plan the work was graded under
@@ -976,8 +1022,8 @@ class ApiProgressReport(Api):
     errorCodes: List[ApiErrorCodeCount]
     recurringCodes: List[str]  # given on two or more uploads
     pillarErrorDistribution: List[ApiPillarErrorShare]
-    # Quirks (strengths) earned so far, only those earned at least once.
-    quirkCounts: List[ApiQuirkCount] = Field(default_factory=list)
+    # Quirks and antiquirks per pillar over all uploads (all six pillars).
+    pillarTallies: List[ApiPillarTally] = Field(default_factory=list)
 
 
 class ApiCohortStudent(Api):

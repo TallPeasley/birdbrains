@@ -88,26 +88,38 @@ export interface FinalAnswerVerification {
   discrepancyNote: string;
 }
 
-/** A strength earned on an upload (a "quirk"; mistakes are shown as antiquirks).
- *  `quirkId` is internal: show `quirkName(quirkId)` from lib/quirks.ts. */
-export interface EarnedQuirk {
-  quirkId: string;
-  pillar: PillarCategory;
-  /** The question that earned it, on pages with several questions. */
+export type CheckStatus = 'MET' | 'MISSED' | 'NOT_TESTED';
+export type PillarQuirkStatus = 'QUIRK' | 'NEUTRAL' | 'ANTIQUIRK' | 'NOT_SHOWN';
+
+/** One of a pillar's 4 checks. `checkId` is internal: show `checkName(checkId)` from lib/quirks.ts. */
+export interface QuirkCheck {
+  checkId: string;
+  status: CheckStatus;
   questionLabel?: string;
   stepNumber?: number | null;
-  /** One sentence to the student naming exactly what they did. */
   evidence?: string;
 }
 
-/** One slot of a student's quirk collection (every quirk is listed, earned or not). */
-export interface QuirkCount {
-  quirkId: string;
+/** A pillar's result: QUIRK (2/3+ of the checks that apply met), ANTIQUIRK (1/4 or fewer),
+ *  NEUTRAL, or NOT_SHOWN (no check applied). */
+export interface PillarQuirk {
   pillar: PillarCategory;
-  /** Uploads that earned it (0 = not yet). */
-  count: number;
-  firstEarnedAt?: string | null;
-  lastEarnedAt?: string | null;
+  status: PillarQuirkStatus;
+  met: number;
+  tested: number;
+  checks: QuirkCheck[];
+}
+
+/** A pillar over all of a student's uploads. */
+export interface PillarTally {
+  pillar: PillarCategory;
+  quirks: number;
+  antiquirks: number;
+  neutral: number;
+  firstQuirkAt?: string | null;
+  lastStatus?: PillarQuirkStatus | null;
+  lastAt?: string | null;
+  checks: { checkId: string; met: number; missed: number }[];
 }
 
 export interface QuestionDiagnostic {
@@ -126,7 +138,7 @@ export interface QuestionDiagnostic {
   }[];
   pillarBreakdowns: PillarBreakdown[];
   supportiveFramingMessage?: string;
-  quirks?: EarnedQuirk[];
+  pillarQuirks?: PillarQuirk[];
 }
 
 export interface Stage2GradingAndAffectOutput {
@@ -152,8 +164,8 @@ export interface Stage2GradingAndAffectOutput {
     description: string;
     severity: 'LOW' | 'MEDIUM' | 'HIGH';
   }[];
-  /** Strengths earned on this upload, one per kind. Missing on gradings made before 2026-11-26. */
-  quirks?: EarnedQuirk[];
+  /** All six pillars: quirk / neutral / antiquirk with their 4 checks. Empty on older gradings. */
+  pillarQuirks?: PillarQuirk[];
   /** Set by the backend. */
   /** null on the Free plan. */
   scaffoldingMode?: ScaffoldingMode | null;
@@ -463,8 +475,8 @@ export interface ProgressReport {
   /** Codes given on two or more uploads. */
   recurringCodes: string[];
   pillarErrorDistribution: { pillar: PillarCategory; percentageOfTotalErrors: number }[];
-  /** Quirks (strengths) earned at least once. Missing from older API versions. */
-  quirkCounts?: QuirkCount[];
+  /** Quirks and antiquirks per pillar over all uploads. Missing from older API versions. */
+  pillarTallies?: PillarTally[];
 }
 
 /** GET /teacher/report: a Pro teacher's class at a glance. */

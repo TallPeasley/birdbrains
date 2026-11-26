@@ -9,7 +9,7 @@ from collections import Counter
 from typing import Optional
 
 from .mastery_affect_ledger import root_errors
-from .quirks import collection as quirk_collection, grading_quirk_ids
+from .quirks import tally as quirk_tally, upload_summary
 from .schemas import (
     ApiCohortReport,
     ApiCohortStudent,
@@ -46,10 +46,10 @@ def progress_report(profile: dict, plan: str, ledger: Optional[StudentLedger], g
     count: Counter = Counter()
     appearances: Counter = Counter()  # uploads on which each code was given
     last_seen: dict[str, str] = {}
-    quirk_pairs: list[tuple[str, list[str]]] = []
+    quirk_uploads: list = []
     for g in sorted(gradings, key=lambda g: g["gradedAt"]):
         stage2 = Stage2GradingAndAffectOutput.model_validate(g["stage2"])
-        quirk_pairs.append((g["gradedAt"], grading_quirk_ids(stage2.question_analyses)))
+        quirk_uploads.append((g["gradedAt"], *upload_summary(stage2.question_analyses)))
         codes = [e.error_code for e in root_errors(stage2)]
         count.update(codes)
         appearances.update(set(codes))
@@ -69,7 +69,7 @@ def progress_report(profile: dict, plan: str, ledger: Optional[StudentLedger], g
         recurringCodes=sorted(c for c, n in appearances.items() if n >= 2),
         pillarErrorDistribution=_pillar_shares(Counter({p.value: sum(n for c, n in count.items() if c.startswith(p.value))
                                                         for p in PillarEnum})),
-        quirkCounts=[r for r in quirk_collection(quirk_pairs) if r["count"] > 0],
+        pillarTallies=quirk_tally(quirk_uploads),
     )
 
 

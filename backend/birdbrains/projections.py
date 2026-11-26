@@ -8,7 +8,7 @@ from typing import Optional
 
 from .questions import strip_label, written_label
 from .codes import CODES, LEGACY_CODES
-from .quirks import QUIRKS
+from .quirks import CHECKS, PILLARS, pillar_status, question_pillars, upload_check_statuses, upload_pillar_counts
 from .schemas import (
     AffectStateEnum,
     ApiGrading,
@@ -121,23 +121,43 @@ def page_questions(stage2: Stage2GradingAndAffectOutput) -> list[dict]:
     return [dict(label=q.label, text=q.printed_text) for q in stage2.questions]
 
 
-def question_quirks(q: QuestionGradingOutput, label: str = "") -> list[dict]:
-    """The quirks one question earned (unknown ids dropped)."""
-    return [
-        dict(quirkId=e.quirk_id, pillar=QUIRKS[e.quirk_id].pillar, questionLabel=label,
-             stepNumber=e.step_number, evidence=e.evidence)
-        for e in q.earned_quirks if e.quirk_id in QUIRKS
-    ]
+def _api_checks(checks, labels=None) -> list[dict]:
+    return [dict(checkId=c.check_id, status=c.status, stepNumber=c.step_number, evidence=c.evidence,
+                 questionLabel=(labels or {}).get(c.check_id) or "")
+            for c in checks]
 
 
-def grading_quirks(stage2: Stage2GradingAndAffectOutput) -> list[dict]:
-    """Quirks earned on one upload, one entry per kind (the first question that earned it)."""
-    multi = len(stage2.question_analyses) > 1
-    out: dict[str, dict] = {}
-    for q in stage2.question_analyses:
-        for item in question_quirks(q, q.question_number if multi else ""):
-            out.setdefault(item["quirkId"], item)
-    return list(out.values())
+def question_pillar_quirks(q: QuestionGradingOutput) -> list[dict]:
+    """All six pillars for one question (empty on gradings made before the checks)."""
+    if not q.requirement_checks:
+        return []
+    return [dict(pillar=p, status=r["status"], met=r["met"], tested=r["tested"], checks=_api_checks(r["checks"]))
+            for p, r in question_pillars(q).items()]
+
+
+def grading_pillar_quirks(stage2: Stage2GradingAndAffectOutput) -> list[dict]:
+    """All six pillars for a whole upload, checks rolled up across its questions."""
+    qs = stage2.question_analyses
+    if not any(q.requirement_checks for q in qs):
+        return []
+    statuses = upload_check_statuses(qs)
+    counts = upload_pillar_counts(qs)  # met / applied, added up over every question
+    # The evidence shown for a check on the upload comes from the question its status came from.
+    out = []
+    for p in PILLARS:
+        checks = []
+        for cid, check in CHECKS.items():
+            if check.pillar != p:
+                continue
+            status, label = statuses[cid]
+            source = next((c for q in qs if (label is None or q.question_number == label)
+                           for c in q.requirement_checks if c.check_id == cid and c.status == status), None)
+            checks.append(dict(checkId=cid, status=status, questionLabel=label or "",
+                               stepNumber=source.step_number if source else None,
+                               evidence=source.evidence if source else ""))
+        met, tested = counts[p]
+        out.append(dict(pillar=p, status=pillar_status(met, tested), met=met, tested=tested, checks=checks))
+    return out
 
 
 def _to_api_question_diagnostic(q: QuestionGradingOutput) -> ApiQuestionDiagnostic:
@@ -207,7 +227,7 @@ def _to_api_question_diagnostic(q: QuestionGradingOutput) -> ApiQuestionDiagnost
             for p in q.pillar_scores
         ],
         supportiveFramingMessage=q.supportive_framing_message,
-        quirks=question_quirks(q),
+        pillarQuirks=question_pillar_quirks(q),
     )
 
 
@@ -237,7 +257,7 @@ def to_api_grading(record: dict) -> ApiGrading:
         entityExtractions=[
             dict(misconceptionId=e.error_code, description=e.description, severity=e.severity) for e in roots
         ],
-        quirks=grading_quirks(stage2),
+        pillarQuirks=grading_pillar_quirks(stage2),
         scaffoldingMode=record["scaffoldingMode"] if pro else None,
         gradedAt=record["gradedAt"],
         plan="pro" if pro else "free",

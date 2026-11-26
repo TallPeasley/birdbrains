@@ -32,12 +32,12 @@ from .pipeline import ImageRef, Meter, PipelineEngine, SubmissionContext, config
 from .known_worksheets import apply_known_worksheet
 from .questions import segment_questions, split_by_question
 from .projections import parent_summary, to_api_grading, to_api_worksheet
-from .quirks import collection as quirk_collection_counts, grading_quirk_ids
+from .quirks import tally as quirk_tally, upload_summary
 from .schemas import (
     LEGACY_CODES,
     STUDENT_ID_PATTERN,
     ApiGrading,
-    ApiQuirkCount,
+    ApiPillarTally,
     ApiClass,
     ApiClassroomImport,
     ApiClassroomStudentWork,
@@ -1067,16 +1067,16 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         require_student_access(user, student_id)
         return [to_api_grading(g) for g in student_gradings(student_id)[:50]]
 
-    @app.get("/students/{student_id}/quirks", response_model=list[ApiQuirkCount])
-    def quirk_collection(student_id: str, user: User):
-        """The student's quirk collection: every quirk, with how many uploads earned it
-        and when it was first earned (null when not yet). Counted from every grading."""
+    @app.get("/students/{student_id}/quirks", response_model=list[ApiPillarTally])
+    def quirk_tallies(student_id: str, user: User):
+        """Quirks and antiquirks per pillar over every upload (all six pillars), with how
+        often each of the pillar's 4 checks was met or missed."""
         require_student_access(user, student_id)
-        pairs = []
+        uploads = []
         for g in student_gradings(student_id):
             stage2 = Stage2GradingAndAffectOutput.model_validate(g["stage2"])
-            pairs.append((g["gradedAt"], grading_quirk_ids(stage2.question_analyses)))
-        return quirk_collection_counts(pairs)
+            uploads.append((g["gradedAt"], *upload_summary(stage2.question_analyses)))
+        return quirk_tally(uploads)
 
     @app.get("/students/{student_id}/gradings/latest", response_model=ApiGrading)
     def latest_grading(student_id: str, user: User):
