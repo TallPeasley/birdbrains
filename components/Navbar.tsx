@@ -15,17 +15,17 @@ const OPTIONS: { value: Role; label: string; icon: typeof Users }[] = [
 
 /** Monospace coordinate badge for each route, shown at the far right of the header. */
 const COORDS: Record<string, string> = {
-  '/': 'BB-00 / HOME',
-  '/student': 'BB-01 / STUDENT',
-  '/parent': 'BB-02 / PARENT',
-  '/plans': 'BB-03 / PLANS',
-  '/account': 'BB-04 / ACCOUNT',
-  '/reports': 'BB-05 / REPORTS',
-  '/teacher': 'BB-06 / TEACHER',
-  '/how-it-works': 'BB-07 / DEMO',
+  '/': 'QK-00 / HOME',
+  '/student': 'QK-01 / STUDENT',
+  '/parent': 'QK-02 / PARENT',
+  '/plans': 'QK-03 / PLANS',
+  '/account': 'QK-04 / ACCOUNT',
+  '/reports': 'QK-05 / REPORTS',
+  '/teacher': 'QK-06 / TEACHER',
+  '/how-it-works': 'QK-07 / DEMO',
 };
 
-/** BirdBrains' own links and controls, inside the shared Aero shell header. */
+/** Quark's own links and controls, inside the shared Aero shell header. */
 export default function Navbar() {
   const { role, setRole } = useRole();
   const pathname = usePathname();
@@ -46,7 +46,7 @@ export default function Navbar() {
       brand="birdbrains"
       home="/"
       stack
-      coord={COORDS[pathname] ?? 'BB-00'}
+      coord={COORDS[pathname] ?? 'QK-00'}
       nav={
         <>
           {showDashboard && (

@@ -1,14 +1,14 @@
-# BirdBrains Terms of Use
+# Quark Terms of Use
 
 *Draft. Last updated: [date].*
 
 These terms are an agreement between you and [legal name of the business]
-("BirdBrains", "we"). By creating an account or using BirdBrains you agree to
+("Quark", "we"). By creating an account or using Quark you agree to
 them. If you are under 18, a parent or guardian must agree for you.
 
-## 1. What BirdBrains is
+## 1. What Quark is
 
-BirdBrains analyses photos of handwritten math work and gives feedback,
+Quark analyses photos of handwritten math work and gives feedback,
 progress views and practice worksheets. It is a study aid. It is not a teacher,
 a tutor or an official assessment, and it does not replace either.
 
@@ -21,7 +21,7 @@ misread handwriting, mark a correct step as wrong, or miss a mistake.
   any ministry of education.
 - Mood and effort signals (Pro) are estimates from how the page looks. They are
   not a psychological or medical assessment.
-- Do not rely on BirdBrains alone for decisions about marks, placement or
+- Do not rely on Quark alone for decisions about marks, placement or
   a student's wellbeing.
 
 ## 3. Accounts
@@ -44,7 +44,7 @@ misread handwriting, mark a correct step as wrong, or miss a mistake.
 
 ## 5. Fair use
 
-Do not: use BirdBrains to cheat on graded tests or exams; try to break, overload
+Do not: use Quark to cheat on graded tests or exams; try to break, overload
 or get around its security or limits; copy or resell it; or use it to build a
 competing product. We may suspend accounts that do.
 
@@ -65,19 +65,19 @@ these terms.
 
 ## 8. Our content
 
-The BirdBrains software, design, worksheets format and name belong to us.
+The Quark software, design, worksheets format and name belong to us.
 Worksheets generated for you are yours to print and use for personal study or
 your own teaching.
 
 ## 9. Availability and changes
 
-We work to keep BirdBrains available but do not promise it will always be
+We work to keep Quark available but do not promise it will always be
 online or error-free. We may change or stop features. We may end an account
 that breaks these terms. You may stop at any time and delete your account.
 
 ## 10. Disclaimers and limits
 
-BirdBrains is provided "as is". To the extent the law allows, we make no
+Quark is provided "as is". To the extent the law allows, we make no
 warranties about accuracy or fitness for a particular purpose, and we are not
 liable for indirect or consequential losses. Our total liability is limited to
 the amount you paid us in the 12 months before the claim, or [CAD $50] if you
@@ -92,7 +92,7 @@ apply there. [Confirm with a lawyer: venue, and Quebec residents.]
 ## 12. Changes to these terms
 
 We will tell account holders before changes that matter take effect. Continuing
-to use BirdBrains after that means you accept them.
+to use Quark after that means you accept them.
 
 ## 13. Contact
 

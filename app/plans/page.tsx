@@ -1,6 +1,6 @@
 import PlansPage from '@/components/PlansPage';
 
-export const metadata = { title: 'Plans & Upgrade · BirdBrains' };
+export const metadata = { title: 'Plans & Upgrade · Quark' };
 
 export default function PlansRoutePage() {
   return <PlansPage />;

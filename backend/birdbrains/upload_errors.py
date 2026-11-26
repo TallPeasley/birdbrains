@@ -72,7 +72,7 @@ UPLOAD_ERRORS: dict[int, UploadErrorInfo] = dict([
     _e(505, "Grading failed", "Something unexpected stopped the grading.", "Press Try again. If it repeats, tell us the code.", False, True),
     # 9xx: anything else
     _e(900, "Something went wrong", "Something unexpected happened.", "Try again. If it repeats, tell us the code."),
-    _e(901, "Can't reach BirdBrains", "We couldn't reach BirdBrains.", "Check your internet connection and try again."),
+    _e(901, "Can't reach Quark", "We couldn't reach Quark.", "Check your internet connection and try again."),
 ])
 
 # Stage 1 says why a page was unreadable; this turns it into a code.

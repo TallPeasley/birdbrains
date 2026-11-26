@@ -1,4 +1,6 @@
-# BirdBrains web
+# Quark web (formerly BirdBrains)
+
+The app shows the name **Quark** to people. Internal names keep the old one on purpose: the GCP project `birdbrain-514606`, the `birdbrains-api` service, `birdbrains-*` secrets, the Python package `birdbrains`, Firestore collections and localStorage keys. The brand (name, logo, colours) comes from the Aero kit (`aero-kit/brands.json` on Maalik's PC, `node sync.mjs` writes `lib/aero/brands.ts`); app icons come from `node tools/make_pwa_icons.js`.
 
 Next.js 15 (App Router) + React 19 + Tailwind CSS 3 frontend built from the BirdBrains UI/UX spec, plus a Python backend in [`backend/`](backend/README.md). Team roles, branch rules and the API contract: [`docs/TEAM.md`](docs/TEAM.md).
 

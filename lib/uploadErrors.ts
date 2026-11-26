@@ -216,8 +216,8 @@ export const UPLOAD_ERRORS: Record<number, UploadErrorInfo> = {
     ours: false,
   },
   901: {
-    title: "Can't reach BirdBrains",
-    message: "We couldn't reach BirdBrains.",
+    title: "Can't reach Quark",
+    message: "We couldn't reach Quark.",
     action: "Check your internet connection and try again.",
     retake: false,
     ours: false,

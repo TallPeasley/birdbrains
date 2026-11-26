@@ -527,7 +527,7 @@ export default function CaptureModal() {
               <p className="flex items-start gap-2 rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-600 ring-1 ring-slate-200">
                 <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600" aria-hidden />
                 <span>
-                  Before a photo is saved, BirdBrains blurs names, dates, class and student-number fields and removes location data.
+                  Before a photo is saved, Quark blurs names, dates, class and student-number fields and removes location data.
                 </span>
               </p>
 

@@ -26,7 +26,7 @@ import type {
   WS_3STAGE_V1,
 } from '@/types/birdBrains';
 
-/** Base URL of the BirdBrains API. When unset the app runs on demo data only. */
+/** Base URL of the Quark API. When unset the app runs on demo data only. */
 export const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? '').replace(/\/$/, '');
 export const IS_LIVE = API_URL !== '';
 
@@ -53,7 +53,7 @@ async function send<T>(path: string, auth: Record<string, string>, init?: Reques
       headers: { ...(init?.headers ?? {}), ...auth },
     });
   } catch {
-    throw new ApiError(0, 'Could not reach BirdBrains. Check your connection and try again.');
+    throw new ApiError(0, 'Could not reach Quark. Check your connection and try again.');
   }
   if (!res.ok) {
     let detail = res.statusText;

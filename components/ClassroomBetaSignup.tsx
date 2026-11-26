@@ -30,7 +30,7 @@ export default function ClassroomBetaSignup({
     return (
       <p className="w-full rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-600">
         The Google Classroom test group is full right now. We’ll open it to everyone after Google approves
-        BirdBrains.
+        Quark.
       </p>
     );
   }

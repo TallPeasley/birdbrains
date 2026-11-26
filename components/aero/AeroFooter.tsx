@@ -10,7 +10,7 @@ export default function AeroFooter() {
     <footer className="no-print mx-auto max-w-7xl border-t border-line px-4 pb-28 pt-5 sm:px-6 lg:px-8">
       <div className="aero-foot">
         <AeroLogo brand="aero" />
-        <span>BirdBrains by Aero</span>
+        <span>Quark by Aero</span>
         <span className="aero-foot__sep" aria-hidden>
           /
         </span>

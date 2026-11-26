@@ -11,7 +11,7 @@ export interface AeroGlobalHeaderProps {
   brand: AeroBrandKey;
   /** Where the brand lockup links to. */
   home?: string;
-  /** Monospace coordinate badge at the far right, e.g. "BB-01 / STUDENT". */
+  /** Monospace coordinate badge at the far right, e.g. "QK-01 / STUDENT". */
   coord?: string;
   /** The app's own primary links (rendered in the nav region). */
   nav?: React.ReactNode;
@@ -22,7 +22,7 @@ export interface AeroGlobalHeaderProps {
 }
 
 /**
- * The Aero shell header shared by Ascent, BirdBrains and Chirp:
+ * The Aero shell header shared by Ascent, Quark and Chirp:
  *   [ecosystem switcher pill] | [logo + brand name + "by Aero"] | nav … actions | [coordinate]
  * The markup and class names match aero-kit/src/aero-shell.js (used by the plain-HTML apps), so all three
  * render from the same stylesheet (app/aero.css).

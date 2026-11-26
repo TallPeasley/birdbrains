@@ -572,7 +572,7 @@ export default function TeacherDashboard() {
         <div className="flex items-center justify-between gap-2">
           <div>
             <h2 className="text-lg font-semibold text-slate-900">Import Assignments & Sync Grades</h2>
-            <p className="text-xs text-slate-500">Pull student photo submissions from your connected LMS, grade with BirdBrains, and push scores back.</p>
+            <p className="text-xs text-slate-500">Pull student photo submissions from your connected LMS, grade with Quark, and push scores back.</p>
           </div>
           {connectedProviders.length > 0 && (
             <button
@@ -625,7 +625,7 @@ export default function TeacherDashboard() {
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-600">BirdBrains Curriculum</label>
+              <label className="block text-xs font-medium text-slate-600">Quark Curriculum</label>
               <select
                 value={gradeCourse}
                 onChange={(e) => setGradeCourse(e.target.value as GradeCourse)}
@@ -680,7 +680,7 @@ export default function TeacherDashboard() {
 
             {selectedProvider === 'google_classroom' ? (
               <p className="basis-full text-xs text-slate-500">
-                Google only lets an app set grades on assignments that app created, so BirdBrains can’t send
+                Google only lets an app set grades on assignments that app created, so Quark can’t send
                 scores to Google Classroom. Copy each student’s score from their results into Classroom.
               </p>
             ) : (

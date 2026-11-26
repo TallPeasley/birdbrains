@@ -26,7 +26,7 @@ export default function AccountCard() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
-  // Signed in with Firebase but no BirdBrains profile yet (e.g. sign-up was interrupted).
+  // Signed in with Firebase but no Quark profile yet (e.g. sign-up was interrupted).
   const needsProfile = signedIn && !profile;
   const showProfileFields = mode === 'signup' || needsProfile;
 

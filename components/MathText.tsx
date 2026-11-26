@@ -2,7 +2,7 @@ import React from 'react';
 import { hasFraction, isWordy, renderKatex, renderKatexFraction } from '@/lib/katexMath';
 
 /**
- * LaTeX / KaTeX-style mathematical & numeric renderer for BirdBrains.
+ * LaTeX / KaTeX-style mathematical & numeric renderer for Quark.
  *
  * Ensures:
  * 1. All numeric text (scores, counts, percentages, negative numbers, step numbers)

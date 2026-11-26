@@ -1,4 +1,4 @@
-/* BirdBrains service worker: makes the site installable and keeps it opening when the
+/* Quark service worker: makes the site installable and keeps it opening when the
  * connection drops. Only this site's own files are cached. API calls, Firebase sign-in and
  * uploads go to other hosts and are never touched, so grading always hits the live API.
  *
@@ -7,7 +7,7 @@
  * - Everything else from this site: served from cache, refreshed in the background.
  * Bump VERSION to drop every old cache on the next visit.
  */
-const VERSION = 'v1';
+const VERSION = 'v2'; // v2: Quark rename (new name and icons)
 const PAGES = `bb-pages-${VERSION}`;
 const ASSETS = `bb-assets-${VERSION}`;
 const OFFLINE = '/offline.html';

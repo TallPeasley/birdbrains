@@ -38,7 +38,7 @@ function recentlyDismissed() {
  * Installable-app plumbing, mounted once in the root layout:
  * - registers the service worker (public/sw.js) on the live site,
  * - opens Upload Work when the app is launched from the "Upload work" home-screen shortcut,
- * - shows an "Install BirdBrains" strip: a one-tap button on Android/Chrome, and the
+ * - shows an "Install Quark" strip: a one-tap button on Android/Chrome, and the
  *   Share > Add to Home Screen steps on iPhone/iPad (Apple has no install button for sites).
  */
 export default function PwaSetup() {
@@ -96,7 +96,7 @@ export default function PwaSetup() {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/icons/icon-192.png" alt="" className="h-9 w-9 shrink-0 rounded-xl" />
         <div className="min-w-0 flex-1 text-sm">
-          <p className="font-semibold text-slate-900">Get the BirdBrains app</p>
+          <p className="font-semibold text-slate-900">Get the Quark app</p>
           {promptEvent ? (
             <p className="text-slate-600">Opens full screen from your home screen, with the camera one tap away.</p>
           ) : (

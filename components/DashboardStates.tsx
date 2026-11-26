@@ -124,7 +124,7 @@ export function LinkChildForm() {
   const [busy, setBusy] = useState(false);
   return (
     <Notice title="Link your child’s account">
-      <p>Ask your child for the parent link code shown on their BirdBrains home page.</p>
+      <p>Ask your child for the parent link code shown on their Quark home page.</p>
       <form
         className="mx-auto flex max-w-xs gap-2"
         onSubmit={(e) => {
