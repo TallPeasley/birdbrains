@@ -9,6 +9,7 @@ substitutions:
   _API_URL: ""                            # the three below are public identifiers, not secrets
   _FIREBASE_API_KEY: ""
   _FIREBASE_AUTH_DOMAIN: ""
+  _HOSTING_PROJECTS: "boson-quark"        # main address; the site is also published to this GCP project after it
 
 options:
   logging: CLOUD_LOGGING_ONLY            # required when a build runs as a custom service account
@@ -71,7 +72,8 @@ steps:
   - id: publish-site
     name: python:3.12-slim
     waitFor: [build-site, health-check]
+    entrypoint: bash
     env: ["COMMIT_SHA=${COMMIT_SHA}"]
-    args: ["python3", "deploy/hosting_deploy.py", "--project", "${PROJECT_ID}"]
+    args: ["-c", "for h in ${_HOSTING_PROJECTS} ${PROJECT_ID}; do python3 deploy/hosting_deploy.py --project $$h || exit 1; done"]
 
 timeout: 1500s

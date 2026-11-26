@@ -122,7 +122,9 @@ class Deps:
     auth: Authenticator
     batch_token: Optional[str] = None
     cors_origins: tuple[str, ...] = (
-        "https://birdbrain-514606.web.app",
+        "https://boson-quark.web.app",  # main address since 2026-11-26
+        "https://boson-quark.firebaseapp.com",
+        "https://birdbrain-514606.web.app",  # first Firebase address, still served
         "https://birdbrain-514606.firebaseapp.com",
         "https://birdbrains.netlify.app",  # old address, kept until Netlify is shut down
         "http://localhost:3000",
@@ -134,7 +136,7 @@ class Deps:
     billing: Optional[Billing] = None  # Stripe; None = upgrades not configured
     classroom: Optional[Classroom] = None  # Google Classroom OAuth; None = not configured
     lms_providers: dict[str, LmsProvider] = field(default_factory=dict)  # Brightspace, Canvas, Microsoft Edu
-    site_url: str = "https://birdbrain-514606.web.app"
+    site_url: str = "https://boson-quark.web.app"
 
 
 def deps_from_env() -> Deps:

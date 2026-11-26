@@ -8,9 +8,11 @@
 set -euo pipefail
 
 PROJECT="${1:?usage: ./deploy.sh <gcp-project-id> [frontend-origin]}"
-ORIGIN="${2:-https://${PROJECT}.web.app}"
-# Also allowed: the firebaseapp.com twin and the old Netlify address (until it is shut down).
-CORS="$ORIGIN,https://${PROJECT}.firebaseapp.com,https://birdbrains.netlify.app"
+# The site lives in its own Firebase project (boson-quark); the API, Firestore and sign-in stay here.
+ORIGIN="${2:-https://boson-quark.web.app}"
+# Also allowed: the firebaseapp.com twins, the first address (<project>.web.app, still served)
+# and the old Netlify address (until it is shut down).
+CORS="$ORIGIN,https://boson-quark.firebaseapp.com,https://${PROJECT}.web.app,https://${PROJECT}.firebaseapp.com,https://birdbrains.netlify.app"
 REGION="northamerica-northeast1"   # PIPEDA: everything stays in Montréal
 SERVICE="birdbrains-api"
 BUCKET="${PROJECT}-birdbrains"
