@@ -28,6 +28,7 @@ import argparse
 import getpass
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -72,8 +73,10 @@ class Stripe:
                                         timeout=30) as resp:
                 return json.load(resp)
         except urllib.error.HTTPError as e:
-            msg = json.load(e).get("error", {}).get("message", "")
-            sys.exit(f"Stripe {method} {path} failed ({e.code}): {msg}")
+            err = json.load(e).get("error", {})
+            detail = ", ".join(f"{k}={err[k]}" for k in ("type", "code", "param") if err.get(k))
+            rid = e.headers.get("Request-Id", "")
+            sys.exit(f"Stripe {method} {path} failed ({e.code}): {err.get('message', '')} [{detail}] request {rid}")
 
 
 def gcloud() -> str:
@@ -106,7 +109,8 @@ def main() -> None:
     args = ap.parse_args()
 
     key = os.environ.get("STRIPE_SECRET_KEY") or getpass.getpass("Stripe secret key (sk_test_... or sk_live_...): ")
-    key = key.strip()
+    # Ctrl+V in a Windows console can add invisible control characters: keep only key characters.
+    key = re.sub(r"[^A-Za-z0-9_]", "", key)
     if not key.startswith(("sk_test_", "sk_live_", "rk_test_", "rk_live_")):
         sys.exit("That does not look like a Stripe secret key (it should start with sk_test_ or sk_live_).")
     mode = "LIVE" if "_live_" in key else "sandbox"
