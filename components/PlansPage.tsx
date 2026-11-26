@@ -40,7 +40,7 @@ const COMPARISON_ROWS: {
     pro: true,
   },
   {
-    feature: '6-pillar breakdown & 24 error codes',
+    feature: '6-pillar breakdown & 48 error codes',
     detail: 'Conceptual, Procedural, Calculation, and Communication scores with feedback.',
     free: true,
     pro: true,
@@ -196,7 +196,7 @@ export default function PlansPage() {
               </li>
               <li className="flex items-start gap-2">
                 <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" aria-hidden />
-                <span>6-pillar scores, 24 error codes, and supportive feedback</span>
+                <span>6-pillar scores, 48 error codes, and supportive feedback</span>
               </li>
               <li className="flex items-start gap-2">
                 <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" aria-hidden />
