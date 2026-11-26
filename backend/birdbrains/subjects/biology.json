@@ -1,0 +1,967 @@
+{
+  "version": 1,
+  "status": "draft",
+  "subject": "biology",
+  "name": "Biology",
+  "courses": [
+    "SNC1W",
+    "SNC2D",
+    "SBI3U",
+    "SBI3C",
+    "SBI4U"
+  ],
+  "pillars": [
+    {
+      "id": "CON",
+      "name": "Concepts",
+      "scope": "The student holds a wrong idea about living things: evolution, genetics, cells, energy and matter in systems.",
+      "max_score": 2,
+      "slip": false
+    },
+    {
+      "id": "STR",
+      "name": "Strategy & Setup",
+      "scope": "The ideas are sound, but the reasoning is set up wrongly: the wrong inheritance pattern, cross, process or experimental design, or a conclusion the data can't support.",
+      "max_score": 2,
+      "slip": false
+    },
+    {
+      "id": "PRC",
+      "name": "Procedure",
+      "scope": "The plan is right, but carrying out a method goes wrong (Punnett squares, probability rules, transcription and translation, magnification, data processing, keys).",
+      "max_score": 2,
+      "slip": false
+    },
+    {
+      "id": "FAC",
+      "name": "Calculation & Recall",
+      "scope": "Reasoning is sound; a term, structure label, sequence, fact, number, unit or rounding slips. In biology most FAC errors are recall, not arithmetic.",
+      "max_score": 2,
+      "slip": true
+    },
+    {
+      "id": "COM",
+      "name": "Communication",
+      "scope": "The biology may be right, but the answer is not what was asked, uses loose or wrong notation, or is not explained.",
+      "max_score": 1,
+      "slip": true
+    },
+    {
+      "id": "TST",
+      "name": "Test Habits",
+      "scope": "How the student handles the test: blanks, traps, giving up, not checking, not using provided tables.",
+      "max_score": 1,
+      "slip": true
+    }
+  ],
+  "decision_order": [
+    "Is the student's idea of the biology wrong (CON)?",
+    "Is the idea right but the pattern, cross, process, design or conclusion set up wrongly (STR)?",
+    "Is the set-up right but a step of the method done wrongly (PRC)?",
+    "Is it a slip in a term, label, sequence, fact, number or unit (FAC)?",
+    "Is the biology right but the answer not what was asked, in wrong notation, or unexplained (COM)?",
+    "Or is it how the test was handled (TST)?"
+  ],
+  "codes": [
+    {
+      "id": "CON_NEED_DRIVES_EVOLUTION",
+      "pillar": "CON",
+      "name": "Need Drives Evolution",
+      "plain_name": "Thinks living things change because they need to",
+      "student_help": "Variation exists first; the environment then selects which variants survive and reproduce.",
+      "description": "Explains evolution as organisms changing because they need or want to (teleology), rather than selection acting on existing variation.",
+      "example": "'Giraffes grew long necks because they needed to reach high leaves.'",
+      "tell_apart": [
+        {
+          "code": "CON_ACQUIRED_TRAITS",
+          "how": "If the student says traits gained during life are passed on, use CON_ACQUIRED_TRAITS."
+        },
+        {
+          "code": "COM_IMPRECISE_TERMS",
+          "how": "If the student understands selection but writes 'adapted to' loosely, use COM_IMPRECISE_TERMS."
+        }
+      ],
+      "remediation": "Tier 1: variation-then-selection simulation (bead or beak lab).",
+      "legacy_ids": []
+    },
+    {
+      "id": "CON_ACQUIRED_TRAITS",
+      "pillar": "CON",
+      "name": "Acquired Traits Inherited",
+      "plain_name": "Thinks traits gained during life are inherited",
+      "student_help": "Only changes in the DNA of sex cells can be passed to offspring.",
+      "description": "Believes characteristics gained during an organism's life (muscles, scars, learned behaviour) are passed to offspring, or that individuals evolve.",
+      "example": "'A bodybuilder's children will be born more muscular.'",
+      "tell_apart": [
+        {
+          "code": "CON_NEED_DRIVES_EVOLUTION",
+          "how": "If the explanation rests on need or purpose, use CON_NEED_DRIVES_EVOLUTION."
+        }
+      ],
+      "remediation": "Tier 1: germline vs body cell diagram.",
+      "legacy_ids": []
+    },
+    {
+      "id": "CON_GENE_ALLELE_SCALE",
+      "pillar": "CON",
+      "name": "Gene, Allele, Chromosome Scale",
+      "plain_name": "Mixed up genes, alleles and chromosomes",
+      "student_help": "DNA makes up chromosomes; a gene is a section of a chromosome; alleles are versions of a gene.",
+      "description": "Confuses DNA, gene, allele and chromosome, or the sizes they come in (a gene contains chromosomes; alleles are different genes).",
+      "example": "'Each allele contains many chromosomes.'",
+      "tell_apart": [
+        {
+          "code": "FAC_TERM_RECALL",
+          "how": "If the student knows the relationships and only swaps two words, use FAC_TERM_RECALL."
+        }
+      ],
+      "remediation": "Tier 1: nested zoom diagram from cell to base pair.",
+      "legacy_ids": []
+    },
+    {
+      "id": "CON_DOMINANT_MEANS_COMMON",
+      "pillar": "CON",
+      "name": "Dominant Means Common",
+      "plain_name": "Thinks dominant means common or stronger",
+      "student_help": "Dominant only means the allele shows when one copy is present; it says nothing about how common or how good it is.",
+      "description": "Believes dominant alleles are more frequent in the population, better for the organism, or will spread over time.",
+      "example": "'Polydactyly is dominant, so most people have six fingers.'",
+      "tell_apart": [
+        {
+          "code": "STR_INHERITANCE_PATTERN",
+          "how": "If the student misidentifies which pattern applies to a cross, use STR_INHERITANCE_PATTERN."
+        }
+      ],
+      "remediation": "Tier 1: allele frequency counter-examples.",
+      "legacy_ids": []
+    },
+    {
+      "id": "CON_PLANT_MATTER_ENERGY",
+      "pillar": "CON",
+      "name": "Plant Respiration and Mass",
+      "plain_name": "Mixed up photosynthesis and respiration in plants",
+      "student_help": "Plants carry out cellular respiration all the time; most of their mass comes from CO₂ in the air.",
+      "description": "Believes plants photosynthesise instead of respiring, respire only at night, or get most of their mass from soil or water.",
+      "example": "'Plants don't need cellular respiration because they make their own food.'",
+      "tell_apart": [
+        {
+          "code": "CON_ENERGY_MATTER_CYCLING",
+          "how": "If the error is about energy or matter moving through an ecosystem, use CON_ENERGY_MATTER_CYCLING."
+        }
+      ],
+      "remediation": "Tier 1: van Helmont willow-tree analysis.",
+      "legacy_ids": []
+    },
+    {
+      "id": "CON_ENERGY_MATTER_CYCLING",
+      "pillar": "CON",
+      "name": "Energy and Matter Cycling",
+      "plain_name": "Mixed up how energy and matter move",
+      "student_help": "Matter cycles through ecosystems; energy flows through once and leaves as heat.",
+      "description": "Believes energy is recycled in ecosystems, that matter is turned into energy, or that decomposers 'make energy'.",
+      "example": "'Decomposers return energy to the soil so plants can use it again.'",
+      "tell_apart": [
+        {
+          "code": "CON_PLANT_MATTER_ENERGY",
+          "how": "If the error is specifically about plant respiration or where plant mass comes from, use CON_PLANT_MATTER_ENERGY."
+        }
+      ],
+      "remediation": "Tier 1: two-colour diagram (matter loops, energy arrows exit).",
+      "legacy_ids": []
+    },
+    {
+      "id": "CON_DIFFUSION_OSMOSIS",
+      "pillar": "CON",
+      "name": "Diffusion and Osmosis Direction",
+      "plain_name": "Got the direction of diffusion or osmosis wrong",
+      "student_help": "Particles spread from high to low concentration; in osmosis water moves toward the side with more solute.",
+      "description": "Predicts movement against the concentration gradient, thinks water moves toward lower solute concentration, or describes particles as 'wanting' to move.",
+      "example": "'In salt water the cell gains water because salt pulls water out of the beaker.'",
+      "tell_apart": [
+        {
+          "code": "PRC_STEP_OMITTED",
+          "how": "If the idea is right but a step in the comparison is skipped, use PRC_STEP_OMITTED."
+        }
+      ],
+      "remediation": "Tier 1: concentration-gradient sketch with arrows.",
+      "legacy_ids": []
+    },
+    {
+      "id": "CON_ENZYME_FUNCTION",
+      "pillar": "CON",
+      "name": "Enzyme Function",
+      "plain_name": "Misunderstood how enzymes work",
+      "student_help": "Enzymes have an optimum; past it, their shape changes (denatures) and activity drops; they are not alive.",
+      "description": "Believes enzymes are alive and are 'killed', that more heat always means faster enzyme activity, or that enzymes are used up in reactions.",
+      "example": "'At 80 °C the enzyme works fastest because heat always speeds up reactions.'",
+      "tell_apart": [
+        {
+          "code": "PRC_DATA_PROCESSING",
+          "how": "If the idea is right but the rate is read from the graph wrongly, use PRC_DATA_PROCESSING."
+        }
+      ],
+      "remediation": "Tier 1: lock-and-key model with a melted key.",
+      "legacy_ids": []
+    },
+    {
+      "id": "STR_INHERITANCE_PATTERN",
+      "pillar": "STR",
+      "name": "Wrong Inheritance Pattern",
+      "plain_name": "Used the wrong inheritance pattern",
+      "student_help": "Check the clues: is it sex-linked, codominant, incomplete, or simple dominant?",
+      "description": "Treats a trait with the wrong pattern: sex-linked as autosomal, codominance as incomplete dominance, multiple alleles as two alleles.",
+      "example": "Colour-blindness cross done with autosomal alleles Bb × bb.",
+      "tell_apart": [
+        {
+          "code": "STR_CROSS_SETUP",
+          "how": "If the pattern is right but the parent genotypes are wrong, use STR_CROSS_SETUP."
+        },
+        {
+          "code": "CON_DOMINANT_MEANS_COMMON",
+          "how": "If the student misunderstands what dominance means, use CON_DOMINANT_MEANS_COMMON."
+        }
+      ],
+      "remediation": "Tier 2: pattern clue checklist.",
+      "legacy_ids": []
+    },
+    {
+      "id": "STR_CROSS_SETUP",
+      "pillar": "STR",
+      "name": "Cross Set Up Wrongly",
+      "plain_name": "Started the cross with the wrong parents",
+      "student_help": "Turn each word description into a genotype before you draw the square.",
+      "description": "Uses the right pattern but the wrong parent genotypes or gametes from the description (heterozygous written as homozygous, a carrier not shown).",
+      "example": "'A heterozygous tall plant crossed with a short plant' set up as TT × tt.",
+      "tell_apart": [
+        {
+          "code": "STR_INHERITANCE_PATTERN",
+          "how": "If the pattern is wrong, use STR_INHERITANCE_PATTERN."
+        },
+        {
+          "code": "PRC_PUNNETT_SQUARE",
+          "how": "If the parents are right and the square is filled wrongly, use PRC_PUNNETT_SQUARE."
+        }
+      ],
+      "remediation": "Tier 2: description-to-genotype table.",
+      "legacy_ids": []
+    },
+    {
+      "id": "STR_WRONG_PROCESS",
+      "pillar": "STR",
+      "name": "Wrong Process Identified",
+      "plain_name": "Picked the wrong biological process",
+      "student_help": "Ask what the result needs to be (identical cells? gametes? protein?) and choose the process that makes it.",
+      "description": "Applies the wrong process to the situation: mitosis for gamete formation, transcription where translation is meant, respiration for photosynthesis, active transport for diffusion.",
+      "example": "'Sperm cells are made by mitosis, so they have 46 chromosomes.'",
+      "tell_apart": [
+        {
+          "code": "FAC_TERM_RECALL",
+          "how": "If the student describes the right process but uses the wrong name for it, use FAC_TERM_RECALL."
+        }
+      ],
+      "remediation": "Tier 2: process comparison table.",
+      "legacy_ids": []
+    },
+    {
+      "id": "STR_PEDIGREE_LOGIC",
+      "pillar": "STR",
+      "name": "Pedigree Reasoning Error",
+      "plain_name": "Drew the wrong conclusion from the pedigree",
+      "student_help": "Look for two unaffected parents with an affected child (recessive) or a pattern only in males (X-linked).",
+      "description": "Draws the inheritance pattern from a pedigree without the key test (unaffected parents with an affected child, male-only patterns, father-to-son passing).",
+      "example": "Calls a trait dominant because it appears in every generation, though two unaffected parents have an affected child.",
+      "tell_apart": [
+        {
+          "code": "STR_INHERITANCE_PATTERN",
+          "how": "STR_INHERITANCE_PATTERN is for using the wrong pattern in a cross; this code is for misreading a pedigree to find it."
+        }
+      ],
+      "remediation": "Tier 2: pedigree decision steps.",
+      "legacy_ids": []
+    },
+    {
+      "id": "STR_CORRELATION_CAUSATION",
+      "pillar": "STR",
+      "name": "Correlation as Cause",
+      "plain_name": "Said one thing causes another from a pattern alone",
+      "student_help": "A pattern shows a link; cause needs a controlled experiment or a mechanism.",
+      "description": "Concludes cause from a correlation, generalises beyond the sample, or ignores a likely third factor.",
+      "example": "'Cities with more hospitals have more deaths, so hospitals cause deaths.'",
+      "tell_apart": [
+        {
+          "code": "COM_OBSERVATION_VS_INFERENCE",
+          "how": "COM_OBSERVATION_VS_INFERENCE is about where statements go in a report; this code is about the logic of the conclusion."
+        },
+        {
+          "code": "STR_EXPERIMENT_DESIGN",
+          "how": "If the flaw is in how the experiment was planned, use STR_EXPERIMENT_DESIGN."
+        }
+      ],
+      "remediation": "Tier 2: 'what else could explain this?' prompt.",
+      "legacy_ids": []
+    },
+    {
+      "id": "STR_IGNORED_CONDITION",
+      "pillar": "STR",
+      "name": "Ignored Condition",
+      "plain_name": "Given condition not used",
+      "student_help": "A condition the question gave was not used, like 'x is positive' or a point on the line.",
+      "description": "Leaves a stated condition or given piece of information out of the model, so the answer does not meet it.",
+      "example": "Question says the mother is a carrier; student uses XᴴXᴴ.",
+      "tell_apart": [
+        {
+          "code": "TST_MISREAD_GIVEN",
+          "how": "If the condition was read wrongly rather than left out, use TST_MISREAD_GIVEN."
+        },
+        {
+          "code": "STR_CROSS_SETUP",
+          "how": "If the condition is used but turned into the wrong genotype, use STR_CROSS_SETUP."
+        }
+      ],
+      "remediation": "Tier 2: condition checklist.",
+      "legacy_ids": []
+    },
+    {
+      "id": "STR_NO_VIABLE_PLAN",
+      "pillar": "STR",
+      "name": "No Viable Plan",
+      "plain_name": "No clear plan",
+      "student_help": "The first move here could not lead to the answer. Plan the method before writing.",
+      "description": "Starts with a move that cannot reach the answer, or moves symbols around with no method.",
+      "example": "Asked for the probability of a child with both traits, draws three unrelated Punnett squares with no plan to combine them.",
+      "tell_apart": [
+        {
+          "code": "TST_UNWORKED_GUESS",
+          "how": "If there is only an answer with no work, use TST_UNWORKED_GUESS; this code needs visible work that wanders."
+        }
+      ],
+      "remediation": "Plan-first prompt: name the target, the known quantities and the bridge between them before calculating.",
+      "legacy_ids": []
+    },
+    {
+      "id": "STR_EXPERIMENT_DESIGN",
+      "pillar": "STR",
+      "name": "Experimental Design Flaw",
+      "plain_name": "Experiment set up unfairly",
+      "student_help": "Change one thing, measure one thing, and keep everything else the same.",
+      "description": "Gets the independent, dependent or controlled variables wrong, leaves out a control or repeats, or designs a test that cannot answer the question.",
+      "example": "Tests a fertiliser on one plant in sunlight and a control plant in shade.",
+      "tell_apart": [
+        {
+          "code": "COM_OBSERVATION_VS_INFERENCE",
+          "how": "This code is about how the experiment is set up; COM_OBSERVATION_VS_INFERENCE is about how the results are reported."
+        },
+        {
+          "code": "STR_NO_VIABLE_PLAN",
+          "how": "STR_NO_VIABLE_PLAN is for calculation problems; use this code for planning an investigation."
+        }
+      ],
+      "remediation": "Fair-test frame: I will change ___, measure ___, and keep ___ the same; repeat ___ times.",
+      "legacy_ids": []
+    },
+    {
+      "id": "PRC_STEP_OMITTED",
+      "pillar": "PRC",
+      "name": "Step Omission",
+      "plain_name": "Skipped a step",
+      "student_help": "A needed step in the method was skipped.",
+      "description": "Skips a required step of the procedure, so the result does not follow.",
+      "example": "Calculates actual cell size without first finding the field of view at the higher magnification.",
+      "tell_apart": [
+        {
+          "code": "PRC_INCOMPLETE_SOLUTION",
+          "how": "Here a middle step is missing and the answer is wrong; in PRC_INCOMPLETE_SOLUTION the work is right but stops before the end."
+        },
+        {
+          "code": "STR_NO_VIABLE_PLAN",
+          "how": "If the plan itself is missing, use STR_NO_VIABLE_PLAN; here the plan is right and one step drops out."
+        }
+      ],
+      "remediation": "Faded worked example: complete the one missing step in an otherwise finished solution.",
+      "legacy_ids": []
+    },
+    {
+      "id": "PRC_PUNNETT_SQUARE",
+      "pillar": "PRC",
+      "name": "Punnett Square Error",
+      "plain_name": "Filled in the Punnett square wrongly",
+      "student_help": "Split each parent into gametes along the edges, then combine one from each side in every box.",
+      "description": "Splits gametes wrongly (Tt into TT), combines boxes wrongly, or counts the ratio wrongly from a correct square.",
+      "example": "For a dihybrid cross, lists gametes TtRr instead of TR, Tr, tR, tr.",
+      "tell_apart": [
+        {
+          "code": "STR_CROSS_SETUP",
+          "how": "If the parents are wrong before the square, use STR_CROSS_SETUP."
+        },
+        {
+          "code": "PRC_PROBABILITY_RULES",
+          "how": "If the square is right but probabilities are combined wrongly afterwards, use PRC_PROBABILITY_RULES."
+        }
+      ],
+      "remediation": "Tier 2: gamete-first worked example.",
+      "legacy_ids": []
+    },
+    {
+      "id": "PRC_PROBABILITY_RULES",
+      "pillar": "PRC",
+      "name": "Probability Rules Misapplied",
+      "plain_name": "Combined probabilities wrongly",
+      "student_help": "Use 'and' → multiply; 'or' → add, for separate events.",
+      "description": "Adds probabilities that should be multiplied (independent events) or multiplies ones that should be added; treats each child as affecting the next.",
+      "example": "Chance of two affected children = ¼ + ¼ = ½.",
+      "tell_apart": [
+        {
+          "code": "PRC_PUNNETT_SQUARE",
+          "how": "If the error is inside the Punnett square, use PRC_PUNNETT_SQUARE."
+        }
+      ],
+      "remediation": "Tier 2: and/or rule card.",
+      "legacy_ids": []
+    },
+    {
+      "id": "PRC_TRANSCRIPTION_TRANSLATION",
+      "pillar": "PRC",
+      "name": "Transcription / Translation Error",
+      "plain_name": "Made a mistake copying DNA to RNA or protein",
+      "student_help": "RNA uses U instead of T; read codons in threes from the start codon using the mRNA, not the DNA.",
+      "description": "Pairs bases wrongly, keeps T in mRNA, reads codons from the DNA or the wrong strand, or shifts the reading frame.",
+      "example": "Transcribes DNA TAC GGA as mRNA ATG CCT.",
+      "tell_apart": [
+        {
+          "code": "STR_WRONG_PROCESS",
+          "how": "If the student does the wrong process altogether, use STR_WRONG_PROCESS."
+        },
+        {
+          "code": "FAC_COPY_ERROR",
+          "how": "If one base is miscopied between lines, use FAC_COPY_ERROR."
+        }
+      ],
+      "remediation": "Tier 2: base-pairing template with a codon ruler.",
+      "legacy_ids": []
+    },
+    {
+      "id": "PRC_MAGNIFICATION",
+      "pillar": "PRC",
+      "name": "Magnification Calculation Error",
+      "plain_name": "Worked out the magnification or size wrongly",
+      "student_help": "Total magnification = eyepiece × objective; at higher power the field of view shrinks by the same factor.",
+      "description": "Multiplies where it should divide, adds eyepiece and objective, or scales the field of view the wrong way.",
+      "example": "Field of view 4 mm at 40×: says it is 16 mm at 400×.",
+      "tell_apart": [
+        {
+          "code": "FAC_UNIT_CONVERSION",
+          "how": "If the method is right and mm to µm goes wrong, use FAC_UNIT_CONVERSION."
+        }
+      ],
+      "remediation": "Tier 2: magnification ratio table.",
+      "legacy_ids": []
+    },
+    {
+      "id": "PRC_DATA_PROCESSING",
+      "pillar": "PRC",
+      "name": "Data Processing Error",
+      "plain_name": "Processed or graphed the data wrongly",
+      "student_help": "Choose the graph type for the data, use an even scale, and take rates from the slope.",
+      "description": "Processes data wrongly: wrong graph type, uneven scale, rate taken from a single point, averages that include an outlier without comment.",
+      "example": "Plots enzyme rate against temperature as a bar graph with uneven gaps on the x-axis.",
+      "tell_apart": [
+        {
+          "code": "COM_MISSING_LABELS",
+          "how": "If the graph is right but missing title or axis labels, use COM_MISSING_LABELS."
+        }
+      ],
+      "remediation": "Tier 2: data-handling checklist.",
+      "legacy_ids": []
+    },
+    {
+      "id": "PRC_CLASSIFICATION_KEY",
+      "pillar": "PRC",
+      "name": "Classification Key Error",
+      "plain_name": "Used the key or classification order wrongly",
+      "student_help": "Follow the key one choice at a time; the order is domain, kingdom, phylum, class, order, family, genus, species.",
+      "description": "Skips couplets in a dichotomous key, writes a key with overlapping choices, or orders taxonomic ranks wrongly; formats binomial names wrongly.",
+      "example": "Writes the scientific name as 'Homo Sapiens'.",
+      "tell_apart": [
+        {
+          "code": "FAC_SEQUENCE_RECALL",
+          "how": "If only the order of ranks is misremembered, use FAC_SEQUENCE_RECALL."
+        }
+      ],
+      "remediation": "Tier 2: key-walk practice with a real specimen set.",
+      "legacy_ids": []
+    },
+    {
+      "id": "PRC_INCOMPLETE_SOLUTION",
+      "pillar": "PRC",
+      "name": "Stopped Before the End",
+      "plain_name": "Stopped one step early",
+      "student_help": "Read the question again when you think you are done: is your last line the thing it asked for?",
+      "description": "Correct work that stops before the requested quantity or form is reached.",
+      "example": "Asked for the phenotype ratio, gives the genotype ratio from the square and stops.",
+      "tell_apart": [
+        {
+          "code": "COM_ANSWERED_DIFFERENT_QUESTION",
+          "how": "If the student aimed at a different target from the start, use COM_ANSWERED_DIFFERENT_QUESTION; here they were heading to the right target and stopped."
+        },
+        {
+          "code": "TST_DISTRACTOR_TRAP",
+          "how": "If an intermediate value is boxed as if it were final, use TST_DISTRACTOR_TRAP; if the work simply ends, use this code."
+        }
+      ],
+      "remediation": "Completion checklist: target quantity, unit, form asked for.",
+      "legacy_ids": []
+    },
+    {
+      "id": "FAC_ARITHMETIC_SLIP",
+      "pillar": "FAC",
+      "name": "Arithmetic Slip",
+      "plain_name": "Calculation slip",
+      "student_help": "The steps make sense, with a small calculation slip in the numbers.",
+      "description": "An isolated arithmetic error with a sound method.",
+      "example": "Calculates 400 ÷ 40 as 100.",
+      "tell_apart": [
+        {
+          "code": "PRC_MAGNIFICATION",
+          "how": "If the magnification method is wrong (multiplying where it should divide), use PRC_MAGNIFICATION; this code is for a slip in the numbers."
+        }
+      ],
+      "remediation": "Five-item rapid micro-drill on the same operation.",
+      "legacy_ids": []
+    },
+    {
+      "id": "FAC_COPY_ERROR",
+      "pillar": "FAC",
+      "name": "Copy Error",
+      "plain_name": "Copied a number wrong",
+      "student_help": "A number or sign changed when copying from one line to the next.",
+      "description": "Miscopies a digit, sign or term from one of the student's own lines to the next.",
+      "example": "Copies the mRNA AUG CCA as AUG CAC on the next line.",
+      "tell_apart": [
+        {
+          "code": "TST_MISREAD_GIVEN",
+          "how": "If the value was read wrongly from the question itself, use TST_MISREAD_GIVEN; this code is for copying between the student's own lines."
+        },
+        {
+          "code": "FAC_ARITHMETIC_SLIP",
+          "how": "If a value was calculated wrongly rather than copied, use FAC_ARITHMETIC_SLIP."
+        }
+      ],
+      "remediation": "Line-to-line check habit.",
+      "legacy_ids": []
+    },
+    {
+      "id": "FAC_UNIT_CONVERSION",
+      "pillar": "FAC",
+      "name": "Unit Conversion",
+      "plain_name": "Unit slip",
+      "student_help": "A unit conversion was off, like centimetres to metres.",
+      "description": "Converts units wrongly or mixes units in one calculation.",
+      "example": "Converts 0.4 mm to 40 µm.",
+      "tell_apart": [
+        {
+          "code": "COM_MISSING_UNITS",
+          "how": "Here the number is wrong because of a conversion; in COM_MISSING_UNITS the number is right but the unit is not written."
+        },
+        {
+          "code": "FAC_ARITHMETIC_SLIP",
+          "how": "If the conversion factor is right and the multiplication goes wrong, use FAC_ARITHMETIC_SLIP."
+        }
+      ],
+      "remediation": "Dimensional conversion bridge: write the factor as a fraction that cancels the old unit.",
+      "legacy_ids": []
+    },
+    {
+      "id": "FAC_ROUNDING",
+      "pillar": "FAC",
+      "name": "Rounding / Precision",
+      "plain_name": "Rounding slip",
+      "student_help": "A number was rounded too early or to the wrong decimal place.",
+      "description": "Rounds too early, or breaks the precision the question asks for.",
+      "example": "Reports mean heart rate as 72.3333 bpm.",
+      "tell_apart": [
+        {
+          "code": "FAC_ARITHMETIC_SLIP",
+          "how": "If the digits themselves are wrong, not just how many are kept, use FAC_ARITHMETIC_SLIP."
+        }
+      ],
+      "remediation": "Precision rules card: count significant figures in the givens, keep guard digits, round once.",
+      "legacy_ids": []
+    },
+    {
+      "id": "FAC_TERM_RECALL",
+      "pillar": "FAC",
+      "name": "Term Recall Slip",
+      "plain_name": "Used the wrong term",
+      "student_help": "Check terms that sound alike (mitosis/meiosis, ileum/ilium, xylem/phloem).",
+      "description": "Knows the idea but uses the wrong technical word for it, often a similar-sounding term.",
+      "example": "'Water travels up the stem in the phloem.'",
+      "tell_apart": [
+        {
+          "code": "CON_GENE_ALLELE_SCALE",
+          "how": "If the swap shows a wrong idea of how the terms relate, use the concept code."
+        },
+        {
+          "code": "COM_IMPRECISE_TERMS",
+          "how": "If the student uses an everyday word instead of a technical one, use COM_IMPRECISE_TERMS."
+        }
+      ],
+      "remediation": "Tier 3: paired-term flash cards.",
+      "legacy_ids": []
+    },
+    {
+      "id": "FAC_STRUCTURE_LABEL",
+      "pillar": "FAC",
+      "name": "Structure Label Slip",
+      "plain_name": "Labelled a structure wrongly",
+      "student_help": "Check each label line ends exactly on the part it names.",
+      "description": "Labels a part of a diagram (cell, organ, heart, flower) with the wrong name, or points the line at the wrong part.",
+      "example": "Labels the left ventricle as the right ventricle on a heart diagram.",
+      "tell_apart": [
+        {
+          "code": "COM_MISSING_LABELS",
+          "how": "If labels are missing rather than wrong, use COM_MISSING_LABELS."
+        }
+      ],
+      "remediation": "Tier 3: blank-diagram labelling drill.",
+      "legacy_ids": []
+    },
+    {
+      "id": "FAC_SEQUENCE_RECALL",
+      "pillar": "FAC",
+      "name": "Sequence Recall Slip",
+      "plain_name": "Put the stages in the wrong order",
+      "student_help": "Use a memory aid (PMAT; right atrium → right ventricle → lungs) and check each step.",
+      "description": "Gets the order of stages or a pathway wrong (phases of mitosis, blood flow, digestion, Krebs before glycolysis).",
+      "example": "Lists the mitosis phases as prophase, anaphase, metaphase, telophase.",
+      "tell_apart": [
+        {
+          "code": "STR_WRONG_PROCESS",
+          "how": "If the wrong process is used entirely, use STR_WRONG_PROCESS."
+        }
+      ],
+      "remediation": "Tier 3: sequencing cards.",
+      "legacy_ids": []
+    },
+    {
+      "id": "FAC_SCIENCE_FACT_RECALL",
+      "pillar": "FAC",
+      "name": "Fact Recall Slip",
+      "plain_name": "Remembered a fact wrongly",
+      "student_help": "Check this fact in your notes; it is one to memorise.",
+      "description": "Misremembers a specific fact: which acids are strong, valence electrons for a group, a solubility rule, a functional group name.",
+      "example": "'Human gametes have 46 chromosomes.'",
+      "tell_apart": [
+        {
+          "code": "STR_WRONG_PROCESS",
+          "how": "If the wrong number comes from picking the wrong process (mitosis for gametes), use STR_WRONG_PROCESS."
+        }
+      ],
+      "remediation": "Tier 3: spaced-recall quiz on the fact list.",
+      "legacy_ids": []
+    },
+    {
+      "id": "COM_ANSWERED_DIFFERENT_QUESTION",
+      "pillar": "COM",
+      "name": "Answered a Different Question",
+      "plain_name": "Answered a different question",
+      "student_help": "The work solved for something slightly different from what the question asked.",
+      "description": "Gives a correct answer to a different target than the one asked.",
+      "example": "Asked for the probability of a carrier daughter, gives the probability of an affected son.",
+      "tell_apart": [
+        {
+          "code": "PRC_INCOMPLETE_SOLUTION",
+          "how": "If the work was heading to the right target and stopped short, use PRC_INCOMPLETE_SOLUTION."
+        },
+        {
+          "code": "TST_SKIPPED_PART",
+          "how": "If a whole labelled part (b) is missing, use TST_SKIPPED_PART."
+        }
+      ],
+      "remediation": "Prompt deconstruction box: circle the verb, underline the target.",
+      "legacy_ids": []
+    },
+    {
+      "id": "COM_MISSING_UNITS",
+      "pillar": "COM",
+      "name": "Missing Units",
+      "plain_name": "Missing units",
+      "student_help": "The final answer is missing its units.",
+      "description": "Omits units on a measurement answer.",
+      "example": "Writes the cell length as '25' with no µm.",
+      "tell_apart": [
+        {
+          "code": "FAC_UNIT_CONVERSION",
+          "how": "If the number is wrong because of a conversion, use FAC_UNIT_CONVERSION."
+        }
+      ],
+      "remediation": "Unit slot habit: draw a box after the answer for the unit.",
+      "legacy_ids": []
+    },
+    {
+      "id": "COM_GENETICS_NOTATION",
+      "pillar": "COM",
+      "name": "Genetics Notation Error",
+      "plain_name": "Wrote alleles in a confusing way",
+      "student_help": "Use one letter per gene (capital = dominant) and write sex-linked alleles on the X, like Xᴴ.",
+      "description": "Right genetics in confusing notation: different letters for alleles of one gene, sex-linked alleles not written on X, no key for the symbols.",
+      "example": "Uses T for tall and s for short.",
+      "tell_apart": [
+        {
+          "code": "STR_CROSS_SETUP",
+          "how": "If the genotypes themselves are wrong, use STR_CROSS_SETUP."
+        }
+      ],
+      "remediation": "Tier 4: notation key template.",
+      "legacy_ids": []
+    },
+    {
+      "id": "COM_UNSUPPORTED_ANSWER",
+      "pillar": "COM",
+      "name": "Unsupported Answer",
+      "plain_name": "Answer not explained",
+      "student_help": "The answer is there, but the reason the question asked for is missing.",
+      "description": "Gives an answer, claim or 'show that' conclusion without the reasoning or working the question requires.",
+      "example": "'Will the cell shrink in salt water? Yes.' with no mention of osmosis.",
+      "tell_apart": [
+        {
+          "code": "COM_WORK_NOT_SHOWN",
+          "how": "COM_WORK_NOT_SHOWN is for missing calculation steps; this code is for a missing explanation in words."
+        },
+        {
+          "code": "COM_IMPRECISE_TERMS",
+          "how": "If an explanation is there but uses loose words, use COM_IMPRECISE_TERMS."
+        }
+      ],
+      "remediation": "Claim-evidence-reasoning frame.",
+      "legacy_ids": []
+    },
+    {
+      "id": "COM_WORK_NOT_SHOWN",
+      "pillar": "COM",
+      "name": "Work Not Shown",
+      "plain_name": "Didn't show the work",
+      "student_help": "Write the formula, then the numbers in it, then the answer.",
+      "description": "A calculation answer with no formula, substitution or steps where the question expects them, so the method cannot be checked or credited.",
+      "example": "Writes 'actual size = 0.02 mm' with no calculation.",
+      "tell_apart": [
+        {
+          "code": "TST_UNWORKED_GUESS",
+          "how": "If the answer is wrong and there is no work, it is likely a guess: use TST_UNWORKED_GUESS. Use this code when the answer is right or close and only the steps are missing."
+        },
+        {
+          "code": "COM_UNSUPPORTED_ANSWER",
+          "how": "For a missing explanation in words, use COM_UNSUPPORTED_ANSWER."
+        }
+      ],
+      "remediation": "GRASS layout model: Given, Required, Analysis, Solution, Statement.",
+      "legacy_ids": []
+    },
+    {
+      "id": "COM_MISSING_LABELS",
+      "pillar": "COM",
+      "name": "Missing Labels / Definitions",
+      "plain_name": "Labels missing",
+      "student_help": "A graph, diagram or variable is missing labels, so it is unclear what it shows.",
+      "description": "Leaves out axis labels, scales, diagram labels or the 'let x be ...' definition that the work needs.",
+      "example": "Draws a plant cell with no labels.",
+      "tell_apart": [
+        {
+          "code": "COM_MISSING_UNITS",
+          "how": "COM_MISSING_UNITS is for a final numerical answer; this code is for diagrams, graphs and tables."
+        }
+      ],
+      "remediation": "Graph checklist card.",
+      "legacy_ids": []
+    },
+    {
+      "id": "COM_IMPRECISE_TERMS",
+      "pillar": "COM",
+      "name": "Imprecise Terms",
+      "plain_name": "Used an everyday word where a subject term was needed",
+      "student_help": "Use the exact subject word instead of an everyday one.",
+      "description": "The idea is right but is stated with everyday or loose words where a specific scientific term is needed, so the answer is ambiguous.",
+      "example": "'The food gets broken down by the juices' instead of naming enzymes.",
+      "tell_apart": [
+        {
+          "code": "COM_UNSUPPORTED_ANSWER",
+          "how": "If no reasoning is given at all, use COM_UNSUPPORTED_ANSWER."
+        },
+        {
+          "code": null,
+          "how": "If the wrong word shows a wrong idea (the student really thinks sugar melts in water), use the matching concept (CON) code instead."
+        }
+      ],
+      "remediation": "Word wall with paired everyday and scientific terms.",
+      "legacy_ids": []
+    },
+    {
+      "id": "COM_OBSERVATION_VS_INFERENCE",
+      "pillar": "COM",
+      "name": "Observation vs Inference",
+      "plain_name": "Mixed up what you saw with what it means",
+      "student_help": "Observations are what you saw, heard or measured; put explanations in the analysis.",
+      "description": "In lab or data questions, reports an explanation as if it were observed, or lists observations where an analysis or conclusion is asked for. Includes conclusions that go beyond the data.",
+      "example": "Observation: 'the yeast respired faster' when the record was balloon size.",
+      "tell_apart": [
+        {
+          "code": "STR_EXPERIMENT_DESIGN",
+          "how": "STR_EXPERIMENT_DESIGN is about how the investigation is planned; this code is about how results are written up."
+        }
+      ],
+      "remediation": "Two-column observation / inference sort.",
+      "legacy_ids": []
+    },
+    {
+      "id": "TST_BLANK",
+      "pillar": "TST",
+      "name": "Blank / Time Attrition",
+      "plain_name": "Left blank",
+      "student_help": "This part was left blank.",
+      "description": "Leaves a question or part with no attempt, from time pressure or a frustration block.",
+      "example": "A whole question with no writing at all.",
+      "tell_apart": [
+        {
+          "code": "TST_ABANDONED_WORK",
+          "how": "If any work was started, use TST_ABANDONED_WORK."
+        },
+        {
+          "code": "TST_SKIPPED_PART",
+          "how": "If other parts of the same question are answered, use TST_SKIPPED_PART."
+        }
+      ],
+      "remediation": "Prerequisite baseline probe on that topic.",
+      "legacy_ids": []
+    },
+    {
+      "id": "TST_SKIPPED_PART",
+      "pillar": "TST",
+      "name": "Skipped Part",
+      "plain_name": "Part of the question skipped",
+      "student_help": "One part of the question was skipped while the others were answered.",
+      "description": "Answers some parts of a multi-part question and leaves another out, likely without noticing.",
+      "example": "Asked for genotype and phenotype ratios; gives only the genotype ratio.",
+      "tell_apart": [
+        {
+          "code": "TST_BLANK",
+          "how": "If the whole question is empty, use TST_BLANK."
+        },
+        {
+          "code": "COM_ANSWERED_DIFFERENT_QUESTION",
+          "how": "If the student answered something else instead of what was asked, use COM_ANSWERED_DIFFERENT_QUESTION."
+        }
+      ],
+      "remediation": "Part checklist habit.",
+      "legacy_ids": []
+    },
+    {
+      "id": "TST_DISTRACTOR_TRAP",
+      "pillar": "TST",
+      "name": "Distractor Trap",
+      "plain_name": "Middle step taken as the answer",
+      "student_help": "A middle step was treated as the final answer.",
+      "description": "Takes an intermediate value or a tempting wrong option as the final answer.",
+      "example": "Multiple choice on organelles: chooses 'nucleus' because it appeared in the stem.",
+      "tell_apart": [
+        {
+          "code": "PRC_INCOMPLETE_SOLUTION",
+          "how": "If the work just stops, use PRC_INCOMPLETE_SOLUTION; this code is for presenting the wrong value as final."
+        },
+        {
+          "code": "TST_UNWORKED_GUESS",
+          "how": "If there is no work behind the choice, use TST_UNWORKED_GUESS."
+        }
+      ],
+      "remediation": "'Is this what was asked?' stop sign.",
+      "legacy_ids": []
+    },
+    {
+      "id": "TST_ABANDONED_WORK",
+      "pillar": "TST",
+      "name": "Abandoned Work",
+      "plain_name": "Gave up partway",
+      "student_help": "A good start was stopped or crossed out before reaching an answer.",
+      "description": "Starts a valid approach, then stops or crosses it out partway with no answer.",
+      "example": "Starts the dihybrid square, fills four boxes, then stops.",
+      "tell_apart": [
+        {
+          "code": "TST_BLANK",
+          "how": "If nothing was written, use TST_BLANK."
+        },
+        {
+          "code": "PRC_INCOMPLETE_SOLUTION",
+          "how": "If the work reaches a result one step short of the target, use PRC_INCOMPLETE_SOLUTION."
+        }
+      ],
+      "remediation": "First-step confidence warm-up, then the same problem.",
+      "legacy_ids": []
+    },
+    {
+      "id": "TST_UNCHECKED_ANSWER",
+      "pillar": "TST",
+      "name": "Unchecked Answer",
+      "plain_name": "Answer not checked",
+      "student_help": "A quick check would show this answer cannot be right, like a negative length.",
+      "description": "Gives an answer a quick check would show is impossible or absurd, and does not notice.",
+      "example": "Gives a probability of 150%.",
+      "tell_apart": [
+        {
+          "code": "FAC_ARITHMETIC_SLIP",
+          "how": "Code the slip that caused the answer as well when it is visible; this code records that the impossible result was not caught."
+        }
+      ],
+      "remediation": "Estimate-then-check habit.",
+      "legacy_ids": []
+    },
+    {
+      "id": "TST_MISREAD_GIVEN",
+      "pillar": "TST",
+      "name": "Misread Given",
+      "plain_name": "Read the question wrong",
+      "student_help": "A number or sign in the question was read wrong.",
+      "description": "Misreads a number, sign or symbol printed in the question.",
+      "example": "Question says 100×; student uses 1000×.",
+      "tell_apart": [
+        {
+          "code": "FAC_COPY_ERROR",
+          "how": "If the slip happens between the student's own lines, use FAC_COPY_ERROR."
+        }
+      ],
+      "remediation": "Given-data check habit.",
+      "legacy_ids": []
+    },
+    {
+      "id": "TST_UNWORKED_GUESS",
+      "pillar": "TST",
+      "name": "Unworked Guess",
+      "plain_name": "Guessed with no work",
+      "student_help": "An answer was written with no working, and it is not right.",
+      "description": "Writes a wrong final answer with no working shown, suggesting a guess.",
+      "example": "Writes '3:1' with no square for a test-cross question; the answer is 1:1.",
+      "tell_apart": [
+        {
+          "code": "COM_WORK_NOT_SHOWN",
+          "how": "If the answer is right but the work is missing, use COM_WORK_NOT_SHOWN."
+        }
+      ],
+      "remediation": "Show-one-step routine.",
+      "legacy_ids": []
+    },
+    {
+      "id": "TST_REFERENCE_SHEET_UNUSED",
+      "pillar": "TST",
+      "name": "Reference Sheet Not Used",
+      "plain_name": "Didn't use the data sheet",
+      "student_help": "If a value or formula is on the data sheet or periodic table, look it up instead of remembering it.",
+      "description": "Gets a value, constant or formula wrong that was printed on the provided data sheet, formula sheet or periodic table.",
+      "example": "Gets the amino acid for a codon wrong when the codon chart was provided.",
+      "tell_apart": [
+        {
+          "code": null,
+          "how": "If the formula or value was NOT provided, use the matching recall (FAC) code."
+        }
+      ],
+      "remediation": "Reference-sheet scavenger hunt before the test.",
+      "legacy_ids": []
+    }
+  ]
+}

@@ -1,0 +1,995 @@
+{
+  "version": 1,
+  "status": "draft",
+  "subject": "physics",
+  "name": "Physics",
+  "courses": [
+    "SNC1W",
+    "SNC2D",
+    "SPH3U",
+    "SPH4U",
+    "SPH4C"
+  ],
+  "pillars": [
+    {
+      "id": "CON",
+      "name": "Concepts",
+      "scope": "The student holds a wrong idea about forces, motion, energy, waves, fields or circuits.",
+      "max_score": 2,
+      "slip": false
+    },
+    {
+      "id": "STR",
+      "name": "Strategy & Setup",
+      "scope": "The ideas are sound, but the plan is wrong: the wrong equation or law, a wrong free-body diagram, sign convention, system or angle reference.",
+      "max_score": 2,
+      "slip": false
+    },
+    {
+      "id": "PRC",
+      "name": "Procedure",
+      "scope": "The plan is right, but carrying out the method goes wrong (rearranging, vector addition, circuit reduction, graph analysis, ray diagrams).",
+      "max_score": 2,
+      "slip": false
+    },
+    {
+      "id": "FAC",
+      "name": "Calculation & Recall",
+      "scope": "Method and plan are sound; a number, sign, constant, formula detail, unit or rounding slips.",
+      "max_score": 2,
+      "slip": true
+    },
+    {
+      "id": "COM",
+      "name": "Communication",
+      "scope": "The physics may be right, but the answer is not what was asked, lacks a direction or unit, or is not explained.",
+      "max_score": 1,
+      "slip": true
+    },
+    {
+      "id": "TST",
+      "name": "Test Habits",
+      "scope": "How the student handles the test: blanks, traps, giving up, not checking, not using the formula sheet.",
+      "max_score": 1,
+      "slip": true
+    }
+  ],
+  "decision_order": [
+    "Is the student's idea of the physics wrong (CON)?",
+    "Is the idea right but the equation, free-body diagram, sign convention or system wrong (STR)?",
+    "Is the plan right but a step of the method done wrongly (PRC)?",
+    "Is it a slip in a number, sign, constant, formula detail, unit or rounding (FAC)?",
+    "Is the physics right but the answer not what was asked, missing a direction or unit, or unexplained (COM)?",
+    "Or is it how the test was handled (TST)?"
+  ],
+  "codes": [
+    {
+      "id": "CON_FORCE_IMPLIES_MOTION",
+      "pillar": "CON",
+      "name": "Motion Needs a Force",
+      "plain_name": "Thinks moving things need a force to keep going",
+      "student_help": "A net force changes motion; an object at constant velocity has zero net force.",
+      "description": "Believes a moving object needs a net force in its direction of motion, or that the net force points the way the object moves.",
+      "example": "'The puck slides at constant speed on ice because the force of the push is still acting on it.'",
+      "tell_apart": [
+        {
+          "code": "CON_VELOCITY_VS_ACCELERATION",
+          "how": "If the confusion is between velocity and acceleration in kinematics (no forces involved), use CON_VELOCITY_VS_ACCELERATION."
+        },
+        {
+          "code": "STR_FREE_BODY_DIAGRAM",
+          "how": "If the student adds a 'force of motion' arrow to a diagram but otherwise reasons correctly, use STR_FREE_BODY_DIAGRAM."
+        }
+      ],
+      "remediation": "Tier 1: frictionless-cart thought experiment.",
+      "legacy_ids": []
+    },
+    {
+      "id": "CON_VELOCITY_VS_ACCELERATION",
+      "pillar": "CON",
+      "name": "Velocity vs Acceleration",
+      "plain_name": "Mixed up velocity and acceleration",
+      "student_help": "Acceleration is how fast velocity changes; an object can be stopped and still accelerating.",
+      "description": "Treats velocity and acceleration as the same thing (zero velocity means zero acceleration; a fast object has a large acceleration), or reads a v-t graph as a position graph.",
+      "example": "'At the top of its flight the ball has zero acceleration because it has stopped.'",
+      "tell_apart": [
+        {
+          "code": "CON_FORCE_IMPLIES_MOTION",
+          "how": "If the reasoning is about forces causing motion, use CON_FORCE_IMPLIES_MOTION."
+        },
+        {
+          "code": "PRC_GRAPH_ANALYSIS",
+          "how": "If the student understands the quantities but takes the slope or area of a graph wrongly, use PRC_GRAPH_ANALYSIS."
+        }
+      ],
+      "remediation": "Tier 1: motion-sensor graph matching.",
+      "legacy_ids": []
+    },
+    {
+      "id": "CON_VECTOR_AS_SCALAR",
+      "pillar": "CON",
+      "name": "Vectors Treated as Scalars",
+      "plain_name": "Added vectors as plain numbers",
+      "student_help": "Vectors have direction; perpendicular ones combine with Pythagoras, not addition.",
+      "description": "Adds, subtracts or compares vector quantities as if they had no direction (3 m east + 4 m north = 7 m; distance used for displacement).",
+      "example": "'She walks 3 km east and 4 km north, so her displacement is 7 km.'",
+      "tell_apart": [
+        {
+          "code": "PRC_VECTOR_ADDITION",
+          "how": "If the student knows vectors need components but combines them wrongly, use PRC_VECTOR_ADDITION."
+        },
+        {
+          "code": "COM_DIRECTION_MISSING",
+          "how": "If the magnitude is right and only the direction is left off the answer, use COM_DIRECTION_MISSING."
+        }
+      ],
+      "remediation": "Tier 1: tip-to-tail drawing on grid paper.",
+      "legacy_ids": []
+    },
+    {
+      "id": "CON_THIRD_LAW_PAIRS",
+      "pillar": "CON",
+      "name": "Third-Law Pairs Misunderstood",
+      "plain_name": "Mixed up action-reaction pairs",
+      "student_help": "Newton's third-law forces act on two different objects, so they never cancel each other.",
+      "description": "Places both forces of a third-law pair on the same object, thinks they cancel, or thinks the bigger or faster object exerts the bigger force.",
+      "example": "'The truck hits the car with more force than the car hits the truck.'",
+      "tell_apart": [
+        {
+          "code": "STR_FREE_BODY_DIAGRAM",
+          "how": "If the error is only in which forces are drawn on one object, use STR_FREE_BODY_DIAGRAM."
+        }
+      ],
+      "remediation": "Tier 1: pair-labelling exercise (force of A on B / B on A).",
+      "legacy_ids": []
+    },
+    {
+      "id": "CON_CURRENT_USED_UP",
+      "pillar": "CON",
+      "name": "Current Used Up",
+      "plain_name": "Thinks current gets used up in a circuit",
+      "student_help": "Current is the same all the way around a series loop; energy, not charge, is transferred.",
+      "description": "Believes current is consumed by components, so less current returns to the battery, or that the first bulb in series is brighter.",
+      "example": "'The second bulb is dimmer because the first bulb used up some of the current.'",
+      "tell_apart": [
+        {
+          "code": "PRC_CIRCUIT_REDUCTION",
+          "how": "If the idea of current is right and the resistor combination is calculated wrongly, use PRC_CIRCUIT_REDUCTION."
+        }
+      ],
+      "remediation": "Tier 1: ammeter readings at several points in a series loop.",
+      "legacy_ids": []
+    },
+    {
+      "id": "CON_ENERGY_ACCOUNTING",
+      "pillar": "CON",
+      "name": "Energy Not Conserved",
+      "plain_name": "Lost track of where the energy goes",
+      "student_help": "Energy is never used up; it is transferred or transformed, often to thermal energy.",
+      "description": "Has energy appear or disappear, confuses energy with force or power, or treats 'energy lost' to friction as vanishing rather than becoming thermal energy.",
+      "example": "'At the bottom of the ramp the cart has no energy left, so it stops.'",
+      "tell_apart": [
+        {
+          "code": "STR_FORMULA_MISSELECTION",
+          "how": "If the idea is right but the wrong energy equation is chosen, use STR_FORMULA_MISSELECTION."
+        }
+      ],
+      "remediation": "Tier 1: energy bar charts (before, transfer, after).",
+      "legacy_ids": []
+    },
+    {
+      "id": "CON_CENTRIFUGAL_FORCE",
+      "pillar": "CON",
+      "name": "Outward Force in Circular Motion",
+      "plain_name": "Added an outward force in circular motion",
+      "student_help": "In circular motion the net force points to the centre; the 'outward pull' is inertia, not a force.",
+      "description": "Draws or uses an outward centrifugal force, or thinks an object released from circular motion flies straight outward.",
+      "example": "'When the string breaks, the ball flies directly away from the centre.'",
+      "tell_apart": [
+        {
+          "code": "STR_FREE_BODY_DIAGRAM",
+          "how": "Use this code when the outward force comes from a wrong idea; use STR_FREE_BODY_DIAGRAM for other missing or extra forces."
+        }
+      ],
+      "remediation": "Tier 1: release-point demonstration with tangent lines.",
+      "legacy_ids": []
+    },
+    {
+      "id": "CON_WAVE_PROPERTIES",
+      "pillar": "CON",
+      "name": "Wave Properties Misunderstood",
+      "plain_name": "Mixed up what changes when a wave changes medium",
+      "student_help": "Frequency is set by the source; when a wave enters a new medium its speed and wavelength change.",
+      "description": "Believes waves carry matter along, that frequency changes when a wave enters a new medium, or that louder sounds travel faster.",
+      "example": "'Light slows down in glass, so its frequency decreases.'",
+      "tell_apart": [
+        {
+          "code": "STR_FORMULA_MISSELECTION",
+          "how": "If the idea is right but the wrong wave equation is picked, use STR_FORMULA_MISSELECTION."
+        }
+      ],
+      "remediation": "Tier 1: rope-junction demonstration.",
+      "legacy_ids": []
+    },
+    {
+      "id": "STR_FORMULA_MISSELECTION",
+      "pillar": "STR",
+      "name": "Formula / Law Misselection",
+      "plain_name": "Wrong formula for this question",
+      "student_help": "The formula or rule used here does not fit this type of question.",
+      "description": "Applies a formula, theorem or law whose conditions the problem does not meet.",
+      "example": "Given v₁, a and Δt, and asked for Δd, uses v₂² = v₁² + 2aΔd, which has two unknowns, instead of Δd = v₁Δt + ½aΔt².",
+      "tell_apart": [
+        {
+          "code": "STR_WRONG_SUBSTITUTION",
+          "how": "Here the formula itself is wrong for the situation; in STR_WRONG_SUBSTITUTION the formula is right but the givens go into the wrong places."
+        },
+        {
+          "code": "FAC_FORMULA_RECALL",
+          "how": "Here a different, real formula is chosen; in FAC_FORMULA_RECALL the right formula is chosen but remembered wrongly."
+        }
+      ],
+      "remediation": "Condition check table: list each formula with the conditions it needs, then tick which ones the question meets.",
+      "legacy_ids": []
+    },
+    {
+      "id": "STR_FREE_BODY_DIAGRAM",
+      "pillar": "STR",
+      "name": "Free-Body Diagram Error",
+      "plain_name": "Free-body diagram has missing or extra forces",
+      "student_help": "Draw only forces that something touching the object (or gravity) exerts on it.",
+      "description": "Leaves a force out of the free-body diagram (normal force, friction, tension) or adds one that doesn't exist (a 'force of motion', the applied force after release).",
+      "example": "Block on an incline: draws gravity and friction but no normal force.",
+      "tell_apart": [
+        {
+          "code": "CON_FORCE_IMPLIES_MOTION",
+          "how": "If an extra force comes from believing motion needs a force, use CON_FORCE_IMPLIES_MOTION."
+        },
+        {
+          "code": "STR_ANGLE_REFERENCE",
+          "how": "If all forces are present but resolved along the wrong axes, use STR_ANGLE_REFERENCE."
+        }
+      ],
+      "remediation": "Tier 2: force-agent checklist (what exerts it, on what).",
+      "legacy_ids": []
+    },
+    {
+      "id": "STR_SIGN_CONVENTION",
+      "pillar": "STR",
+      "name": "No Consistent Sign Convention",
+      "plain_name": "Mixed up which direction is positive",
+      "student_help": "Pick which way is positive at the start and give every vector its sign from that choice.",
+      "description": "Does not choose a positive direction, or switches it partway, so values like g, displacement or velocity carry inconsistent signs.",
+      "example": "Takes up as positive for the initial velocity (+12 m/s) but uses g = +9.8 m/s² for a ball thrown upward.",
+      "tell_apart": [
+        {
+          "code": "FAC_SIGNED_NUMBER",
+          "how": "If the signs are set up consistently and a sign slips in the arithmetic, use FAC_SIGNED_NUMBER."
+        }
+      ],
+      "remediation": "Tier 2: sign-convention box at the top of every solution.",
+      "legacy_ids": []
+    },
+    {
+      "id": "STR_ANGLE_REFERENCE",
+      "pillar": "STR",
+      "name": "Wrong Angle Reference",
+      "plain_name": "Used sin where cos was needed (or the reverse)",
+      "student_help": "Sketch the right triangle and check which side is opposite your angle.",
+      "description": "Resolves a vector using the wrong trig ratio because the angle is measured from a different line than assumed (from the vertical, from the incline).",
+      "example": "On a 30° incline writes the component of gravity along the slope as mg cos 30°.",
+      "tell_apart": [
+        {
+          "code": "STR_FREE_BODY_DIAGRAM",
+          "how": "If a force is missing entirely, use STR_FREE_BODY_DIAGRAM."
+        },
+        {
+          "code": "FAC_CALCULATOR_ENTRY",
+          "how": "If the ratio is right but the calculator is in radians, use FAC_CALCULATOR_ENTRY."
+        }
+      ],
+      "remediation": "Tier 2: labelled component triangle drawn for every vector.",
+      "legacy_ids": []
+    },
+    {
+      "id": "STR_WRONG_SYSTEM",
+      "pillar": "STR",
+      "name": "Wrong System Chosen",
+      "plain_name": "Chose the wrong object or system",
+      "student_help": "Decide which object (or group of objects) you are applying the law to, and include only forces or momenta for that system.",
+      "description": "Applies a law to the wrong system: uses the total mass for one object, conserves momentum across a system with a large external force, mixes forces on different objects in one Fnet.",
+      "example": "Two blocks pulled together: finds the tension between them using Fnet on the whole system.",
+      "tell_apart": [
+        {
+          "code": "STR_FREE_BODY_DIAGRAM",
+          "how": "STR_FREE_BODY_DIAGRAM is about forces on one chosen object; this code is about choosing the object or system itself."
+        }
+      ],
+      "remediation": "Tier 2: system-boundary sketch before writing Fnet = ma.",
+      "legacy_ids": []
+    },
+    {
+      "id": "STR_WRONG_SUBSTITUTION",
+      "pillar": "STR",
+      "name": "Wrong Substitution",
+      "plain_name": "Values put in the wrong places",
+      "student_help": "The right formula was used, but values went into the wrong spots.",
+      "description": "Puts known values into the wrong variables of a correct formula.",
+      "example": "Puts the final velocity in for v₁ in v₂ = v₁ + aΔt.",
+      "tell_apart": [
+        {
+          "code": "STR_FORMULA_MISSELECTION",
+          "how": "If the formula is wrong for the situation, use STR_FORMULA_MISSELECTION; this code is only for the right formula filled in wrongly."
+        },
+        {
+          "code": "TST_MISREAD_GIVEN",
+          "how": "If the student read the number itself wrongly from the question, use TST_MISREAD_GIVEN; here the number is read right but given the wrong role."
+        }
+      ],
+      "remediation": "Givens list: symbol, value, unit for every quantity before any substitution.",
+      "legacy_ids": []
+    },
+    {
+      "id": "STR_NO_VIABLE_PLAN",
+      "pillar": "STR",
+      "name": "No Viable Plan",
+      "plain_name": "No clear plan",
+      "student_help": "The first move here could not lead to the answer. Plan the method before writing.",
+      "description": "Starts with a move that cannot reach the answer, or moves symbols around with no method.",
+      "example": "Projectile problem: writes three kinematics equations mixing horizontal and vertical values with no plan for which direction gives the time.",
+      "tell_apart": [
+        {
+          "code": "STR_FORMULA_MISSELECTION",
+          "how": "STR_FORMULA_MISSELECTION is one wrong choice inside a sensible plan; this code is for when no workable plan is visible at all."
+        },
+        {
+          "code": "TST_UNWORKED_GUESS",
+          "how": "If there is only an answer with no work, use TST_UNWORKED_GUESS; this code needs visible work that wanders."
+        }
+      ],
+      "remediation": "Plan-first prompt: name the target, the known quantities and the bridge between them before calculating.",
+      "legacy_ids": []
+    },
+    {
+      "id": "STR_EXPERIMENT_DESIGN",
+      "pillar": "STR",
+      "name": "Experimental Design Flaw",
+      "plain_name": "Experiment set up unfairly",
+      "student_help": "Change one thing, measure one thing, and keep everything else the same.",
+      "description": "Gets the independent, dependent or controlled variables wrong, leaves out a control or repeats, or designs a test that cannot answer the question.",
+      "example": "Measures the period of a pendulum to study length but changes the release angle each trial.",
+      "tell_apart": [
+        {
+          "code": "COM_OBSERVATION_VS_INFERENCE",
+          "how": "This code is about how the experiment is set up; COM_OBSERVATION_VS_INFERENCE is about how the results are reported."
+        },
+        {
+          "code": "STR_NO_VIABLE_PLAN",
+          "how": "STR_NO_VIABLE_PLAN is for calculation problems; use this code for planning an investigation."
+        }
+      ],
+      "remediation": "Fair-test frame: I will change ___, measure ___, and keep ___ the same; repeat ___ times.",
+      "legacy_ids": []
+    },
+    {
+      "id": "PRC_STEP_OMITTED",
+      "pillar": "PRC",
+      "name": "Step Omission",
+      "plain_name": "Skipped a step",
+      "student_help": "A needed step in the method was skipped.",
+      "description": "Skips a required step of the procedure, so the result does not follow.",
+      "example": "Projectile: finds time in the air from the vertical motion, then skips multiplying by the horizontal velocity and reports the time as the range.",
+      "tell_apart": [
+        {
+          "code": "PRC_INCOMPLETE_SOLUTION",
+          "how": "Here a middle step is missing and the answer is wrong; in PRC_INCOMPLETE_SOLUTION the work is right but stops before the end."
+        },
+        {
+          "code": "STR_NO_VIABLE_PLAN",
+          "how": "If the plan itself is missing, use STR_NO_VIABLE_PLAN; here the plan is right and one step drops out."
+        }
+      ],
+      "remediation": "Faded worked example: complete the one missing step in an otherwise finished solution.",
+      "legacy_ids": []
+    },
+    {
+      "id": "PRC_REARRANGEMENT",
+      "pillar": "PRC",
+      "name": "Rearranging Error",
+      "plain_name": "Rearranged the formula wrongly",
+      "student_help": "Rearrange with symbols first, then put the numbers in.",
+      "description": "Rearranges an equation incorrectly to isolate the unknown (divides instead of multiplies, moves a term without changing its sign, loses a square).",
+      "example": "Rearranges Ek = ½mv² for v as v = 2Ek/m (forgets the square root).",
+      "tell_apart": [
+        {
+          "code": "FAC_ARITHMETIC_SLIP",
+          "how": "If the algebra is right and only a number is computed wrongly, use FAC_ARITHMETIC_SLIP."
+        },
+        {
+          "code": "STR_FORMULA_MISSELECTION",
+          "how": "If the starting formula is wrong, use STR_FORMULA_MISSELECTION; this code is for a right formula rearranged wrongly."
+        }
+      ],
+      "remediation": "Symbol-first rearranging drill with a check by substituting simple numbers.",
+      "legacy_ids": []
+    },
+    {
+      "id": "PRC_VECTOR_ADDITION",
+      "pillar": "PRC",
+      "name": "Vector Addition Error",
+      "plain_name": "Combined the vector components wrongly",
+      "student_help": "Add x-components together and y-components together, then use Pythagoras and tan⁻¹ for the result.",
+      "description": "Knows vectors need components but adds them wrongly: mixes x and y, gives components the wrong sign for their quadrant, or takes tan⁻¹ of the wrong ratio.",
+      "example": "Adds the x-component of one vector to the y-component of the other.",
+      "tell_apart": [
+        {
+          "code": "CON_VECTOR_AS_SCALAR",
+          "how": "If the student adds magnitudes directly, use CON_VECTOR_AS_SCALAR."
+        },
+        {
+          "code": "STR_ANGLE_REFERENCE",
+          "how": "If each component is computed with the wrong trig ratio, use STR_ANGLE_REFERENCE."
+        }
+      ],
+      "remediation": "Tier 2: component table (vector, x, y, sign).",
+      "legacy_ids": []
+    },
+    {
+      "id": "PRC_CIRCUIT_REDUCTION",
+      "pillar": "PRC",
+      "name": "Circuit Reduction Error",
+      "plain_name": "Combined resistors wrongly",
+      "student_help": "Series resistors add; parallel resistors add as reciprocals, and you flip at the end.",
+      "description": "Combines resistors wrongly: adds parallel resistors directly, forgets to take the reciprocal at the end, or treats a mixed circuit as all series.",
+      "example": "Two 6 Ω resistors in parallel: writes 1/R = 1/6 + 1/6 = 1/3, so R = 1/3 Ω.",
+      "tell_apart": [
+        {
+          "code": "CON_CURRENT_USED_UP",
+          "how": "If the student's idea of current is wrong, use CON_CURRENT_USED_UP."
+        }
+      ],
+      "remediation": "Tier 2: redraw-and-reduce one step at a time.",
+      "legacy_ids": []
+    },
+    {
+      "id": "PRC_GRAPH_ANALYSIS",
+      "pillar": "PRC",
+      "name": "Graph Analysis Error",
+      "plain_name": "Read the slope or area wrongly",
+      "student_help": "On a d-t graph slope is velocity; on a v-t graph slope is acceleration and the area is displacement.",
+      "description": "Takes the slope where the area is needed (or the reverse), reads a single point instead of a slope, or uses the wrong rise or run.",
+      "example": "Finds displacement from a v-t graph as the final velocity times the time, ignoring that the graph is a sloped line.",
+      "tell_apart": [
+        {
+          "code": "CON_VELOCITY_VS_ACCELERATION",
+          "how": "If the student misunderstands what the quantities mean, use CON_VELOCITY_VS_ACCELERATION."
+        }
+      ],
+      "remediation": "Tier 2: slope-or-area decision chart.",
+      "legacy_ids": []
+    },
+    {
+      "id": "PRC_RAY_DIAGRAM",
+      "pillar": "PRC",
+      "name": "Ray Diagram Error",
+      "plain_name": "Drew the ray diagram with the wrong rules",
+      "student_help": "Use two standard rays: parallel then through F, and through the centre (or through F then parallel).",
+      "description": "Applies the ray rules wrongly (parallel ray not sent through the focal point, rays not extended for virtual images), so the image position or type is wrong.",
+      "example": "Converging lens: draws the parallel ray refracting straight through without bending toward F.",
+      "tell_apart": [
+        {
+          "code": "COM_MISSING_LABELS",
+          "how": "If the diagram is right but the image, F or axes are unlabelled, use COM_MISSING_LABELS."
+        }
+      ],
+      "remediation": "Tier 2: three-ray template.",
+      "legacy_ids": []
+    },
+    {
+      "id": "PRC_STAGE_HANDOFF",
+      "pillar": "PRC",
+      "name": "Stage Handoff Error",
+      "plain_name": "Didn't carry values between stages",
+      "student_help": "The final values from one stage become the starting values for the next.",
+      "description": "In multi-stage problems (motion that changes acceleration, collision then slide), does not carry the end values of one stage into the next, or restarts from the original givens.",
+      "example": "Car speeds up then brakes: uses v₁ = 0 for the braking stage instead of the speed reached in stage 1.",
+      "tell_apart": [
+        {
+          "code": "STR_NO_VIABLE_PLAN",
+          "how": "If the student never splits the problem into stages, use STR_NO_VIABLE_PLAN."
+        }
+      ],
+      "remediation": "Tier 2: stage table with a 'carry over' column.",
+      "legacy_ids": []
+    },
+    {
+      "id": "PRC_INCOMPLETE_SOLUTION",
+      "pillar": "PRC",
+      "name": "Stopped Before the End",
+      "plain_name": "Stopped one step early",
+      "student_help": "Read the question again when you think you are done: is your last line the thing it asked for?",
+      "description": "Correct work that stops before the requested quantity or form is reached.",
+      "example": "Asked for the speed at impact, finds the vertical component only and stops.",
+      "tell_apart": [
+        {
+          "code": "COM_ANSWERED_DIFFERENT_QUESTION",
+          "how": "If the student aimed at a different target from the start, use COM_ANSWERED_DIFFERENT_QUESTION; here they were heading to the right target and stopped."
+        },
+        {
+          "code": "TST_DISTRACTOR_TRAP",
+          "how": "If an intermediate value is boxed as if it were final, use TST_DISTRACTOR_TRAP; if the work simply ends, use this code."
+        }
+      ],
+      "remediation": "Completion checklist: target quantity, unit, form asked for.",
+      "legacy_ids": []
+    },
+    {
+      "id": "FAC_ARITHMETIC_SLIP",
+      "pillar": "FAC",
+      "name": "Arithmetic Slip",
+      "plain_name": "Calculation slip",
+      "student_help": "The steps make sense, with a small calculation slip in the numbers.",
+      "description": "An isolated arithmetic error with a sound method.",
+      "example": "Computes 9.8 × 2.5 as 2.45.",
+      "tell_apart": [
+        {
+          "code": "PRC_REARRANGEMENT",
+          "how": "If the formula was rearranged wrongly before any arithmetic, use PRC_REARRANGEMENT."
+        },
+        {
+          "code": "FAC_CALCULATOR_ENTRY",
+          "how": "If the slip comes from how the number was keyed in (brackets, exponent, mode), use FAC_CALCULATOR_ENTRY."
+        }
+      ],
+      "remediation": "Five-item rapid micro-drill on the same operation.",
+      "legacy_ids": []
+    },
+    {
+      "id": "FAC_SIGNED_NUMBER",
+      "pillar": "FAC",
+      "name": "Signed Number Slip",
+      "plain_name": "Negative number slip",
+      "student_help": "A slip happened when adding, subtracting or multiplying negative numbers.",
+      "description": "Arithmetic slip with negatives in otherwise correct work.",
+      "example": "Computes 0 − (−9.8)(3.0) as −29.4.",
+      "tell_apart": [
+        {
+          "code": "FAC_ARITHMETIC_SLIP",
+          "how": "Use this code when the slip is about the sign; other arithmetic slips are FAC_ARITHMETIC_SLIP."
+        }
+      ],
+      "remediation": "Integer operations micro-drill.",
+      "legacy_ids": []
+    },
+    {
+      "id": "FAC_COPY_ERROR",
+      "pillar": "FAC",
+      "name": "Copy Error",
+      "plain_name": "Copied a number wrong",
+      "student_help": "A number or sign changed when copying from one line to the next.",
+      "description": "Miscopies a digit, sign or term from one of the student's own lines to the next.",
+      "example": "Writes 12.5 m/s on one line and 15.2 m/s on the next.",
+      "tell_apart": [
+        {
+          "code": "TST_MISREAD_GIVEN",
+          "how": "If the value was read wrongly from the question itself, use TST_MISREAD_GIVEN; this code is for copying between the student's own lines."
+        },
+        {
+          "code": "FAC_ARITHMETIC_SLIP",
+          "how": "If a value was calculated wrongly rather than copied, use FAC_ARITHMETIC_SLIP."
+        }
+      ],
+      "remediation": "Line-to-line check habit.",
+      "legacy_ids": []
+    },
+    {
+      "id": "FAC_FORMULA_RECALL",
+      "pillar": "FAC",
+      "name": "Formula Recall",
+      "plain_name": "Formula remembered wrong",
+      "student_help": "The right formula was chosen but remembered with a piece missing or changed.",
+      "description": "Picks the right formula but recalls it wrongly.",
+      "example": "Writes kinetic energy as Ek = mv².",
+      "tell_apart": [
+        {
+          "code": "STR_FORMULA_MISSELECTION",
+          "how": "If a different formula was chosen, use STR_FORMULA_MISSELECTION."
+        },
+        {
+          "code": "TST_REFERENCE_SHEET_UNUSED",
+          "how": "If the formula was on the provided sheet, use TST_REFERENCE_SHEET_UNUSED."
+        }
+      ],
+      "remediation": "Formula flash cards with units for each symbol.",
+      "legacy_ids": []
+    },
+    {
+      "id": "FAC_UNIT_CONVERSION",
+      "pillar": "FAC",
+      "name": "Unit Conversion",
+      "plain_name": "Unit slip",
+      "student_help": "A unit conversion was off, like centimetres to metres.",
+      "description": "Converts units wrongly or mixes units in one calculation.",
+      "example": "Uses 90 km/h directly in an equation with metres and seconds.",
+      "tell_apart": [
+        {
+          "code": "COM_MISSING_UNITS",
+          "how": "Here the number is wrong because of a conversion; in COM_MISSING_UNITS the number is right but the unit is not written."
+        },
+        {
+          "code": "FAC_ARITHMETIC_SLIP",
+          "how": "If the conversion factor is right and the multiplication goes wrong, use FAC_ARITHMETIC_SLIP."
+        }
+      ],
+      "remediation": "Dimensional conversion bridge: write the factor as a fraction that cancels the old unit.",
+      "legacy_ids": []
+    },
+    {
+      "id": "FAC_ROUNDING",
+      "pillar": "FAC",
+      "name": "Rounding / Precision",
+      "plain_name": "Rounding slip",
+      "student_help": "A number was rounded too early or to the wrong decimal place.",
+      "description": "Rounds too early, or breaks the precision the question asks for.",
+      "example": "Rounds the time to 1 s halfway through and gets a final distance off by 20%.",
+      "tell_apart": [
+        {
+          "code": "FAC_ARITHMETIC_SLIP",
+          "how": "If the digits themselves are wrong, not just how many are kept, use FAC_ARITHMETIC_SLIP."
+        }
+      ],
+      "remediation": "Precision rules card: count significant figures in the givens, keep guard digits, round once.",
+      "legacy_ids": []
+    },
+    {
+      "id": "FAC_CALCULATOR_ENTRY",
+      "pillar": "FAC",
+      "name": "Calculator Entry",
+      "plain_name": "Calculator used wrong",
+      "student_help": "The calculator was set up or used wrong, like being in radians instead of degrees.",
+      "description": "Wrong calculator mode, missing brackets when keying, or misread display.",
+      "example": "Calculator in radian mode: sin 30 = −0.988.",
+      "tell_apart": [
+        {
+          "code": "FAC_ARITHMETIC_SLIP",
+          "how": "Use FAC_ARITHMETIC_SLIP for mental or written arithmetic; this code is for results that only make sense as a keying slip (for example an answer off by a power of ten)."
+        }
+      ],
+      "remediation": "Calculator entry drill with the same expression typed three ways.",
+      "legacy_ids": []
+    },
+    {
+      "id": "FAC_CONSTANT_RECALL",
+      "pillar": "FAC",
+      "name": "Constant Recall Slip",
+      "plain_name": "Used the wrong value for a constant",
+      "student_help": "Check constants (g, c, k) against the data sheet.",
+      "description": "Uses a wrong value for a physical constant (g = 10 or 98 m/s², c = 3 × 10⁶ m/s, wrong exponent on k or G).",
+      "example": "Uses the speed of light as 3.0 × 10⁶ m/s.",
+      "tell_apart": [
+        {
+          "code": "TST_REFERENCE_SHEET_UNUSED",
+          "how": "If the constant was printed on the provided data sheet, use TST_REFERENCE_SHEET_UNUSED."
+        },
+        {
+          "code": "FAC_FORMULA_RECALL",
+          "how": "If the formula, not the constant, is misremembered, use FAC_FORMULA_RECALL."
+        }
+      ],
+      "remediation": "Tier 3: constants flash cards.",
+      "legacy_ids": []
+    },
+    {
+      "id": "COM_ANSWERED_DIFFERENT_QUESTION",
+      "pillar": "COM",
+      "name": "Answered a Different Question",
+      "plain_name": "Answered a different question",
+      "student_help": "The work solved for something slightly different from what the question asked.",
+      "description": "Gives a correct answer to a different target than the one asked.",
+      "example": "Asked for the maximum height, gives the time to reach it.",
+      "tell_apart": [
+        {
+          "code": "PRC_INCOMPLETE_SOLUTION",
+          "how": "If the work was heading to the right target and stopped short, use PRC_INCOMPLETE_SOLUTION."
+        },
+        {
+          "code": "TST_SKIPPED_PART",
+          "how": "If a whole labelled part (b) is missing, use TST_SKIPPED_PART."
+        }
+      ],
+      "remediation": "Prompt deconstruction box: circle the verb, underline the target.",
+      "legacy_ids": []
+    },
+    {
+      "id": "COM_MISSING_UNITS",
+      "pillar": "COM",
+      "name": "Missing Units",
+      "plain_name": "Missing units",
+      "student_help": "The final answer is missing its units.",
+      "description": "Omits units on a measurement answer.",
+      "example": "Gives the force as '24.5' with no newtons.",
+      "tell_apart": [
+        {
+          "code": "FAC_UNIT_CONVERSION",
+          "how": "If the number is wrong because of a conversion, use FAC_UNIT_CONVERSION."
+        }
+      ],
+      "remediation": "Unit slot habit: draw a box after the answer for the unit.",
+      "legacy_ids": []
+    },
+    {
+      "id": "COM_DIRECTION_MISSING",
+      "pillar": "COM",
+      "name": "Direction Missing",
+      "plain_name": "Left the direction off a vector answer",
+      "student_help": "Velocity, displacement, force and momentum answers need a direction, like [E 30° N] or 'down the ramp'.",
+      "description": "Gives a correct magnitude for a vector quantity but no direction, or a direction that does not use the convention set up in the question.",
+      "example": "Final answer: 'v = 25 m/s' when the question asks for the velocity.",
+      "tell_apart": [
+        {
+          "code": "CON_VECTOR_AS_SCALAR",
+          "how": "If the student combined vectors as scalars, use CON_VECTOR_AS_SCALAR."
+        },
+        {
+          "code": "COM_MISSING_UNITS",
+          "how": "If the unit is missing, use COM_MISSING_UNITS."
+        }
+      ],
+      "remediation": "Tier 4: final-answer template with magnitude, unit and direction slots.",
+      "legacy_ids": []
+    },
+    {
+      "id": "COM_UNSUPPORTED_ANSWER",
+      "pillar": "COM",
+      "name": "Unsupported Answer",
+      "plain_name": "Answer not explained",
+      "student_help": "The answer is there, but the reason the question asked for is missing.",
+      "description": "Gives an answer, claim or 'show that' conclusion without the reasoning or working the question requires.",
+      "example": "'Which ball lands first? They land at the same time.' with no reasoning about equal acceleration.",
+      "tell_apart": [
+        {
+          "code": "COM_WORK_NOT_SHOWN",
+          "how": "COM_WORK_NOT_SHOWN is for missing calculation steps; this code is for a missing explanation in words."
+        },
+        {
+          "code": "COM_IMPRECISE_TERMS",
+          "how": "If an explanation is there but uses loose words, use COM_IMPRECISE_TERMS."
+        }
+      ],
+      "remediation": "Claim-evidence-reasoning frame.",
+      "legacy_ids": []
+    },
+    {
+      "id": "COM_WORK_NOT_SHOWN",
+      "pillar": "COM",
+      "name": "Work Not Shown",
+      "plain_name": "Didn't show the work",
+      "student_help": "Write the formula, then the numbers in it, then the answer.",
+      "description": "A calculation answer with no formula, substitution or steps where the question expects them, so the method cannot be checked or credited.",
+      "example": "Writes 'a = 2.4 m/s²' with no equation or substitution.",
+      "tell_apart": [
+        {
+          "code": "TST_UNWORKED_GUESS",
+          "how": "If the answer is wrong and there is no work, it is likely a guess: use TST_UNWORKED_GUESS. Use this code when the answer is right or close and only the steps are missing."
+        },
+        {
+          "code": "COM_UNSUPPORTED_ANSWER",
+          "how": "For a missing explanation in words, use COM_UNSUPPORTED_ANSWER."
+        }
+      ],
+      "remediation": "GRASS layout model: Given, Required, Analysis, Solution, Statement.",
+      "legacy_ids": []
+    },
+    {
+      "id": "COM_MISSING_LABELS",
+      "pillar": "COM",
+      "name": "Missing Labels / Definitions",
+      "plain_name": "Labels missing",
+      "student_help": "A graph, diagram or variable is missing labels, so it is unclear what it shows.",
+      "description": "Leaves out axis labels, scales, diagram labels or the 'let x be ...' definition that the work needs.",
+      "example": "Draws a free-body diagram with arrows but no force names.",
+      "tell_apart": [
+        {
+          "code": "COM_MISSING_UNITS",
+          "how": "COM_MISSING_UNITS is for a final numerical answer; this code is for diagrams, graphs and tables."
+        }
+      ],
+      "remediation": "Graph checklist card.",
+      "legacy_ids": []
+    },
+    {
+      "id": "COM_IMPRECISE_TERMS",
+      "pillar": "COM",
+      "name": "Imprecise Terms",
+      "plain_name": "Used an everyday word where a subject term was needed",
+      "student_help": "Use the exact subject word instead of an everyday one.",
+      "description": "The idea is right but is stated with everyday or loose words where a specific scientific term is needed, so the answer is ambiguous.",
+      "example": "Writes 'the speed changes direction' or uses 'weight' for mass.",
+      "tell_apart": [
+        {
+          "code": "COM_UNSUPPORTED_ANSWER",
+          "how": "If no reasoning is given at all, use COM_UNSUPPORTED_ANSWER."
+        },
+        {
+          "code": null,
+          "how": "If the wrong word shows a wrong idea (the student really thinks sugar melts in water), use the matching concept (CON) code instead."
+        }
+      ],
+      "remediation": "Word wall with paired everyday and scientific terms.",
+      "legacy_ids": []
+    },
+    {
+      "id": "COM_OBSERVATION_VS_INFERENCE",
+      "pillar": "COM",
+      "name": "Observation vs Inference",
+      "plain_name": "Mixed up what you saw with what it means",
+      "student_help": "Observations are what you saw, heard or measured; put explanations in the analysis.",
+      "description": "In lab or data questions, reports an explanation as if it were observed, or lists observations where an analysis or conclusion is asked for. Includes conclusions that go beyond the data.",
+      "example": "Observation: 'friction slowed the cart' (what was measured was the distance).",
+      "tell_apart": [
+        {
+          "code": "STR_EXPERIMENT_DESIGN",
+          "how": "STR_EXPERIMENT_DESIGN is about how the investigation is planned; this code is about how results are written up."
+        }
+      ],
+      "remediation": "Two-column observation / inference sort.",
+      "legacy_ids": []
+    },
+    {
+      "id": "TST_BLANK",
+      "pillar": "TST",
+      "name": "Blank / Time Attrition",
+      "plain_name": "Left blank",
+      "student_help": "This part was left blank.",
+      "description": "Leaves a question or part with no attempt, from time pressure or a frustration block.",
+      "example": "A whole question with no writing at all.",
+      "tell_apart": [
+        {
+          "code": "TST_ABANDONED_WORK",
+          "how": "If any work was started, use TST_ABANDONED_WORK."
+        },
+        {
+          "code": "TST_SKIPPED_PART",
+          "how": "If other parts of the same question are answered, use TST_SKIPPED_PART."
+        }
+      ],
+      "remediation": "Prerequisite baseline probe on that topic.",
+      "legacy_ids": []
+    },
+    {
+      "id": "TST_SKIPPED_PART",
+      "pillar": "TST",
+      "name": "Skipped Part",
+      "plain_name": "Part of the question skipped",
+      "student_help": "One part of the question was skipped while the others were answered.",
+      "description": "Answers some parts of a multi-part question and leaves another out, likely without noticing.",
+      "example": "Asked for the range and the maximum height; gives only the range.",
+      "tell_apart": [
+        {
+          "code": "TST_BLANK",
+          "how": "If the whole question is empty, use TST_BLANK."
+        },
+        {
+          "code": "COM_ANSWERED_DIFFERENT_QUESTION",
+          "how": "If the student answered something else instead of what was asked, use COM_ANSWERED_DIFFERENT_QUESTION."
+        }
+      ],
+      "remediation": "Part checklist habit.",
+      "legacy_ids": []
+    },
+    {
+      "id": "TST_DISTRACTOR_TRAP",
+      "pillar": "TST",
+      "name": "Distractor Trap",
+      "plain_name": "Middle step taken as the answer",
+      "student_help": "A middle step was treated as the final answer.",
+      "description": "Takes an intermediate value or a tempting wrong option as the final answer.",
+      "example": "Boxes the horizontal component of velocity as the final speed.",
+      "tell_apart": [
+        {
+          "code": "PRC_INCOMPLETE_SOLUTION",
+          "how": "If the work just stops, use PRC_INCOMPLETE_SOLUTION; this code is for presenting the wrong value as final."
+        },
+        {
+          "code": "TST_UNWORKED_GUESS",
+          "how": "If there is no work behind the choice, use TST_UNWORKED_GUESS."
+        }
+      ],
+      "remediation": "'Is this what was asked?' stop sign.",
+      "legacy_ids": []
+    },
+    {
+      "id": "TST_ABANDONED_WORK",
+      "pillar": "TST",
+      "name": "Abandoned Work",
+      "plain_name": "Gave up partway",
+      "student_help": "A good start was stopped or crossed out before reaching an answer.",
+      "description": "Starts a valid approach, then stops or crosses it out partway with no answer.",
+      "example": "Starts resolving forces on the incline, then crosses it out with no answer.",
+      "tell_apart": [
+        {
+          "code": "TST_BLANK",
+          "how": "If nothing was written, use TST_BLANK."
+        },
+        {
+          "code": "PRC_INCOMPLETE_SOLUTION",
+          "how": "If the work reaches a result one step short of the target, use PRC_INCOMPLETE_SOLUTION."
+        }
+      ],
+      "remediation": "First-step confidence warm-up, then the same problem.",
+      "legacy_ids": []
+    },
+    {
+      "id": "TST_UNCHECKED_ANSWER",
+      "pillar": "TST",
+      "name": "Unchecked Answer",
+      "plain_name": "Answer not checked",
+      "student_help": "A quick check would show this answer cannot be right, like a negative length.",
+      "description": "Gives an answer a quick check would show is impossible or absurd, and does not notice.",
+      "example": "Reports a car's stopping distance as 4500 km.",
+      "tell_apart": [
+        {
+          "code": "FAC_ARITHMETIC_SLIP",
+          "how": "Code the slip that caused the answer as well when it is visible; this code records that the impossible result was not caught."
+        }
+      ],
+      "remediation": "Estimate-then-check habit.",
+      "legacy_ids": []
+    },
+    {
+      "id": "TST_MISREAD_GIVEN",
+      "pillar": "TST",
+      "name": "Misread Given",
+      "plain_name": "Read the question wrong",
+      "student_help": "A number or sign in the question was read wrong.",
+      "description": "Misreads a number, sign or symbol printed in the question.",
+      "example": "Question says 45 cm; student uses 45 m.",
+      "tell_apart": [
+        {
+          "code": "FAC_COPY_ERROR",
+          "how": "If the slip happens between the student's own lines, use FAC_COPY_ERROR."
+        },
+        {
+          "code": "STR_WRONG_SUBSTITUTION",
+          "how": "If the value is read right but used in the wrong place, use STR_WRONG_SUBSTITUTION."
+        }
+      ],
+      "remediation": "Given-data check habit.",
+      "legacy_ids": []
+    },
+    {
+      "id": "TST_UNWORKED_GUESS",
+      "pillar": "TST",
+      "name": "Unworked Guess",
+      "plain_name": "Guessed with no work",
+      "student_help": "An answer was written with no working, and it is not right.",
+      "description": "Writes a wrong final answer with no working shown, suggesting a guess.",
+      "example": "Writes 'Fnet = 50 N' with no work; the answer is 18 N.",
+      "tell_apart": [
+        {
+          "code": "COM_WORK_NOT_SHOWN",
+          "how": "If the answer is right but the work is missing, use COM_WORK_NOT_SHOWN."
+        }
+      ],
+      "remediation": "Show-one-step routine.",
+      "legacy_ids": []
+    },
+    {
+      "id": "TST_REFERENCE_SHEET_UNUSED",
+      "pillar": "TST",
+      "name": "Reference Sheet Not Used",
+      "plain_name": "Didn't use the data sheet",
+      "student_help": "If a value or formula is on the data sheet or periodic table, look it up instead of remembering it.",
+      "description": "Gets a value, constant or formula wrong that was printed on the provided data sheet, formula sheet or periodic table.",
+      "example": "Uses G = 6.67 × 10⁻¹² when the data sheet gives 6.67 × 10⁻¹¹.",
+      "tell_apart": [
+        {
+          "code": null,
+          "how": "If the formula or value was NOT provided, use the matching recall (FAC) code."
+        }
+      ],
+      "remediation": "Reference-sheet scavenger hunt before the test.",
+      "legacy_ids": []
+    }
+  ]
+}

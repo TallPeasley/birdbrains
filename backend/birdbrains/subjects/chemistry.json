@@ -1,0 +1,1016 @@
+{
+  "version": 1,
+  "status": "draft",
+  "subject": "chemistry",
+  "name": "Chemistry",
+  "courses": [
+    "SNC1W",
+    "SNC2D",
+    "SCH3U",
+    "SCH4U",
+    "SCH4C"
+  ],
+  "pillars": [
+    {
+      "id": "CON",
+      "name": "Concepts",
+      "scope": "The student holds a wrong idea about matter, particles, bonding, reactions or energy.",
+      "max_score": 2,
+      "slip": false
+    },
+    {
+      "id": "STR",
+      "name": "Strategy & Setup",
+      "scope": "The ideas are sound, but the plan is wrong: the wrong relationship, reaction, ratio or experimental design.",
+      "max_score": 2,
+      "slip": false
+    },
+    {
+      "id": "PRC",
+      "name": "Procedure",
+      "scope": "The plan is right, but carrying out the method goes wrong (stoichiometry steps, naming, formulas, Lewis structures, equilibrium expressions).",
+      "max_score": 2,
+      "slip": false
+    },
+    {
+      "id": "FAC",
+      "name": "Calculation & Recall",
+      "scope": "Method and plan are sound; a number, molar mass, constant, charge, unit or rounding slips.",
+      "max_score": 2,
+      "slip": true
+    },
+    {
+      "id": "COM",
+      "name": "Communication",
+      "scope": "The chemistry may be right, but the answer is not what was asked, is written in wrong notation, or is not explained.",
+      "max_score": 1,
+      "slip": true
+    },
+    {
+      "id": "TST",
+      "name": "Test Habits",
+      "scope": "How the student handles the test: blanks, traps, giving up, not checking, not using the data sheet.",
+      "max_score": 1,
+      "slip": true
+    }
+  ],
+  "decision_order": [
+    "Is the student's idea of the chemistry wrong (CON)?",
+    "Is the idea right but the relationship, reaction, mole ratio or design wrong (STR)?",
+    "Is the plan right but a step of the method done wrongly (PRC)?",
+    "Is it a slip in a number, molar mass, constant, charge, unit or rounding (FAC)?",
+    "Is the chemistry right but the answer not what was asked, in wrong notation, or unexplained (COM)?",
+    "Or is it how the test was handled (TST)?"
+  ],
+  "codes": [
+    {
+      "id": "CON_PARTICLE_PROPERTIES",
+      "pillar": "CON",
+      "name": "Bulk Properties Given to Particles",
+      "plain_name": "Gave particles properties they don't have",
+      "student_help": "Single particles don't melt, expand or change colour; only the spaces and motions between them change.",
+      "description": "Gives individual atoms or molecules the visible properties of the substance (molecules expand when heated, copper atoms are orange, particles melt).",
+      "example": "'When the gas is heated, the molecules get bigger, so the balloon expands.'",
+      "tell_apart": [
+        {
+          "code": "CON_INTER_INTRA_FORCES",
+          "how": "If the error is about which bonds break during a change of state, use CON_INTER_INTRA_FORCES."
+        },
+        {
+          "code": "COM_IMPRECISE_TERMS",
+          "how": "If the student means the right thing and only words it loosely ('the particles spread out' for the gas), use COM_IMPRECISE_TERMS."
+        }
+      ],
+      "remediation": "Tier 1: particle diagram before and after the change.",
+      "legacy_ids": []
+    },
+    {
+      "id": "CON_INTER_INTRA_FORCES",
+      "pillar": "CON",
+      "name": "Intermolecular vs Intramolecular Forces",
+      "plain_name": "Mixed up forces between and within molecules",
+      "student_help": "Boiling and melting separate molecules from each other; the bonds inside each molecule stay.",
+      "description": "Confuses forces between molecules with bonds inside them (boiling water breaks O-H bonds; a stronger covalent bond means a higher boiling point).",
+      "example": "'When water boils, the bonds between hydrogen and oxygen break, so the bubbles are hydrogen and oxygen gas.'",
+      "tell_apart": [
+        {
+          "code": "CON_PARTICLE_PROPERTIES",
+          "how": "CON_PARTICLE_PROPERTIES is about giving particles bulk properties; this code is about which forces a change affects."
+        },
+        {
+          "code": "CON_BOND_ENERGY",
+          "how": "If the error is about whether bond breaking takes in or gives out energy, use CON_BOND_ENERGY."
+        }
+      ],
+      "remediation": "Tier 1: two-level diagram of molecules with bonds inside and attractions between.",
+      "legacy_ids": []
+    },
+    {
+      "id": "CON_BOND_ENERGY",
+      "pillar": "CON",
+      "name": "Bond Breaking Releases Energy",
+      "plain_name": "Thinks breaking bonds gives out energy",
+      "student_help": "Breaking bonds always takes energy in; making bonds gives energy out.",
+      "description": "Believes breaking bonds releases energy, or that energy is stored 'in' a bond and let out when it breaks; gets the sign of ΔH backwards as a result.",
+      "example": "'ATP releases energy because its phosphate bond breaks.' / 'Combustion is exothermic because the fuel's bonds break.'",
+      "tell_apart": [
+        {
+          "code": "PRC_ENERGY_SIGN",
+          "how": "If the student knows which way energy flows but writes ΔH with the wrong sign or on the wrong side, use PRC_ENERGY_SIGN."
+        }
+      ],
+      "remediation": "Tier 1: energy-level diagram with bond breaking and bond making drawn as separate steps.",
+      "legacy_ids": []
+    },
+    {
+      "id": "CON_MASS_CONSERVATION",
+      "pillar": "CON",
+      "name": "Mass Not Conserved",
+      "plain_name": "Thinks mass is lost or gained in reactions",
+      "student_help": "Atoms are rearranged, never created or destroyed; a gas that escapes still has mass.",
+      "description": "Believes mass disappears when a gas is produced or appears when a solid forms, or that a reaction can make or destroy atoms.",
+      "example": "'The mass went down after burning the steel wool... wait, it went up, so mass was created.'",
+      "tell_apart": [
+        {
+          "code": "PRC_BALANCING",
+          "how": "If the student accepts conservation but balances incorrectly, use PRC_BALANCING."
+        }
+      ],
+      "remediation": "Tier 1: closed-system demonstration and atom counting.",
+      "legacy_ids": []
+    },
+    {
+      "id": "CON_IONIC_AS_MOLECULE",
+      "pillar": "CON",
+      "name": "Ionic Compounds as Molecules",
+      "plain_name": "Treated an ionic compound like a molecule",
+      "student_help": "Ionic compounds are lattices of ions; there is no single 'NaCl molecule' and electrons are transferred, not shared.",
+      "description": "Treats ionic compounds as discrete molecules, describes ionic bonding as sharing, or draws a single bond between a metal and non-metal ion.",
+      "example": "'One molecule of NaCl has a covalent bond where Na and Cl share an electron.'",
+      "tell_apart": [
+        {
+          "code": "PRC_FORMULA_FROM_IONS",
+          "how": "If the idea of ions is right but the formula is built wrongly from the charges, use PRC_FORMULA_FROM_IONS."
+        }
+      ],
+      "remediation": "Tier 1: lattice model next to a molecular model.",
+      "legacy_ids": []
+    },
+    {
+      "id": "CON_MOLE_MEANING",
+      "pillar": "CON",
+      "name": "What a Mole Means",
+      "plain_name": "Mixed up what a mole counts",
+      "student_help": "A mole is a count of particles; check whether you are counting molecules or the atoms inside them.",
+      "description": "Treats the mole as a mass, or confuses moles of a compound with moles of the atoms in it (1 mol O₂ contains 1 mol O atoms).",
+      "example": "'1 mol of O₂ has a mass of 16 g, the same as 1 mol of O.'",
+      "tell_apart": [
+        {
+          "code": "FAC_MOLAR_MASS",
+          "how": "If the student understands the mole and just adds the periodic table masses wrongly, use FAC_MOLAR_MASS."
+        },
+        {
+          "code": "STR_WRONG_MOLE_RATIO",
+          "how": "If the mole idea is right and the ratio from the equation is wrong, use STR_WRONG_MOLE_RATIO."
+        }
+      ],
+      "remediation": "Tier 1: counting analogy (a dozen eggs vs a dozen cartons).",
+      "legacy_ids": []
+    },
+    {
+      "id": "CON_STATIC_EQUILIBRIUM",
+      "pillar": "CON",
+      "name": "Equilibrium as Stopped",
+      "plain_name": "Thinks equilibrium means the reaction stops",
+      "student_help": "At equilibrium both reactions still happen at the same rate; amounts stay constant, not equal.",
+      "description": "Believes reactions stop at equilibrium, that concentrations of reactants and products are equal, or that Le Châtelier shifts change K when only concentration changes.",
+      "example": "'At equilibrium the reaction is finished, so [N₂] = [NH₃].'",
+      "tell_apart": [
+        {
+          "code": "PRC_EQUILIBRIUM_EXPRESSION",
+          "how": "If the idea is right but the K expression or ICE table is built wrongly, use PRC_EQUILIBRIUM_EXPRESSION."
+        }
+      ],
+      "remediation": "Tier 1: two-way traffic simulation with equal rates.",
+      "legacy_ids": []
+    },
+    {
+      "id": "CON_STRONG_VS_CONCENTRATED",
+      "pillar": "CON",
+      "name": "Strong vs Concentrated",
+      "plain_name": "Mixed up strong and concentrated",
+      "student_help": "Strong means it ionises completely; concentrated means there is a lot of it per litre.",
+      "description": "Confuses acid or base strength (degree of ionisation) with concentration, or thinks a weak acid cannot have a low pH.",
+      "example": "'0.001 mol/L HCl is a weak acid because it is dilute.'",
+      "tell_apart": [
+        {
+          "code": "FAC_SCIENCE_FACT_RECALL",
+          "how": "If the student understands strength and just misremembers which acids are strong, use FAC_SCIENCE_FACT_RECALL."
+        }
+      ],
+      "remediation": "Tier 1: particle pictures of strong/weak × dilute/concentrated grid.",
+      "legacy_ids": []
+    },
+    {
+      "id": "STR_FORMULA_MISSELECTION",
+      "pillar": "STR",
+      "name": "Formula / Law Misselection",
+      "plain_name": "Wrong formula for this question",
+      "student_help": "The formula or rule used here does not fit this type of question.",
+      "description": "Applies a formula, theorem or law whose conditions the problem does not meet.",
+      "example": "Uses Boyle's law (P₁V₁ = P₂V₂) on a question where the temperature also changes, instead of the combined gas law.",
+      "tell_apart": [
+        {
+          "code": "STR_WRONG_SUBSTITUTION",
+          "how": "Here the formula itself is wrong for the situation; in STR_WRONG_SUBSTITUTION the formula is right but the givens go into the wrong places."
+        }
+      ],
+      "remediation": "Condition check table: list each formula with the conditions it needs, then tick which ones the question meets.",
+      "legacy_ids": []
+    },
+    {
+      "id": "STR_UNBALANCED_EQUATION_USED",
+      "pillar": "STR",
+      "name": "Unbalanced Equation Used",
+      "plain_name": "Used an unbalanced equation",
+      "student_help": "Balance the equation before you take any mole ratio from it.",
+      "description": "Takes mole ratios or mass predictions from an equation that has not been balanced.",
+      "example": "Uses H₂ + O₂ → H₂O as written and concludes 1 mol H₂ gives 1 mol H₂O from 1 mol O₂.",
+      "tell_apart": [
+        {
+          "code": "PRC_BALANCING",
+          "how": "If the student tried to balance and got it wrong, use PRC_BALANCING; this code is for not balancing at all."
+        },
+        {
+          "code": "STR_WRONG_MOLE_RATIO",
+          "how": "If the equation is balanced and the ratio is read wrongly, use STR_WRONG_MOLE_RATIO."
+        }
+      ],
+      "remediation": "Tier 2: 'balance before you ratio' checkpoint.",
+      "legacy_ids": []
+    },
+    {
+      "id": "STR_WRONG_MOLE_RATIO",
+      "pillar": "STR",
+      "name": "Wrong Mole Ratio",
+      "plain_name": "Used the wrong mole ratio",
+      "student_help": "Write the ratio as (wanted coefficient / given coefficient) with the names next to the numbers.",
+      "description": "Uses a balanced equation but inverts the mole ratio, takes the coefficient of the wrong species, or skips the ratio (assumes 1:1).",
+      "example": "For 2H₂ + O₂ → 2H₂O, finds mol O₂ needed for 4 mol H₂ as 4 × 2/1 = 8 mol.",
+      "tell_apart": [
+        {
+          "code": "STR_UNBALANCED_EQUATION_USED",
+          "how": "If the equation was never balanced, use STR_UNBALANCED_EQUATION_USED."
+        },
+        {
+          "code": "CON_MOLE_MEANING",
+          "how": "If the student does not understand what the coefficients count, use CON_MOLE_MEANING."
+        }
+      ],
+      "remediation": "Tier 2: labelled ratio bridge (mol wanted / mol given).",
+      "legacy_ids": []
+    },
+    {
+      "id": "STR_LIMITING_REAGENT_IGNORED",
+      "pillar": "STR",
+      "name": "Limiting Reagent Ignored",
+      "plain_name": "Didn't find the limiting reactant",
+      "student_help": "When amounts of two reactants are given, work out which one runs out first.",
+      "description": "When amounts of more than one reactant are given, calculates the product from the excess reactant or from both added together.",
+      "example": "Given 2.0 mol H₂ and 2.0 mol O₂, predicts 4.0 mol H₂O from the oxygen.",
+      "tell_apart": [
+        {
+          "code": "STR_WRONG_MOLE_RATIO",
+          "how": "If the limiting reactant is chosen correctly but the ratio is wrong, use STR_WRONG_MOLE_RATIO."
+        }
+      ],
+      "remediation": "Tier 2: 'which runs out first' table for each reactant.",
+      "legacy_ids": []
+    },
+    {
+      "id": "STR_WRONG_REACTION",
+      "pillar": "STR",
+      "name": "Wrong Reaction Predicted",
+      "plain_name": "Predicted the wrong reaction or products",
+      "student_help": "Classify the reaction type first, then check the activity series or solubility table.",
+      "description": "Predicts the wrong reaction type or products: a displacement the activity series rules out, a precipitate that is soluble, the wrong products of combustion or neutralisation.",
+      "example": "Predicts Cu + ZnSO₄ → CuSO₄ + Zn even though copper is below zinc in the activity series.",
+      "tell_apart": [
+        {
+          "code": "PRC_FORMULA_FROM_IONS",
+          "how": "If the products are right but their formulas are written wrongly, use PRC_FORMULA_FROM_IONS."
+        },
+        {
+          "code": "TST_REFERENCE_SHEET_UNUSED",
+          "how": "If the activity series or solubility table was provided and ignored, use TST_REFERENCE_SHEET_UNUSED."
+        }
+      ],
+      "remediation": "Tier 1: reaction-type decision tree.",
+      "legacy_ids": []
+    },
+    {
+      "id": "STR_WRONG_SUBSTITUTION",
+      "pillar": "STR",
+      "name": "Wrong Substitution",
+      "plain_name": "Values put in the wrong places",
+      "student_help": "The right formula was used, but values went into the wrong spots.",
+      "description": "Puts known values into the wrong variables of a correct formula.",
+      "example": "In C₁V₁ = C₂V₂, puts the volume of water added in as V₂ instead of the total final volume.",
+      "tell_apart": [
+        {
+          "code": "STR_FORMULA_MISSELECTION",
+          "how": "If the formula is wrong for the situation, use STR_FORMULA_MISSELECTION; this code is only for the right formula filled in wrongly."
+        },
+        {
+          "code": "TST_MISREAD_GIVEN",
+          "how": "If the student read the number itself wrongly from the question, use TST_MISREAD_GIVEN; here the number is read right but given the wrong role."
+        }
+      ],
+      "remediation": "Givens list: symbol, value, unit for every quantity before any substitution.",
+      "legacy_ids": []
+    },
+    {
+      "id": "STR_NO_VIABLE_PLAN",
+      "pillar": "STR",
+      "name": "No Viable Plan",
+      "plain_name": "No clear plan",
+      "student_help": "The first move here could not lead to the answer. Plan the method before writing.",
+      "description": "Starts with a move that cannot reach the answer, or moves symbols around with no method.",
+      "example": "Asked for the mass of product from a mass of reactant, writes n = m/M and PV = nRT with no route between the two substances.",
+      "tell_apart": [
+        {
+          "code": "STR_FORMULA_MISSELECTION",
+          "how": "STR_FORMULA_MISSELECTION is one wrong choice inside a sensible plan; this code is for when no workable plan is visible at all."
+        },
+        {
+          "code": "TST_UNWORKED_GUESS",
+          "how": "If there is only an answer with no work, use TST_UNWORKED_GUESS; this code needs visible work that wanders."
+        }
+      ],
+      "remediation": "Plan-first prompt: name the target, the known quantities and the bridge between them before calculating.",
+      "legacy_ids": []
+    },
+    {
+      "id": "STR_EXPERIMENT_DESIGN",
+      "pillar": "STR",
+      "name": "Experimental Design Flaw",
+      "plain_name": "Experiment set up unfairly",
+      "student_help": "Change one thing, measure one thing, and keep everything else the same.",
+      "description": "Gets the independent, dependent or controlled variables wrong, leaves out a control or repeats, or designs a test that cannot answer the question.",
+      "example": "Tests how temperature affects reaction rate but also changes the acid concentration between trials.",
+      "tell_apart": [
+        {
+          "code": "COM_OBSERVATION_VS_INFERENCE",
+          "how": "This code is about how the experiment is set up; COM_OBSERVATION_VS_INFERENCE is about how the results are reported."
+        },
+        {
+          "code": "STR_NO_VIABLE_PLAN",
+          "how": "STR_NO_VIABLE_PLAN is for calculation problems; use this code for planning an investigation."
+        }
+      ],
+      "remediation": "Fair-test frame: I will change ___, measure ___, and keep ___ the same; repeat ___ times.",
+      "legacy_ids": []
+    },
+    {
+      "id": "PRC_STEP_OMITTED",
+      "pillar": "PRC",
+      "name": "Step Omission",
+      "plain_name": "Skipped a step",
+      "student_help": "A needed step in the method was skipped.",
+      "description": "Skips a required step of the procedure, so the result does not follow.",
+      "example": "Applies the mole ratio directly to grams (mass of reactant × 2/1) without converting to moles first.",
+      "tell_apart": [
+        {
+          "code": "PRC_INCOMPLETE_SOLUTION",
+          "how": "Here a middle step is missing and the answer is wrong; in PRC_INCOMPLETE_SOLUTION the work is right but stops before the end."
+        },
+        {
+          "code": "STR_NO_VIABLE_PLAN",
+          "how": "If the plan itself is missing, use STR_NO_VIABLE_PLAN; here the plan is right and one step drops out."
+        }
+      ],
+      "remediation": "Faded worked example: complete the one missing step in an otherwise finished solution.",
+      "legacy_ids": []
+    },
+    {
+      "id": "PRC_BALANCING",
+      "pillar": "PRC",
+      "name": "Balancing Method Error",
+      "plain_name": "Balanced the equation wrongly",
+      "student_help": "Only change the big numbers in front; never change the small subscripts.",
+      "description": "Tries to balance but changes subscripts instead of coefficients, or leaves atoms unbalanced (often oxygen or polyatomic ions).",
+      "example": "Balances H₂ + O₂ → H₂O by writing H₂ + O₂ → H₂O₂.",
+      "tell_apart": [
+        {
+          "code": "STR_UNBALANCED_EQUATION_USED",
+          "how": "If no balancing was attempted, use STR_UNBALANCED_EQUATION_USED."
+        },
+        {
+          "code": "CON_MASS_CONSERVATION",
+          "how": "If the student doesn't accept that atoms are conserved, use CON_MASS_CONSERVATION."
+        }
+      ],
+      "remediation": "Tier 2: atom-count table under each side of the equation.",
+      "legacy_ids": []
+    },
+    {
+      "id": "PRC_FORMULA_FROM_IONS",
+      "pillar": "PRC",
+      "name": "Formula from Ions",
+      "plain_name": "Built the formula wrongly from the ions",
+      "student_help": "Make the total positive and negative charges equal; use brackets for more than one polyatomic ion.",
+      "description": "Builds a formula whose charges don't balance, forgets brackets around polyatomic ions, or crosses charges without reducing.",
+      "example": "Writes calcium nitrate as CaNO₃₂ or Ca₂(NO₃).",
+      "tell_apart": [
+        {
+          "code": "FAC_ION_CHARGE_RECALL",
+          "how": "If the student uses the wrong charge for an ion, use FAC_ION_CHARGE_RECALL; this code is for a wrong formula from the right charges."
+        },
+        {
+          "code": "CON_IONIC_AS_MOLECULE",
+          "how": "If the student does not see the compound as ionic at all, use CON_IONIC_AS_MOLECULE."
+        }
+      ],
+      "remediation": "Tier 2: charge-box method for each ion.",
+      "legacy_ids": []
+    },
+    {
+      "id": "PRC_NAMING_RULES",
+      "pillar": "PRC",
+      "name": "Naming Rules Misapplied",
+      "plain_name": "Named the compound with the wrong rules",
+      "student_help": "Ionic: no prefixes, Roman numeral for multivalent metals. Molecular: prefixes.",
+      "description": "Applies the wrong IUPAC naming system (prefixes on ionic compounds, no Roman numeral for a multivalent metal, wrong -ide/-ate/-ite ending, wrong organic parent chain).",
+      "example": "Names FeCl₃ 'iron trichloride' or CO₂ 'carbon oxide'.",
+      "tell_apart": [
+        {
+          "code": "FAC_ION_CHARGE_RECALL",
+          "how": "If the rule is right but the Roman numeral is wrong because the charge was misremembered, use FAC_ION_CHARGE_RECALL."
+        }
+      ],
+      "remediation": "Tier 2: naming decision flowchart.",
+      "legacy_ids": []
+    },
+    {
+      "id": "PRC_LEWIS_STRUCTURE",
+      "pillar": "PRC",
+      "name": "Lewis Structure Error",
+      "plain_name": "Drew the Lewis structure wrongly",
+      "student_help": "Count total valence electrons first, then check every atom has a full shell.",
+      "description": "Miscounts valence electrons, leaves an atom without an octet, drops lone pairs, or misses a needed double bond; VSEPR shape follows from the wrong structure.",
+      "example": "Draws CO₂ with single bonds and two lone pairs on carbon.",
+      "tell_apart": [
+        {
+          "code": "FAC_SCIENCE_FACT_RECALL",
+          "how": "If only the number of valence electrons for an element is misremembered, use FAC_SCIENCE_FACT_RECALL."
+        }
+      ],
+      "remediation": "Tier 2: electron-count checklist (total, bonds, lone pairs, octets).",
+      "legacy_ids": []
+    },
+    {
+      "id": "PRC_EQUILIBRIUM_EXPRESSION",
+      "pillar": "PRC",
+      "name": "Equilibrium Expression Error",
+      "plain_name": "Set up K or the ICE table wrongly",
+      "student_help": "Products over reactants, coefficients as powers, and leave out solids and pure liquids.",
+      "description": "Builds K, Ksp or an ICE table wrongly: coefficients as multipliers instead of exponents, solids or water included, change row not in the mole ratio.",
+      "example": "For N₂ + 3H₂ ⇌ 2NH₃ writes K = [NH₃]/(3[H₂][N₂]).",
+      "tell_apart": [
+        {
+          "code": "CON_STATIC_EQUILIBRIUM",
+          "how": "If the student misunderstands what equilibrium is, use CON_STATIC_EQUILIBRIUM."
+        }
+      ],
+      "remediation": "Tier 2: ICE-table template with the stoichiometry row filled in.",
+      "legacy_ids": []
+    },
+    {
+      "id": "PRC_ENERGY_SIGN",
+      "pillar": "PRC",
+      "name": "Energy Sign Error",
+      "plain_name": "Got the sign of the energy change wrong",
+      "student_help": "Exothermic: ΔH is negative and energy is a product. Endothermic: ΔH is positive.",
+      "description": "Knows whether a reaction is exothermic or endothermic but writes ΔH with the wrong sign, adds Hess's law steps without flipping signs, or uses q = mcΔT with the wrong sign for the system.",
+      "example": "Reverses a Hess's law equation but keeps ΔH = −286 kJ.",
+      "tell_apart": [
+        {
+          "code": "CON_BOND_ENERGY",
+          "how": "If the student thinks bond breaking releases energy, use CON_BOND_ENERGY."
+        }
+      ],
+      "remediation": "Tier 2: sign-tracking checkpoints at each Hess's law step.",
+      "legacy_ids": []
+    },
+    {
+      "id": "PRC_REARRANGEMENT",
+      "pillar": "PRC",
+      "name": "Rearranging Error",
+      "plain_name": "Rearranged the formula wrongly",
+      "student_help": "Rearrange with symbols first, then put the numbers in.",
+      "description": "Rearranges an equation incorrectly to isolate the unknown (divides instead of multiplies, moves a term without changing its sign, loses a square).",
+      "example": "Rearranges PV = nRT for T as T = nR/PV.",
+      "tell_apart": [
+        {
+          "code": "FAC_ARITHMETIC_SLIP",
+          "how": "If the algebra is right and only a number is computed wrongly, use FAC_ARITHMETIC_SLIP."
+        },
+        {
+          "code": "STR_FORMULA_MISSELECTION",
+          "how": "If the starting formula is wrong, use STR_FORMULA_MISSELECTION; this code is for a right formula rearranged wrongly."
+        }
+      ],
+      "remediation": "Symbol-first rearranging drill with a check by substituting simple numbers.",
+      "legacy_ids": []
+    },
+    {
+      "id": "PRC_INCOMPLETE_SOLUTION",
+      "pillar": "PRC",
+      "name": "Stopped Before the End",
+      "plain_name": "Stopped one step early",
+      "student_help": "Read the question again when you think you are done: is your last line the thing it asked for?",
+      "description": "Correct work that stops before the requested quantity or form is reached.",
+      "example": "Asked for the mass of CO₂ produced, finds 0.25 mol CO₂ and stops.",
+      "tell_apart": [
+        {
+          "code": "COM_ANSWERED_DIFFERENT_QUESTION",
+          "how": "If the student aimed at a different target from the start, use COM_ANSWERED_DIFFERENT_QUESTION; here they were heading to the right target and stopped."
+        },
+        {
+          "code": "TST_DISTRACTOR_TRAP",
+          "how": "If an intermediate value is boxed as if it were final, use TST_DISTRACTOR_TRAP; if the work simply ends, use this code."
+        }
+      ],
+      "remediation": "Completion checklist: target quantity, unit, form asked for.",
+      "legacy_ids": []
+    },
+    {
+      "id": "FAC_ARITHMETIC_SLIP",
+      "pillar": "FAC",
+      "name": "Arithmetic Slip",
+      "plain_name": "Calculation slip",
+      "student_help": "The steps make sense, with a small calculation slip in the numbers.",
+      "description": "An isolated arithmetic error with a sound method.",
+      "example": "Computes 0.250 × 44.01 as 1.10 instead of 11.0.",
+      "tell_apart": [
+        {
+          "code": "PRC_REARRANGEMENT",
+          "how": "If the formula was rearranged wrongly before any arithmetic, use PRC_REARRANGEMENT."
+        },
+        {
+          "code": "FAC_CALCULATOR_ENTRY",
+          "how": "If the slip comes from how the number was keyed in (brackets, exponent, mode), use FAC_CALCULATOR_ENTRY."
+        }
+      ],
+      "remediation": "Five-item rapid micro-drill on the same operation.",
+      "legacy_ids": []
+    },
+    {
+      "id": "FAC_COPY_ERROR",
+      "pillar": "FAC",
+      "name": "Copy Error",
+      "plain_name": "Copied a number wrong",
+      "student_help": "A number or sign changed when copying from one line to the next.",
+      "description": "Miscopies a digit, sign or term from one of the student's own lines to the next.",
+      "example": "Writes 0.0350 mol on one line and 0.0530 mol on the next.",
+      "tell_apart": [
+        {
+          "code": "TST_MISREAD_GIVEN",
+          "how": "If the value was read wrongly from the question itself, use TST_MISREAD_GIVEN; this code is for copying between the student's own lines."
+        },
+        {
+          "code": "FAC_ARITHMETIC_SLIP",
+          "how": "If a value was calculated wrongly rather than copied, use FAC_ARITHMETIC_SLIP."
+        }
+      ],
+      "remediation": "Line-to-line check habit.",
+      "legacy_ids": []
+    },
+    {
+      "id": "FAC_MOLAR_MASS",
+      "pillar": "FAC",
+      "name": "Molar Mass Slip",
+      "plain_name": "Molar mass slip",
+      "student_help": "Add one atomic mass for every atom, including the ones in brackets.",
+      "description": "Calculates a molar mass wrongly: misses atoms in brackets or hydrates, reads the atomic number instead of the mass, adds a wrong mass.",
+      "example": "Uses 62.0 g/mol for Ca(NO₃)₂ by counting the nitrate only once.",
+      "tell_apart": [
+        {
+          "code": "CON_MOLE_MEANING",
+          "how": "If the student confuses moles of molecules with atoms, use CON_MOLE_MEANING."
+        },
+        {
+          "code": "FAC_ARITHMETIC_SLIP",
+          "how": "If the right masses are added wrongly, use FAC_ARITHMETIC_SLIP."
+        }
+      ],
+      "remediation": "Tier 3: molar mass table (element, count, mass, subtotal).",
+      "legacy_ids": []
+    },
+    {
+      "id": "FAC_ION_CHARGE_RECALL",
+      "pillar": "FAC",
+      "name": "Ion Charge Recall",
+      "plain_name": "Remembered an ion's charge or formula wrongly",
+      "student_help": "Check the ion table for charges and polyatomic formulas.",
+      "description": "Uses the wrong charge for an ion or the wrong formula for a polyatomic ion.",
+      "example": "Writes sulfate as SO₃²⁻ or aluminium as Al²⁺.",
+      "tell_apart": [
+        {
+          "code": "PRC_FORMULA_FROM_IONS",
+          "how": "If the charges are right and the formula is built wrongly, use PRC_FORMULA_FROM_IONS."
+        },
+        {
+          "code": "TST_REFERENCE_SHEET_UNUSED",
+          "how": "If an ion table was provided, use TST_REFERENCE_SHEET_UNUSED."
+        }
+      ],
+      "remediation": "Tier 3: ion flash cards.",
+      "legacy_ids": []
+    },
+    {
+      "id": "FAC_SCIENCE_FACT_RECALL",
+      "pillar": "FAC",
+      "name": "Fact Recall Slip",
+      "plain_name": "Remembered a fact wrongly",
+      "student_help": "Check this fact in your notes; it is one to memorise.",
+      "description": "Misremembers a specific fact: which acids are strong, valence electrons for a group, a solubility rule, a functional group name.",
+      "example": "Lists HF as a strong acid.",
+      "tell_apart": [
+        {
+          "code": "CON_STRONG_VS_CONCENTRATED",
+          "how": "If the misunderstanding is about what 'strong' means, use CON_STRONG_VS_CONCENTRATED."
+        }
+      ],
+      "remediation": "Tier 3: spaced-recall quiz on the fact list.",
+      "legacy_ids": []
+    },
+    {
+      "id": "FAC_UNIT_CONVERSION",
+      "pillar": "FAC",
+      "name": "Unit Conversion",
+      "plain_name": "Unit slip",
+      "student_help": "A unit conversion was off, like centimetres to metres.",
+      "description": "Converts units wrongly or mixes units in one calculation.",
+      "example": "Uses 25 °C instead of 298 K in PV = nRT.",
+      "tell_apart": [
+        {
+          "code": "COM_MISSING_UNITS",
+          "how": "Here the number is wrong because of a conversion; in COM_MISSING_UNITS the number is right but the unit is not written."
+        },
+        {
+          "code": "FAC_ARITHMETIC_SLIP",
+          "how": "If the conversion factor is right and the multiplication goes wrong, use FAC_ARITHMETIC_SLIP."
+        }
+      ],
+      "remediation": "Dimensional conversion bridge: write the factor as a fraction that cancels the old unit.",
+      "legacy_ids": []
+    },
+    {
+      "id": "FAC_ROUNDING",
+      "pillar": "FAC",
+      "name": "Rounding / Precision",
+      "plain_name": "Rounding slip",
+      "student_help": "A number was rounded too early or to the wrong decimal place.",
+      "description": "Rounds too early, or breaks the precision the question asks for.",
+      "example": "Reports 0.12345 mol from data given to three significant figures.",
+      "tell_apart": [
+        {
+          "code": "FAC_ARITHMETIC_SLIP",
+          "how": "If the digits themselves are wrong, not just how many are kept, use FAC_ARITHMETIC_SLIP."
+        }
+      ],
+      "remediation": "Precision rules card: count significant figures in the givens, keep guard digits, round once.",
+      "legacy_ids": []
+    },
+    {
+      "id": "FAC_CALCULATOR_ENTRY",
+      "pillar": "FAC",
+      "name": "Calculator Entry",
+      "plain_name": "Calculator used wrong",
+      "student_help": "The calculator was set up or used wrong, like being in radians instead of degrees.",
+      "description": "Wrong calculator mode, missing brackets when keying, or misread display.",
+      "example": "Types 6.02 × 10^23 without brackets in a division and gets an answer off by a factor of 10⁴⁶.",
+      "tell_apart": [
+        {
+          "code": "FAC_ARITHMETIC_SLIP",
+          "how": "Use FAC_ARITHMETIC_SLIP for mental or written arithmetic; this code is for results that only make sense as a keying slip (for example an answer off by a power of ten)."
+        }
+      ],
+      "remediation": "Calculator entry drill with the same expression typed three ways.",
+      "legacy_ids": []
+    },
+    {
+      "id": "COM_ANSWERED_DIFFERENT_QUESTION",
+      "pillar": "COM",
+      "name": "Answered a Different Question",
+      "plain_name": "Answered a different question",
+      "student_help": "The work solved for something slightly different from what the question asked.",
+      "description": "Gives a correct answer to a different target than the one asked.",
+      "example": "Asked for the mass of oxygen needed, gives the mass of water produced.",
+      "tell_apart": [
+        {
+          "code": "PRC_INCOMPLETE_SOLUTION",
+          "how": "If the work was heading to the right target and stopped short, use PRC_INCOMPLETE_SOLUTION."
+        },
+        {
+          "code": "TST_SKIPPED_PART",
+          "how": "If a whole labelled part (b) is missing, use TST_SKIPPED_PART."
+        }
+      ],
+      "remediation": "Prompt deconstruction box: circle the verb, underline the target.",
+      "legacy_ids": []
+    },
+    {
+      "id": "COM_MISSING_UNITS",
+      "pillar": "COM",
+      "name": "Missing Units",
+      "plain_name": "Missing units",
+      "student_help": "The final answer is missing its units.",
+      "description": "Omits units on a measurement answer.",
+      "example": "Writes the concentration as 0.50 with no mol/L.",
+      "tell_apart": [
+        {
+          "code": "FAC_UNIT_CONVERSION",
+          "how": "If the number is wrong because of a conversion, use FAC_UNIT_CONVERSION."
+        }
+      ],
+      "remediation": "Unit slot habit: draw a box after the answer for the unit.",
+      "legacy_ids": []
+    },
+    {
+      "id": "COM_CHEM_NOTATION",
+      "pillar": "COM",
+      "name": "Chemical Notation Error",
+      "plain_name": "Wrote the chemical symbols or formula wrongly",
+      "student_help": "Capital letter starts each element; subscripts go low, charges go high, and states go in brackets.",
+      "description": "Correct chemistry in wrong notation: case of element symbols, subscripts written as coefficients, charges missing on ions, missing states, wrong arrow (→ vs ⇌).",
+      "example": "Writes CO (carbon monoxide) as Co, or Na+ as Na.",
+      "tell_apart": [
+        {
+          "code": "FAC_ION_CHARGE_RECALL",
+          "how": "If the charge written is the wrong value, use FAC_ION_CHARGE_RECALL; this code is for a right value written wrongly or left out."
+        },
+        {
+          "code": "PRC_BALANCING",
+          "how": "If subscripts were changed to balance, use PRC_BALANCING."
+        }
+      ],
+      "remediation": "Tier 4: notation checklist.",
+      "legacy_ids": []
+    },
+    {
+      "id": "COM_UNSUPPORTED_ANSWER",
+      "pillar": "COM",
+      "name": "Unsupported Answer",
+      "plain_name": "Answer not explained",
+      "student_help": "The answer is there, but the reason the question asked for is missing.",
+      "description": "Gives an answer, claim or 'show that' conclusion without the reasoning or working the question requires.",
+      "example": "'Which has the higher boiling point, H₂O or H₂S? H₂O.' with no mention of hydrogen bonding.",
+      "tell_apart": [
+        {
+          "code": "COM_WORK_NOT_SHOWN",
+          "how": "COM_WORK_NOT_SHOWN is for missing calculation steps; this code is for a missing explanation in words."
+        },
+        {
+          "code": "COM_IMPRECISE_TERMS",
+          "how": "If an explanation is there but uses loose words, use COM_IMPRECISE_TERMS."
+        }
+      ],
+      "remediation": "Claim-evidence-reasoning frame.",
+      "legacy_ids": []
+    },
+    {
+      "id": "COM_WORK_NOT_SHOWN",
+      "pillar": "COM",
+      "name": "Work Not Shown",
+      "plain_name": "Didn't show the work",
+      "student_help": "Write the formula, then the numbers in it, then the answer.",
+      "description": "A calculation answer with no formula, substitution or steps where the question expects them, so the method cannot be checked or credited.",
+      "example": "Writes 'mass = 11.0 g' for a stoichiometry question with no steps.",
+      "tell_apart": [
+        {
+          "code": "TST_UNWORKED_GUESS",
+          "how": "If the answer is wrong and there is no work, it is likely a guess: use TST_UNWORKED_GUESS. Use this code when the answer is right or close and only the steps are missing."
+        },
+        {
+          "code": "COM_UNSUPPORTED_ANSWER",
+          "how": "For a missing explanation in words, use COM_UNSUPPORTED_ANSWER."
+        }
+      ],
+      "remediation": "GRASS layout model: Given, Required, Analysis, Solution, Statement.",
+      "legacy_ids": []
+    },
+    {
+      "id": "COM_MISSING_LABELS",
+      "pillar": "COM",
+      "name": "Missing Labels / Definitions",
+      "plain_name": "Labels missing",
+      "student_help": "A graph, diagram or variable is missing labels, so it is unclear what it shows.",
+      "description": "Leaves out axis labels, scales, diagram labels or the 'let x be ...' definition that the work needs.",
+      "example": "Draws a heating curve with no axis labels or units.",
+      "tell_apart": [
+        {
+          "code": "COM_MISSING_UNITS",
+          "how": "COM_MISSING_UNITS is for a final numerical answer; this code is for diagrams, graphs and tables."
+        }
+      ],
+      "remediation": "Graph checklist card.",
+      "legacy_ids": []
+    },
+    {
+      "id": "COM_IMPRECISE_TERMS",
+      "pillar": "COM",
+      "name": "Imprecise Terms",
+      "plain_name": "Used an everyday word where a subject term was needed",
+      "student_help": "Use the exact subject word instead of an everyday one.",
+      "description": "The idea is right but is stated with everyday or loose words where a specific scientific term is needed, so the answer is ambiguous.",
+      "example": "'The salt melts into the water' when the student means dissolves.",
+      "tell_apart": [
+        {
+          "code": "COM_UNSUPPORTED_ANSWER",
+          "how": "If no reasoning is given at all, use COM_UNSUPPORTED_ANSWER."
+        },
+        {
+          "code": null,
+          "how": "If the wrong word shows a wrong idea (the student really thinks sugar melts in water), use the matching concept (CON) code instead."
+        }
+      ],
+      "remediation": "Word wall with paired everyday and scientific terms.",
+      "legacy_ids": []
+    },
+    {
+      "id": "COM_OBSERVATION_VS_INFERENCE",
+      "pillar": "COM",
+      "name": "Observation vs Inference",
+      "plain_name": "Mixed up what you saw with what it means",
+      "student_help": "Observations are what you saw, heard or measured; put explanations in the analysis.",
+      "description": "In lab or data questions, reports an explanation as if it were observed, or lists observations where an analysis or conclusion is asked for. Includes conclusions that go beyond the data.",
+      "example": "Observation: 'hydrogen gas was produced.' (what was seen was bubbles).",
+      "tell_apart": [
+        {
+          "code": "STR_EXPERIMENT_DESIGN",
+          "how": "STR_EXPERIMENT_DESIGN is about how the investigation is planned; this code is about how results are written up."
+        }
+      ],
+      "remediation": "Two-column observation / inference sort.",
+      "legacy_ids": []
+    },
+    {
+      "id": "TST_BLANK",
+      "pillar": "TST",
+      "name": "Blank / Time Attrition",
+      "plain_name": "Left blank",
+      "student_help": "This part was left blank.",
+      "description": "Leaves a question or part with no attempt, from time pressure or a frustration block.",
+      "example": "A whole question with no writing at all.",
+      "tell_apart": [
+        {
+          "code": "TST_ABANDONED_WORK",
+          "how": "If any work was started, use TST_ABANDONED_WORK."
+        },
+        {
+          "code": "TST_SKIPPED_PART",
+          "how": "If other parts of the same question are answered, use TST_SKIPPED_PART."
+        }
+      ],
+      "remediation": "Prerequisite baseline probe on that topic.",
+      "legacy_ids": []
+    },
+    {
+      "id": "TST_SKIPPED_PART",
+      "pillar": "TST",
+      "name": "Skipped Part",
+      "plain_name": "Part of the question skipped",
+      "student_help": "One part of the question was skipped while the others were answered.",
+      "description": "Answers some parts of a multi-part question and leaves another out, likely without noticing.",
+      "example": "Question asks for the limiting reagent and the mass of product; gives only the mass.",
+      "tell_apart": [
+        {
+          "code": "TST_BLANK",
+          "how": "If the whole question is empty, use TST_BLANK."
+        },
+        {
+          "code": "COM_ANSWERED_DIFFERENT_QUESTION",
+          "how": "If the student answered something else instead of what was asked, use COM_ANSWERED_DIFFERENT_QUESTION."
+        }
+      ],
+      "remediation": "Part checklist habit.",
+      "legacy_ids": []
+    },
+    {
+      "id": "TST_DISTRACTOR_TRAP",
+      "pillar": "TST",
+      "name": "Distractor Trap",
+      "plain_name": "Middle step taken as the answer",
+      "student_help": "A middle step was treated as the final answer.",
+      "description": "Takes an intermediate value or a tempting wrong option as the final answer.",
+      "example": "Boxes the moles of product as the final answer when the question asks for grams.",
+      "tell_apart": [
+        {
+          "code": "PRC_INCOMPLETE_SOLUTION",
+          "how": "If the work just stops, use PRC_INCOMPLETE_SOLUTION; this code is for presenting the wrong value as final."
+        },
+        {
+          "code": "TST_UNWORKED_GUESS",
+          "how": "If there is no work behind the choice, use TST_UNWORKED_GUESS."
+        }
+      ],
+      "remediation": "'Is this what was asked?' stop sign.",
+      "legacy_ids": []
+    },
+    {
+      "id": "TST_ABANDONED_WORK",
+      "pillar": "TST",
+      "name": "Abandoned Work",
+      "plain_name": "Gave up partway",
+      "student_help": "A good start was stopped or crossed out before reaching an answer.",
+      "description": "Starts a valid approach, then stops or crosses it out partway with no answer.",
+      "example": "Starts an ICE table, fills the first row, then crosses it out and moves on.",
+      "tell_apart": [
+        {
+          "code": "TST_BLANK",
+          "how": "If nothing was written, use TST_BLANK."
+        },
+        {
+          "code": "PRC_INCOMPLETE_SOLUTION",
+          "how": "If the work reaches a result one step short of the target, use PRC_INCOMPLETE_SOLUTION."
+        }
+      ],
+      "remediation": "First-step confidence warm-up, then the same problem.",
+      "legacy_ids": []
+    },
+    {
+      "id": "TST_UNCHECKED_ANSWER",
+      "pillar": "TST",
+      "name": "Unchecked Answer",
+      "plain_name": "Answer not checked",
+      "student_help": "A quick check would show this answer cannot be right, like a negative length.",
+      "description": "Gives an answer a quick check would show is impossible or absurd, and does not notice.",
+      "example": "Reports a percentage yield of 340% without comment.",
+      "tell_apart": [
+        {
+          "code": "FAC_ARITHMETIC_SLIP",
+          "how": "Code the slip that caused the answer as well when it is visible; this code records that the impossible result was not caught."
+        }
+      ],
+      "remediation": "Estimate-then-check habit.",
+      "legacy_ids": []
+    },
+    {
+      "id": "TST_MISREAD_GIVEN",
+      "pillar": "TST",
+      "name": "Misread Given",
+      "plain_name": "Read the question wrong",
+      "student_help": "A number or sign in the question was read wrong.",
+      "description": "Misreads a number, sign or symbol printed in the question.",
+      "example": "Question gives 0.250 L; student uses 250 L.",
+      "tell_apart": [
+        {
+          "code": "FAC_COPY_ERROR",
+          "how": "If the slip happens between the student's own lines, use FAC_COPY_ERROR."
+        },
+        {
+          "code": "STR_WRONG_SUBSTITUTION",
+          "how": "If the value is read right but used in the wrong place, use STR_WRONG_SUBSTITUTION."
+        }
+      ],
+      "remediation": "Given-data check habit.",
+      "legacy_ids": []
+    },
+    {
+      "id": "TST_UNWORKED_GUESS",
+      "pillar": "TST",
+      "name": "Unworked Guess",
+      "plain_name": "Guessed with no work",
+      "student_help": "An answer was written with no working, and it is not right.",
+      "description": "Writes a wrong final answer with no working shown, suggesting a guess.",
+      "example": "Writes 'pH = 4' with no working for a weak-acid pH question; the answer is 2.9.",
+      "tell_apart": [
+        {
+          "code": "COM_WORK_NOT_SHOWN",
+          "how": "If the answer is right but the work is missing, use COM_WORK_NOT_SHOWN."
+        }
+      ],
+      "remediation": "Show-one-step routine.",
+      "legacy_ids": []
+    },
+    {
+      "id": "TST_REFERENCE_SHEET_UNUSED",
+      "pillar": "TST",
+      "name": "Reference Sheet Not Used",
+      "plain_name": "Didn't use the data sheet",
+      "student_help": "If a value or formula is on the data sheet or periodic table, look it up instead of remembering it.",
+      "description": "Gets a value, constant or formula wrong that was printed on the provided data sheet, formula sheet or periodic table.",
+      "example": "Uses 35 g/mol for chlorine when the provided periodic table says 35.45.",
+      "tell_apart": [
+        {
+          "code": null,
+          "how": "If the formula or value was NOT provided, use the matching recall (FAC) code."
+        }
+      ],
+      "remediation": "Reference-sheet scavenger hunt before the test.",
+      "legacy_ids": []
+    }
+  ]
+}
