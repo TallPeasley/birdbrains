@@ -1,0 +1,991 @@
+{
+  "version": 1,
+  "status": "draft",
+  "subject": "english",
+  "name": "English",
+  "courses": [
+    "ENL1W",
+    "ENG2D",
+    "ENG3U",
+    "ENG3C",
+    "ENG4U",
+    "ENG4C",
+    "OLC4O",
+    "OSSLT"
+  ],
+  "pillars": [
+    {
+      "id": "CON",
+      "name": "Reading & Understanding",
+      "scope": "The student misunderstands the text: what it says, what it means, its tone, purpose or devices.",
+      "max_score": 2,
+      "slip": false
+    },
+    {
+      "id": "STR",
+      "name": "Thesis & Organisation",
+      "scope": "The reading may be right, but the argument or plan is wrong: off the prompt, no arguable thesis, drifting, badly ordered, wrong form.",
+      "max_score": 2,
+      "slip": false
+    },
+    {
+      "id": "PRC",
+      "name": "Evidence & Analysis",
+      "scope": "The thesis is sound, but proving it goes wrong: summary instead of analysis, missing, weak or unexplained evidence.",
+      "max_score": 2,
+      "slip": false
+    },
+    {
+      "id": "FAC",
+      "name": "Grammar & Mechanics",
+      "scope": "The ideas are sound; a sentence-level convention slips (sentence boundaries, agreement, tense, spelling, punctuation).",
+      "max_score": 1,
+      "slip": true
+    },
+    {
+      "id": "COM",
+      "name": "Style & Expression",
+      "scope": "The ideas are sound, but how they are expressed gets in the way: unclear, informal, imprecise, repetitive, unlinked, or wrongly cited.",
+      "max_score": 2,
+      "slip": false
+    },
+    {
+      "id": "TST",
+      "name": "Task Habits",
+      "scope": "How the student handles the task: blanks, unfinished work, missed parts, length, not rereading the text, not proofreading.",
+      "max_score": 1,
+      "slip": true
+    }
+  ],
+  "decision_order": [
+    "Does the student misunderstand the text (CON)?",
+    "Is the reading right but the thesis, plan or form wrong (STR)?",
+    "Is the thesis right but the evidence or analysis weak (PRC)?",
+    "Is it a sentence-level grammar or mechanics slip (FAC)?",
+    "Are the ideas right but expressed unclearly, informally or without citation (COM)?",
+    "Or is it how the task was handled (TST)?"
+  ],
+  "codes": [
+    {
+      "id": "CON_LITERAL_MISREAD",
+      "pillar": "CON",
+      "name": "Literal Misread",
+      "plain_name": "Misread what happens in the text",
+      "student_help": "Reread the lines around your answer: who does what, to whom, and when?",
+      "description": "Gets the plain sense of a passage wrong: who did what, the order of events, or what a sentence states.",
+      "example": "'In Act 1, Romeo is in love with Juliet' (he is pining for Rosaline).",
+      "tell_apart": [
+        {
+          "code": "CON_FIGURATIVE_AS_LITERAL",
+          "how": "If the student reads a figure of speech as fact, use CON_FIGURATIVE_AS_LITERAL."
+        },
+        {
+          "code": "TST_TEXT_NOT_REREAD",
+          "how": "If the answer comes from memory or general knowledge rather than the passage, use TST_TEXT_NOT_REREAD."
+        }
+      ],
+      "remediation": "Tier 1: who-what-when retelling of the passage.",
+      "legacy_ids": []
+    },
+    {
+      "id": "CON_FIGURATIVE_AS_LITERAL",
+      "pillar": "CON",
+      "name": "Figurative Read as Literal",
+      "plain_name": "Took figurative language literally",
+      "student_help": "Ask whether the words could really be true; if not, what are they comparing or suggesting?",
+      "description": "Reads metaphor, hyperbole, symbolism or idiom as literal statement.",
+      "example": "'\"All the world's a stage\" means the play is set in a theatre.'",
+      "tell_apart": [
+        {
+          "code": "CON_TONE_MISREAD",
+          "how": "If the student misses sarcasm or irony (the attitude), use CON_TONE_MISREAD."
+        },
+        {
+          "code": "CON_DEVICE_MISIDENTIFIED",
+          "how": "If the student sees the figure but names the wrong device, use CON_DEVICE_MISIDENTIFIED."
+        }
+      ],
+      "remediation": "Tier 1: literal vs figurative sort with the effect of each.",
+      "legacy_ids": []
+    },
+    {
+      "id": "CON_TONE_MISREAD",
+      "pillar": "CON",
+      "name": "Tone Misread",
+      "plain_name": "Misjudged the tone or attitude",
+      "student_help": "Look at word choice: is the writer serious, mocking, angry, hopeful?",
+      "description": "Misjudges the speaker's or writer's attitude: takes sarcasm or irony as sincere, misses humour, or names a mood the text doesn't support.",
+      "example": "Reads Swift's 'A Modest Proposal' as a serious plan.",
+      "tell_apart": [
+        {
+          "code": "CON_FIGURATIVE_AS_LITERAL",
+          "how": "If it is a single figure of speech read literally, use CON_FIGURATIVE_AS_LITERAL."
+        },
+        {
+          "code": "CON_NARRATOR_AS_AUTHOR",
+          "how": "If the student assumes the narrator's views are the author's, use CON_NARRATOR_AS_AUTHOR."
+        }
+      ],
+      "remediation": "Tier 1: tone-word ladder with evidence for each choice.",
+      "legacy_ids": []
+    },
+    {
+      "id": "CON_NARRATOR_AS_AUTHOR",
+      "pillar": "CON",
+      "name": "Narrator Taken as Author",
+      "plain_name": "Treated the narrator as the author",
+      "student_help": "The narrator or speaker is a character the author created; their views may not be the author's.",
+      "description": "Treats the narrator, speaker or a character as the author, or takes an unreliable narrator at face value.",
+      "example": "'Poe admits he is a murderer in \"The Tell-Tale Heart\".'",
+      "tell_apart": [
+        {
+          "code": "CON_TONE_MISREAD",
+          "how": "If the issue is the attitude of the text rather than who is speaking, use CON_TONE_MISREAD."
+        }
+      ],
+      "remediation": "Tier 1: speaker/author/audience triangle.",
+      "legacy_ids": []
+    },
+    {
+      "id": "CON_THEME_AS_TOPIC",
+      "pillar": "CON",
+      "name": "Topic Given as Theme",
+      "plain_name": "Gave a topic, not a theme",
+      "student_help": "A theme is a full statement about life (\"Ambition without limits destroys\"), not one word (\"ambition\").",
+      "description": "Gives a topic word or a moral cliché as the theme instead of a statement the text makes about its topic.",
+      "example": "'The theme of Macbeth is ambition.'",
+      "tell_apart": [
+        {
+          "code": "STR_NO_ARGUABLE_THESIS",
+          "how": "If the thesis of the whole essay is not arguable, use STR_NO_ARGUABLE_THESIS; this code is about naming a theme."
+        }
+      ],
+      "remediation": "Tier 1: topic → question → theme statement frame.",
+      "legacy_ids": []
+    },
+    {
+      "id": "CON_DEVICE_MISIDENTIFIED",
+      "pillar": "CON",
+      "name": "Device Misidentified",
+      "plain_name": "Named the wrong literary device",
+      "student_help": "Check the definition: simile uses like/as, metaphor doesn't; irony is a gap between expected and actual.",
+      "description": "Names a literary, rhetorical or media device wrongly (simile for metaphor, irony for coincidence, foreshadowing for flashback).",
+      "example": "'\"Her eyes were stars\" is a simile.'",
+      "tell_apart": [
+        {
+          "code": "PRC_DEVICE_SPOTTING",
+          "how": "If the device is named correctly but its effect isn't explained, use PRC_DEVICE_SPOTTING."
+        }
+      ],
+      "remediation": "Tier 1: device definition cards with paired examples.",
+      "legacy_ids": []
+    },
+    {
+      "id": "CON_PURPOSE_AUDIENCE",
+      "pillar": "CON",
+      "name": "Purpose or Audience Misread",
+      "plain_name": "Misread the text's purpose or audience",
+      "student_help": "Ask who the text is for and what it wants them to think or do.",
+      "description": "Misidentifies the purpose (inform, persuade, entertain) or intended audience of an informational, media or persuasive text.",
+      "example": "Calls a sponsored advertisement for a sports drink an objective health report.",
+      "tell_apart": [
+        {
+          "code": "CON_FACT_VS_OPINION",
+          "how": "If the student treats a claim as fact, use CON_FACT_VS_OPINION."
+        }
+      ],
+      "remediation": "Tier 1: purpose-audience-form (PAF) table.",
+      "legacy_ids": []
+    },
+    {
+      "id": "CON_FACT_VS_OPINION",
+      "pillar": "CON",
+      "name": "Fact vs Opinion",
+      "plain_name": "Mixed up fact and opinion",
+      "student_help": "A fact can be checked; an opinion or claim needs support. Watch for loaded words.",
+      "description": "Treats opinion, claims or biased statements as facts, or misses bias in a source.",
+      "example": "'The article proves that video games are a waste of time because the author says so.'",
+      "tell_apart": [
+        {
+          "code": "CON_PURPOSE_AUDIENCE",
+          "how": "If the issue is the text's overall purpose, use CON_PURPOSE_AUDIENCE."
+        }
+      ],
+      "remediation": "Tier 1: fact / opinion / claim sort with loaded-word highlighting.",
+      "legacy_ids": []
+    },
+    {
+      "id": "STR_OFF_PROMPT",
+      "pillar": "STR",
+      "name": "Off the Prompt",
+      "plain_name": "Wrote about something other than the prompt",
+      "student_help": "Turn the prompt into a question and make sure your thesis answers it.",
+      "description": "The response or thesis addresses a different question or topic from the one set (writes about a character when asked about a theme, or a general opinion when asked about the text).",
+      "example": "Prompt: 'How does Shakespeare use the witches to build tension?' Essay: 'Macbeth is a tragic hero.'",
+      "tell_apart": [
+        {
+          "code": "TST_SKIPPED_PART",
+          "how": "If the prompt is answered but one of its parts is left out, use TST_SKIPPED_PART."
+        },
+        {
+          "code": "STR_THESIS_DRIFT",
+          "how": "If the thesis answers the prompt but the body wanders away, use STR_THESIS_DRIFT."
+        }
+      ],
+      "remediation": "Tier 2: prompt-unpacking box (verb, topic, limits).",
+      "legacy_ids": []
+    },
+    {
+      "id": "STR_NO_ARGUABLE_THESIS",
+      "pillar": "STR",
+      "name": "No Arguable Thesis",
+      "plain_name": "Thesis isn't something you can argue",
+      "student_help": "A thesis is a claim someone could disagree with, plus why.",
+      "description": "The thesis is a fact, a plot statement, an announcement ('In this essay I will...'), or is missing.",
+      "example": "'In this essay I will talk about the symbols in Lord of the Flies.'",
+      "tell_apart": [
+        {
+          "code": "CON_THEME_AS_TOPIC",
+          "how": "If the problem is naming a theme as a single word, use CON_THEME_AS_TOPIC."
+        },
+        {
+          "code": "STR_OFF_PROMPT",
+          "how": "If the thesis is arguable but answers a different question, use STR_OFF_PROMPT."
+        }
+      ],
+      "remediation": "Tier 2: claim + because + so-what thesis frame.",
+      "legacy_ids": []
+    },
+    {
+      "id": "STR_THESIS_DRIFT",
+      "pillar": "STR",
+      "name": "Thesis Drift",
+      "plain_name": "Body moved away from the thesis",
+      "student_help": "Each paragraph's point should prove a part of your thesis.",
+      "description": "Body paragraphs argue something other than the thesis, or the conclusion reaches a different claim.",
+      "example": "Thesis about guilt; body paragraphs about Lady Macbeth's ambition with no link to guilt.",
+      "tell_apart": [
+        {
+          "code": "STR_PARAGRAPH_FOCUS",
+          "how": "If a single paragraph mixes points, use STR_PARAGRAPH_FOCUS; this code is about the essay as a whole."
+        }
+      ],
+      "remediation": "Tier 2: thesis-to-topic-sentence map.",
+      "legacy_ids": []
+    },
+    {
+      "id": "STR_PARAGRAPH_FOCUS",
+      "pillar": "STR",
+      "name": "Unfocused Paragraph",
+      "plain_name": "Paragraph has no single clear point",
+      "student_help": "Start each paragraph with one point; everything after should support it.",
+      "description": "A paragraph has no topic sentence, combines several unrelated points, or its point only appears at the end.",
+      "example": "One paragraph discusses setting, then a character's motive, then a quote about the ending.",
+      "tell_apart": [
+        {
+          "code": "STR_THESIS_DRIFT",
+          "how": "If the paragraph is focused but off the thesis, use STR_THESIS_DRIFT."
+        },
+        {
+          "code": "COM_WEAK_TRANSITIONS",
+          "how": "If paragraphs are focused but not linked, use COM_WEAK_TRANSITIONS."
+        }
+      ],
+      "remediation": "Tier 2: point-evidence-explain (PEE) paragraph frame.",
+      "legacy_ids": []
+    },
+    {
+      "id": "STR_ILLOGICAL_ORDER",
+      "pillar": "STR",
+      "name": "Illogical Order",
+      "plain_name": "Ideas aren't in a logical order",
+      "student_help": "Put ideas in an order that builds: time order, weakest to strongest, or cause to effect.",
+      "description": "Ideas or paragraphs are ordered with no logic or progression; the argument jumps back and forth.",
+      "example": "Persuasive essay puts its strongest point first, a rebuttal in the middle, and a new reason in the conclusion.",
+      "tell_apart": [
+        {
+          "code": "COM_WEAK_TRANSITIONS",
+          "how": "If the order is sound but the links between ideas are missing, use COM_WEAK_TRANSITIONS."
+        }
+      ],
+      "remediation": "Tier 2: reverse outline of the draft.",
+      "legacy_ids": []
+    },
+    {
+      "id": "STR_OVERLAPPING_POINTS",
+      "pillar": "STR",
+      "name": "Overlapping Points",
+      "plain_name": "Points repeat each other",
+      "student_help": "Each body point should be a different reason, not the same reason in new words.",
+      "description": "The thesis or body points overlap, so the essay makes one point several times.",
+      "example": "Thesis: 'Jack is violent, aggressive and brutal.'",
+      "tell_apart": [
+        {
+          "code": "COM_REPETITION",
+          "how": "COM_REPETITION is about repeated words or sentence patterns; this code is about repeated ideas."
+        }
+      ],
+      "remediation": "Tier 2: point-distinctness check (can each stand alone?).",
+      "legacy_ids": []
+    },
+    {
+      "id": "STR_WRONG_FORM",
+      "pillar": "STR",
+      "name": "Wrong Form",
+      "plain_name": "Used the wrong form for the task",
+      "student_help": "Check the form asked for (news report, letter, series of paragraphs) and its features.",
+      "description": "Writes in a form other than the one set, or misses its required features (a news report without a headline or 5Ws lead, a letter without salutation).",
+      "example": "OSSLT news report task answered as a personal story with no headline.",
+      "tell_apart": [
+        {
+          "code": "STR_OFF_PROMPT",
+          "how": "If the topic is wrong, use STR_OFF_PROMPT; this code is about the form."
+        },
+        {
+          "code": "TST_LENGTH_MISMATCH",
+          "how": "If the form is right but far too short or long, use TST_LENGTH_MISMATCH."
+        }
+      ],
+      "remediation": "Tier 2: form-feature checklist.",
+      "legacy_ids": []
+    },
+    {
+      "id": "STR_WEAK_INTRO_CONCLUSION",
+      "pillar": "STR",
+      "name": "Weak Introduction or Conclusion",
+      "plain_name": "Introduction or conclusion is missing or weak",
+      "student_help": "Introduce the text, author and thesis; conclude by showing what the argument proved, without new points.",
+      "description": "Missing introduction or conclusion, an introduction without context or thesis, or a conclusion that only repeats or adds a new argument.",
+      "example": "Conclusion: 'In conclusion, that is why Macbeth is a tragedy. Also, Banquo is important.'",
+      "tell_apart": [
+        {
+          "code": "STR_NO_ARGUABLE_THESIS",
+          "how": "If the introduction is there but its thesis isn't arguable, use STR_NO_ARGUABLE_THESIS."
+        }
+      ],
+      "remediation": "Tier 2: intro funnel and conclusion so-what templates.",
+      "legacy_ids": []
+    },
+    {
+      "id": "PRC_SUMMARY_NOT_ANALYSIS",
+      "pillar": "PRC",
+      "name": "Summary Instead of Analysis",
+      "plain_name": "Retold the story instead of analysing",
+      "student_help": "After each event you mention, explain why it matters to your point.",
+      "description": "Retells plot or paraphrases the text where analysis is asked for.",
+      "example": "Paragraph on the conch: retells each scene the conch appears in, with no claim about what it shows.",
+      "tell_apart": [
+        {
+          "code": "PRC_EVIDENCE_NOT_EXPLAINED",
+          "how": "If there is a quote and a point but no link, use PRC_EVIDENCE_NOT_EXPLAINED; this code is for paragraphs that are mostly retelling."
+        }
+      ],
+      "remediation": "Tier 2: 'so what?' annotation after each sentence.",
+      "legacy_ids": []
+    },
+    {
+      "id": "PRC_NO_EVIDENCE",
+      "pillar": "PRC",
+      "name": "No Evidence",
+      "plain_name": "Made a claim without evidence",
+      "student_help": "Back each point with a quote or specific detail from the text.",
+      "description": "Makes claims about a text without any quotation, specific reference or detail.",
+      "example": "'Gatsby is lonely throughout the novel.' with no reference to the text.",
+      "tell_apart": [
+        {
+          "code": "PRC_WEAK_EVIDENCE",
+          "how": "If evidence is given but doesn't support the claim, use PRC_WEAK_EVIDENCE."
+        }
+      ],
+      "remediation": "Tier 2: evidence hunt with page references.",
+      "legacy_ids": []
+    },
+    {
+      "id": "PRC_WEAK_EVIDENCE",
+      "pillar": "PRC",
+      "name": "Weak or Irrelevant Evidence",
+      "plain_name": "Quote doesn't support the point",
+      "student_help": "Choose the quote that proves your point most directly, not just one on the same topic.",
+      "description": "Uses a quotation or detail that does not support the claim, is too general, or supports a different point.",
+      "example": "Claim: Piggy is intelligent. Quote: 'Piggy wiped his glasses.'",
+      "tell_apart": [
+        {
+          "code": "PRC_NO_EVIDENCE",
+          "how": "If no evidence is given, use PRC_NO_EVIDENCE."
+        },
+        {
+          "code": "PRC_OVERREACH",
+          "how": "If the evidence is relevant but the claim reads too much into it, use PRC_OVERREACH."
+        }
+      ],
+      "remediation": "Tier 2: claim-evidence match ranking.",
+      "legacy_ids": []
+    },
+    {
+      "id": "PRC_DROPPED_QUOTE",
+      "pillar": "PRC",
+      "name": "Dropped Quotation",
+      "plain_name": "Dropped a quote in without introducing it",
+      "student_help": "Lead into each quote with who says it and when, and blend it into your sentence.",
+      "description": "Inserts a quotation as a sentence on its own with no lead-in, context or grammatical integration.",
+      "example": "'Macbeth is guilty. \"Will all great Neptune's ocean wash this blood clean from my hand?\"'",
+      "tell_apart": [
+        {
+          "code": "PRC_EVIDENCE_NOT_EXPLAINED",
+          "how": "PRC_EVIDENCE_NOT_EXPLAINED is about what comes after the quote; this code is about how it is brought in."
+        }
+      ],
+      "remediation": "Tier 2: sandwich method (lead-in, quote, explanation).",
+      "legacy_ids": []
+    },
+    {
+      "id": "PRC_EVIDENCE_NOT_EXPLAINED",
+      "pillar": "PRC",
+      "name": "Evidence Not Explained",
+      "plain_name": "Didn't explain how the quote proves the point",
+      "student_help": "After a quote, explain which words matter and how they prove your point.",
+      "description": "Gives a relevant quotation and then moves on, or only restates it, without explaining how it supports the claim.",
+      "example": "'Jack says \"Kill the pig!\" This shows he is violent.' and the paragraph ends.",
+      "tell_apart": [
+        {
+          "code": "PRC_SUMMARY_NOT_ANALYSIS",
+          "how": "If most of the paragraph retells plot, use PRC_SUMMARY_NOT_ANALYSIS."
+        },
+        {
+          "code": "PRC_DEVICE_SPOTTING",
+          "how": "If a device is named without its effect, use PRC_DEVICE_SPOTTING."
+        }
+      ],
+      "remediation": "Tier 2: zoom-in on key words in the quote.",
+      "legacy_ids": []
+    },
+    {
+      "id": "PRC_DEVICE_SPOTTING",
+      "pillar": "PRC",
+      "name": "Device Spotting",
+      "plain_name": "Named a device without its effect",
+      "student_help": "Say what the device does: what does it make the reader feel, see or think?",
+      "description": "Identifies a literary or rhetorical device correctly but does not explain its effect or how it supports the argument.",
+      "example": "'The author uses alliteration in \"silent sea\".' (nothing more).",
+      "tell_apart": [
+        {
+          "code": "CON_DEVICE_MISIDENTIFIED",
+          "how": "If the device is named wrongly, use CON_DEVICE_MISIDENTIFIED."
+        },
+        {
+          "code": "PRC_EVIDENCE_NOT_EXPLAINED",
+          "how": "PRC_EVIDENCE_NOT_EXPLAINED is for quotes left unexplained; this code is specifically for naming devices without effect."
+        }
+      ],
+      "remediation": "Tier 2: device-effect-purpose chain.",
+      "legacy_ids": []
+    },
+    {
+      "id": "PRC_OVERREACH",
+      "pillar": "PRC",
+      "name": "Overreaching Interpretation",
+      "plain_name": "Read more into the text than it supports",
+      "student_help": "Check that your interpretation fits the whole text, not just one line.",
+      "description": "Makes an interpretation the text cannot support or that other parts contradict.",
+      "example": "'The green light proves Gatsby is secretly an alien.' / reading every colour as a symbol.",
+      "tell_apart": [
+        {
+          "code": "PRC_WEAK_EVIDENCE",
+          "how": "If the claim is reasonable but the quote chosen doesn't support it, use PRC_WEAK_EVIDENCE."
+        },
+        {
+          "code": "CON_LITERAL_MISREAD",
+          "how": "If the reading comes from misunderstanding what happens, use CON_LITERAL_MISREAD."
+        }
+      ],
+      "remediation": "Tier 2: 'what in the text supports and challenges this?' table.",
+      "legacy_ids": []
+    },
+    {
+      "id": "PRC_COUNTERARGUMENT_MISSING",
+      "pillar": "PRC",
+      "name": "Counterargument Missing",
+      "plain_name": "Didn't deal with the other side",
+      "student_help": "In persuasive writing, name the strongest opposing view and answer it.",
+      "description": "Persuasive or argumentative writing ignores obvious opposing views, or only addresses a weak version of them.",
+      "example": "Argues for a four-day school week without addressing childcare or learning time.",
+      "tell_apart": [
+        {
+          "code": "PRC_NO_EVIDENCE",
+          "how": "If the writer's own points lack support, use PRC_NO_EVIDENCE."
+        }
+      ],
+      "remediation": "Tier 2: 'some may argue... however...' frame.",
+      "legacy_ids": []
+    },
+    {
+      "id": "FAC_RUN_ON",
+      "pillar": "FAC",
+      "name": "Run-on / Comma Splice",
+      "plain_name": "Joined sentences with only a comma (or nothing)",
+      "student_help": "Two complete sentences need a period, a semicolon, or a joining word like 'and' or 'because'.",
+      "description": "Joins independent clauses with only a comma or with no punctuation.",
+      "example": "'Macbeth kills Duncan, he feels guilty right away.'",
+      "tell_apart": [
+        {
+          "code": "FAC_FRAGMENT",
+          "how": "A fragment is a piece missing a subject or verb; a run-on is two sentences stuck together."
+        },
+        {
+          "code": "TST_NOT_PROOFREAD",
+          "how": "If slips like this are scattered through work where the student usually punctuates correctly, also consider TST_NOT_PROOFREAD."
+        }
+      ],
+      "remediation": "Tier 3: sentence-boundary micro-drill.",
+      "legacy_ids": []
+    },
+    {
+      "id": "FAC_FRAGMENT",
+      "pillar": "FAC",
+      "name": "Sentence Fragment",
+      "plain_name": "Wrote an incomplete sentence",
+      "student_help": "Every sentence needs a subject and a verb and must make sense alone.",
+      "description": "Punctuates a phrase or dependent clause as a full sentence.",
+      "example": "'Because he wanted to be king.'",
+      "tell_apart": [
+        {
+          "code": "FAC_RUN_ON",
+          "how": "If two complete sentences are joined wrongly, use FAC_RUN_ON."
+        }
+      ],
+      "remediation": "Tier 3: fragment-fix drill.",
+      "legacy_ids": []
+    },
+    {
+      "id": "FAC_AGREEMENT",
+      "pillar": "FAC",
+      "name": "Agreement Error",
+      "plain_name": "Subject and verb (or pronoun) don't match",
+      "student_help": "Match singular with singular and plural with plural, even when words come between.",
+      "description": "Subject-verb or pronoun-antecedent agreement error.",
+      "example": "'The group of boys are lost.' / 'Every student must bring their... his... they're book.'",
+      "tell_apart": [
+        {
+          "code": "FAC_VERB_TENSE",
+          "how": "If the verb's time changes rather than its number, use FAC_VERB_TENSE."
+        }
+      ],
+      "remediation": "Tier 3: agreement micro-drill.",
+      "legacy_ids": []
+    },
+    {
+      "id": "FAC_VERB_TENSE",
+      "pillar": "FAC",
+      "name": "Tense Shift",
+      "plain_name": "Switched verb tenses",
+      "student_help": "Write about literature in the present tense and keep it steady.",
+      "description": "Shifts between past and present without reason, or does not use the literary present when discussing a text.",
+      "example": "'Gatsby throws parties and he wanted Daisy to come.'",
+      "tell_apart": [
+        {
+          "code": "FAC_AGREEMENT",
+          "how": "If the verb doesn't match its subject's number, use FAC_AGREEMENT."
+        }
+      ],
+      "remediation": "Tier 3: tense-highlight reread.",
+      "legacy_ids": []
+    },
+    {
+      "id": "FAC_SPELLING_HOMOPHONE",
+      "pillar": "FAC",
+      "name": "Spelling / Homophone",
+      "plain_name": "Spelling or sound-alike word slip",
+      "student_help": "Check sound-alike words: their/there/they're, its/it's, affect/effect, then/than.",
+      "description": "Misspells a word or uses the wrong homophone.",
+      "example": "'Its clear that there going to lose.'",
+      "tell_apart": [
+        {
+          "code": "COM_WORD_CHOICE",
+          "how": "If the word is spelled right but is the wrong word for the meaning, use COM_WORD_CHOICE."
+        }
+      ],
+      "remediation": "Tier 3: personal spelling list.",
+      "legacy_ids": []
+    },
+    {
+      "id": "FAC_PUNCTUATION",
+      "pillar": "FAC",
+      "name": "Punctuation Error",
+      "plain_name": "Punctuation used wrongly",
+      "student_help": "Apostrophes show ownership or missing letters, not plurals; check commas after introductory phrases.",
+      "description": "Misuses apostrophes, commas, semicolons, colons or quotation punctuation (other than run-ons).",
+      "example": "'The boy's ran to the beach.' / 'However the plan fails.'",
+      "tell_apart": [
+        {
+          "code": "FAC_RUN_ON",
+          "how": "Comma splices and fused sentences are FAC_RUN_ON."
+        },
+        {
+          "code": "COM_CITATION_FORMAT",
+          "how": "Punctuation of in-text citations belongs to COM_CITATION_FORMAT."
+        }
+      ],
+      "remediation": "Tier 3: punctuation rule cards.",
+      "legacy_ids": []
+    },
+    {
+      "id": "FAC_MODIFIER",
+      "pillar": "FAC",
+      "name": "Misplaced Modifier",
+      "plain_name": "A describing phrase is attached to the wrong word",
+      "student_help": "Put describing phrases right next to the word they describe.",
+      "description": "A dangling or misplaced modifier makes the sentence describe the wrong thing.",
+      "example": "'Running to the boat, the conch fell from Ralph's hands.'",
+      "tell_apart": [
+        {
+          "code": "COM_UNCLEAR_SENTENCES",
+          "how": "If the sentence is unclear for other reasons (length, wordiness), use COM_UNCLEAR_SENTENCES."
+        }
+      ],
+      "remediation": "Tier 3: modifier-fix drill.",
+      "legacy_ids": []
+    },
+    {
+      "id": "FAC_CAPITALS_TITLES",
+      "pillar": "FAC",
+      "name": "Capitals and Titles",
+      "plain_name": "Capitals or title formatting slip",
+      "student_help": "Capitalise names and the main words of titles; italicise (or underline) long works and put short works in quotation marks.",
+      "description": "Misses capitals on proper nouns or sentence starts, or formats titles wrongly.",
+      "example": "'in romeo and juliet, shakespeare...' / 'the poem Ozymandias'.",
+      "tell_apart": [
+        {
+          "code": "COM_CITATION_FORMAT",
+          "how": "If the issue is the citation itself (author, page), use COM_CITATION_FORMAT."
+        }
+      ],
+      "remediation": "Tier 3: title-format cheat sheet.",
+      "legacy_ids": []
+    },
+    {
+      "id": "COM_UNCLEAR_SENTENCES",
+      "pillar": "COM",
+      "name": "Unclear or Wordy Sentences",
+      "plain_name": "Sentences are hard to follow",
+      "student_help": "Say it in fewer words; one idea per sentence is fine.",
+      "description": "Sentences are so long, wordy or tangled that the meaning is hard to follow, though no single grammar rule is broken.",
+      "example": "'The thing that the author is trying to show through the way that the character acts is that in a way he is not who he seems to be.'",
+      "tell_apart": [
+        {
+          "code": "FAC_RUN_ON",
+          "how": "If the problem is two sentences joined by a comma, use FAC_RUN_ON."
+        },
+        {
+          "code": "COM_WORD_CHOICE",
+          "how": "If one word is the problem, use COM_WORD_CHOICE."
+        }
+      ],
+      "remediation": "Tier 4: sentence-trimming exercise.",
+      "legacy_ids": []
+    },
+    {
+      "id": "COM_INFORMAL_REGISTER",
+      "pillar": "COM",
+      "name": "Informal Register",
+      "plain_name": "Too casual for the task",
+      "student_help": "In formal writing avoid slang, contractions and 'you'.",
+      "description": "Uses slang, contractions, text-speak, second person or a chatty tone where a formal register is expected.",
+      "example": "'Macbeth is kinda sus and you can tell he's gonna snap.'",
+      "tell_apart": [
+        {
+          "code": "COM_AUDIENCE_TONE",
+          "how": "If the tone is wrong for the audience in a functional piece (a letter, a speech), use COM_AUDIENCE_TONE."
+        },
+        {
+          "code": "COM_HEDGED_CLAIMS",
+          "how": "If the issue is 'I think' and 'I feel', use COM_HEDGED_CLAIMS."
+        }
+      ],
+      "remediation": "Tier 4: formal / informal rewrite pairs.",
+      "legacy_ids": []
+    },
+    {
+      "id": "COM_WORD_CHOICE",
+      "pillar": "COM",
+      "name": "Imprecise Word Choice",
+      "plain_name": "Used a word that doesn't quite fit",
+      "student_help": "Choose the most exact word; if you used a thesaurus, check the word means what you need.",
+      "description": "Uses vague words (thing, stuff, good, bad) or words that don't mean what is intended, often from a thesaurus.",
+      "example": "'The author utilises a plethora of imagery to make it more good.'",
+      "tell_apart": [
+        {
+          "code": "FAC_SPELLING_HOMOPHONE",
+          "how": "If the right word is spelled as a sound-alike, use FAC_SPELLING_HOMOPHONE."
+        },
+        {
+          "code": "COM_IMPRECISE_TERMS",
+          "how": "If a specific literary term is replaced by an everyday word, use COM_IMPRECISE_TERMS."
+        }
+      ],
+      "remediation": "Tier 4: vague-word swap list.",
+      "legacy_ids": []
+    },
+    {
+      "id": "COM_IMPRECISE_TERMS",
+      "pillar": "COM",
+      "name": "Imprecise Terms",
+      "plain_name": "Used an everyday word where a subject term was needed",
+      "student_help": "Use the exact subject word instead of an everyday one.",
+      "description": "The idea is right but is stated with everyday or loose words where a specific scientific term is needed, so the answer is ambiguous.",
+      "example": "'In the paragraph of the poem' (stanza); 'the main guy' (protagonist).",
+      "tell_apart": [
+        {
+          "code": "COM_WORD_CHOICE",
+          "how": "COM_WORD_CHOICE is for general vocabulary; this code is for subject terms."
+        }
+      ],
+      "remediation": "Tier 4: subject word wall.",
+      "legacy_ids": []
+    },
+    {
+      "id": "COM_REPETITION",
+      "pillar": "COM",
+      "name": "Repetitive Wording",
+      "plain_name": "Repeated the same words or sentence pattern",
+      "student_help": "Vary how sentences start and use synonyms or pronouns for repeated nouns.",
+      "description": "Repeats the same words, phrases or sentence openings so the writing becomes monotonous.",
+      "example": "Five sentences in a row start with 'This shows that'.",
+      "tell_apart": [
+        {
+          "code": "STR_OVERLAPPING_POINTS",
+          "how": "If the same idea is repeated, use STR_OVERLAPPING_POINTS."
+        }
+      ],
+      "remediation": "Tier 4: sentence-opening variety drill.",
+      "legacy_ids": []
+    },
+    {
+      "id": "COM_HEDGED_CLAIMS",
+      "pillar": "COM",
+      "name": "Hedged Claims",
+      "plain_name": "Weakened claims with 'I think' or 'maybe'",
+      "student_help": "State your claim directly; your evidence does the persuading.",
+      "description": "Weakens claims with unnecessary hedging or first-person qualifiers in analytical writing.",
+      "example": "'I think that maybe Piggy could possibly represent science, in my opinion.'",
+      "tell_apart": [
+        {
+          "code": "COM_INFORMAL_REGISTER",
+          "how": "If the language is casual (slang, contractions), use COM_INFORMAL_REGISTER."
+        }
+      ],
+      "remediation": "Tier 4: hedge-cutting rewrite.",
+      "legacy_ids": []
+    },
+    {
+      "id": "COM_WEAK_TRANSITIONS",
+      "pillar": "COM",
+      "name": "Weak Transitions",
+      "plain_name": "Ideas aren't linked together",
+      "student_help": "Use linking words (however, as a result, similarly) and begin paragraphs by linking back.",
+      "description": "Sentences or paragraphs follow each other without transitions, so connections between ideas are unclear.",
+      "example": "Paragraph 2 starts 'Another thing is the setting.' with no link to paragraph 1.",
+      "tell_apart": [
+        {
+          "code": "STR_ILLOGICAL_ORDER",
+          "how": "If the ideas are in an illogical order, use STR_ILLOGICAL_ORDER; this code is for sound order without links."
+        }
+      ],
+      "remediation": "Tier 4: transition word bank by purpose.",
+      "legacy_ids": []
+    },
+    {
+      "id": "COM_CITATION_FORMAT",
+      "pillar": "COM",
+      "name": "Citation Format",
+      "plain_name": "Quote or source cited incorrectly",
+      "student_help": "Cite with the format your teacher uses (for example MLA: (Golding 45)).",
+      "description": "Missing or wrongly formatted citations, page references or works cited entries; quotations not marked as quotations.",
+      "example": "Uses a sentence from the novel with no quotation marks or page number.",
+      "tell_apart": [
+        {
+          "code": "FAC_CAPITALS_TITLES",
+          "how": "If only the title formatting is wrong, use FAC_CAPITALS_TITLES."
+        },
+        {
+          "code": "PRC_DROPPED_QUOTE",
+          "how": "If the quote is cited but not introduced, use PRC_DROPPED_QUOTE."
+        }
+      ],
+      "remediation": "Tier 4: citation template card.",
+      "legacy_ids": []
+    },
+    {
+      "id": "COM_AUDIENCE_TONE",
+      "pillar": "COM",
+      "name": "Tone Wrong for Audience",
+      "plain_name": "Tone doesn't suit the reader",
+      "student_help": "Ask who will read it (a principal, a newspaper, a friend) and adjust how you say things.",
+      "description": "In functional or persuasive writing, the tone does not suit the audience or purpose (rude, overly casual, overly emotional).",
+      "example": "Letter to the principal: 'Your rule is honestly the dumbest thing ever.'",
+      "tell_apart": [
+        {
+          "code": "COM_INFORMAL_REGISTER",
+          "how": "COM_INFORMAL_REGISTER is about formal essay language; this code is about tone toward a specific reader."
+        },
+        {
+          "code": "CON_PURPOSE_AUDIENCE",
+          "how": "If the student misreads the audience of a text they are reading, use CON_PURPOSE_AUDIENCE."
+        }
+      ],
+      "remediation": "Tier 4: rewrite for three audiences.",
+      "legacy_ids": []
+    },
+    {
+      "id": "TST_BLANK",
+      "pillar": "TST",
+      "name": "Blank / Time Attrition",
+      "plain_name": "Left blank",
+      "student_help": "This part was left blank.",
+      "description": "Leaves a question or part with no attempt, from time pressure or a frustration block.",
+      "example": "Leaves the short-answer reading question blank.",
+      "tell_apart": [
+        {
+          "code": "TST_ABANDONED_WORK",
+          "how": "If any work was started, use TST_ABANDONED_WORK."
+        },
+        {
+          "code": "TST_SKIPPED_PART",
+          "how": "If other parts of the same question are answered, use TST_SKIPPED_PART."
+        }
+      ],
+      "remediation": "Prerequisite baseline probe on that topic.",
+      "legacy_ids": []
+    },
+    {
+      "id": "TST_SKIPPED_PART",
+      "pillar": "TST",
+      "name": "Skipped Part",
+      "plain_name": "Part of the question skipped",
+      "student_help": "One part of the question was skipped while the others were answered.",
+      "description": "Answers some parts of a multi-part question and leaves another out, likely without noticing.",
+      "example": "Prompt asks for two examples and their effects; gives one example.",
+      "tell_apart": [
+        {
+          "code": "TST_BLANK",
+          "how": "If the whole question is empty, use TST_BLANK."
+        }
+      ],
+      "remediation": "Part checklist habit.",
+      "legacy_ids": []
+    },
+    {
+      "id": "TST_TEMPTING_OPTION",
+      "pillar": "TST",
+      "name": "Tempting Wrong Option",
+      "plain_name": "Picked an answer that sounds right but isn't supported",
+      "student_help": "Check each option against the passage, not against what sounds true.",
+      "description": "In a multiple-choice reading question, picks an option that is true in general, uses words from the passage, or is half right, instead of the one the passage supports.",
+      "example": "Picks 'Bees are important to farming' (true in general) when the question asks what the passage's second paragraph argues.",
+      "tell_apart": [
+        {
+          "code": "TST_TEXT_NOT_REREAD",
+          "how": "If a written answer comes from memory instead of the passage, use TST_TEXT_NOT_REREAD; this code is for multiple-choice options."
+        },
+        {
+          "code": "CON_LITERAL_MISREAD",
+          "how": "If the student clearly misunderstood the passage, use CON_LITERAL_MISREAD."
+        }
+      ],
+      "remediation": "Eliminate-with-evidence routine for multiple choice.",
+      "legacy_ids": []
+    },
+    {
+      "id": "TST_ABANDONED_WORK",
+      "pillar": "TST",
+      "name": "Abandoned Work",
+      "plain_name": "Gave up partway",
+      "student_help": "A good start was stopped or crossed out before reaching an answer.",
+      "description": "Starts a valid approach, then stops or crosses it out partway with no answer.",
+      "example": "Essay stops partway through the second body paragraph.",
+      "tell_apart": [
+        {
+          "code": "TST_BLANK",
+          "how": "If nothing was written, use TST_BLANK."
+        },
+        {
+          "code": "TST_LENGTH_MISMATCH",
+          "how": "If the piece is complete but far too short, use TST_LENGTH_MISMATCH."
+        }
+      ],
+      "remediation": "First-step confidence warm-up, then the same problem.",
+      "legacy_ids": []
+    },
+    {
+      "id": "TST_LENGTH_MISMATCH",
+      "pillar": "TST",
+      "name": "Length Mismatch",
+      "plain_name": "Much too short or too long",
+      "student_help": "Check the length asked for (words, paragraphs, lines) and plan to fit it.",
+      "description": "Writes far less or far more than the task asks for (a paragraph for an essay, one sentence where a series of paragraphs is set).",
+      "example": "Series-of-paragraphs task answered in four lines.",
+      "tell_apart": [
+        {
+          "code": "TST_ABANDONED_WORK",
+          "how": "If the writing stops mid-thought, use TST_ABANDONED_WORK."
+        },
+        {
+          "code": "STR_WRONG_FORM",
+          "how": "If the form itself is wrong, use STR_WRONG_FORM."
+        }
+      ],
+      "remediation": "Time-and-length plan before writing.",
+      "legacy_ids": []
+    },
+    {
+      "id": "TST_TEXT_NOT_REREAD",
+      "pillar": "TST",
+      "name": "Answered Without the Text",
+      "plain_name": "Answered from memory, not the passage",
+      "student_help": "Go back to the passage and find the line that answers the question.",
+      "description": "Answers a reading question from memory, general knowledge or opinion instead of the passage provided.",
+      "example": "Reading question on a passage about bees answered with facts from a science class not in the passage.",
+      "tell_apart": [
+        {
+          "code": "CON_LITERAL_MISREAD",
+          "how": "If the student read the passage but understood it wrongly, use CON_LITERAL_MISREAD."
+        }
+      ],
+      "remediation": "Line-reference habit for every reading answer.",
+      "legacy_ids": []
+    },
+    {
+      "id": "TST_COPIED_PROMPT",
+      "pillar": "TST",
+      "name": "Copied Prompt or Passage",
+      "plain_name": "Copied the question or passage instead of answering",
+      "student_help": "Use your own words; a quote should support your answer, not replace it.",
+      "description": "Restates the prompt or copies long stretches of the passage as the answer, with little or no response of the student's own.",
+      "example": "Answer to 'What is the main idea?' is the first three sentences of the passage copied out.",
+      "tell_apart": [
+        {
+          "code": "PRC_SUMMARY_NOT_ANALYSIS",
+          "how": "If the student paraphrases the plot in their own words, use PRC_SUMMARY_NOT_ANALYSIS."
+        }
+      ],
+      "remediation": "Answer-in-own-words frame.",
+      "legacy_ids": []
+    },
+    {
+      "id": "TST_NOT_PROOFREAD",
+      "pillar": "TST",
+      "name": "Not Proofread",
+      "plain_name": "Didn't reread for slips",
+      "student_help": "Leave two minutes to reread; read it as if someone else wrote it.",
+      "description": "A cluster of obvious slips (missing or doubled words, unfinished sentences) the student would likely catch on a reread, in work that otherwise shows they know the conventions.",
+      "example": "'The the boys decide to to build a fire on the.'",
+      "tell_apart": [
+        {
+          "code": "FAC_SPELLING_HOMOPHONE",
+          "how": "Use the specific FAC code when a slip shows a real gap (consistent its/it's); use this one when slips look careless and scattered."
+        }
+      ],
+      "remediation": "Proofreading checklist and read-aloud habit.",
+      "legacy_ids": []
+    }
+  ]
+}

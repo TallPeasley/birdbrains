@@ -1,0 +1,698 @@
+{
+  "version": 1,
+  "status": "draft",
+  "subject": "history_geography",
+  "name": "History, Geography & Civics",
+  "courses": [
+    "CGC1W",
+    "CHC2D",
+    "CHC2P",
+    "CHV2O",
+    "CHA3U",
+    "CGG3O",
+    "CHY4U",
+    "CGW4U"
+  ],
+  "pillars": [
+    {
+      "id": "CON",
+      "name": "Historical & Geographic Thinking",
+      "scope": "The student holds a wrong idea about how the past or places work: causes, change, significance, perspective, people-environment links.",
+      "max_score": 2,
+      "slip": false
+    },
+    {
+      "id": "STR",
+      "name": "Argument & Inquiry",
+      "scope": "The thinking may be sound, but the argument or inquiry is set up wrongly: off the question, no arguable thesis, no criteria, one-sided, badly ordered.",
+      "max_score": 2,
+      "slip": false
+    },
+    {
+      "id": "PRC",
+      "name": "Evidence & Sources",
+      "scope": "The argument is sound, but proving it goes wrong: narrating instead of analysing, no or unexplained evidence, sources taken at face value, data misread.",
+      "max_score": 2,
+      "slip": false
+    },
+    {
+      "id": "FAC",
+      "name": "Facts & Recall",
+      "scope": "The reasoning is sound; a date, name, term, place, statistic or calculation slips.",
+      "max_score": 1,
+      "slip": true
+    },
+    {
+      "id": "COM",
+      "name": "Communication",
+      "scope": "The ideas are sound, but the expression gets in the way: unclear, informal, imprecise terms, missing citations or map conventions.",
+      "max_score": 2,
+      "slip": false
+    },
+    {
+      "id": "TST",
+      "name": "Test Habits",
+      "scope": "How the student handles the task: blanks, unfinished or missed parts, length, ignoring the provided source.",
+      "max_score": 1,
+      "slip": true
+    }
+  ],
+  "decision_order": [
+    "Does the student hold a wrong idea about cause, change, significance, perspective or people-environment links (CON)?",
+    "Is the thinking right but the argument or inquiry set up wrongly (STR)?",
+    "Is the argument right but the evidence or source work weak (PRC)?",
+    "Is it a slip in a date, name, term, place, number or calculation (FAC)?",
+    "Are the ideas right but expressed unclearly, informally or without citation or map conventions (COM)?",
+    "Or is it how the task was handled (TST)?"
+  ],
+  "codes": [
+    {
+      "id": "CON_PRESENTISM",
+      "pillar": "CON",
+      "name": "Presentism",
+      "plain_name": "Judged the past only by today's values",
+      "student_help": "Ask what people at the time believed and why, before you judge them.",
+      "description": "Judges past people or events only by present-day values, without considering the beliefs and conditions of the time.",
+      "example": "'People in 1917 were stupid for supporting conscription.'",
+      "tell_apart": [
+        {
+          "code": "CON_UNIFORM_GROUPS",
+          "how": "If the student treats a past group as all thinking the same, use CON_UNIFORM_GROUPS."
+        },
+        {
+          "code": "STR_ONE_SIDED",
+          "how": "If the student considers only one side of a question, use STR_ONE_SIDED."
+        }
+      ],
+      "remediation": "Tier 1: historical perspective-taking chart.",
+      "legacy_ids": []
+    },
+    {
+      "id": "CON_SINGLE_CAUSE",
+      "pillar": "CON",
+      "name": "Single Cause",
+      "plain_name": "Gave only one cause for a complex event",
+      "student_help": "Big events usually have several causes: long-term and short-term, political, economic and social.",
+      "description": "Explains a complex event with one cause, or confuses a trigger with the underlying causes.",
+      "example": "'World War I happened because Franz Ferdinand was shot.'",
+      "tell_apart": [
+        {
+          "code": "CON_SIGNIFICANCE_AS_FAME",
+          "how": "If the issue is judging importance rather than cause, use CON_SIGNIFICANCE_AS_FAME."
+        }
+      ],
+      "remediation": "Tier 1: cause web (long-term, short-term, trigger).",
+      "legacy_ids": []
+    },
+    {
+      "id": "CON_CHANGE_AS_PROGRESS",
+      "pillar": "CON",
+      "name": "Change Always Progress",
+      "plain_name": "Assumed change is always progress",
+      "student_help": "Change can be better for some and worse for others; some things stay the same.",
+      "description": "Assumes all change is improvement for everyone, or misses continuity alongside change.",
+      "example": "'After 1918 women had full equality in Canada because some women could vote.'",
+      "tell_apart": [
+        {
+          "code": "CON_UNIFORM_GROUPS",
+          "how": "If the error is treating a group as uniform, use CON_UNIFORM_GROUPS."
+        }
+      ],
+      "remediation": "Tier 1: continuity-and-change timeline with winners and losers.",
+      "legacy_ids": []
+    },
+    {
+      "id": "CON_SIGNIFICANCE_AS_FAME",
+      "pillar": "CON",
+      "name": "Significance as Fame",
+      "plain_name": "Judged importance by fame or size",
+      "student_help": "Something is significant if it had deep, lasting effects on many people, or reveals something important.",
+      "description": "Judges historical or geographic significance by how famous, dramatic or large something is, not by its consequences or what it reveals.",
+      "example": "'The Halifax Explosion is the most significant event because it was the biggest explosion.'",
+      "tell_apart": [
+        {
+          "code": "STR_NO_CRITERIA",
+          "how": "If the student gives no criteria at all, use STR_NO_CRITERIA; this code is about using the wrong idea of significance."
+        }
+      ],
+      "remediation": "Tier 1: significance criteria (impact, depth, duration, revealing).",
+      "legacy_ids": []
+    },
+    {
+      "id": "CON_UNIFORM_GROUPS",
+      "pillar": "CON",
+      "name": "Groups Treated as Uniform",
+      "plain_name": "Treated a whole group as all the same",
+      "student_help": "People in a group (Canadians, a province, a community) often disagreed; name who thought what.",
+      "description": "Treats a nation, group or community as if everyone in it shared the same experience or view.",
+      "example": "'Canadians all supported the war effort.'",
+      "tell_apart": [
+        {
+          "code": "CON_PRESENTISM",
+          "how": "If the issue is judging the past by today's values, use CON_PRESENTISM."
+        }
+      ],
+      "remediation": "Tier 1: perspectives grid with several groups.",
+      "legacy_ids": []
+    },
+    {
+      "id": "CON_ENVIRONMENTAL_DETERMINISM",
+      "pillar": "CON",
+      "name": "Environment Decides Everything",
+      "plain_name": "Assumed geography alone decides what people do",
+      "student_help": "Physical geography shapes choices, but people, technology, economics and policy matter too.",
+      "description": "Explains human patterns (settlement, wealth, culture) by physical geography alone, or treats natural and human systems as unconnected.",
+      "example": "'Northern Canada has few people only because it is cold.'",
+      "tell_apart": [
+        {
+          "code": "CON_SINGLE_CAUSE",
+          "how": "CON_SINGLE_CAUSE is the general one-cause error; use this code when that cause is physical geography."
+        }
+      ],
+      "remediation": "Tier 1: interrelationships web (natural, human, economic).",
+      "legacy_ids": []
+    },
+    {
+      "id": "STR_OFF_PROMPT",
+      "pillar": "STR",
+      "name": "Off the Prompt",
+      "plain_name": "Wrote about something other than the prompt",
+      "student_help": "Turn the prompt into a question and make sure your thesis answers it.",
+      "description": "The response or thesis addresses a different question or topic from the one set (writes about a character when asked about a theme, or a general opinion when asked about the text).",
+      "example": "Asked how the Depression changed government's role, writes about the causes of the stock market crash.",
+      "tell_apart": [
+        {
+          "code": "TST_SKIPPED_PART",
+          "how": "If one part of the question is left out, use TST_SKIPPED_PART."
+        }
+      ],
+      "remediation": "Tier 2: prompt-unpacking box.",
+      "legacy_ids": []
+    },
+    {
+      "id": "STR_NO_ARGUABLE_THESIS",
+      "pillar": "STR",
+      "name": "No Arguable Thesis",
+      "plain_name": "Thesis isn't something you can argue",
+      "student_help": "A thesis is a claim someone could disagree with, plus why.",
+      "description": "The thesis is a fact, a plot statement, an announcement ('In this essay I will...'), or is missing.",
+      "example": "'The Winnipeg General Strike happened in 1919.'",
+      "tell_apart": [
+        {
+          "code": "STR_OFF_PROMPT",
+          "how": "If the thesis is arguable but answers another question, use STR_OFF_PROMPT."
+        }
+      ],
+      "remediation": "Tier 2: claim + because + so-what thesis frame.",
+      "legacy_ids": []
+    },
+    {
+      "id": "STR_NO_CRITERIA",
+      "pillar": "STR",
+      "name": "No Criteria",
+      "plain_name": "Judged without saying how",
+      "student_help": "When you judge (most significant, biggest change), say what you are judging by.",
+      "description": "Makes a judgement of significance, change, success or responsibility without stating or applying criteria.",
+      "example": "'Vimy Ridge was the most important battle.' with no reason for 'important'.",
+      "tell_apart": [
+        {
+          "code": "CON_SIGNIFICANCE_AS_FAME",
+          "how": "If criteria are used but they are about fame or size, use CON_SIGNIFICANCE_AS_FAME."
+        }
+      ],
+      "remediation": "Tier 2: criteria table before judging.",
+      "legacy_ids": []
+    },
+    {
+      "id": "STR_ONE_SIDED",
+      "pillar": "STR",
+      "name": "One-Sided",
+      "plain_name": "Looked at only one side or perspective",
+      "student_help": "Include the perspectives the question asks for, especially those of groups most affected.",
+      "description": "Considers only one perspective when the question asks for several, or leaves out the groups most affected (for example Indigenous peoples, workers, women, immigrants).",
+      "example": "Explains the building of the CPR only from the government's point of view.",
+      "tell_apart": [
+        {
+          "code": "CON_UNIFORM_GROUPS",
+          "how": "If the student treats one group as uniform, use CON_UNIFORM_GROUPS."
+        }
+      ],
+      "remediation": "Tier 2: perspectives checklist.",
+      "legacy_ids": []
+    },
+    {
+      "id": "STR_WEAK_INQUIRY_QUESTION",
+      "pillar": "STR",
+      "name": "Weak Inquiry Question",
+      "plain_name": "Inquiry question has a yes/no or one-fact answer",
+      "student_help": "Good inquiry questions start with how, why, to what extent, or how significant.",
+      "description": "In inquiry tasks, poses a question answerable with a fact or yes/no, or too broad to investigate.",
+      "example": "'When did Canada join NATO?'",
+      "tell_apart": [
+        {
+          "code": "STR_NO_ARGUABLE_THESIS",
+          "how": "STR_NO_ARGUABLE_THESIS is about the claim; this code is about the question being investigated."
+        }
+      ],
+      "remediation": "Tier 2: question-stem bank.",
+      "legacy_ids": []
+    },
+    {
+      "id": "STR_ILLOGICAL_ORDER",
+      "pillar": "STR",
+      "name": "Illogical Order",
+      "plain_name": "Ideas aren't in a logical order",
+      "student_help": "Put ideas in an order that builds: time order, weakest to strongest, or cause to effect.",
+      "description": "Ideas or paragraphs are ordered with no logic or progression; the argument jumps back and forth.",
+      "example": "Jumps from 1945 to 1914 to 1982 with no thematic reason.",
+      "tell_apart": [
+        {
+          "code": "COM_UNCLEAR_SENTENCES",
+          "how": "If the order is fine but sentences are hard to follow, use COM_UNCLEAR_SENTENCES."
+        }
+      ],
+      "remediation": "Tier 2: reverse outline.",
+      "legacy_ids": []
+    },
+    {
+      "id": "PRC_NARRATIVE_NOT_ANALYSIS",
+      "pillar": "PRC",
+      "name": "Narrative Instead of Analysis",
+      "plain_name": "Told what happened instead of explaining it",
+      "student_help": "After each event, explain how it answers the question (why, how much, how significant).",
+      "description": "Narrates events in order where explanation or argument is asked for.",
+      "example": "Asked why the Statute of Westminster mattered, lists events from 1919 to 1931.",
+      "tell_apart": [
+        {
+          "code": "PRC_EVIDENCE_NOT_EXPLAINED",
+          "how": "If evidence is given with a point but not linked, use PRC_EVIDENCE_NOT_EXPLAINED."
+        }
+      ],
+      "remediation": "Tier 2: 'so what?' annotation.",
+      "legacy_ids": []
+    },
+    {
+      "id": "PRC_NO_EVIDENCE",
+      "pillar": "PRC",
+      "name": "No Evidence",
+      "plain_name": "Made a claim without evidence",
+      "student_help": "Back each point with a quote or specific detail from the text.",
+      "description": "Makes claims about a text without any quotation, specific reference or detail.",
+      "example": "'The Depression was very bad for farmers.' with nothing specific.",
+      "tell_apart": [
+        {
+          "code": "PRC_EVIDENCE_NOT_EXPLAINED",
+          "how": "If evidence is given but not explained, use PRC_EVIDENCE_NOT_EXPLAINED."
+        }
+      ],
+      "remediation": "Tier 2: evidence hunt.",
+      "legacy_ids": []
+    },
+    {
+      "id": "PRC_EVIDENCE_NOT_EXPLAINED",
+      "pillar": "PRC",
+      "name": "Evidence Not Explained",
+      "plain_name": "Didn't explain how the quote proves the point",
+      "student_help": "After a quote, explain which words matter and how they prove your point.",
+      "description": "Gives a relevant quotation and then moves on, or only restates it, without explaining how it supports the claim.",
+      "example": "'Unemployment hit 30% in 1933.' and the paragraph ends.",
+      "tell_apart": [
+        {
+          "code": "PRC_NARRATIVE_NOT_ANALYSIS",
+          "how": "If the paragraph is mostly narrative, use PRC_NARRATIVE_NOT_ANALYSIS."
+        }
+      ],
+      "remediation": "Tier 2: point-evidence-explain frame.",
+      "legacy_ids": []
+    },
+    {
+      "id": "PRC_SOURCE_AT_FACE_VALUE",
+      "pillar": "PRC",
+      "name": "Source Taken at Face Value",
+      "plain_name": "Trusted a source without questioning it",
+      "student_help": "Ask who made the source, when, why, and for whom before you trust it.",
+      "description": "Uses a source without considering its author, date, purpose or bias (propaganda posters treated as fact).",
+      "example": "'The poster shows that every Canadian man was eager to enlist.'",
+      "tell_apart": [
+        {
+          "code": "PRC_SOURCES_NOT_CORROBORATED",
+          "how": "If the student uses several sources but ignores where they disagree, use PRC_SOURCES_NOT_CORROBORATED."
+        }
+      ],
+      "remediation": "Tier 2: sourcing questions (author, date, purpose, audience).",
+      "legacy_ids": []
+    },
+    {
+      "id": "PRC_SOURCES_NOT_CORROBORATED",
+      "pillar": "PRC",
+      "name": "Sources Not Compared",
+      "plain_name": "Didn't compare sources",
+      "student_help": "Check whether other sources agree; explain any disagreement.",
+      "description": "Uses sources without comparing them, ignores sources that disagree, or picks only the one that fits.",
+      "example": "Uses one politician's speech as proof of public opinion while ignoring the provided strike newspaper.",
+      "tell_apart": [
+        {
+          "code": "PRC_SOURCE_AT_FACE_VALUE",
+          "how": "If one source is accepted uncritically, use PRC_SOURCE_AT_FACE_VALUE."
+        }
+      ],
+      "remediation": "Tier 2: source comparison grid.",
+      "legacy_ids": []
+    },
+    {
+      "id": "PRC_DATA_MISREAD",
+      "pillar": "PRC",
+      "name": "Data, Map or Graph Misread",
+      "plain_name": "Misread a map, graph or table",
+      "student_help": "Read the title, legend, axes and scale before you read the data.",
+      "description": "Misreads a map, climate graph, population pyramid, table or chart (wrong axis, scale or legend).",
+      "example": "Reads the precipitation bars on a climate graph against the temperature axis.",
+      "tell_apart": [
+        {
+          "code": "FAC_PLACE_LOCATION",
+          "how": "If the error is locating a place, use FAC_PLACE_LOCATION."
+        },
+        {
+          "code": "COM_MAP_CONVENTIONS",
+          "how": "If the student draws a map or graph missing its conventions, use COM_MAP_CONVENTIONS."
+        }
+      ],
+      "remediation": "Tier 2: read-the-frame-first routine.",
+      "legacy_ids": []
+    },
+    {
+      "id": "FAC_DATE_CHRONOLOGY",
+      "pillar": "FAC",
+      "name": "Date or Chronology Slip",
+      "plain_name": "Got a date or order of events wrong",
+      "student_help": "Check dates against your timeline.",
+      "description": "Gives a wrong date or puts events in the wrong order.",
+      "example": "'Confederation happened in 1876.'",
+      "tell_apart": [
+        {
+          "code": "CON_SINGLE_CAUSE",
+          "how": "If the chronology error supports a wrong cause-and-effect claim, also check CON_SINGLE_CAUSE."
+        }
+      ],
+      "remediation": "Tier 3: timeline flash cards.",
+      "legacy_ids": []
+    },
+    {
+      "id": "FAC_NAME_TERM_RECALL",
+      "pillar": "FAC",
+      "name": "Name or Term Recall Slip",
+      "plain_name": "Used the wrong name or term",
+      "student_help": "Check names of people, laws and events in your notes.",
+      "description": "Uses the wrong name for a person, law, treaty, event or concept.",
+      "example": "Calls the Indian Act the 'Indigenous Act' or confuses Mackenzie King with Laurier.",
+      "tell_apart": [
+        {
+          "code": "COM_IMPRECISE_TERMS",
+          "how": "If the student uses an everyday word instead of the term, use COM_IMPRECISE_TERMS."
+        }
+      ],
+      "remediation": "Tier 3: term flash cards.",
+      "legacy_ids": []
+    },
+    {
+      "id": "FAC_PLACE_LOCATION",
+      "pillar": "FAC",
+      "name": "Place or Location Slip",
+      "plain_name": "Got a place or location wrong",
+      "student_help": "Check latitude/longitude order and the map's scale and grid.",
+      "description": "Locates a place wrongly, swaps latitude and longitude, or uses grid references or scale wrongly.",
+      "example": "Places Saskatchewan east of Manitoba; gives 45° W, 75° N for Ottawa.",
+      "tell_apart": [
+        {
+          "code": "PRC_DATA_MISREAD",
+          "how": "If the error is reading a data map or graph, use PRC_DATA_MISREAD."
+        }
+      ],
+      "remediation": "Tier 3: map-location drill.",
+      "legacy_ids": []
+    },
+    {
+      "id": "FAC_STATISTIC_RECALL",
+      "pillar": "FAC",
+      "name": "Statistic or Fact Slip",
+      "plain_name": "Remembered a fact or number wrongly",
+      "student_help": "Check this fact or number in your notes or the source.",
+      "description": "Misremembers a statistic or specific fact.",
+      "example": "'About 6,000 Canadians died at Vimy Ridge' (about 3,600).",
+      "tell_apart": [
+        {
+          "code": "TST_SOURCE_NOT_USED",
+          "how": "If the number was in a provided source, use TST_SOURCE_NOT_USED."
+        }
+      ],
+      "remediation": "Tier 3: key-facts list.",
+      "legacy_ids": []
+    },
+    {
+      "id": "FAC_ARITHMETIC_SLIP",
+      "pillar": "FAC",
+      "name": "Arithmetic Slip",
+      "plain_name": "Calculation slip",
+      "student_help": "The steps make sense, with a small calculation slip in the numbers.",
+      "description": "An isolated arithmetic error with a sound method.",
+      "example": "Population density: 2,000,000 ÷ 50,000 km² = 400 people/km².",
+      "tell_apart": [
+        {
+          "code": "PRC_DATA_MISREAD",
+          "how": "If the wrong numbers were read from the graph or table, use PRC_DATA_MISREAD; this code is for a slip in the calculation."
+        }
+      ],
+      "remediation": "Five-item rapid micro-drill on the same operation.",
+      "legacy_ids": []
+    },
+    {
+      "id": "FAC_COPY_ERROR",
+      "pillar": "FAC",
+      "name": "Copy Error",
+      "plain_name": "Copied a number wrong",
+      "student_help": "A number or sign changed when copying from one line to the next.",
+      "description": "Miscopies a digit, sign or term from one of the student's own lines to the next.",
+      "example": "Copies 1929 from the source as 1992 in the answer.",
+      "tell_apart": [
+        {
+          "code": "FAC_ARITHMETIC_SLIP",
+          "how": "If a value was calculated wrongly rather than copied, use FAC_ARITHMETIC_SLIP."
+        }
+      ],
+      "remediation": "Line-to-line check habit.",
+      "legacy_ids": []
+    },
+    {
+      "id": "COM_UNCLEAR_SENTENCES",
+      "pillar": "COM",
+      "name": "Unclear or Wordy Sentences",
+      "plain_name": "Sentences are hard to follow",
+      "student_help": "Say it in fewer words; one idea per sentence is fine.",
+      "description": "Sentences are so long, wordy or tangled that the meaning is hard to follow, though no single grammar rule is broken.",
+      "example": "'The thing about the Depression was that it was a time when the things that happened were very bad for many reasons.'",
+      "tell_apart": [
+        {
+          "code": "STR_ILLOGICAL_ORDER",
+          "how": "If the problem is the order of ideas, use STR_ILLOGICAL_ORDER."
+        }
+      ],
+      "remediation": "Tier 4: sentence-trimming exercise.",
+      "legacy_ids": []
+    },
+    {
+      "id": "COM_INFORMAL_REGISTER",
+      "pillar": "COM",
+      "name": "Informal Register",
+      "plain_name": "Too casual for the task",
+      "student_help": "In formal writing avoid slang, contractions and 'you'.",
+      "description": "Uses slang, contractions, text-speak, second person or a chatty tone where a formal register is expected.",
+      "example": "'Basically the government was super mean to the strikers.'",
+      "tell_apart": [
+        {
+          "code": "COM_IMPRECISE_TERMS",
+          "how": "If a specific subject term is missing, use COM_IMPRECISE_TERMS."
+        }
+      ],
+      "remediation": "Tier 4: formal / informal rewrite pairs.",
+      "legacy_ids": []
+    },
+    {
+      "id": "COM_IMPRECISE_TERMS",
+      "pillar": "COM",
+      "name": "Imprecise Terms",
+      "plain_name": "Used an everyday word where a subject term was needed",
+      "student_help": "Use the exact subject word instead of an everyday one.",
+      "description": "The idea is right but is stated with everyday or loose words where a specific scientific term is needed, so the answer is ambiguous.",
+      "example": "'The government made people join the army' (conscription); 'more people moved to cities' with no 'urbanisation' when asked to define trends.",
+      "tell_apart": [
+        {
+          "code": "FAC_NAME_TERM_RECALL",
+          "how": "If the student uses the wrong term, use FAC_NAME_TERM_RECALL."
+        }
+      ],
+      "remediation": "Tier 4: subject word wall.",
+      "legacy_ids": []
+    },
+    {
+      "id": "COM_CITATION_FORMAT",
+      "pillar": "COM",
+      "name": "Citation Format",
+      "plain_name": "Quote or source cited incorrectly",
+      "student_help": "Cite with the format your teacher uses (for example MLA: (Golding 45)).",
+      "description": "Missing or wrongly formatted citations, page references or works cited entries; quotations not marked as quotations.",
+      "example": "Uses a sentence from a website with no quotation marks or source.",
+      "tell_apart": [
+        {
+          "code": "PRC_SOURCE_AT_FACE_VALUE",
+          "how": "If the source is cited but not evaluated, use PRC_SOURCE_AT_FACE_VALUE."
+        }
+      ],
+      "remediation": "Tier 4: citation template card.",
+      "legacy_ids": []
+    },
+    {
+      "id": "COM_MAP_CONVENTIONS",
+      "pillar": "COM",
+      "name": "Map or Graph Conventions Missing",
+      "plain_name": "Map or graph missing title, legend or scale",
+      "student_help": "Maps need a title, legend, scale, north arrow and labels; graphs need a title, labelled axes and units.",
+      "description": "A map or graph the student made is missing required conventions (title, orientation, date, author, legend, scale, labels).",
+      "example": "Thematic map with colours but no legend or title.",
+      "tell_apart": [
+        {
+          "code": "PRC_DATA_MISREAD",
+          "how": "PRC_DATA_MISREAD is about reading a map or graph; this code is about making one."
+        }
+      ],
+      "remediation": "Tier 4: TODALSIG checklist.",
+      "legacy_ids": []
+    },
+    {
+      "id": "COM_UNSUPPORTED_ANSWER",
+      "pillar": "COM",
+      "name": "Unsupported Answer",
+      "plain_name": "Answer not explained",
+      "student_help": "The answer is there, but the reason the question asked for is missing.",
+      "description": "Gives an answer, claim or 'show that' conclusion without the reasoning or working the question requires.",
+      "example": "'Was the Treaty of Versailles fair to Germany? No.'",
+      "tell_apart": [
+        {
+          "code": "PRC_NO_EVIDENCE",
+          "how": "If reasoning is given but no specific evidence, use PRC_NO_EVIDENCE."
+        }
+      ],
+      "remediation": "Tier 4: claim-because-evidence frame.",
+      "legacy_ids": []
+    },
+    {
+      "id": "TST_BLANK",
+      "pillar": "TST",
+      "name": "Blank / Time Attrition",
+      "plain_name": "Left blank",
+      "student_help": "This part was left blank.",
+      "description": "Leaves a question or part with no attempt, from time pressure or a frustration block.",
+      "example": "Leaves the source-analysis question blank.",
+      "tell_apart": [
+        {
+          "code": "TST_ABANDONED_WORK",
+          "how": "If any work was started, use TST_ABANDONED_WORK."
+        },
+        {
+          "code": "TST_SKIPPED_PART",
+          "how": "If other parts of the same question are answered, use TST_SKIPPED_PART."
+        },
+        {
+          "code": "TST_LENGTH_MISMATCH",
+          "how": "If something was written but far too little, use TST_LENGTH_MISMATCH."
+        }
+      ],
+      "remediation": "Prerequisite baseline probe on that topic.",
+      "legacy_ids": []
+    },
+    {
+      "id": "TST_SKIPPED_PART",
+      "pillar": "TST",
+      "name": "Skipped Part",
+      "plain_name": "Part of the question skipped",
+      "student_help": "One part of the question was skipped while the others were answered.",
+      "description": "Answers some parts of a multi-part question and leaves another out, likely without noticing.",
+      "example": "Asked for one cause and one consequence; gives only the cause.",
+      "tell_apart": [
+        {
+          "code": "TST_BLANK",
+          "how": "If the whole question is empty, use TST_BLANK."
+        }
+      ],
+      "remediation": "Part checklist habit.",
+      "legacy_ids": []
+    },
+    {
+      "id": "TST_ABANDONED_WORK",
+      "pillar": "TST",
+      "name": "Abandoned Work",
+      "plain_name": "Gave up partway",
+      "student_help": "A good start was stopped or crossed out before reaching an answer.",
+      "description": "Starts a valid approach, then stops or crosses it out partway with no answer.",
+      "example": "Starts the essay outline, writes the thesis, then stops.",
+      "tell_apart": [
+        {
+          "code": "TST_BLANK",
+          "how": "If nothing was written, use TST_BLANK."
+        }
+      ],
+      "remediation": "First-step confidence warm-up, then the same problem.",
+      "legacy_ids": []
+    },
+    {
+      "id": "TST_LENGTH_MISMATCH",
+      "pillar": "TST",
+      "name": "Length Mismatch",
+      "plain_name": "Much too short or too long",
+      "student_help": "Check the length asked for (words, paragraphs, lines) and plan to fit it.",
+      "description": "Writes far less or far more than the task asks for (a paragraph for an essay, one sentence where a series of paragraphs is set).",
+      "example": "Two sentences for a question worth 10 marks.",
+      "tell_apart": [
+        {
+          "code": "TST_ABANDONED_WORK",
+          "how": "If the writing stops mid-thought, use TST_ABANDONED_WORK."
+        }
+      ],
+      "remediation": "Marks-to-length planning habit.",
+      "legacy_ids": []
+    },
+    {
+      "id": "TST_SOURCE_NOT_USED",
+      "pillar": "TST",
+      "name": "Provided Source Not Used",
+      "plain_name": "Didn't use the source you were given",
+      "student_help": "When a question gives you a source, quote or point to it in your answer.",
+      "description": "Answers a source-based question from memory or general knowledge without using the provided source, or gets a fact wrong that the source states.",
+      "example": "Asked what Source B suggests about public opinion, writes about the war in general.",
+      "tell_apart": [
+        {
+          "code": "PRC_SOURCE_AT_FACE_VALUE",
+          "how": "If the source is used but not questioned, use PRC_SOURCE_AT_FACE_VALUE."
+        }
+      ],
+      "remediation": "Source-reference habit.",
+      "legacy_ids": []
+    },
+    {
+      "id": "TST_TEMPTING_OPTION",
+      "pillar": "TST",
+      "name": "Tempting Wrong Option",
+      "plain_name": "Picked an answer that sounds right but isn't supported",
+      "student_help": "Check each option against the passage, not against what sounds true.",
+      "description": "In a multiple-choice reading question, picks an option that is true in general, uses words from the passage, or is half right, instead of the one the passage supports.",
+      "example": "Picks 'Canada fought in WWI' when the question asks what the source says about conscription.",
+      "tell_apart": [
+        {
+          "code": "TST_SOURCE_NOT_USED",
+          "how": "For written answers that ignore the source, use TST_SOURCE_NOT_USED."
+        }
+      ],
+      "remediation": "Eliminate-with-evidence routine for multiple choice.",
+      "legacy_ids": []
+    }
+  ]
+}
