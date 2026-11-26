@@ -130,4 +130,6 @@ def curriculum_registry_text() -> str:
 
 
 def cached_context_text() -> str:
-    return SIX_PILLAR_TAXONOMY + "\n" + curriculum_registry_text()
+    from .quirks import quirks_text
+
+    return SIX_PILLAR_TAXONOMY + "\n" + quirks_text() + "\n" + curriculum_registry_text()

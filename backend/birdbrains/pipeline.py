@@ -43,6 +43,7 @@ from .schemas import (
     Stage2GradingAndAffectOutput,
 )
 from .taxonomy import CURRICULUM, cached_context_text
+from .quirks import clean_question_quirks
 
 log = logging.getLogger(__name__)
 
@@ -259,24 +260,31 @@ Method (follow in exact order):
    blank questions as `TST_BLANK`). The code's prefix is its pillar. Also list
    downstream lines/conclusions affected solely by an earlier root error in THIS
    question as `is_cascading_consequence=true` with the root cause's code.
-6. `pillar_scores`: give exactly one entry per pillar (`CON`, `STR`, `PRC`, `FAC`,
+6. `earned_quirks`: what the student did WELL on THIS question, from the quirk list
+   in the cached context. Up to 3, each with clear evidence on the page: the
+   `step_number` that shows it (or null for the whole question) and one short
+   `evidence` sentence to the student naming exactly what they did ("You kept the
+   negative sign on -3x through every line."). Never award a quirk the question's
+   errors contradict, never for a blank question, and never just to soften bad news.
+   An empty list is fine. Quirks never change the pillar scores.
+7. `pillar_scores`: give exactly one entry per pillar (`CON`, `STR`, `PRC`, `FAC`,
    `COM`, `TST`) for THIS question. Max scores are CON 2, STR 2, PRC 2, FAC 2,
    COM 1, TST 1. Deduct only for root causes, never for cascading consequences. Feedback is one sentence
    addressed to the student.
-7. `sentiment_entities`: for each mathematical skill or object the student engaged
+8. `sentiment_entities`: for each mathematical skill or object the student engaged
    with in THIS question (e.g. "distributing a leading coefficient"), give valence
    (-1 frustrated / avoidant to +1 fluent / confident), friction_intensity (0 to 1)
    and an affect state. Base this on the affect markers and on the pattern of work,
    not on the mark alone. `aggregate_valence` and `aggregate_friction` summarise
    this question.
-8. `recommended_scaffolding_mode`: `HIGH_SUPPORT_DEESCALATION` when
+9. `recommended_scaffolding_mode`: `HIGH_SUPPORT_DEESCALATION` when
    `aggregate_valence` is -0.45 or lower; `METACOGNITIVE_SPEED_BUMP` when the
    errors are mostly FAC/COM/TST slips made in rushed work; otherwise
    `STANDARD_PROGRESSIVE_FADE`.
-9. `supportive_framing_message`: one or two warm, specific, growth-mindset
-   sentences to the student for this question. Name what they did well first, then
-   the main thing to fix.
-10. `parent_insight`: one sentence for a parent describing the pattern on this
+10. `supportive_framing_message`: one or two warm, specific, growth-mindset
+   sentences to the student for this question. Name what they did well first (a quirk
+   you awarded, if any), then the main thing to fix.
+11. `parent_insight`: one sentence for a parent describing the pattern on this
     question and one concrete thing to try at home. No jargon, no codes.
 
 Writing for people (every explanation, note, description, feedback, message and
@@ -296,11 +304,11 @@ that appear inside it.
 # Appended to the Stage 2 prompt on the Free plan. It sits in the request, not the
 # system prompt, so both plans share the same instructions and exemplars.
 FREE_MODE_NOTE = """\
-Plan: FREE. Skip method step 7 and the mood part of step 8: return
+Plan: FREE. Skip method step 8 and the mood part of step 9: return
 sentiment_entities as an empty list, aggregate_valence 0, aggregate_friction 0 and
 recommended_scaffolding_mode STANDARD_PROGRESSIVE_FADE. Everything else (answer key,
 final-answer re-substitution verification, key-step coverage checks, step evaluations,
-errors, pillar scores, the message to the student and the parent insight) is
+errors, earned quirks, pillar scores, the message to the student and the parent insight) is
 required as usual. Keep explanations to one sentence each.
 """
 
@@ -461,6 +469,7 @@ def sanitize_question_grading(
         "problem_statement": q.problem_statement.strip() or source.problem_statement,
         "step_evaluations": clean_steps,
     }
+    q = clean_question_quirks(q.model_copy(update={"step_evaluations": clean_steps}))
     if free:
         update |= {
             "sentiment_entities": [],
@@ -656,7 +665,7 @@ class GeminiPipeline:
                 cache = self._client.caches.create(
                     model=model,
                     config=types.CreateCachedContentConfig(
-                        display_name=f"birdbrains-taxonomy-curriculum-v3-{model}",
+                        display_name=f"birdbrains-taxonomy-curriculum-v4-{model}",
                         system_instruction=STAGE2_SYSTEM,
                         contents=[types.Content(role="user", parts=[types.Part.from_text(text=cached_context_text())])],
                         ttl=f"{CACHE_TTL_SECONDS}s",

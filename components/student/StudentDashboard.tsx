@@ -9,6 +9,8 @@ import AffectCard from '@/components/student/AffectCard';
 import PillarCards from '@/components/student/PillarCards';
 import StepDiagnostics from '@/components/student/StepDiagnostics';
 import WorksheetViewer from '@/components/student/WorksheetViewer';
+import { QuirkCollection, QuirksEarned, firstTimeQuirks } from '@/components/student/Quirks';
+import { countQuirks } from '@/lib/quirks';
 import MakeWorksheetButton, { MAKEABLE } from '@/components/student/MakeWorksheetButton';
 import { LoadError, Loading, NoWorkNotice, useDashboardGate } from '@/components/DashboardStates';
 import {
@@ -20,7 +22,7 @@ import {
 import { api, ApiError } from '@/lib/api';
 import { demoPersonas, gradingOutput, worksheet as demoWorksheet } from '@/lib/mockData';
 import { useSession } from '@/lib/session';
-import type { ApiUsage, PlanTier, Stage2GradingAndAffectOutput, WS_3STAGE_V1 } from '@/types/birdBrains';
+import type { ApiUsage, PlanTier, QuirkCount, Stage2GradingAndAffectOutput, WS_3STAGE_V1 } from '@/types/birdBrains';
 
 const WORKSHEET_NOTES: Record<string, string> = {
   WORKSHEET_QUEUED: 'Your practice worksheet is ready to be made. Make it now, or it will be waiting for you tomorrow morning.',
@@ -56,6 +58,7 @@ export default function StudentDashboard() {
   const [addByPhone, setAddByPhone] = useState(false);
   const known = useRef<Set<string>>(new Set());
   const [adding, setAdding] = useState<{ busy: boolean; error: string }>({ busy: false, error: '' });
+  const [quirkRows, setQuirkRows] = useState<QuirkCount[] | null>(null);
   const addInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -65,9 +68,13 @@ export default function StudentDashboard() {
     (async () => {
       const token = await getToken();
       const usagePromise = api.usage(token, activeStudentId).catch(() => null);
+      const quirksPromise = api.quirks(token, activeStudentId).catch(() => null);
       const history = await api.gradings(token, activeStudentId);
       const usage = await usagePromise;
+      const quirks = await quirksPromise;
       if (cancelled) return;
+      // Lifetime counts from the API; if that fails, count the uploads loaded here.
+      setQuirkRows(quirks ?? countQuirks(history));
       if (history.length === 0) {
         setState({ kind: 'empty', usage });
         return;
@@ -122,6 +129,7 @@ export default function StudentDashboard() {
         worksheetNote=""
         worksheetProOnly={false}
         usage={DEMO_PRO_USAGE}
+        quirkRows={countQuirks([gradingOutput])}
       />
     );
   }
@@ -252,6 +260,8 @@ export default function StudentDashboard() {
             : undefined
         }
         usage={state.usage}
+        quirkRows={quirkRows ?? countQuirks(state.history)}
+        newQuirks={firstTimeQuirks(state.history, grading.gradingId)}
       />
     </div>
   );
@@ -346,6 +356,7 @@ export function StudentDemo({ plan }: { plan: PlanTier }) {
       worksheetNote=""
       worksheetProOnly={free}
       usage={free ? DEMO_FREE_USAGE : DEMO_PRO_USAGE}
+      quirkRows={countQuirks([grading])}
     />
   );
 }
@@ -361,6 +372,8 @@ function View({
   worksheetProOnly,
   onWorksheetMade,
   usage,
+  quirkRows,
+  newQuirks,
 }: {
   name: string;
   own: boolean;
@@ -375,6 +388,10 @@ function View({
   sample?: boolean;
   /** False when an older upload from the history is open. */
   latest?: boolean;
+  /** The quirk collection (every quirk with its count). */
+  quirkRows?: QuirkCount[];
+  /** Quirks this upload earned for the first time. */
+  newQuirks?: Set<string>;
 }) {
   const { openCapture } = useRole();
   const limitReached = usage !== null && usage.plan === 'free' && usage.remaining === 0;
@@ -430,9 +447,15 @@ function View({
 
       {usage && <UploadsLeftMeter usage={usage} compact />}
 
+      <QuirksEarned
+        quirks={grading.quirks}
+        heading={own ? 'Quirks you earned on this upload' : 'Quirks earned on this upload'}
+        newIds={newQuirks}
+      />
       <AffectCard grading={grading} />
       <PillarCards pillars={grading.pillarBreakdowns} />
       <StepDiagnostics grading={grading} />
+      {quirkRows && <QuirkCollection rows={quirkRows} own={own} />}
 
       <div id="practice-worksheet" className="scroll-mt-24" />
       {worksheet ? (

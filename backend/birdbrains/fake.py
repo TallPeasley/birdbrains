@@ -214,6 +214,12 @@ class FakePipeline:
                         "severity": "LOW",
                     },
                 ],
+                "earned_quirks": [
+                    {"quirk_id": "QK_CON_RULE_APPLIED", "step_number": 3,
+                     "evidence": "You completed the square inside the bracket with (6/2)^2 = 9."},
+                    {"quirk_id": "QK_FAC_ACCURATE_ARITHMETIC", "step_number": None,
+                     "evidence": "Every calculation you did was right."},
+                ],
                 "sentiment_entities": [] if free else [
                     {"entity_name": "completing the square", "valence_score": 0.4,
                      "friction_intensity": 0.3, "affect_state": "PRODUCTIVE_STRUGGLE"},

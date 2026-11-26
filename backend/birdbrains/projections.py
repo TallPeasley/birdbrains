@@ -8,6 +8,7 @@ from typing import Optional
 
 from .questions import strip_label, written_label
 from .codes import CODES, LEGACY_CODES
+from .quirks import QUIRKS
 from .schemas import (
     AffectStateEnum,
     ApiGrading,
@@ -44,7 +45,7 @@ _BRACKETED_CODE = re.compile(r"\s*[(\[]\s*" + _ANY_CODE + r"\s*[)\]]")
 _CODE = re.compile(r"\b" + _ANY_CODE + r"\b")
 _PROSE_KEYS = {"explanation", "description", "note", "discrepancyNote", "resubstitutionCheck", "feedback",
                "supportiveFramingMessage", "answerVerification", "keyStepDescription",
-               "actionableParentInsight"}
+               "actionableParentInsight", "evidence"}
 
 
 def plain(text: Optional[str]) -> Optional[str]:
@@ -120,6 +121,25 @@ def page_questions(stage2: Stage2GradingAndAffectOutput) -> list[dict]:
     return [dict(label=q.label, text=q.printed_text) for q in stage2.questions]
 
 
+def question_quirks(q: QuestionGradingOutput, label: str = "") -> list[dict]:
+    """The quirks one question earned (unknown ids dropped)."""
+    return [
+        dict(quirkId=e.quirk_id, pillar=QUIRKS[e.quirk_id].pillar, questionLabel=label,
+             stepNumber=e.step_number, evidence=e.evidence)
+        for e in q.earned_quirks if e.quirk_id in QUIRKS
+    ]
+
+
+def grading_quirks(stage2: Stage2GradingAndAffectOutput) -> list[dict]:
+    """Quirks earned on one upload, one entry per kind (the first question that earned it)."""
+    multi = len(stage2.question_analyses) > 1
+    out: dict[str, dict] = {}
+    for q in stage2.question_analyses:
+        for item in question_quirks(q, q.question_number if multi else ""):
+            out.setdefault(item["quirkId"], item)
+    return list(out.values())
+
+
 def _to_api_question_diagnostic(q: QuestionGradingOutput) -> ApiQuestionDiagnostic:
     roots = [e for e in q.identified_errors if not e.is_cascading_consequence]
     per_pillar = Counter(e.pillar for e in roots)
@@ -187,6 +207,7 @@ def _to_api_question_diagnostic(q: QuestionGradingOutput) -> ApiQuestionDiagnost
             for p in q.pillar_scores
         ],
         supportiveFramingMessage=q.supportive_framing_message,
+        quirks=question_quirks(q),
     )
 
 
@@ -216,6 +237,7 @@ def to_api_grading(record: dict) -> ApiGrading:
         entityExtractions=[
             dict(misconceptionId=e.error_code, description=e.description, severity=e.severity) for e in roots
         ],
+        quirks=grading_quirks(stage2),
         scaffoldingMode=record["scaffoldingMode"] if pro else None,
         gradedAt=record["gradedAt"],
         plan="pro" if pro else "free",
