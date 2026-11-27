@@ -8,10 +8,12 @@
 set -euo pipefail
 
 PROJECT="${1:?usage: ./deploy.sh <gcp-project-id> [frontend-origin]}"
-# The site lives in its own Firebase project (boson-quark); the API, Firestore and sign-in stay here.
-ORIGIN="${2:-https://boson-quark.web.app}"
-# Also allowed: the firebaseapp.com twins and the first address (<project>.web.app, still served).
-CORS="$ORIGIN,https://boson-quark.firebaseapp.com,https://${PROJECT}.web.app,https://${PROJECT}.firebaseapp.com"
+# The site lives in its own Firebase project (boson-quark) at the custom domain quark.study;
+# the API, Firestore and sign-in stay here.
+ORIGIN="${2:-https://quark.study}"
+# Also allowed: www.quark.study (redirects to quark.study), the boson-quark Firebase addresses and the
+# first address (<project>.web.app), all still served.
+CORS="$ORIGIN,https://quark.study,https://www.quark.study,https://boson-quark.web.app,https://boson-quark.firebaseapp.com,https://${PROJECT}.web.app,https://${PROJECT}.firebaseapp.com"
 REGION="northamerica-northeast1"   # PIPEDA: everything stays in Montréal
 SERVICE="birdbrains-api"
 BUCKET="${PROJECT}-birdbrains"

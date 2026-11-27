@@ -10,8 +10,9 @@ Other commands (checks, `gcloud` reads) run from the repo folder on any machine 
 ### Deploy and configuration
 - [ ] `main` is deployed from the PC (`bb-deploy-main` at `origin/main`, after Maalik's "go"): `./backend/deploy.sh birdbrain-514606` finished without errors.
 - [ ] `curl https://birdbrains-api-28737473918.northamerica-northeast1.run.app/health` returns `{"ok":true}`.
-- [ ] The live site (Firebase Hosting, https://boson-quark.web.app and https://birdbrain-514606.web.app) was published by `./deploy-web.sh` from the latest `main`, on the PC.
-- [ ] Firebase Auth (birdbrain-514606): `boson-quark.web.app` is in Authorized domains (only the project's own `web.app` is there by default); email sign-up works on a phone.
+- [ ] `quark.study` is connected in Firebase Hosting (project `boson-quark`), `www.quark.study` and `quark.boson.systems` redirect to it, and https://quark.study loads with a valid certificate.
+- [ ] The live site (Firebase Hosting, https://quark.study, plus https://boson-quark.web.app and https://birdbrain-514606.web.app) was published by `./deploy-web.sh` from the latest `main`, on the PC.
+- [ ] Firebase Auth (birdbrain-514606): `quark.study` and `boson-quark.web.app` are in Authorized domains (only the project's own `web.app` is there by default); email sign-up works on a phone.
 - [ ] `./backend/monitoring.sh birdbrain-514606 <your email>` has been run and the alert email is confirmed.
 - [ ] Billing budget alert exists (Billing > Budgets) for the project.
 - [ ] If Pro is paid at launch: `python backend/tools/stripe_setup.py --price 10` (Quark Pro, $10 CAD/month) run with the sandbox key, API redeployed, and a test-card (4242...) upgrade flips an account to Pro and Manage billing opens. Then run the script again with the `sk_live_` key, redeploy, and make one real purchase and refund.

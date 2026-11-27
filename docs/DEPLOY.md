@@ -28,25 +28,41 @@ The trigger only fires when files that matter change (`--included-files` in `dep
 ## Status
 Written and syntax-checked, but NOT yet run against real GCP/Firebase. Expect to fix a permission or flag on the first run.
 
-## Site address (since 2026-11-26)
+## Site address (quark.study, since 2026-11-27)
 
-The main address is https://boson-quark.web.app (Firebase project `boson-quark`). The API, Firestore,
-Storage and Firebase Auth stay in `birdbrain-514606`, so the site is still built with that project's
-Firebase web config. `deploy-web.sh` (and Cloud Build) publish the same build to both
-`boson-quark` and `birdbrain-514606`, so https://birdbrain-514606.web.app keeps working; canonical
-links point search engines at the new address. The API's `BIRDBRAINS_SITE_URL` (Stripe and Classroom
-return pages) is the new address, and CORS allows both.
+The main address is **https://quark.study**, a custom domain on Firebase Hosting project `boson-quark`.
+https://www.quark.study and https://quark.boson.systems are Firebase Hosting redirects to
+https://quark.study. https://boson-quark.web.app and https://birdbrain-514606.web.app keep serving the
+same build. The API, Firestore, Storage and Firebase Auth stay in `birdbrain-514606`, so the site is
+still built with that project's Firebase web config. `deploy-web.sh` (and Cloud Build) publish the
+same build to both `boson-quark` and `birdbrain-514606`; canonical links, the sitemap and robots.txt
+point search engines at https://quark.study. The API's `BIRDBRAINS_SITE_URL` (Stripe and Classroom
+return pages) is https://quark.study, and CORS allows quark.study, www.quark.study and every
+web.app / firebaseapp.com address.
 
-One-time console steps (cannot be done from the repo):
+**Order matters.** Connect quark.study in Firebase Hosting (and wait for the certificate) before
+deploying this code. If you must deploy first, run `SITE_URL=https://boson-quark.web.app ./deploy-web.sh`
+so Stripe and Classroom send people back to an address that works, and run it again without
+`SITE_URL` once quark.study is live.
 
-1. Firebase console, project **birdbrain-514606** > Authentication > Settings > Authorized domains >
-   Add domain: `boson-quark.web.app`. Without it Google and Microsoft sign-in fail on the new address.
-2. Google Cloud console, project **birdbrain-514606** > APIs & Services > Credentials > the
-   "Browser key (auto created by Firebase)": if it has Website restrictions, add `https://boson-quark.web.app/*`.
-3. Google Auth Platform (birdbrain-514606) > Branding: set the home page to `https://boson-quark.web.app`
-   and add `boson-quark.web.app` under Authorized domains. The Classroom redirect URI is the API's
+One-time console steps (cannot be done from the repo; DNS and custom domains wait for Maalik's cutover "go"):
+
+1. Firebase console, project **boson-quark** > Hosting > Add custom domain: `quark.study`. Add
+   `www.quark.study` as a redirect to it, and `quark.boson.systems` as a redirect to
+   `https://quark.study`. Paste the `TXT` and `A` records Firebase shows into Spaceship > Advanced DNS
+   (`@` for quark.study, `www` for www.quark.study; `quark` in the boson.systems zone).
+2. Firebase console, project **birdbrain-514606** > Authentication > Settings > Authorized domains >
+   Add domain: `quark.study` (keep `boson-quark.web.app`). Without it Google and Microsoft sign-in
+   fail on quark.study.
+3. Google Cloud console, project **birdbrain-514606** > APIs & Services > Credentials > the
+   "Browser key (auto created by Firebase)": if it has Website restrictions, add `https://quark.study/*`
+   (keep `https://boson-quark.web.app/*`).
+4. Google Auth Platform (birdbrain-514606) > Branding: set the home page to `https://quark.study`
+   and add `quark.study` under Authorized domains. The Classroom redirect URI is the API's
    `/classroom/callback` and does not change. Canvas and Brightspace redirect URIs are on the API too
    (`/lms/canvas/callback`, `/lms/brightspace/callback`); see docs/LMS.md.
-4. Stripe > Settings > Billing > Customer portal: rerun `python backend/tools/stripe_setup.py --price 10`
-   (it now sets the portal's return link to the new address), or change "Default redirect link" by hand.
-5. Signed-in people are signed in per address: anyone who opens the new address signs in once again.
+5. After the API and site are deployed with quark.study: Stripe > Settings > Billing > Customer portal:
+   rerun `python backend/tools/stripe_setup.py --price 10` (its default site URL is now
+   https://quark.study, so it sets the portal's return link there), or change "Default redirect link"
+   by hand. Needs the Stripe key, so Maalik runs it on his PC.
+6. Signed-in people are signed in per address: anyone who opens quark.study signs in once again.

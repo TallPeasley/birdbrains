@@ -44,7 +44,7 @@ LOOKUP_KEY = "birdbrains_pro_monthly"  # internal id, kept after the Quark renam
 PRODUCT_NAME = "Quark Pro"
 REGION = "northamerica-northeast1"
 DEFAULT_API_URL = "https://birdbrains-api-28737473918.northamerica-northeast1.run.app"
-DEFAULT_SITE_URL = "https://boson-quark.web.app"
+DEFAULT_SITE_URL = "https://quark.study"
 EVENTS = [
     "checkout.session.completed",
     "checkout.session.async_payment_succeeded",

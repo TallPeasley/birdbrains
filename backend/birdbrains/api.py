@@ -124,7 +124,9 @@ class Deps:
     auth: Authenticator
     batch_token: Optional[str] = None
     cors_origins: tuple[str, ...] = (
-        "https://boson-quark.web.app",  # main address since 2026-11-26
+        "https://quark.study",  # main address (custom domain on boson-quark)
+        "https://www.quark.study",  # redirects to quark.study
+        "https://boson-quark.web.app",  # Firebase address, still served
         "https://boson-quark.firebaseapp.com",
         "https://birdbrain-514606.web.app",  # first Firebase address, still served
         "https://birdbrain-514606.firebaseapp.com",
@@ -141,7 +143,7 @@ class Deps:
     # sealed in ``lmsschools``. Both must be set for those two to work.
     lms_sealer: Optional[Sealer] = None
     lms_factory: Optional[LmsFactory] = None
-    site_url: str = "https://boson-quark.web.app"
+    site_url: str = "https://quark.study"
 
 
 def deps_from_env() -> Deps:

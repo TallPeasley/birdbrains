@@ -14,8 +14,9 @@ const DESCRIPTION =
   'Six-pillar math diagnostics and three-stage remedial worksheets for Ontario Grade 9–10 students and parents.';
 
 export const metadata: Metadata = {
-  // Main address. The same build is also served at birdbrain-514606.web.app; canonical links send search engines here.
-  metadataBase: new URL('https://boson-quark.web.app'),
+  // Main address (custom domain on boson-quark). The same build is also served at boson-quark.web.app and
+  // birdbrain-514606.web.app, and quark.boson.systems redirects here; canonical links send search engines here.
+  metadataBase: new URL('https://quark.study'),
   alternates: { canonical: '/' },
   title: 'Quark by Aero',
   description: DESCRIPTION,
