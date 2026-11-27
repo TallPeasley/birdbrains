@@ -44,7 +44,8 @@ One-time console steps (cannot be done from the repo):
    "Browser key (auto created by Firebase)": if it has Website restrictions, add `https://boson-quark.web.app/*`.
 3. Google Auth Platform (birdbrain-514606) > Branding: set the home page to `https://boson-quark.web.app`
    and add `boson-quark.web.app` under Authorized domains. The Classroom redirect URI is the API's
-   `/classroom/callback` and does not change.
+   `/classroom/callback` and does not change. Canvas and Brightspace redirect URIs are on the API too
+   (`/lms/canvas/callback`, `/lms/brightspace/callback`); see docs/LMS.md.
 4. Stripe > Settings > Billing > Customer portal: rerun `python backend/tools/stripe_setup.py --price 10`
    (it now sets the portal's return link to the new address), or change "Default redirect link" by hand.
 5. Signed-in people are signed in per address: anyone who opens the new address signs in once again.

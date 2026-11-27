@@ -22,7 +22,8 @@ from PIL import Image
 from . import mastery_affect_ledger as ledger_engine
 from .billing import Billing, BillingError, plan_change
 from .classroom import SCOPES, STUDENT_SCOPES, Classroom, ClassroomError, expectations_text
-from .lms import LMS_PROVIDERS, LmsError, LmsProvider, normalize_instance_url
+from .lms import (LMS_PROVIDERS, SCHOOL_PROVIDERS, LmsError, LmsFactory, LmsProvider, Sealer, expired,
+                  normalize_instance_url, school_key, school_provider, sso_uid)
 from .upload_errors import READING_REASON_CODES, UPLOAD_ERRORS, UploadFailure, classify_pipeline_error, failure_body
 from .auth import Authenticator
 from .batch_engine import BatchEngine, FlaggedGrading, is_flagged
@@ -66,6 +67,7 @@ from .schemas import (
     JoinClassRequest,
     SetPlanRequest,
     SetClassroomBetaRequest,
+    SetLmsSchoolRequest,
     SetTesterRequest,
     UpdateProfileRequest,
     CourseEnum,
@@ -135,7 +137,11 @@ class Deps:
     free_worksheets: bool = False  # nightly 3-stage worksheets are a Pro feature
     billing: Optional[Billing] = None  # Stripe; None = upgrades not configured
     classroom: Optional[Classroom] = None  # Google Classroom OAuth; None = not configured
-    lms_providers: dict[str, LmsProvider] = field(default_factory=dict)  # Brightspace, Canvas, Microsoft Edu
+    lms_providers: dict[str, LmsProvider] = field(default_factory=dict)  # app-wide ones (Microsoft Edu)
+    # Canvas and Brightspace: each school registers its own OAuth app; its keys live
+    # sealed in ``lmsschools``. Both must be set for those two to work.
+    lms_sealer: Optional[Sealer] = None
+    lms_factory: Optional[LmsFactory] = None
     site_url: str = "https://boson-quark.web.app"
 
 
@@ -206,24 +212,6 @@ def deps_from_env() -> Deps:
     pub = env("BIRDBRAINS_PUBLIC_URL")
     if pub:
         pub = pub.rstrip("/")
-        if env("BRIGHTSPACE_OAUTH_CLIENT_ID") and env("BRIGHTSPACE_OAUTH_CLIENT_SECRET"):
-            from .lms import BrightspaceProvider
-
-            lms_providers["brightspace"] = BrightspaceProvider(
-                env("BRIGHTSPACE_OAUTH_CLIENT_ID"),
-                env("BRIGHTSPACE_OAUTH_CLIENT_SECRET"),
-                f"{pub}/lms/brightspace/callback",
-                f"{pub}/auth/lms/brightspace/callback",
-            )
-        if env("CANVAS_OAUTH_CLIENT_ID") and env("CANVAS_OAUTH_CLIENT_SECRET"):
-            from .lms import CanvasProvider
-
-            lms_providers["canvas"] = CanvasProvider(
-                env("CANVAS_OAUTH_CLIENT_ID"),
-                env("CANVAS_OAUTH_CLIENT_SECRET"),
-                f"{pub}/lms/canvas/callback",
-                f"{pub}/auth/lms/canvas/callback",
-            )
         if env("MICROSOFT_OAUTH_CLIENT_ID") and env("MICROSOFT_OAUTH_CLIENT_SECRET"):
             from .lms import MicrosoftEduProvider
 
@@ -233,6 +221,11 @@ def deps_from_env() -> Deps:
                 f"{pub}/lms/microsoft_edu/callback",
                 f"{pub}/auth/lms/microsoft_edu/callback",
             )
+
+    lms_sealer = lms_factory = None
+    if pub and env("BIRDBRAINS_LMS_KEY"):
+        lms_sealer = Sealer(env("BIRDBRAINS_LMS_KEY"))
+        lms_factory = lambda pid, school, _pub=pub: school_provider(pid, school, _pub)  # noqa: E731
 
     origins = os.environ.get("BIRDBRAINS_CORS_ORIGINS")
     return Deps(
@@ -250,6 +243,8 @@ def deps_from_env() -> Deps:
         billing=billing,
         classroom=classroom,
         lms_providers=lms_providers,
+        lms_sealer=lms_sealer,
+        lms_factory=lms_factory,
         site_url=(env("BIRDBRAINS_SITE_URL") or Deps.site_url).rstrip("/"),
     )
 
@@ -1487,54 +1482,111 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         classroom_teacher(user)
         raise HTTPException(501, "CLASSROOM_GRADE_SYNC_UNSUPPORTED")
 
-    # ---------------------------------------- Multi-LMS (Brightspace, Canvas, Microsoft Edu)
-    def lms_provider(provider_id: str) -> LmsProvider:
-        if provider_id not in LMS_PROVIDERS:
-            raise HTTPException(404, f"Unknown LMS provider: {provider_id}")
-        prov = d.lms_providers.get(provider_id)
-        if not prov:
-            raise HTTPException(503, f"LMS_NOT_CONFIGURED:{provider_id}")
-        return prov
+    # ---------------------------------------- School LMS (Canvas, Brightspace, Microsoft Edu)
+    # Canvas and Brightspace are set up per school: the school's LMS admin registers
+    # Quark (docs/LMS.md) and Maalik records the keys with tools/lms_schools.py. Until
+    # then a Pro teacher's Connect just asks for their school to be set up. Tokens and
+    # school secrets are sealed (lms.Sealer) before they are stored.
+    def lms_school(provider_id: str, instance_url: Optional[str]) -> Optional[dict]:
+        if not instance_url:
+            return None
+        return d.store.get("lmsschools", school_key(provider_id, instance_url))
 
-    def lms_teacher(user: dict, provider_id: str) -> LmsProvider:
+    def school_providers_ready() -> bool:
+        return d.lms_sealer is not None and d.lms_factory is not None
+
+    def provider_for(provider_id: str, instance_url: Optional[str] = None) -> LmsProvider:
+        if provider_id not in LMS_PROVIDERS:
+            raise HTTPException(404, "Unknown school system")
+        if provider_id not in SCHOOL_PROVIDERS:
+            prov = d.lms_providers.get(provider_id)
+            if not prov:
+                raise HTTPException(503, "LMS_NOT_CONFIGURED")
+            return prov
+        if not school_providers_ready():
+            raise HTTPException(503, "LMS_NOT_CONFIGURED")
+        school = lms_school(provider_id, instance_url)
+        if not school or school.get("status") != "active" or not school.get("clientSecret"):
+            raise HTTPException(409, "LMS_SCHOOL_NOT_SET_UP")
+        try:
+            secret = d.lms_sealer.unseal(school["clientSecret"])["secret"]
+        except (LmsError, KeyError):
+            log.error("Stored keys for %s could not be read", school["id"])
+            raise HTTPException(503, "LMS_NOT_CONFIGURED")
+        return d.lms_factory(provider_id, {**school, "clientSecret": secret})
+
+    def lms_teacher(user: dict, provider_id: str) -> None:
+        if provider_id not in LMS_PROVIDERS:
+            raise HTTPException(404, "Unknown school system")
         if user["role"] != "teacher":
             raise HTTPException(403, "Only teacher accounts can connect an LMS")
         if account_plan(user) != "pro":
             raise HTTPException(402, "PRO_ONLY")
-        return lms_provider(provider_id)
 
     def lms_token_key(uid: str, provider_id: str) -> str:
         return f"{uid}:{provider_id}"
 
+    def seal(data: dict) -> str:
+        if d.lms_sealer:
+            return d.lms_sealer.seal(data)
+        return json.dumps(data)  # only app-wide providers without a key (local runs)
+
+    def unseal(doc: dict) -> dict:
+        if d.lms_sealer:
+            return d.lms_sealer.unseal(doc["sealed"])
+        return json.loads(doc["sealed"])
+
     def lms_session(user: dict, provider_id: str):
-        prov = lms_teacher(user, provider_id)
-        tokens = d.store.get("lmstokens", lms_token_key(user["uid"], provider_id))
-        if not tokens:
-            raise HTTPException(409, f"LMS_NOT_CONNECTED:{provider_id}")
+        lms_teacher(user, provider_id)
+        key = lms_token_key(user["uid"], provider_id)
+        doc = d.store.get("lmstokens", key)
+        if not doc or not doc.get("sealed"):
+            raise HTTPException(409, "LMS_NOT_CONNECTED")
+        prov = provider_for(provider_id, doc.get("instanceUrl"))
         try:
-            return prov.open(tokens["tokenData"])
-        except LmsError:
-            d.store.delete("lmstokens", lms_token_key(user["uid"], provider_id))
-            raise HTTPException(409, f"LMS_NOT_CONNECTED:{provider_id}")
+            tok = unseal(doc)
+        except (LmsError, ValueError):
+            d.store.delete("lmstokens", key)
+            raise HTTPException(409, "LMS_NOT_CONNECTED")
+        if expired(tok):
+            try:
+                tok = prov.refresh(tok)
+            except LmsError:
+                # Brightspace refresh tokens work once. If another request just used
+                # it, that request stored the new one: use that instead.
+                again = d.store.get("lmstokens", key)
+                fresh = None
+                if again and again.get("sealed") and again["sealed"] != doc["sealed"]:
+                    try:
+                        fresh = unseal(again)
+                    except (LmsError, ValueError):
+                        fresh = None
+                if fresh:
+                    tok = fresh
+                else:
+                    d.store.delete("lmstokens", key)  # access was taken away in the LMS
+                    raise HTTPException(409, "LMS_NOT_CONNECTED")
+            else:
+                d.store.put("lmstokens", key, {**doc, "sealed": seal(tok), "refreshedAt": now_iso()})
+        return prov.session(tok)
 
     def disconnect_lms(user: dict, provider_id: str) -> None:
         key = lms_token_key(user["uid"], provider_id)
-        tokens = d.store.get("lmstokens", key)
-        if tokens:
-            prov = d.lms_providers.get(provider_id)
-            if prov:
-                try:
-                    prov.revoke(tokens["tokenData"])
-                except Exception:
-                    pass
-            d.store.delete("lmstokens", key)
+        doc = d.store.get("lmstokens", key)
+        if not doc:
+            return
+        try:
+            provider_for(provider_id, doc.get("instanceUrl")).revoke(unseal(doc))
+        except Exception:  # noqa: BLE001 - nothing left to undo, or the school is gone
+            pass
+        d.store.delete("lmstokens", key)
 
     def lms_call(call):
         try:
             return call()
         except LmsError as e:
             log.warning("LMS call failed: %s", e)
-            raise HTTPException(502, f"LMS could not be reached: {e}")
+            raise HTTPException(502, "Your school's system could not be reached. Please try again.")
 
     def _sync_lms_grades(user: dict, provider_id: str, course_id: str, work_id: str,
                          body: Optional[LmsSyncRequest], push_fn) -> dict:
@@ -1570,6 +1622,7 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
                 skipped.append({"studentName": rec["studentName"], "reason": str(e)})
         return {"synced": synced, "skipped": skipped}
 
+
     @app.get("/lms/providers", response_model=list[ApiLmsProviderStatus])
     def lms_providers_status(user: User):
         plan = account_plan(user)
@@ -1586,72 +1639,109 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         ]
         for pid, meta in LMS_PROVIDERS.items():
             tok = d.store.get("lmstokens", lms_token_key(user["uid"], pid))
+            school = None
+            instance_url = (tok or {}).get("instanceUrl")
+            if pid in SCHOOL_PROVIDERS:
+                instance_url = instance_url or (d.store.get("lmsrequests", lms_token_key(user["uid"], pid))
+                                                or {}).get("instanceUrl")
+                school = (lms_school(pid, instance_url) or {}).get("status")
             out.append(
                 ApiLmsProviderStatus(
                     id=pid,
                     name=meta["name"],
-                    configured=pid in d.lms_providers,
-                    connected=tok is not None,
+                    configured=school_providers_ready() if pid in SCHOOL_PROVIDERS else pid in d.lms_providers,
+                    connected=bool(tok and tok.get("sealed")),
                     requiresInstanceUrl=meta["requiresInstanceUrl"],
                     defaultPlaceholder=meta["defaultPlaceholder"],
-                    instanceUrl=(tok or {}).get("instanceUrl"),
+                    instanceUrl=instance_url,
                     plan=plan,
+                    school=school,
                 )
             )
         return out
 
+    def school_address(provider_id: str, raw: Optional[str]) -> Optional[str]:
+        if provider_id not in SCHOOL_PROVIDERS:
+            return None
+        try:
+            return normalize_instance_url(raw)
+        except LmsError:
+            raise HTTPException(422, f"Enter your school's {LMS_PROVIDERS[provider_id]['name'].split(' ')[0]} "
+                                     "address, for example " + LMS_PROVIDERS[provider_id]["defaultPlaceholder"])
+
+    def ask_for_school(provider_id: str, instance_url: str, user: dict) -> str:
+        """A teacher wants their school's Canvas or Brightspace. Records the request
+        for Maalik (tools/lms_schools.py) and returns the school's status."""
+        sid = school_key(provider_id, instance_url)
+        school = d.store.get("lmsschools", sid) or {
+            "id": sid, "provider": provider_id, "instanceUrl": instance_url, "status": "requested",
+            "requestedAt": now_iso(), "requests": []}
+        if not any(r["uid"] == user["uid"] for r in school["requests"]):
+            school["requests"].append({"uid": user["uid"], "name": user.get("name", ""), "at": now_iso()})
+            school["requests"] = school["requests"][-50:]
+            d.store.put("lmsschools", sid, school)
+            log.info("LMS set-up request for %s from %s", sid, user["uid"])
+        return school["status"]
+
     @app.post("/lms/{provider_id}/connect")
     def lms_connect(provider_id: str, user: User, body: Optional[LmsConnectRequest] = None):
-        prov = lms_teacher(user, provider_id)
-        instance_url = body.instanceUrl if body else None
-        if prov.requires_instance_url:
-            try:
-                instance_url = normalize_instance_url(instance_url)
-            except LmsError as e:
-                raise HTTPException(422, str(e))
+        """Returns {url} to send the teacher to their LMS to approve Quark. For Canvas
+        and Brightspace, if their school has not set Quark up yet, returns
+        {url: null, school: "requested"} and records the request instead."""
+        lms_teacher(user, provider_id)
+        instance_url = school_address(provider_id, body.instanceUrl if body else None)
+        if instance_url:
+            if not school_providers_ready():
+                raise HTTPException(503, "LMS_NOT_CONFIGURED")
+            d.store.put("lmsrequests", lms_token_key(user["uid"], provider_id),
+                        {"uid": user["uid"], "provider": provider_id, "instanceUrl": instance_url, "at": now_iso()})
+            status = (lms_school(provider_id, instance_url) or {}).get("status")
+            if status != "active":
+                return {"url": None, "school": ask_for_school(provider_id, instance_url, user)}
+        prov = provider_for(provider_id, instance_url)
         state = secrets.token_urlsafe(32)
         d.store.put("oauthstates", state, {
-            "uid": user["uid"],
-            "provider": provider_id,
-            "instanceUrl": instance_url,
-            "kind": "lms",
+            "uid": user["uid"], "provider": provider_id, "instanceUrl": instance_url, "kind": "lms",
             "expiresAt": (datetime.now(timezone.utc) + timedelta(minutes=10)).isoformat(),
         })
-        return {"url": prov.auth_url(state, instance_url=instance_url, sso=False)}
+        return {"url": prov.auth_url(state), "school": "active" if instance_url else None}
 
-    @app.get("/lms/{provider_id}/callback")
-    def lms_callback(provider_id: str, state: str = "", code: str = "", error: str = ""):
-        back = f"{d.site_url}/teacher?lms={urllib.parse.quote(provider_id)}&status="
+    def take_state(state: str, provider_id: str, kind: str) -> Optional[dict]:
         pending = d.store.get("oauthstates", state) if state else None
         if state:
             d.store.delete("oauthstates", state)
-        prov = d.lms_providers.get(provider_id)
-        if (
-            not pending
-            or pending.get("provider") != provider_id
-            or not prov
-            or not code
-            or error
-            or datetime.fromisoformat(pending["expiresAt"]) < datetime.now(timezone.utc)
-        ):
+        if (not pending or pending.get("provider") != provider_id or pending.get("kind") != kind
+                or datetime.fromisoformat(pending["expiresAt"]) < datetime.now(timezone.utc)):
+            return None
+        return pending
+
+    @app.get("/lms/{provider_id}/callback")
+    def lms_callback(provider_id: str, state: str = "", code: str = "", error: str = ""):
+        # One return address for connecting and for signing in, because a school's
+        # Brightspace app registration takes a single redirect URI.
+        peek = d.store.get("oauthstates", state) if state else None
+        if peek and peek.get("kind") == "sso":
+            return lms_sso_callback(provider_id, state, code, error)
+        back = f"{d.site_url}/teacher?lms={urllib.parse.quote(provider_id)}&status="
+        pending = take_state(state, provider_id, "lms")
+        if not pending or not code or error:
             return RedirectResponse(back + "failed", status_code=303)
         try:
-            token_data = prov.exchange(code, instance_url=pending.get("instanceUrl"), sso=False)
-        except LmsError:
+            prov = provider_for(provider_id, pending.get("instanceUrl"))
+            tok = prov.exchange(code)
+        except (HTTPException, LmsError) as e:
+            log.warning("LMS connect for %s failed: %s", provider_id, e)
             return RedirectResponse(back + "failed", status_code=303)
         d.store.put("lmstokens", lms_token_key(pending["uid"], provider_id), {
-            "uid": pending["uid"],
-            "provider": provider_id,
-            "instanceUrl": pending.get("instanceUrl"),
-            "tokenData": token_data,
-            "connectedAt": now_iso(),
+            "uid": pending["uid"], "provider": provider_id, "instanceUrl": pending.get("instanceUrl"),
+            "sealed": seal(tok), "connectedAt": now_iso(),
         })
         return RedirectResponse(back + "connected", status_code=303)
 
     @app.delete("/lms/{provider_id}", status_code=204)
     def lms_disconnect(provider_id: str, user: User):
         if provider_id not in LMS_PROVIDERS:
-            raise HTTPException(404, f"Unknown LMS provider: {provider_id}")
+            raise HTTPException(404, "Unknown school system")
         disconnect_lms(user, provider_id)
         return Response(status_code=204)
 
@@ -1722,6 +1812,7 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
             })
         return {"imported": imported, "skipped": skipped}
 
+
     @app.post("/lms/{provider_id}/courses/{course_id}/assignments/{work_id}/sync", response_model=ApiLmsSyncResult)
     def lms_sync(provider_id: str, course_id: str, work_id: str, user: User, body: Optional[LmsSyncRequest] = None):
         sess = lms_session(user, provider_id)
@@ -1732,51 +1823,49 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
             ),
         )
 
-    # ---------------------------------------- School LMS SSO (Brightspace, Canvas, Microsoft)
+    # ---------------------------------------- Sign in with a school LMS
+    # Anyone at a school that has set Quark up can sign in with their Canvas or
+    # Brightspace account. Quark only reads who they are, then lets the token go.
     @app.post("/auth/lms/{provider_id}/connect")
     def lms_sso_connect(provider_id: str, body: Optional[LmsConnectRequest] = None):
-        prov = lms_provider(provider_id)
-        instance_url = body.instanceUrl if body else None
-        if prov.requires_instance_url:
-            try:
-                instance_url = normalize_instance_url(instance_url)
-            except LmsError as e:
-                raise HTTPException(422, str(e))
+        if provider_id not in LMS_PROVIDERS:
+            raise HTTPException(404, "Unknown school system")
+        instance_url = school_address(provider_id, body.instanceUrl if body else None)
+        if instance_url and (lms_school(provider_id, instance_url) or {}).get("status") != "active":
+            raise HTTPException(409, "LMS_SCHOOL_NOT_SET_UP")
+        prov = provider_for(provider_id, instance_url)
         state = secrets.token_urlsafe(32)
         d.store.put("oauthstates", state, {
-            "provider": provider_id,
-            "instanceUrl": instance_url,
-            "kind": "sso",
+            "provider": provider_id, "instanceUrl": instance_url, "kind": "sso",
             "expiresAt": (datetime.now(timezone.utc) + timedelta(minutes=10)).isoformat(),
         })
-        return {"url": prov.auth_url(state, instance_url=instance_url, sso=True)}
+        return {"url": prov.auth_url(state, sso=True)}
 
     @app.get("/auth/lms/{provider_id}/callback")
     def lms_sso_callback(provider_id: str, state: str = "", code: str = "", error: str = ""):
         back_err = f"{d.site_url}/?ssoError={urllib.parse.quote(provider_id)}"
-        pending = d.store.get("oauthstates", state) if state else None
-        if state:
-            d.store.delete("oauthstates", state)
-        prov = d.lms_providers.get(provider_id)
-        if (
-            not pending
-            or pending.get("kind") != "sso"
-            or pending.get("provider") != provider_id
-            or not prov
-            or not code
-            or error
-            or datetime.fromisoformat(pending["expiresAt"]) < datetime.now(timezone.utc)
-        ):
+        pending = take_state(state, provider_id, "sso")
+        if not pending or not code or error:
+            return RedirectResponse(back_err, status_code=303)
+        instance_url = pending.get("instanceUrl")
+        try:
+            prov = provider_for(provider_id, instance_url)
+            tok = prov.exchange(code, sso=True)
+            info = prov.user_info(tok)
+        except (HTTPException, LmsError) as e:
+            log.warning("LMS sign-in with %s failed: %s", provider_id, e)
             return RedirectResponse(back_err, status_code=303)
         try:
-            tok = prov.exchange(code, instance_url=pending.get("instanceUrl"), sso=True)
-            info = prov.user_info(tok["access_token"], instance_url=pending.get("instanceUrl"))
+            prov.revoke(tok)  # sign-in only needs to know who they are
         except LmsError:
+            pass
+        if not info.get("sub"):
             return RedirectResponse(back_err, status_code=303)
-        raw_uid = f"lms_{provider_id}_{info['sub']}"
-        custom_token = d.auth.create_custom_token(raw_uid, {"provider": provider_id, "name": info.get("name", "")})
-        q = urllib.parse.urlencode({"ssoToken": custom_token, "ssoName": info.get("name", ""), "provider": provider_id})
-        return RedirectResponse(f"{d.site_url}/?{q}", status_code=303)
+        custom_token = d.auth.create_custom_token(sso_uid(provider_id, instance_url, info["sub"]),
+                                                  {"lmsProvider": provider_id})
+        # In the fragment, so the token never reaches a server log or a Referer header.
+        q = urllib.parse.urlencode({"ssoToken": custom_token, "ssoName": info.get("name", "")})
+        return RedirectResponse(f"{d.site_url}/#{q}", status_code=303)
 
     @app.get("/teacher/students", response_model=list[ApiRosterStudent])
     def teacher_students(user: User):
@@ -1970,6 +2059,52 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         return profile
 
     CLASSROOM_BETA_LIMIT = int(os.environ.get("BIRDBRAINS_CLASSROOM_BETA_LIMIT", "100"))
+
+    def public_school(school: dict) -> dict:
+        out = {k: v for k, v in school.items() if k != "clientSecret"}
+        out["hasKeys"] = bool(school.get("clientId") and school.get("clientSecret"))
+        return out
+
+    @app.get("/internal/lms-schools", dependencies=[Depends(require_batch_token)])
+    def lms_schools_list(status: Optional[str] = None):
+        """Admin: schools whose Canvas or Brightspace was asked for or set up. No secrets."""
+        rows = [r for st in ([status] if status else ["requested", "active", "declined"])
+                for r in d.store.query("lmsschools", "status", st)]
+        return [public_school(r) for r in sorted(rows, key=lambda r: r.get("requestedAt", ""))]
+
+    @app.post("/internal/lms-schools", dependencies=[Depends(require_batch_token)])
+    def lms_schools_set(body: SetLmsSchoolRequest):
+        """Admin: store a school's OAuth app keys (from its LMS admin) and turn it on,
+        or decline it. Turning a school off also disconnects its teachers."""
+        if not school_providers_ready():
+            raise HTTPException(503, "Set BIRDBRAINS_LMS_KEY first (deploy.sh creates it)")
+        try:
+            instance_url = normalize_instance_url(body.instanceUrl)
+        except LmsError as e:
+            raise HTTPException(422, str(e))
+        sid = school_key(body.provider, instance_url)
+        school = d.store.get("lmsschools", sid) or {
+            "id": sid, "provider": body.provider, "instanceUrl": instance_url, "requestedAt": now_iso(),
+            "requests": []}
+        if body.name is not None:
+            school["name"] = body.name.strip()
+        if body.clientId:
+            school["clientId"] = body.clientId.strip()
+        if body.clientSecret:
+            school["clientSecret"] = d.lms_sealer.seal({"secret": body.clientSecret.strip()})
+        school["scoped"] = body.scoped
+        if body.status == "active" and not (school.get("clientId") and school.get("clientSecret")):
+            raise HTTPException(422, "A school needs its client ID and secret before it can be turned on")
+        if body.status == "active" and school.get("status") != "active":
+            school["activatedAt"] = now_iso()
+        if body.status != "active" and school.get("status") == "active":
+            for tok in d.store.query("lmstokens", "instanceUrl", instance_url):
+                if tok.get("provider") == body.provider:
+                    d.store.delete("lmstokens", lms_token_key(tok["uid"], body.provider))
+        school["status"] = body.status
+        d.store.put("lmsschools", sid, school)
+        log.info("LMS school %s is now %s", sid, body.status)
+        return public_school(school)
 
     @app.get("/internal/classroom-beta", dependencies=[Depends(require_batch_token)])
     def classroom_beta_list(status: Optional[str] = None):
