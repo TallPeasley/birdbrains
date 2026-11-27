@@ -2,13 +2,13 @@
 """End-to-end check of the live API: the week 1 exit check and the Free vs Pro test,
 run by a script instead of by hand.
 
-Against the live project (Cloud Shell, from backend/):
+Against the live project (from backend/, on any machine signed in to gcloud):
 
     python tools/smoke_test.py --url https://<api> --firebase-key <web API key> \\
       --batch-token "$(gcloud secrets versions access latest --secret=birdbrains-batch-token)" \\
       [--photo path/to/real-worksheet.jpg] [--grade-all]
 
-The web API key is the public NEXT_PUBLIC_FIREBASE_API_KEY from Netlify. The script
+The web API key is the public NEXT_PUBLIC_FIREBASE_API_KEY (Firebase console > Project settings > Your apps). The script
 signs up three throwaway accounts (student, parent, stranger), runs the checks, then
 deletes the accounts and everything they uploaded. Locally, against the dev backend:
 

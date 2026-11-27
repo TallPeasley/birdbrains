@@ -8,8 +8,8 @@
 # address, https://boson-quark.web.app), then the GCP project itself so the first address
 # keeps working. Override with HOSTING_PROJECTS="boson-quark" ./deploy-web.sh to skip one.
 #
-# Run from Cloud Shell (or any machine with gcloud, node 20+ and npm), signed in as a
-# project owner. It:
+# Run only from Maalik's PC (Aero Sites\bb-deploy-main, moved to origin/main first), after he types
+# "go" in the deploy thread. Needs gcloud, node 20+ and npm, signed in as a project owner. It:
 #   1. reads the API URL from Cloud Run and the Firebase web config from Firebase,
 #   2. builds the static site with those values,
 #   3. lets the API accept calls from the new address (CORS) and send people back to it,
@@ -27,8 +27,6 @@ SITE="https://${MAIN_HOSTING}.web.app"
 ORIGINS=""
 for h in $HOSTING_PROJECTS; do ORIGINS="$ORIGINS,https://$h.web.app,https://$h.firebaseapp.com"; done
 ORIGINS="${ORIGINS#,}"
-# Kept allowed while the old Netlify address is still in use. Drop it once Netlify is gone.
-OLD_SITE="https://birdbrains.netlify.app"
 cd "$(dirname "$0")"
 
 gcloud config set project "$PROJECT" >/dev/null
@@ -62,7 +60,7 @@ npm run build
 echo "== Pointing the API at the site address ($SITE)"
 # ^;^ switches gcloud's list separator so the comma-separated origin list survives.
 gcloud run services update "$SERVICE" --region "$REGION" \
-  --update-env-vars "^;^BIRDBRAINS_CORS_ORIGINS=$ORIGINS,$OLD_SITE;BIRDBRAINS_SITE_URL=$SITE" >/dev/null
+  --update-env-vars "^;^BIRDBRAINS_CORS_ORIGINS=$ORIGINS;BIRDBRAINS_SITE_URL=$SITE" >/dev/null
 
 # Uses your gcloud sign-in. If firebase-tools asks you to log in, run: npx firebase-tools login --no-localhost
 for h in $HOSTING_PROJECTS; do

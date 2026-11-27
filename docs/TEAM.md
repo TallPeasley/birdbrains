@@ -1,8 +1,8 @@
-# BirdBrains team handoff
+# Quark team handoff (formerly BirdBrains)
 
 Who owns what, how we branch and review, the API the UI is built against, and
 how to run everything on your own machine with no cloud account. Launch is
-**Mon Dec 14, 2026**. The day-by-day plan is in TickTick (list 🐦BirdBrains),
+the **week of 2026-11-30** (the original plan said Mon Dec 14, 2026). The day-by-day plan is in TickTick (list 🐦BirdBrains),
 with a copy in this repo at [`docs/PLAN.md`](PLAN.md); task titles start with the owner.
 Gemini (Antigravity) picks up its `Gemini:` tasks from `docs/PLAN.md`.
 
