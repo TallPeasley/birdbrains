@@ -7,6 +7,7 @@ import type {
   ClassroomImportResult,
   LmsProviderId,
   LmsProviderStatus,
+  LmsSchoolStatus,
   LmsSyncResult,
   PlanTier,
   RosterStudent,
@@ -191,7 +192,11 @@ export const api = {
   /** Multi-LMS (Brightspace, Canvas, Microsoft Teams for Education, plus Google Classroom status). */
   lmsProviders: (t: string) => request<LmsProviderStatus[]>('/lms/providers', t),
   lmsConnect: (t: string, provider: Exclude<LmsProviderId, 'google_classroom'>, instanceUrl?: string) =>
-    request<{ url: string }>(`/lms/${provider}/connect`, t, json({ instanceUrl: instanceUrl || null })),
+    request<{ url: string | null; school?: LmsSchoolStatus | null }>(
+      `/lms/${provider}/connect`,
+      t,
+      json({ instanceUrl: instanceUrl || null }),
+    ),
   lmsDisconnect: (t: string, provider: Exclude<LmsProviderId, 'google_classroom'>) =>
     request<void>(`/lms/${provider}`, t, { method: 'DELETE' }),
   lmsCourses: (t: string, provider: Exclude<LmsProviderId, 'google_classroom'>) =>

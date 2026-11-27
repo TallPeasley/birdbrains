@@ -425,7 +425,11 @@ export interface LmsProviderStatus {
   plan: PlanTier;
   /** Google Classroom only: the teacher's "sign up to test" status. Connect works once approved. */
   beta?: ClassroomBetaStatus | null;
+  /** Canvas and Brightspace only: whether the school at instanceUrl has set Quark up yet. */
+  school?: LmsSchoolStatus | null;
 }
+
+export type LmsSchoolStatus = 'requested' | 'active' | 'declined';
 
 export type ClassroomBetaStatus = 'none' | 'pending' | 'approved' | 'declined';
 

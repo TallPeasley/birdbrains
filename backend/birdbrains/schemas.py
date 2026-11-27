@@ -954,6 +954,9 @@ class ApiClassroomStudentWork(Api):
     gradingId: Optional[str] = None
 
 
+LmsSchoolStatus = Literal["requested", "active", "declined"]
+
+
 class ApiLmsProviderStatus(Api):
     id: LmsProviderId
     name: str
@@ -964,6 +967,22 @@ class ApiLmsProviderStatus(Api):
     instanceUrl: Optional[str] = None
     plan: PlanTier
     beta: Optional[ClassroomBetaStatus] = None  # Google Classroom only: the teacher's test-group status
+    # Canvas and Brightspace only: whether the school at instanceUrl has set Quark up.
+    school: Optional[LmsSchoolStatus] = None
+
+
+class SetLmsSchoolRequest(Api):
+    """Admin: record a school's Canvas or Brightspace OAuth app (from its LMS admin)
+    and turn it on, or decline the request. The secret is sealed before it is stored."""
+
+    model_config = ConfigDict(extra="forbid")
+    provider: Literal["canvas", "brightspace"]
+    instanceUrl: str = Field(..., min_length=8, max_length=255)
+    status: LmsSchoolStatus = "active"
+    name: Optional[str] = Field(default=None, max_length=120)
+    clientId: Optional[str] = Field(default=None, min_length=1, max_length=255)
+    clientSecret: Optional[str] = Field(default=None, min_length=1, max_length=512)
+    scoped: bool = True  # Canvas: the developer key has "Enforce scopes" on
 
 
 class LmsSyncRequest(Api):

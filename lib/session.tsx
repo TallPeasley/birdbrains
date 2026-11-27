@@ -141,17 +141,19 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       else setProfile(null);
       if (!cancelled) setReady(true);
     };
+    // Signing in with a school LMS comes back as /#ssoToken=... (in the fragment, so
+    // the token never reaches a server). Read it once and clear it from the address.
+    const takeSsoToken = (): string | null => {
+      const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+      const token = hash.get('ssoToken');
+      if (token) window.history.replaceState({}, '', window.location.pathname + window.location.search);
+      return token;
+    };
     if (DEV_AUTH) {
-      const params = new URLSearchParams(window.location.search);
-      const ssoToken = params.get('ssoToken');
+      const ssoToken = takeSsoToken();
       if (ssoToken && ssoToken.startsWith('dev:')) {
         devUid.current = ssoToken.slice(4);
         window.localStorage.setItem(DEV_KEY, devUid.current);
-        params.delete('ssoToken');
-        params.delete('ssoName');
-        params.delete('provider');
-        const next = params.toString();
-        window.history.replaceState({}, '', window.location.pathname + (next ? `?${next}` : ''));
       } else {
         devUid.current = window.localStorage.getItem(DEV_KEY);
       }
@@ -159,16 +161,8 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     } else {
       firebaseAuth()
         .then(async ({ auth, instance }) => {
-          const params = new URLSearchParams(window.location.search);
-          const ssoToken = params.get('ssoToken');
-          if (ssoToken) {
-            params.delete('ssoToken');
-            params.delete('ssoName');
-            params.delete('provider');
-            const next = params.toString();
-            window.history.replaceState({}, '', window.location.pathname + (next ? `?${next}` : ''));
-            await auth.signInWithCustomToken(instance, ssoToken).catch(() => {});
-          }
+          const ssoToken = takeSsoToken();
+          if (ssoToken) await auth.signInWithCustomToken(instance, ssoToken).catch(() => {});
           unsubscribe = auth.onAuthStateChanged(instance, (user) => void settle(user !== null));
         })
         .catch(() => setReady(true));

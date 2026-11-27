@@ -87,10 +87,15 @@ optional_secret STRIPE_PRICE_ID            birdbrains-stripe-price-id
 optional_secret STRIPE_PORTAL_CONFIGURATION birdbrains-stripe-portal-config
 optional_secret GOOGLE_OAUTH_CLIENT_ID      birdbrains-google-oauth-client-id
 optional_secret GOOGLE_OAUTH_CLIENT_SECRET  birdbrains-google-oauth-client-secret
-optional_secret BRIGHTSPACE_OAUTH_CLIENT_ID     birdbrains-brightspace-oauth-client-id
-optional_secret BRIGHTSPACE_OAUTH_CLIENT_SECRET birdbrains-brightspace-oauth-client-secret
-optional_secret CANVAS_OAUTH_CLIENT_ID          birdbrains-canvas-oauth-client-id
-optional_secret CANVAS_OAUTH_CLIENT_SECRET      birdbrains-canvas-oauth-client-secret
+# Canvas and Brightspace keys belong to each school (tools/lms_schools.py stores
+# them, sealed with this key). Made once here; never rotate it without re-adding
+# every school, or their stored keys and teachers' tokens can't be read.
+if ! gcloud secrets describe birdbrains-lms-token-key >/dev/null 2>&1; then
+  openssl rand -base64 32 | tr '+/' '-_' | tr -d '\n' | \
+    gcloud secrets create birdbrains-lms-token-key --data-file=- \
+      --replication-policy=user-managed --locations="$REGION"
+fi
+optional_secret BIRDBRAINS_LMS_KEY              birdbrains-lms-token-key
 optional_secret MICROSOFT_OAUTH_CLIENT_ID       birdbrains-microsoft-oauth-client-id
 optional_secret MICROSOFT_OAUTH_CLIENT_SECRET   birdbrains-microsoft-oauth-client-secret
 

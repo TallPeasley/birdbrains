@@ -152,4 +152,6 @@ Privacy contact: [name], [email address], [mailing address].
    sentence, add Stripe to the provider table) and Google Classroom import by teachers (Quark
    then stores each imported student's name and their handed-in photos under the teacher's
    account, without that student having an account; say so, and say who consents).
+   The same now applies to Canvas and Brightspace import, and to signing in with Canvas or
+   Brightspace (Quark keeps the LMS user id and name, not the LMS token).
 7. Lawyer review, especially if schools (MFIPPA) or US users (COPPA, FERPA) come in.

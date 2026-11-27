@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowRight, Loader2, School } from 'lucide-react';
-import { api } from '@/lib/api';
+import { ApiError, api } from '@/lib/api';
 import { useSession } from '@/lib/session';
 import { useRole } from '@/lib/roleContext';
 import type { GradeCourse } from '@/types/birdBrains';
@@ -25,6 +25,17 @@ export default function AccountCard() {
   const [lmsUrl, setLmsUrl] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+
+  // Coming back from a school LMS sign-in that did not finish (/?ssoError=canvas).
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const failed = params.get('ssoError');
+    if (!failed) return;
+    params.delete('ssoError');
+    const rest = params.toString();
+    window.history.replaceState({}, '', window.location.pathname + (rest ? `?${rest}` : ''));
+    setError(`Signing in with ${failed === 'brightspace' ? 'Brightspace' : failed === 'canvas' ? 'Canvas' : 'your school'} did not finish. Please try again.`);
+  }, []);
 
   // Signed in with Firebase but no Quark profile yet (e.g. sign-up was interrupted).
   const needsProfile = signedIn && !profile;
@@ -198,7 +209,13 @@ export default function AccountCard() {
                 disabled={busy || !lmsUrl.trim()}
                 onClick={() =>
                   void run(async () => {
-                    const { url } = await api.lmsSsoConnect(lmsMenu, lmsUrl.trim());
+                    const name = lmsMenu === 'brightspace' ? 'Brightspace' : 'Canvas';
+                    const { url } = await api.lmsSsoConnect(lmsMenu, lmsUrl.trim()).catch((e) => {
+                      if (e instanceof ApiError && e.status === 409)
+                        throw new Error(`Your school has not set up signing in to Quark with ${name} yet. Use another way to sign in for now.`);
+                      if (e instanceof ApiError && e.status === 422) throw new Error(e.detail);
+                      throw new Error(`Could not reach ${name} sign-in. Please try again.`);
+                    });
                     window.location.assign(url);
                   })
                 }

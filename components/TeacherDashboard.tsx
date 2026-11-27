@@ -87,10 +87,30 @@ const DEMO_ROSTER: RosterStudent[] = [
   { studentId: 'stu_demo_2', name: 'Ben Okoro', course: 'MPM2D', lmsProvider: 'google_classroom', lmsCourseId: 'demo_mpm2d' },
 ];
 
+// The API sends short codes for these; people see plain words instead.
+const PLAIN: Record<string, string> = {
+  PRO_ONLY: 'Connecting your school system is part of Pro.',
+  LMS_NOT_CONFIGURED: 'This connection is not switched on yet. Please try again later.',
+  LMS_SCHOOL_NOT_SET_UP: 'Your school has not set Quark up for this yet.',
+  LMS_NOT_CONNECTED: 'Your connection has ended. Please connect again.',
+  CLASSROOM_NOT_CONNECTED: 'Your Google Classroom connection has ended. Please connect again.',
+  CLASSROOM_NOT_CONFIGURED: 'Google Classroom is not switched on yet. Please try again later.',
+  CLASSROOM_BETA_NOT_APPROVED: 'Your Google Classroom test spot has not been approved yet.',
+  CLASSROOM_GRADE_SYNC_UNSUPPORTED: 'Google Classroom does not let Quark send grades back. Copy them across instead.',
+};
+
 function errText(err: unknown): string {
-  if (err instanceof ApiError) return err.detail || `Error ${err.status}`;
+  if (err instanceof ApiError) {
+    if (PLAIN[err.detail]) return PLAIN[err.detail];
+    if (!err.detail || /^[A-Z0-9_:]+$/.test(err.detail)) return 'Something went wrong. Please try again.';
+    return err.detail;
+  }
   if (err instanceof Error) return err.message;
   return 'Something went wrong. Please try again.';
+}
+
+function lmsName(id: string): string {
+  return ({ brightspace: 'Brightspace', canvas: 'Canvas', microsoft_edu: 'Microsoft Teams' } as Record<string, string>)[id] ?? 'Your school system';
 }
 
 export default function TeacherDashboard() {
@@ -144,8 +164,8 @@ export default function TeacherDashboard() {
         tone: status === 'connected' ? 'ok' : 'err',
         text:
           status === 'connected'
-            ? `${lms.replace('_', ' ')} connected. Select it below to import assignments.`
-            : `${lms.replace('_', ' ')} connection failed. Check your URL and permissions and try again.`,
+            ? `${lmsName(lms)} connected. Select it below to import assignments.`
+            : `${lmsName(lms)} did not connect. Check your school's address and try again.`,
       });
       window.history.replaceState({}, '', window.location.pathname);
     }
@@ -268,11 +288,19 @@ export default function TeacherDashboard() {
     setBanner(null);
     try {
       const token = await getToken();
-      const { url } =
-        p.id === 'google_classroom'
-          ? await api.classroomConnect(token)
-          : await api.lmsConnect(token, p.id, instanceUrls[p.id]);
-      window.location.assign(url);
+      if (p.id === 'google_classroom') {
+        window.location.assign((await api.classroomConnect(token)).url);
+        return;
+      }
+      const address = (instanceUrls[p.id] ?? p.instanceUrl ?? '').trim();
+      const res = await api.lmsConnect(token, p.id, address);
+      if (res.url) {
+        window.location.assign(res.url);
+        return;
+      }
+      // The school has not set Quark up yet: the request is noted for us.
+      setProviders((prev) => prev.map((x) => (x.id === p.id ? { ...x, school: res.school ?? 'requested', instanceUrl: address } : x)));
+      setBusyProvider(null);
     } catch (err) {
       setBanner({ tone: 'err', text: errText(err) });
       setBusyProvider(null);
@@ -518,6 +546,18 @@ export default function TeacherDashboard() {
               {p.connected && p.instanceUrl && (
                 <p className="mt-2 truncate text-xs text-slate-500">{p.instanceUrl}</p>
               )}
+
+              {!p.connected && p.school === 'requested' && (
+                <p className="mt-2 rounded-lg bg-indigo-50 px-3 py-2 text-xs text-indigo-800">
+                  Your school has not set Quark up with {p.name.split(' ')[0]} yet. We have asked for it and will set
+                  it up with your school&apos;s {p.name.split(' ')[0]} admin. You can connect as soon as it is ready.
+                </p>
+              )}
+              {!p.connected && p.school === 'declined' && (
+                <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                  Quark could not be set up with this school&apos;s {p.name.split(' ')[0]}. Please contact us if that changes.
+                </p>
+              )}
             </div>
 
             <div className="flex items-center gap-2">
@@ -554,7 +594,7 @@ export default function TeacherDashboard() {
               ) : (
                 <button
                   type="button"
-                  disabled={!p.configured || !isPro || busyProvider === p.id || (p.requiresInstanceUrl && !(instanceUrls[p.id] ?? '').trim())}
+                  disabled={!p.configured || !isPro || busyProvider === p.id || (p.requiresInstanceUrl && !(instanceUrls[p.id] ?? p.instanceUrl ?? '').trim())}
                   onClick={() => void handleConnect(p)}
                   className="inline-flex w-full items-center justify-center gap-1.5 btn btn-sm btn-primary"
                 >
