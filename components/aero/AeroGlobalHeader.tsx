@@ -7,7 +7,7 @@ import { aeroBrand, aeroSwitcher, type AeroBrandKey } from '@/lib/aero/brands';
 import { AERO_URLS, BRAND_STAGE } from '@/lib/aero/stage';
 
 export interface AeroGlobalHeaderProps {
-  /** Which Aero pillar this app is. */
+  /** Which ecosystem pillar this app is. */
   brand: AeroBrandKey;
   /** Where the brand lockup links to. */
   home?: string;
@@ -22,16 +22,16 @@ export interface AeroGlobalHeaderProps {
 }
 
 /**
- * The Aero shell header shared by Ascent, Quark and Chirp:
+ * The shared shell header used by Axiom, Quark and Planck (Boson ecosystem):
  *   [ecosystem switcher pill] | [logo + brand name + "by Aero"] | nav … actions | [coordinate]
  * The markup and class names match aero-kit/src/aero-shell.js (used by the plain-HTML apps), so all three
  * render from the same stylesheet (app/aero.css).
  */
 export default function AeroGlobalHeader({ brand, home = '/', coord, nav, children, stack }: AeroGlobalHeaderProps) {
-  const isAero = brand === 'aero';
+  const isAero = brand === 'boson';
   const me = aeroBrand(brand, BRAND_STAGE);
   const items = aeroSwitcher(brand, BRAND_STAGE, AERO_URLS);
-  const aeroUrl = isAero ? home : AERO_URLS.aero || aeroBrand('aero', BRAND_STAGE).url || '/';
+  const aeroUrl = isAero ? home : AERO_URLS.boson || aeroBrand('boson', BRAND_STAGE).url || '/';
   const menuId = useId();
   const [open, setOpen] = useState(false);
   const box = useRef<HTMLDivElement>(null);
@@ -87,7 +87,7 @@ export default function AeroGlobalHeader({ brand, home = '/', coord, nav, childr
             aria-label="Aero ecosystem: switch app"
             onClick={() => setOpen((v) => !v)}
           >
-            <AeroLogo brand="aero" />
+            <AeroLogo brand="boson" />
             <span className="aero-switcher__label">Aero</span>
             <svg className="aero-switcher__chev" viewBox="0 0 10 10" fill="none" aria-hidden>
               <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -118,7 +118,7 @@ export default function AeroGlobalHeader({ brand, home = '/', coord, nav, childr
               </a>
             ))}
             <a className="aero-switcher__foot" href={aeroUrl} aria-current={isAero ? 'true' : undefined}>
-              <AeroLogo brand="aero" />
+              <AeroLogo brand="boson" />
               <span>One system, three tools.</span>
               <span className="aero-switcher__foot-go">{isAero ? 'Here' : 'Overview →'}</span>
             </a>

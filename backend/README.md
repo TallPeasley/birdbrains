@@ -1,6 +1,6 @@
-# BirdBrains backend
+# Quark backend
 
-Python API and AI pipeline for BirdBrains. It follows the AI pipeline spec and
+Python API and AI pipeline for Quark (the code, package and cloud resources keep the old `birdbrains` name). It follows the AI pipeline spec and
 serves the JSON contracts in `../types/birdBrains.ts`.
 
 ```
@@ -91,7 +91,7 @@ To exercise real Gemini from your machine, keep `BIRDBRAINS_BACKEND=local`, set
 | `BIRDBRAINS_PRIVACY_DETECTOR` | `gemini` | what finds names and dates on photos before storage: `gemini` (Montréal) or `dlp` (Cloud DLP; its image inspection is not offered in Montréal) |
 | `BIRDBRAINS_AUTH` | `firebase` | `firebase` or `dev`. `dev`/`local` are refused on Cloud Run |
 | `GOOGLE_CLOUD_PROJECT`, `BIRDBRAINS_BUCKET` | | Required with `gcp` |
-| `BIRDBRAINS_CORS_ORIGINS` | Firebase Hosting site (+ old Netlify address) + localhost:3000 | Comma-separated origins allowed to call the API |
+| `BIRDBRAINS_CORS_ORIGINS` | Firebase Hosting sites (boson-quark + birdbrain-514606, web.app and firebaseapp.com) + localhost:3000 | Comma-separated origins allowed to call the API |
 | `BIRDBRAINS_BATCH_TOKEN` | unset (batch routes off) | Shared secret for the scheduler |
 | `BIRDBRAINS_STAGE1_MODEL`, `BIRDBRAINS_STAGE2_MODEL`, `BIRDBRAINS_WORKSHEET_MODEL` | spec models | Override when Google retires a model |
 | `BIRDBRAINS_HEADER_MASK` | `0` | Optional backstop: share of the page, from the top, blacked out before storage. Detected name/date/class fields are blurred regardless |
@@ -105,7 +105,7 @@ To exercise real Gemini from your machine, keep `BIRDBRAINS_BACKEND=local`, set
 | `BIRDBRAINS_CLASSROOM` | unset | `demo` swaps in a pretend Google Classroom (3 classes, invented students) for testing. Refused on Cloud Run. See `docs/TEST_CLASSROOMS.md` |
 
 The Vertex AI location defaults to `northamerica-northeast1` (Canada, PIPEDA). `BIRDBRAINS_VERTEX_LOCATION` overrides it, but only change it after deciding that photos may be processed outside Canada.
-If uploads end in "The diagnostic could not be completed", run `python tools/check_models.py --project <project>` in Cloud Shell to see which regions serve the models, and search the Cloud Run logs for `pipeline_failed` (it holds Google's error text, never student work).
+If uploads end in "The diagnostic could not be completed", run `python tools/check_models.py --project <project>` (any machine signed in to gcloud) to see which regions serve the models, and search the Cloud Run logs for `pipeline_failed` (it holds Google's error text, never student work).
 
 ## Choices the specs left open
 
@@ -148,7 +148,7 @@ to themselves. Tester uploads are left out of `GET /internal/stats` and shown as
 `testerUploads` instead.
 
 1. Sign up on the site with the test email (student, or parent + linked student).
-2. In Cloud Shell, from `~/birdbrains/backend`:
+2. From `backend/`, on any machine signed in to gcloud (it is an admin call, not a deploy):
 
 ```bash
 pip install -q httpx
@@ -178,8 +178,9 @@ JSONL format, real token costs and speed), the Firestore transaction behind the 
 
 ## Turning on Stripe and Google Classroom
 
-Both stay off until their secrets exist; `deploy.sh` picks them up on the next run.
-Create each secret in Cloud Shell (values never go in chat or in git):
+Both stay off until their secrets exist; `deploy.sh` picks them up on the next run, which happens only from
+Maalik's PC (`Aero Sites\bb-deploy-main`) after he types "go". Create each secret from a terminal signed in to
+gcloud on the PC (values never go in chat or in git):
 
 ```bash
 mk() { printf '%s' "$2" | gcloud secrets create "$1" --data-file=- \
@@ -189,12 +190,13 @@ mk() { printf '%s' "$2" | gcloud secrets create "$1" --data-file=- \
 **Stripe** (sandbox first, then live). One script does the whole Stripe side:
 
 ```bash
-cd backend && python tools/stripe_setup.py --project birdbrain-514606 --price 12.99
-./deploy.sh birdbrain-514606
+cd backend && python tools/stripe_setup.py --project birdbrain-514606 --price 10
+./deploy.sh birdbrain-514606   # on the PC, after Maalik's "go"
 ```
 
 It asks for the secret key without echoing it (Stripe dashboard > Developers > API keys),
-creates or reuses product "BirdBrains Pro" with a monthly CAD price (lookup key
+creates or reuses product "Quark Pro" (renaming an old "BirdBrains Pro") with a monthly CAD price
+($10 CAD/month since 2026-11-25) (lookup key
 `birdbrains_pro_monthly`), creates customer portal settings (card, invoices, cancel at period
 end), points a webhook at `<API URL>/billing/webhook`, and stores four secrets:
 `birdbrains-stripe-secret-key`, `-webhook-secret`, `-price-id`, `-portal-config`.

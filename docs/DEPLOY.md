@@ -14,7 +14,8 @@ The trigger only fires when files that matter change (`--included-files` in `dep
 
 ## One-time setup
 1. Cloud Build console > Repositories > connect `TallPeasley/birdbrains` (browser click, GitHub approval).
-2. Cloud Shell: `cd ~/birdbrains && git pull && ./deploy/setup-auto-deploy.sh`
+2. On Maalik's PC, in `Aero Sites\bb-deploy-main` moved to `origin/main`, after he types "go": `./deploy/setup-auto-deploy.sh`
+   (deploys and deploy setup run only from the PC since 2026-11-19, never from Cloud Shell)
 3. Test: `gcloud builds triggers run birdbrains-main --branch=main`
 
 ## Rollback

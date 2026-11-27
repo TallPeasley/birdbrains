@@ -128,7 +128,6 @@ class Deps:
         "https://boson-quark.firebaseapp.com",
         "https://birdbrain-514606.web.app",  # first Firebase address, still served
         "https://birdbrain-514606.firebaseapp.com",
-        "https://birdbrains.netlify.app",  # old address, kept until Netlify is shut down
         "http://localhost:3000",
     )
     inline_images: bool = False  # local mode: send image bytes to the model, there is no gs:// URI

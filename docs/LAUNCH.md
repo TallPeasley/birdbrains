@@ -1,18 +1,20 @@
-# Launch checklist and runbook
+# Quark launch checklist and runbook
 
-For launch day (Mon Dec 14, 2026) and the pilot weeks after it. Commands run in
-Google Cloud Shell from the repo folder unless it says otherwise.
+For launch (week of 2026-11-30; the original plan said Mon Dec 14) and the pilot weeks after it.
+Deploys run only from Maalik's PC (`Aero Sites\bb-deploy-main`, moved to `origin/main` first), and only after
+he types "go" in the deploy thread (rule since 2026-11-19). Never from Cloud Shell.
+Other commands (checks, `gcloud` reads) run from the repo folder on any machine signed in to gcloud.
 
 ## 1. Launch checklist
 
 ### Deploy and configuration
-- [ ] `main` is deployed: `git pull && ./backend/deploy.sh birdbrain-514606` finished without errors.
+- [ ] `main` is deployed from the PC (`bb-deploy-main` at `origin/main`, after Maalik's "go"): `./backend/deploy.sh birdbrain-514606` finished without errors.
 - [ ] `curl https://birdbrains-api-28737473918.northamerica-northeast1.run.app/health` returns `{"ok":true}`.
-- [ ] The live site (Firebase Hosting) was published by `./deploy-web.sh` from the latest `main`.
-- [ ] Firebase Auth: the site's domain is in Authorized domains (`web.app` is there by default; add any custom domain); email sign-up works on a phone.
+- [ ] The live site (Firebase Hosting, https://boson-quark.web.app and https://birdbrain-514606.web.app) was published by `./deploy-web.sh` from the latest `main`, on the PC.
+- [ ] Firebase Auth (birdbrain-514606): `boson-quark.web.app` is in Authorized domains (only the project's own `web.app` is there by default); email sign-up works on a phone.
 - [ ] `./backend/monitoring.sh birdbrain-514606 <your email>` has been run and the alert email is confirmed.
 - [ ] Billing budget alert exists (Billing > Budgets) for the project.
-- [ ] If Pro is paid at launch: `python backend/tools/stripe_setup.py --price <CAD>` run with the sandbox key, API redeployed, and a test-card (4242...) upgrade flips an account to Pro and Manage billing opens. Then run the script again with the `sk_live_` key, redeploy, and make one real purchase and refund.
+- [ ] If Pro is paid at launch: `python backend/tools/stripe_setup.py --price 10` (Quark Pro, $10 CAD/month) run with the sandbox key, API redeployed, and a test-card (4242...) upgrade flips an account to Pro and Manage billing opens. Then run the script again with the `sk_live_` key, redeploy, and make one real purchase and refund.
 - [ ] If Classroom is on: OAuth consent screen lists the pilot teachers as test users.
 
 ### Quality gates

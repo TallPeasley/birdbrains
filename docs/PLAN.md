@@ -1,8 +1,8 @@
-# BirdBrains launch plan (task list)
+# Quark launch plan (task list, formerly BirdBrains)
 
 > **Snapshot of the TickTick list 🐦BirdBrains, taken 2026-11-13 22:15 Toronto time.** TickTick is the source of truth. Claude refreshes this file whenever the plan changes; if the two disagree, TickTick wins.
 
-Launch: **Mon Dec 14, 2026**. Who owns which folders, the branch rules and the API contract are in [`docs/TEAM.md`](TEAM.md). Plans (Free vs Pro) are described in TEAM.md under "Plans".
+Launch: **week of 2026-11-30** (moved up by Maalik; the dates below are from the original Mon Dec 14, 2026 plan and were not re-dated). Who owns which folders, the branch rules and the API contract are in [`docs/TEAM.md`](TEAM.md). Plans (Free vs Pro) are described in TEAM.md under "Plans".
 
 ## For Gemini (Antigravity): how to use this file
 
