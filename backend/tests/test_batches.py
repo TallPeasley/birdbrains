@@ -114,8 +114,30 @@ def test_engine_error_fails_with_a_5xx_code(client, family, deps):
 
     c = TestClient(create_app(deps))
     r = send(c, family["studentId"])
-    done = c.post(f"/submissions/batch/{r.json()['batchId']}/process", headers=auth("alex")).json()
+    bid = r.json()["batchId"]
+    done = c.post(f"/submissions/batch/{bid}/process", headers=auth("alex")).json()
     assert done["status"] == "FAILED" and 500 <= done["failureCode"] < 600
+
+    # A failure on our side can be retried on the same batch, at no extra upload.
+    used = c.get(f"/students/{family['studentId']}/usage", headers=auth("alex")).json()["usedThisMonth"]
+    from birdbrains.documents import FakeDocumentEngine
+
+    deps.documents = FakeDocumentEngine()
+    c = TestClient(create_app(deps))
+    again = c.post(f"/submissions/batch/{bid}/process", headers=auth("alex")).json()
+    assert again["status"] == "READY" and again["failureCode"] is None and again["practice"]["problems"]
+    assert c.get(f"/students/{family['studentId']}/usage", headers=auth("alex")).json()["usedThisMonth"] == used
+
+
+def test_a_run_that_died_part_way_can_be_retried(client, family, deps):
+    bid = send(client, family["studentId"]).json()["batchId"]
+    rec = deps.store.get("batches", bid)
+    deps.store.put("batches", bid, rec | {"status": "GENERATING", "startedAt": "2026-01-01T00:00:00+00:00"})
+    done = client.post(f"/submissions/batch/{bid}/process", headers=auth("alex")).json()
+    assert done["status"] == "READY"
+    # A run still in progress is left alone.
+    deps.store.put("batches", bid, deps.store.get("batches", bid) | {"status": "READING", "startedAt": "2999-01-01T00:00:00+00:00"})
+    assert client.post(f"/submissions/batch/{bid}/process", headers=auth("alex")).json()["status"] == "READING"
 
 
 @pytest.mark.parametrize("mode, files, code", [

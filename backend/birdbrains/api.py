@@ -107,6 +107,7 @@ BATCH_MAX_FILES: dict[str, int] = {"SLIDES_DECK": 25, "TEXTBOOK_ASSIST": 10}
 BATCH_MAX_FILE_BYTES = 25 * 1024 * 1024
 BATCH_MAX_TOTAL_BYTES = 30 * 1024 * 1024
 BATCH_HISTORY_LIMIT = 50
+BATCH_RUN_STALE_SECONDS = 360  # longer than the 300 s Cloud Run timeout: a run this old died
 # Extra photos a student adds to an earlier upload (a re-shoot, or close-ups of single
 # questions) are read together with the first ones. Capped so one upload stays one page.
 MAX_TOTAL_FILES = 10
@@ -1042,6 +1043,13 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         d.store.put("batches", batch_id, record)
         return batch_view(record)
 
+    def batch_run_stale(record: dict) -> bool:
+        """A run still marked READING or GENERATING after the Cloud Run timeout died."""
+        started = record.get("startedAt")
+        if not started:
+            return True
+        return datetime.now(timezone.utc) - datetime.fromisoformat(started) > timedelta(seconds=BATCH_RUN_STALE_SECONDS)
+
     def batch_parts(record: dict) -> list[DocPart]:
         parts: list[DocPart] = []
         for f in record["files"]:
@@ -1058,15 +1066,22 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         """Read the files and write the practice set or hints. Synchronous and
         idempotent: a finished batch is returned as it is."""
         record = owned("batches", batch_id, user)
-        if record["status"] in ("READY", "FAILED", "READING", "GENERATING"):
+        if record["status"] == "READY":
             return batch_view(record)
+        if record["status"] == "FAILED" and record.get("failureCode") == 207:
+            return batch_view(record)  # nothing readable: running it again won't help
+        if record["status"] in ("READING", "GENERATING") and not batch_run_stale(record):
+            return batch_view(record)  # another request is working on it
+        # FAILED on our side (5xx), or a run that died part-way: try again at no extra cost.
 
         def mark(status: str, **extra):
             record.update(status=status, **extra)
             d.store.put("batches", batch_id, record)
 
+        record.pop("failureCode", None)
+        record.pop("finishedAt", None)
         try:
-            mark("READING")
+            mark("READING", startedAt=now_iso())
             parts = batch_parts(record)
             mark("GENERATING")
             if record["uploadMode"] == "SLIDES_DECK":

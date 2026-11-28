@@ -363,6 +363,32 @@ export default function CaptureModal({ initialMode }: { initialMode?: UploadMode
     }
   };
 
+  /** Run a batch that failed on our side (5xx) again: same files, no extra upload. */
+  const retryBatch = async () => {
+    if (!batch) return;
+    const id = batch.batchId;
+    const run = ++runId.current;
+    setProblem(null);
+    setBatchStep('READING');
+    setStage('BATCH_SENDING');
+    try {
+      const done = await api.processBatch(await getToken(), id);
+      if (run !== runId.current) return;
+      setBatch(done);
+      setStage('BATCH_DONE');
+      bumpData();
+    } catch (err) {
+      if (run !== runId.current) return;
+      setProblem({
+        code: err instanceof ApiError ? uploadErrorCode(err.status, err.detail, err.code) : 900,
+        message: err instanceof Error ? err.message : 'Something went wrong. Please try again.',
+        failedAt: 0,
+        status: err instanceof ApiError ? err.status : undefined,
+      });
+      setStage('BATCH_DONE');
+    }
+  };
+
   const submitLive = async (sharpnessScore: number) => {
     const run = ++runId.current;
     const alive = () => run === runId.current;
@@ -629,6 +655,7 @@ export default function CaptureModal({ initialMode }: { initialMode?: UploadMode
                 setBatch(null);
                 setStage('IDLE');
               }}
+              onRetry={live && batch?.status === 'FAILED' && (batch.failureCode ?? 900) >= 500 ? () => void retryBatch() : undefined}
               onClose={close}
             />
           ) : stage === 'IDLE' ? (
@@ -932,6 +959,7 @@ function BatchView({
   demo,
   onAnother,
   onBack,
+  onRetry,
   onClose,
 }: {
   mode: UploadMode;
@@ -942,6 +970,8 @@ function BatchView({
   demo: boolean;
   onAnother: () => void;
   onBack: () => void;
+  /** Set when the batch failed on our side and can be run again. */
+  onRetry?: () => void;
   onClose: () => void;
 }) {
   const slides = mode === 'SLIDES_DECK';
@@ -990,9 +1020,15 @@ function BatchView({
           <button type="button" onClick={onBack} className="btn btn-secondary">
             Back to files
           </button>
-          <button type="button" onClick={onClose} className="btn btn-primary">
-            Close
-          </button>
+          {onRetry ? (
+            <button type="button" onClick={onRetry} className="btn btn-primary">
+              <RotateCcw className="h-4 w-4" aria-hidden /> Try again
+            </button>
+          ) : (
+            <button type="button" onClick={onClose} className="btn btn-primary">
+              Close
+            </button>
+          )}
         </div>
       </div>
     );
