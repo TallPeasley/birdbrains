@@ -1,0 +1,1110 @@
+{
+ "version": 1,
+ "about": "Curriculums, grades and subjects Quark knows about. A course id is '<curriculum>.<grade>.<subject>' (for example 'ccss.g7.math'), or one of the legacy Ontario course codes below. 'level' is the age-equivalent grade (0 = kindergarten, 12 = final year) used to pick topics from the shared catalog in topics/*.json. Edit this file, then run pytest: backend/tests/test_curricula.py checks it.",
+ "subjects": [
+  {
+   "id": "math",
+   "name": "Math"
+  },
+  {
+   "id": "science",
+   "name": "Science (general)",
+   "covers": [
+    "biology",
+    "chemistry",
+    "physics",
+    "earth_science"
+   ]
+  },
+  {
+   "id": "biology",
+   "name": "Biology"
+  },
+  {
+   "id": "chemistry",
+   "name": "Chemistry"
+  },
+  {
+   "id": "physics",
+   "name": "Physics"
+  },
+  {
+   "id": "earth_science",
+   "name": "Earth & space science"
+  }
+ ],
+ "gradable_subjects": [
+  "math"
+ ],
+ "default_curriculum": "on",
+ "legacy_courses": [
+  {
+   "id": "MTH1W",
+   "curriculum": "on",
+   "grade": "g9",
+   "subject": "math",
+   "label": "Grade 9 · MTH1W",
+   "name": "Mathematics, Grade 9 (de-streamed)"
+  },
+  {
+   "id": "MPM2D",
+   "curriculum": "on",
+   "grade": "g10",
+   "subject": "math",
+   "label": "Grade 10 · MPM2D",
+   "name": "Principles of Mathematics, Grade 10 (academic)"
+  }
+ ],
+ "curricula": [
+  {
+   "id": "on",
+   "name": "Ontario",
+   "region": "Canada",
+   "grades": [
+    {
+     "id": "k",
+     "label": "Kindergarten",
+     "level": 0
+    },
+    {
+     "id": "g1",
+     "label": "Grade 1",
+     "level": 1
+    },
+    {
+     "id": "g2",
+     "label": "Grade 2",
+     "level": 2
+    },
+    {
+     "id": "g3",
+     "label": "Grade 3",
+     "level": 3
+    },
+    {
+     "id": "g4",
+     "label": "Grade 4",
+     "level": 4
+    },
+    {
+     "id": "g5",
+     "label": "Grade 5",
+     "level": 5
+    },
+    {
+     "id": "g6",
+     "label": "Grade 6",
+     "level": 6
+    },
+    {
+     "id": "g7",
+     "label": "Grade 7",
+     "level": 7
+    },
+    {
+     "id": "g8",
+     "label": "Grade 8",
+     "level": 8
+    },
+    {
+     "id": "g9",
+     "label": "Grade 9",
+     "level": 9
+    },
+    {
+     "id": "g10",
+     "label": "Grade 10",
+     "level": 10
+    },
+    {
+     "id": "g11",
+     "label": "Grade 11",
+     "level": 11
+    },
+    {
+     "id": "g12",
+     "label": "Grade 12",
+     "level": 12
+    }
+   ],
+   "notes": "Grade 9 and Grade 10 math use the existing MTH1W and MPM2D course data. Every other grade and subject uses Quark's shared K-12 topic catalog; topic placement by grade has not been checked against the Ontario curriculum documents.",
+   "review_status": "needs_review"
+  },
+  {
+   "id": "bc",
+   "name": "British Columbia",
+   "region": "Canada",
+   "grades": [
+    {
+     "id": "k",
+     "label": "Kindergarten",
+     "level": 0
+    },
+    {
+     "id": "g1",
+     "label": "Grade 1",
+     "level": 1
+    },
+    {
+     "id": "g2",
+     "label": "Grade 2",
+     "level": 2
+    },
+    {
+     "id": "g3",
+     "label": "Grade 3",
+     "level": 3
+    },
+    {
+     "id": "g4",
+     "label": "Grade 4",
+     "level": 4
+    },
+    {
+     "id": "g5",
+     "label": "Grade 5",
+     "level": 5
+    },
+    {
+     "id": "g6",
+     "label": "Grade 6",
+     "level": 6
+    },
+    {
+     "id": "g7",
+     "label": "Grade 7",
+     "level": 7
+    },
+    {
+     "id": "g8",
+     "label": "Grade 8",
+     "level": 8
+    },
+    {
+     "id": "g9",
+     "label": "Grade 9",
+     "level": 9
+    },
+    {
+     "id": "g10",
+     "label": "Grade 10",
+     "level": 10
+    },
+    {
+     "id": "g11",
+     "label": "Grade 11",
+     "level": 11
+    },
+    {
+     "id": "g12",
+     "label": "Grade 12",
+     "level": 12
+    }
+   ],
+   "notes": "Uses the shared K-12 topic catalog. Grade placement is approximate.",
+   "review_status": "needs_review"
+  },
+  {
+   "id": "ab",
+   "name": "Alberta",
+   "region": "Canada",
+   "grades": [
+    {
+     "id": "k",
+     "label": "Kindergarten",
+     "level": 0
+    },
+    {
+     "id": "g1",
+     "label": "Grade 1",
+     "level": 1
+    },
+    {
+     "id": "g2",
+     "label": "Grade 2",
+     "level": 2
+    },
+    {
+     "id": "g3",
+     "label": "Grade 3",
+     "level": 3
+    },
+    {
+     "id": "g4",
+     "label": "Grade 4",
+     "level": 4
+    },
+    {
+     "id": "g5",
+     "label": "Grade 5",
+     "level": 5
+    },
+    {
+     "id": "g6",
+     "label": "Grade 6",
+     "level": 6
+    },
+    {
+     "id": "g7",
+     "label": "Grade 7",
+     "level": 7
+    },
+    {
+     "id": "g8",
+     "label": "Grade 8",
+     "level": 8
+    },
+    {
+     "id": "g9",
+     "label": "Grade 9",
+     "level": 9
+    },
+    {
+     "id": "g10",
+     "label": "Grade 10",
+     "level": 10
+    },
+    {
+     "id": "g11",
+     "label": "Grade 11",
+     "level": 11
+    },
+    {
+     "id": "g12",
+     "label": "Grade 12",
+     "level": 12
+    }
+   ],
+   "notes": "Uses the shared K-12 topic catalog. Grade placement is approximate.",
+   "review_status": "needs_review"
+  },
+  {
+   "id": "qc",
+   "name": "Quebec",
+   "region": "Canada",
+   "grades": [
+    {
+     "id": "k",
+     "label": "Kindergarten",
+     "level": 0
+    },
+    {
+     "id": "g1",
+     "label": "Elementary Grade 1",
+     "level": 1
+    },
+    {
+     "id": "g2",
+     "label": "Elementary Grade 2",
+     "level": 2
+    },
+    {
+     "id": "g3",
+     "label": "Elementary Grade 3",
+     "level": 3
+    },
+    {
+     "id": "g4",
+     "label": "Elementary Grade 4",
+     "level": 4
+    },
+    {
+     "id": "g5",
+     "label": "Elementary Grade 5",
+     "level": 5
+    },
+    {
+     "id": "g6",
+     "label": "Elementary Grade 6",
+     "level": 6
+    },
+    {
+     "id": "sec1",
+     "label": "Secondary I",
+     "level": 7
+    },
+    {
+     "id": "sec2",
+     "label": "Secondary II",
+     "level": 8
+    },
+    {
+     "id": "sec3",
+     "label": "Secondary III",
+     "level": 9
+    },
+    {
+     "id": "sec4",
+     "label": "Secondary IV",
+     "level": 10
+    },
+    {
+     "id": "sec5",
+     "label": "Secondary V",
+     "level": 11
+    }
+   ],
+   "notes": "Secondary I-V are mapped to grade levels 7-11. Uses the shared K-12 topic catalog; grade placement is approximate.",
+   "review_status": "needs_review"
+  },
+  {
+   "id": "ca_other",
+   "name": "Other Canadian province or territory",
+   "region": "Canada",
+   "grades": [
+    {
+     "id": "k",
+     "label": "Kindergarten",
+     "level": 0
+    },
+    {
+     "id": "g1",
+     "label": "Grade 1",
+     "level": 1
+    },
+    {
+     "id": "g2",
+     "label": "Grade 2",
+     "level": 2
+    },
+    {
+     "id": "g3",
+     "label": "Grade 3",
+     "level": 3
+    },
+    {
+     "id": "g4",
+     "label": "Grade 4",
+     "level": 4
+    },
+    {
+     "id": "g5",
+     "label": "Grade 5",
+     "level": 5
+    },
+    {
+     "id": "g6",
+     "label": "Grade 6",
+     "level": 6
+    },
+    {
+     "id": "g7",
+     "label": "Grade 7",
+     "level": 7
+    },
+    {
+     "id": "g8",
+     "label": "Grade 8",
+     "level": 8
+    },
+    {
+     "id": "g9",
+     "label": "Grade 9",
+     "level": 9
+    },
+    {
+     "id": "g10",
+     "label": "Grade 10",
+     "level": 10
+    },
+    {
+     "id": "g11",
+     "label": "Grade 11",
+     "level": 11
+    },
+    {
+     "id": "g12",
+     "label": "Grade 12",
+     "level": 12
+    }
+   ],
+   "notes": "Uses the shared K-12 topic catalog. Grade placement is approximate.",
+   "review_status": "needs_review"
+  },
+  {
+   "id": "ccss",
+   "name": "US Common Core (math)",
+   "region": "United States",
+   "grades": [
+    {
+     "id": "k",
+     "label": "Kindergarten",
+     "level": 0,
+     "subjects": [
+      "math"
+     ]
+    },
+    {
+     "id": "g1",
+     "label": "Grade 1",
+     "level": 1,
+     "subjects": [
+      "math"
+     ]
+    },
+    {
+     "id": "g2",
+     "label": "Grade 2",
+     "level": 2,
+     "subjects": [
+      "math"
+     ]
+    },
+    {
+     "id": "g3",
+     "label": "Grade 3",
+     "level": 3,
+     "subjects": [
+      "math"
+     ]
+    },
+    {
+     "id": "g4",
+     "label": "Grade 4",
+     "level": 4,
+     "subjects": [
+      "math"
+     ]
+    },
+    {
+     "id": "g5",
+     "label": "Grade 5",
+     "level": 5,
+     "subjects": [
+      "math"
+     ]
+    },
+    {
+     "id": "g6",
+     "label": "Grade 6",
+     "level": 6,
+     "subjects": [
+      "math"
+     ]
+    },
+    {
+     "id": "g7",
+     "label": "Grade 7",
+     "level": 7,
+     "subjects": [
+      "math"
+     ]
+    },
+    {
+     "id": "g8",
+     "label": "Grade 8",
+     "level": 8,
+     "subjects": [
+      "math"
+     ]
+    },
+    {
+     "id": "g9",
+     "label": "Grade 9",
+     "level": 9,
+     "subjects": [
+      "math"
+     ]
+    },
+    {
+     "id": "g10",
+     "label": "Grade 10",
+     "level": 10,
+     "subjects": [
+      "math"
+     ]
+    },
+    {
+     "id": "g11",
+     "label": "Grade 11",
+     "level": 11,
+     "subjects": [
+      "math"
+     ]
+    },
+    {
+     "id": "g12",
+     "label": "Grade 12",
+     "level": 12,
+     "subjects": [
+      "math"
+     ]
+    }
+   ],
+   "notes": "Math only. Common Core high-school standards are grouped by conceptual category rather than by grade, so grades 9-12 here are the student's grade, not a Common Core grade.",
+   "review_status": "needs_review"
+  },
+  {
+   "id": "ngss",
+   "name": "US Next Generation Science Standards",
+   "region": "United States",
+   "grades": [
+    {
+     "id": "k",
+     "label": "Kindergarten",
+     "level": 0,
+     "subjects": [
+      "science",
+      "biology",
+      "chemistry",
+      "physics",
+      "earth_science"
+     ]
+    },
+    {
+     "id": "g1",
+     "label": "Grade 1",
+     "level": 1,
+     "subjects": [
+      "science",
+      "biology",
+      "chemistry",
+      "physics",
+      "earth_science"
+     ]
+    },
+    {
+     "id": "g2",
+     "label": "Grade 2",
+     "level": 2,
+     "subjects": [
+      "science",
+      "biology",
+      "chemistry",
+      "physics",
+      "earth_science"
+     ]
+    },
+    {
+     "id": "g3",
+     "label": "Grade 3",
+     "level": 3,
+     "subjects": [
+      "science",
+      "biology",
+      "chemistry",
+      "physics",
+      "earth_science"
+     ]
+    },
+    {
+     "id": "g4",
+     "label": "Grade 4",
+     "level": 4,
+     "subjects": [
+      "science",
+      "biology",
+      "chemistry",
+      "physics",
+      "earth_science"
+     ]
+    },
+    {
+     "id": "g5",
+     "label": "Grade 5",
+     "level": 5,
+     "subjects": [
+      "science",
+      "biology",
+      "chemistry",
+      "physics",
+      "earth_science"
+     ]
+    },
+    {
+     "id": "g6",
+     "label": "Grade 6",
+     "level": 6,
+     "subjects": [
+      "science",
+      "biology",
+      "chemistry",
+      "physics",
+      "earth_science"
+     ]
+    },
+    {
+     "id": "g7",
+     "label": "Grade 7",
+     "level": 7,
+     "subjects": [
+      "science",
+      "biology",
+      "chemistry",
+      "physics",
+      "earth_science"
+     ]
+    },
+    {
+     "id": "g8",
+     "label": "Grade 8",
+     "level": 8,
+     "subjects": [
+      "science",
+      "biology",
+      "chemistry",
+      "physics",
+      "earth_science"
+     ]
+    },
+    {
+     "id": "g9",
+     "label": "Grade 9",
+     "level": 9,
+     "subjects": [
+      "science",
+      "biology",
+      "chemistry",
+      "physics",
+      "earth_science"
+     ]
+    },
+    {
+     "id": "g10",
+     "label": "Grade 10",
+     "level": 10,
+     "subjects": [
+      "science",
+      "biology",
+      "chemistry",
+      "physics",
+      "earth_science"
+     ]
+    },
+    {
+     "id": "g11",
+     "label": "Grade 11",
+     "level": 11,
+     "subjects": [
+      "science",
+      "biology",
+      "chemistry",
+      "physics",
+      "earth_science"
+     ]
+    },
+    {
+     "id": "g12",
+     "label": "Grade 12",
+     "level": 12,
+     "subjects": [
+      "science",
+      "biology",
+      "chemistry",
+      "physics",
+      "earth_science"
+     ]
+    }
+   ],
+   "notes": "Science only. NGSS middle-school and high-school expectations are grouped by grade band, so grades 6-12 here are the student's grade, not an NGSS grade.",
+   "review_status": "needs_review"
+  },
+  {
+   "id": "us_other",
+   "name": "Other US state standards",
+   "region": "United States",
+   "grades": [
+    {
+     "id": "k",
+     "label": "Kindergarten",
+     "level": 0
+    },
+    {
+     "id": "g1",
+     "label": "Grade 1",
+     "level": 1
+    },
+    {
+     "id": "g2",
+     "label": "Grade 2",
+     "level": 2
+    },
+    {
+     "id": "g3",
+     "label": "Grade 3",
+     "level": 3
+    },
+    {
+     "id": "g4",
+     "label": "Grade 4",
+     "level": 4
+    },
+    {
+     "id": "g5",
+     "label": "Grade 5",
+     "level": 5
+    },
+    {
+     "id": "g6",
+     "label": "Grade 6",
+     "level": 6
+    },
+    {
+     "id": "g7",
+     "label": "Grade 7",
+     "level": 7
+    },
+    {
+     "id": "g8",
+     "label": "Grade 8",
+     "level": 8
+    },
+    {
+     "id": "g9",
+     "label": "Grade 9",
+     "level": 9
+    },
+    {
+     "id": "g10",
+     "label": "Grade 10",
+     "level": 10
+    },
+    {
+     "id": "g11",
+     "label": "Grade 11",
+     "level": 11
+    },
+    {
+     "id": "g12",
+     "label": "Grade 12",
+     "level": 12
+    }
+   ],
+   "notes": "For states that use their own standards. Uses the shared K-12 topic catalog; grade placement is approximate.",
+   "review_status": "needs_review"
+  },
+  {
+   "id": "eng",
+   "name": "National Curriculum in England (incl. GCSE)",
+   "region": "United Kingdom",
+   "grades": [
+    {
+     "id": "y1",
+     "label": "Year 1",
+     "level": 0,
+     "stage": "Key Stage 1"
+    },
+    {
+     "id": "y2",
+     "label": "Year 2",
+     "level": 1,
+     "stage": "Key Stage 1"
+    },
+    {
+     "id": "y3",
+     "label": "Year 3",
+     "level": 2,
+     "stage": "Key Stage 2"
+    },
+    {
+     "id": "y4",
+     "label": "Year 4",
+     "level": 3,
+     "stage": "Key Stage 2"
+    },
+    {
+     "id": "y5",
+     "label": "Year 5",
+     "level": 4,
+     "stage": "Key Stage 2"
+    },
+    {
+     "id": "y6",
+     "label": "Year 6",
+     "level": 5,
+     "stage": "Key Stage 2"
+    },
+    {
+     "id": "y7",
+     "label": "Year 7",
+     "level": 6,
+     "stage": "Key Stage 3"
+    },
+    {
+     "id": "y8",
+     "label": "Year 8",
+     "level": 7,
+     "stage": "Key Stage 3"
+    },
+    {
+     "id": "y9",
+     "label": "Year 9",
+     "level": 8,
+     "stage": "Key Stage 3"
+    },
+    {
+     "id": "y10",
+     "label": "Year 10 (GCSE)",
+     "level": 9,
+     "stage": "Key Stage 4"
+    },
+    {
+     "id": "y11",
+     "label": "Year 11 (GCSE)",
+     "level": 10,
+     "stage": "Key Stage 4"
+    },
+    {
+     "id": "y12",
+     "label": "Year 12 (post-16)",
+     "level": 11,
+     "stage": "Post-16"
+    },
+    {
+     "id": "y13",
+     "label": "Year 13 (post-16)",
+     "level": 12,
+     "stage": "Post-16"
+    }
+   ],
+   "notes": "Year N is mapped to grade level N-1 by age. Years 12-13 sit outside the National Curriculum (typically A level). Scotland, Wales and Northern Ireland have their own curricula and are not covered here.",
+   "review_status": "needs_review"
+  },
+  {
+   "id": "ib",
+   "name": "International Baccalaureate (IB)",
+   "region": "International",
+   "grades": [
+    {
+     "id": "pyp_k",
+     "label": "PYP · Kindergarten",
+     "level": 0
+    },
+    {
+     "id": "pyp1",
+     "label": "PYP · Grade 1",
+     "level": 1
+    },
+    {
+     "id": "pyp2",
+     "label": "PYP · Grade 2",
+     "level": 2
+    },
+    {
+     "id": "pyp3",
+     "label": "PYP · Grade 3",
+     "level": 3
+    },
+    {
+     "id": "pyp4",
+     "label": "PYP · Grade 4",
+     "level": 4
+    },
+    {
+     "id": "pyp5",
+     "label": "PYP · Grade 5",
+     "level": 5
+    },
+    {
+     "id": "myp1",
+     "label": "MYP Year 1",
+     "level": 6
+    },
+    {
+     "id": "myp2",
+     "label": "MYP Year 2",
+     "level": 7
+    },
+    {
+     "id": "myp3",
+     "label": "MYP Year 3",
+     "level": 8
+    },
+    {
+     "id": "myp4",
+     "label": "MYP Year 4",
+     "level": 9
+    },
+    {
+     "id": "myp5",
+     "label": "MYP Year 5",
+     "level": 10
+    },
+    {
+     "id": "dp1",
+     "label": "DP Year 1",
+     "level": 11
+    },
+    {
+     "id": "dp2",
+     "label": "DP Year 2",
+     "level": 12
+    }
+   ],
+   "notes": "PYP years follow the school's local grade. MYP Years 1-5 are mapped to grade levels 6-10 and DP Years 1-2 to 11-12 by age. Topics come from the shared K-12 catalog, not from IB subject guides.",
+   "review_status": "needs_review"
+  },
+  {
+   "id": "ap",
+   "name": "Advanced Placement (AP)",
+   "region": "United States",
+   "grades": [
+    {
+     "id": "precalc",
+     "label": "AP Precalculus",
+     "level": 11,
+     "subjects": [
+      "math"
+     ]
+    },
+    {
+     "id": "calc_ab",
+     "label": "AP Calculus AB",
+     "level": 12,
+     "subjects": [
+      "math"
+     ]
+    },
+    {
+     "id": "calc_bc",
+     "label": "AP Calculus BC",
+     "level": 12,
+     "subjects": [
+      "math"
+     ]
+    },
+    {
+     "id": "stats",
+     "label": "AP Statistics",
+     "level": 12,
+     "subjects": [
+      "math"
+     ]
+    },
+    {
+     "id": "bio",
+     "label": "AP Biology",
+     "level": 12,
+     "subjects": [
+      "biology"
+     ]
+    },
+    {
+     "id": "chem",
+     "label": "AP Chemistry",
+     "level": 12,
+     "subjects": [
+      "chemistry"
+     ]
+    },
+    {
+     "id": "phys1",
+     "label": "AP Physics 1",
+     "level": 11,
+     "subjects": [
+      "physics"
+     ]
+    },
+    {
+     "id": "phys2",
+     "label": "AP Physics 2",
+     "level": 12,
+     "subjects": [
+      "physics"
+     ]
+    },
+    {
+     "id": "physc_mech",
+     "label": "AP Physics C: Mechanics",
+     "level": 12,
+     "subjects": [
+      "physics"
+     ]
+    },
+    {
+     "id": "physc_em",
+     "label": "AP Physics C: Electricity and Magnetism",
+     "level": 12,
+     "subjects": [
+      "physics"
+     ]
+    },
+    {
+     "id": "envsci",
+     "label": "AP Environmental Science",
+     "level": 12,
+     "subjects": [
+      "earth_science",
+      "biology"
+     ]
+    }
+   ],
+   "notes": "AP is organised by course, not grade; students usually take these in grades 10-12. Each course uses the shared catalog's topics at its level, not the College Board course framework.",
+   "review_status": "needs_review"
+  },
+  {
+   "id": "other",
+   "name": "Other or not listed",
+   "region": "Any",
+   "grades": [
+    {
+     "id": "k",
+     "label": "Kindergarten",
+     "level": 0
+    },
+    {
+     "id": "g1",
+     "label": "Grade 1",
+     "level": 1
+    },
+    {
+     "id": "g2",
+     "label": "Grade 2",
+     "level": 2
+    },
+    {
+     "id": "g3",
+     "label": "Grade 3",
+     "level": 3
+    },
+    {
+     "id": "g4",
+     "label": "Grade 4",
+     "level": 4
+    },
+    {
+     "id": "g5",
+     "label": "Grade 5",
+     "level": 5
+    },
+    {
+     "id": "g6",
+     "label": "Grade 6",
+     "level": 6
+    },
+    {
+     "id": "g7",
+     "label": "Grade 7",
+     "level": 7
+    },
+    {
+     "id": "g8",
+     "label": "Grade 8",
+     "level": 8
+    },
+    {
+     "id": "g9",
+     "label": "Grade 9",
+     "level": 9
+    },
+    {
+     "id": "g10",
+     "label": "Grade 10",
+     "level": 10
+    },
+    {
+     "id": "g11",
+     "label": "Grade 11",
+     "level": 11
+    },
+    {
+     "id": "g12",
+     "label": "Grade 12",
+     "level": 12
+    }
+   ],
+   "notes": "Uses the shared K-12 topic catalog by grade.",
+   "review_status": "needs_review"
+  }
+ ]
+}

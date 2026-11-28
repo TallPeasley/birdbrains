@@ -84,7 +84,7 @@ from .schemas import (
 )
 from .storage import BlobStorage
 from .store import Store
-from .taxonomy import strand_for
+from .taxonomy import CURRICULUM, strand_for
 
 log = logging.getLogger(__name__)
 
@@ -401,6 +401,8 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
     @app.patch("/me", response_model=UserProfile)
     def update_profile(body: UpdateProfileRequest, user: User):
         user["name"] = body.name.strip()
+        if body.course and user.get("role") == "student" and user.get("studentId"):
+            user["course"] = body.course.value
         d.store.put("users", user["uid"], user)
         return profile_view(user)
 
@@ -631,6 +633,9 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
                classroom: Optional[dict] = None) -> SubmissionIngestionPayload:
         """Shared by the web upload and the extension's one-time upload link: plan
         limit, image checks, duplicate check, privacy scrub, then storage."""
+        if not course.info.gradable:
+            # Science courses are in the curriculum catalog but grading is math-only for now.
+            raise UploadFailure(422, 109, "Grading is not available for this subject yet")
         if usage(studentId).remaining == 0:
             raise UploadFailure(402, 402, "FREE_LIMIT_REACHED")
         submission_id = new_id("sub")
@@ -977,7 +982,9 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
             read_topic = " · ".join(t for t in (stage1.detected_unit, stage1.detected_topic) if t)
             if not record["unitTopic"].strip() and read_topic:
                 record["unitTopic"] = read_topic[:200]
-            if stage1.detected_course:
+            # Only Ontario's two original courses offer choices to Stage 1 (see
+            # pipeline.stage1_course_text); every other course is the student's own pick.
+            if stage1.detected_course in CURRICULUM and record["course"] in CURRICULUM:
                 record["course"] = stage1.detected_course
             ctx = SubmissionContext(submission_id, CourseEnum(record["course"]), record["unitTopic"] or "Not stated",
                                     (record.get("forClassroom") or {}).get("expectations", ""))

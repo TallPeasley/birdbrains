@@ -46,7 +46,7 @@ const COMPARISON_ROWS: {
     pro: true,
   },
   {
-    feature: 'Mastery chart, EQAO forecast & error distribution',
+    feature: 'Mastery chart, achievement forecast & error distribution',
     detail: 'Strand trends over time and provincial level forecast on the parent view.',
     free: true,
     pro: true,
@@ -200,7 +200,7 @@ export default function PlansPage() {
               </li>
               <li className="flex items-start gap-2">
                 <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" aria-hidden />
-                <span>Mastery chart, EQAO forecast, and pillar error share</span>
+                <span>Mastery chart, achievement forecast, and pillar error share</span>
               </li>
             </ul>
           </div>

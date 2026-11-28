@@ -25,6 +25,8 @@ import { useRole } from '@/lib/roleContext';
 import { useSession } from '@/lib/session';
 import { Loading, SignInNotice } from '@/components/DashboardStates';
 import UploadHistory from '@/components/account/UploadHistory';
+import CourseSetting from '@/components/account/CourseSetting';
+import { courseGradeLabel } from '@/lib/curricula';
 import { ManageBillingButton, UpgradeReturnNotice } from '@/components/billing/Billing';
 import type { ApiClass, ApiUsage, UserProfile } from '@/types/birdBrains';
 
@@ -364,13 +366,6 @@ export default function AccountSettings() {
     }
   };
 
-  const courseDisplay =
-    activeProfile.course === 'MPM2D'
-      ? 'Grade 10 · MPM2D'
-      : activeProfile.course === 'MTH1W'
-        ? 'Grade 9 · MTH1W'
-        : activeProfile.course ?? 'Not set';
-
   const showHistory = activeProfile.role !== 'teacher' && (!live || Boolean(activeStudentId));
 
   return (
@@ -439,7 +434,9 @@ export default function AccountSettings() {
           {isStudent && (
             <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3.5 sm:col-span-2">
               <dt className="text-xs font-semibold uppercase tracking-wider text-slate-500">Course</dt>
-              <dd className="mt-1 text-base font-semibold text-slate-900">{courseDisplay}</dd>
+              <dd className="mt-1">
+                <CourseSetting course={activeProfile.course ?? null} name={activeProfile.name} live={live} />
+              </dd>
             </div>
           )}
         </dl>
@@ -616,7 +613,7 @@ export default function AccountSettings() {
                         {isDemoAlex ? demoParentSummary.studentName : `Child ${idx + 1}`}
                       </p>
                       <p className="truncate text-xs text-slate-500">
-                        {isDemoAlex ? `Grade 10 · ${demoParentSummary.course} · ` : ''}
+                        {isDemoAlex ? `${courseGradeLabel(demoParentSummary.course)} · ${demoParentSummary.course} · ` : ''}
                         <span className="font-mono">{childId}</span>
                       </p>
                     </div>

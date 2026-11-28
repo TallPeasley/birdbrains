@@ -45,6 +45,7 @@ UPLOAD_ERRORS: dict[int, UploadErrorInfo] = dict([
     _e(106, "File too large", "Each photo must be 12 MB or smaller.", "Lower the camera quality a little and try again.", True),
     _e(107, "Wrong number of photos", "Attach between 1 and 6 photos.", "Add at least one photo, or split a long set into two uploads."),
     _e(108, "Already uploaded", "This exact photo was uploaded before.", "Open your earlier diagnostic, or upload a different page."),
+    _e(109, "Subject not graded yet", "Quark grades math work today. Grading for this subject is not available yet.", "Upload a math page, or pick a math course in your account settings."),
     # 2xx: reading the page
     _e(201, "Handwriting unclear", "We couldn't read the handwriting clearly enough.", "Retake in good light, flat on a desk, with the whole page in view.", True),
     _e(202, "Blank page", "The page looks empty, with no student work on it.", "Check you picked the right page and retake it.", True),

@@ -61,6 +61,13 @@ export const UPLOAD_ERRORS: Record<number, UploadErrorInfo> = {
     retake: false,
     ours: false,
   },
+  109: {
+    title: "Subject not graded yet",
+    message: "Quark grades math work today. Grading for this subject is not available yet.",
+    action: "Upload a math page, or pick a math course in your account settings.",
+    retake: false,
+    ours: false,
+  },
   201: {
     title: "Handwriting unclear",
     message: "We couldn't read the handwriting clearly enough.",

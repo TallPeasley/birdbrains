@@ -111,7 +111,7 @@ const PRIVACY = [
 const FAQ: [q: string, a: string][] = [
   [
     'Which courses does Quark cover?',
-    'Today Quark grades Ontario Grade 9 (MTH1W) and Grade 10 academic math (MPM2D): linear systems, analytic geometry, quadratics, similar triangles and trigonometry. Chemistry, physics, biology, English and history are next. Their mistake lists are drafted on the same six pillars, but Quark does not grade them yet.',
+    'Quark grades math from kindergarten to Grade 12. You pick your curriculum and grade, including Ontario, British Columbia, Alberta, Quebec and other provinces, US Common Core and state standards, the National Curriculum in England and GCSE, IB and AP, and Quark pitches the diagnosis to that level. Ontario Grade 9 (MTH1W) and Grade 10 (MPM2D) math have been tested the longest. Chemistry, physics, biology, English and history are next. Their mistake lists are drafted on the same six pillars, but Quark does not grade them yet.',
   ],
   [
     'Do I need an account to try it?',
@@ -137,8 +137,8 @@ export default function HomePage() {
       <section className="grid items-center gap-10 pt-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:gap-14 lg:pt-10">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="aero-badge aero-badge--accent">Ontario curriculum</span>
-            <span className="aero-coord">MATH GR 9–10 LIVE · MORE SUBJECTS NEXT</span>
+            <span className="aero-badge aero-badge--accent">Your curriculum</span>
+            <span className="aero-coord">MATH K–12 LIVE · SCIENCES NEXT</span>
           </div>
           <h1 className="mt-5 max-w-2xl font-display text-4xl font-extrabold leading-[1.05] tracking-display text-slate-900 sm:text-[3.5rem]">
             See <em className="font-serif font-normal tracking-normal text-brand">why</em> an answer went wrong, not just
@@ -146,8 +146,9 @@ export default function HomePage() {
           </h1>
           <p className="mt-5 max-w-xl text-lg text-slate-600">
             Snap a photo of handwritten work. Quark traces every step, sorts each mistake into six pillars so a slip
-            never looks like a real gap, and builds practice that targets exactly what to work on next. Grade 9–10
-            math is live today, with sciences, English and history on the way.
+            never looks like a real gap, and builds practice that targets exactly what to work on next. Pick your
+            curriculum and grade: math is live from kindergarten to Grade 12, with sciences, English and history on the
+            way.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <Link href="/how-it-works" className="btn btn-lg btn-primary">
@@ -164,7 +165,7 @@ export default function HomePage() {
             )}
           </div>
           <ul className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-sm text-slate-500">
-            {['Try it without an account', 'Works on any phone', 'Made for the Ontario curriculum'].map((t) => (
+            {['Try it without an account', 'Works on any phone', 'Works with your curriculum'].map((t) => (
               <li key={t} className="inline-flex items-center gap-1.5">
                 <CheckCircle2 className="h-4 w-4 text-emerald-600" aria-hidden />
                 {t}

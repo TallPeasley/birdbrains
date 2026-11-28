@@ -256,7 +256,8 @@ export const api = {
     request<CohortReport>(`/teacher/report${googleCourseId ? `?googleCourseId=${encodeURIComponent(googleCourseId)}` : ''}`, t),
   /** Plan and uploads left this month. A 402 FREE_LIMIT_REACHED on upload means remaining hit 0. */
   usage: (t: string, studentId: string) => request<ApiUsage>(`/students/${studentId}/usage`, t),
-  updateProfile: (t: string, name: string) => request<UserProfile>('/me', t, { ...json({ name }), method: 'PATCH' }),
+  updateProfile: (t: string, name: string, course?: string) =>
+    request<UserProfile>('/me', t, { ...json(course ? { name, course } : { name }), method: 'PATCH' }),
   myClasses: (t: string) => request<ApiClass[]>('/me/classes', t),
   joinClass: (t: string, joinCode: string) => request<ApiClass[]>('/me/classes', t, json({ joinCode })),
   leaveClass: (t: string, classId: string) => request<ApiClass[]>(`/me/classes/${classId}`, t, { method: 'DELETE' }),
