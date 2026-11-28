@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
+import type { UploadMode } from '@/lib/uploadModes';
 
 export type Role = 'student' | 'parent';
 
@@ -23,6 +24,10 @@ interface RoleContextValue {
   /** What the open upload window is for, when it was opened from a worksheet problem. */
   captureContext: CaptureContext | null;
   openCapture: (context?: CaptureContext) => void;
+  /** Which kind of upload the window opens on (photo, slides or textbook). */
+  captureMode: UploadMode;
+  /** Open the upload window on a given mode (the student portal's action cards). */
+  openCaptureMode: (mode: UploadMode) => void;
   closeCapture: () => void;
 }
 
@@ -36,6 +41,7 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
   );
   const [isCaptureOpen, setCaptureOpen] = useState(false);
   const [captureContext, setCaptureContext] = useState<CaptureContext | null>(null);
+  const [captureMode, setCaptureMode] = useState<UploadMode>('WORKSHEET_PHOTO');
 
   // Keep the toggle honest when someone lands directly on a dashboard URL.
   const role: Role = pathname.startsWith('/parent')
@@ -62,11 +68,18 @@ export function RoleProvider({ children }: { children: React.ReactNode }) {
       openCapture: (context?: CaptureContext) => {
         // Also used straight as an onClick handler, so ignore anything that isn't a context.
         setCaptureContext(context && typeof context === 'object' && 'problem' in context ? context : null);
+        setCaptureMode('WORKSHEET_PHOTO');
+        setCaptureOpen(true);
+      },
+      captureMode,
+      openCaptureMode: (mode: UploadMode) => {
+        setCaptureContext(null);
+        setCaptureMode(mode);
         setCaptureOpen(true);
       },
       closeCapture: () => setCaptureOpen(false),
     }),
-    [role, setRole, isCaptureOpen, captureContext],
+    [role, setRole, isCaptureOpen, captureContext, captureMode],
   );
 
   return <RoleContext.Provider value={value}>{children}</RoleContext.Provider>;

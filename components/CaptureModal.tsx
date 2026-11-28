@@ -4,10 +4,13 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import {
   AlertTriangle,
+  BookOpen,
   Camera,
   CheckCircle2,
   CopyCheck,
+  FileText,
   ImagePlus,
+  Presentation,
   Loader2,
   RotateCcw,
   ShieldCheck,
@@ -26,14 +29,14 @@ import { UPLOAD_ERRORS, uploadErrorCode } from '@/lib/uploadErrors';
 import { useSession } from '@/lib/session';
 import PhoneQrPanel from '@/components/PhoneQrPanel';
 import { MathText } from '@/components/MathText';
+import { acceptsFile, UPLOAD_MODE_ORDER, UPLOAD_MODES, type UploadMode } from '@/lib/uploadModes';
 import type {
   ApiPhoneUpload,
   Stage2GradingAndAffectOutput,
   SubmissionIngestionPayload,
 } from '@/types/birdBrains';
 
-const MAX_FILES = 6;
-const MAX_FILE_BYTES = 12 * 1024 * 1024;
+const MODE_ICON = { WORKSHEET_PHOTO: Camera, SLIDES_DECK: Presentation, TEXTBOOK_ASSIST: BookOpen } as const;
 
 type Stage =
   | 'IDLE'
@@ -44,7 +47,10 @@ type Stage =
   | 'DONE'
   | 'DUPLICATE'
   | 'NEEDS_RETAKE'
-  | 'ERROR';
+  | 'ERROR'
+  // Slides and textbook uploads (demo only until POST /submissions/batch exists).
+  | 'BATCH_SENDING'
+  | 'BATCH_DONE';
 
 const PIPELINE: { stage: Stage; label: string; detail: string }[] = [
   { stage: 'UPLOADING', label: 'Uploading your photos', detail: 'Sending your pages and blurring any names or dates.' },
@@ -59,6 +65,8 @@ interface QueuedFile {
   previewUrl: string;
   quality?: ImageQualityResult;
   error?: string;
+  /** Digital slides, PDFs and screenshots skip the handwriting sharpness check. */
+  skipCheck?: boolean;
 }
 
 interface ProblemState {
@@ -75,8 +83,18 @@ const TIER_STYLE = {
   TOO_BLURRY: { label: 'Too Blurry · Code 101', cls: 'bg-rose-50 text-rose-700 ring-rose-200', bar: 'bg-rose-500' },
 } as const;
 
-export default function CaptureModal() {
-  const { isCaptureOpen, closeCapture, captureContext } = useRole();
+/**
+ * The upload window. `initialMode` (or the mode the portal opened it with, see
+ * `openCaptureMode`) picks what it takes: photos of handwritten work (graded now),
+ * slides and PDF booklets, or textbook pages. Opening it from a worksheet problem or a
+ * Classroom assignment always uses photos.
+ */
+export default function CaptureModal({ initialMode }: { initialMode?: UploadMode } = {}) {
+  const { isCaptureOpen, closeCapture, captureContext, captureMode } = useRole();
+  const [mode, setMode] = useState<UploadMode>('WORKSHEET_PHOTO');
+  const [unitTopic, setUnitTopic] = useState('');
+  const cfg = UPLOAD_MODES[mode];
+  const photoMode = mode === 'WORKSHEET_PHOTO';
   const { live, profile, activeStudentId, getToken, bumpData } = useSession();
   const [problem, setProblem] = useState<ProblemState | null>(null);
   const runId = useRef(0);
@@ -120,6 +138,20 @@ export default function CaptureModal() {
     reset();
   }, [closeCapture, reset]);
 
+  // Each time the window opens, start on the mode it was opened for.
+  useEffect(() => {
+    if (!isCaptureOpen) return;
+    setMode(captureContext ? 'WORKSHEET_PHOTO' : (initialMode ?? captureMode));
+    setUnitTopic('');
+  }, [isCaptureOpen, captureContext, captureMode, initialMode]);
+
+  const switchMode = (next: UploadMode) => {
+    if (next === mode) return;
+    reset();
+    setUnitTopic('');
+    setMode(next);
+  };
+
   useEffect(() => {
     if (!isCaptureOpen) return;
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && close();
@@ -142,19 +174,26 @@ export default function CaptureModal() {
           return { ...q, error: 'Code 108 · Duplicate photo: this file is already in your upload list.' };
         }
         existingSignatures.add(sig);
-        if (q.file.size > MAX_FILE_BYTES) {
-          return { ...q, error: 'Code 106 · File is over 12 MB. Please choose a smaller photo.' };
+        if (q.file.size > cfg.maxFileBytes) {
+          const mb = Math.round(cfg.maxFileBytes / (1024 * 1024));
+          return { ...q, error: `Code 106 · File is over ${mb} MB. Please choose a smaller file.` };
         }
-        if (!q.file.type.startsWith('image/')) {
-          return { ...q, error: 'Code 105 · Not an image file. Use a JPEG, PNG, or WebP photo.' };
+        if (photoMode ? !q.file.type.startsWith('image/') : !acceptsFile(mode, q.file)) {
+          return {
+            ...q,
+            error: photoMode
+              ? 'Code 105 · Not an image file. Use a JPEG, PNG, or WebP photo.'
+              : `Code 105 · This file type isn't supported here. ${cfg.subtitle}`,
+          };
         }
-        return q;
+        return cfg.runBlurCheck ? q : { ...q, skipCheck: true };
       });
-      return [...prev, ...annotated].slice(0, MAX_FILES);
+      return [...prev, ...annotated].slice(0, cfg.maxFiles);
     });
 
+    if (!cfg.runBlurCheck) return;
     incoming.forEach(async (q) => {
-      if (!q.file.type.startsWith('image/') || q.file.size > MAX_FILE_BYTES) return;
+      if (!q.file.type.startsWith('image/') || q.file.size > cfg.maxFileBytes) return;
       try {
         const quality = await analyzeImage(q.file);
         setFiles((prev) =>
@@ -175,13 +214,21 @@ export default function CaptureModal() {
       return prev.filter((f) => f.id !== id);
     });
 
-  const analyzing = files.some((f) => !f.quality && !f.error);
+  const analyzing = files.some((f) => !f.quality && !f.error && !f.skipCheck);
   const allPassed =
     files.length > 0 &&
-    files.length <= MAX_FILES &&
-    files.every((f) => !f.error && f.quality?.passed);
+    files.length <= cfg.maxFiles &&
+    files.every((f) => !f.error && (f.skipCheck || f.quality?.passed));
   const targetStudentId = live ? (activeStudentId ?? '') : studentId.trim();
-  const canSubmit = allPassed && !analyzing && targetStudentId !== '' && stage === 'IDLE';
+  // Slides and textbook uploads need a topic, and an API, which the live site doesn't have yet.
+  const modeAvailable = !live || cfg.liveReady;
+  const canSubmit =
+    allPassed &&
+    !analyzing &&
+    targetStudentId !== '' &&
+    stage === 'IDLE' &&
+    modeAvailable &&
+    (photoMode || unitTopic.trim() !== '');
 
   const failedCount = files.filter((f) => f.error || (f.quality && !f.quality.passed)).length;
 
@@ -197,6 +244,10 @@ export default function CaptureModal() {
 
   const submit = (again = false) => {
     if (again ? !(allPassed && !analyzing && targetStudentId !== '') : !canSubmit) return;
+    if (!photoMode) {
+      submitBatch();
+      return;
+    }
     const qualities = files.map((f) => f.quality!);
     const weakest = qualities.reduce((a, b) => (a.sharpnessScore <= b.sharpnessScore ? a : b));
     const smallest = qualities.reduce((a, b) =>
@@ -231,6 +282,12 @@ export default function CaptureModal() {
         }, i * 950),
       ),
     );
+  };
+
+  /** Slides and textbook pages: a demo run until POST /submissions/batch exists. */
+  const submitBatch = () => {
+    setStage('BATCH_SENDING');
+    timers.current.push(setTimeout(() => setStage('BATCH_DONE'), 1400));
   };
 
   const submitLive = async (sharpnessScore: number) => {
@@ -386,7 +443,8 @@ export default function CaptureModal() {
     }
   };
 
-  const showPhone = live && !touch && targetStudentId !== '';
+  const showPhone = live && !touch && targetStudentId !== '' && photoMode;
+  const ModeIcon = MODE_ICON[mode];
 
   if (!isCaptureOpen) return null;
   const activeIndex =
@@ -404,8 +462,9 @@ export default function CaptureModal() {
       >
         <div className="flex items-start justify-between border-b border-slate-200 px-4 py-4 sm:px-6">
           <div>
-            <h2 id="capture-title" className="text-lg font-semibold text-slate-900">
-              {captureContext ? 'Upload your work' : 'Upload student work'}
+            <h2 id="capture-title" className="flex items-center gap-2 text-lg font-semibold text-slate-900">
+              {!captureContext && <ModeIcon className="h-5 w-5 text-indigo-600" aria-hidden />}
+              {captureContext ? 'Upload your work' : cfg.title}
             </h2>
             {captureContext ? (
               <p className="text-sm text-slate-600">
@@ -418,7 +477,9 @@ export default function CaptureModal() {
               </p>
             ) : (
               <p className="text-sm text-slate-500">
-                We check each photo is big and sharp enough to read before it is sent.
+                {photoMode
+                  ? 'We check each photo is big and sharp enough to read before it is sent.'
+                  : cfg.blurb}
               </p>
             )}
           </div>
@@ -455,8 +516,55 @@ export default function CaptureModal() {
               />
             </div>
           )}
-          {stage === 'IDLE' ? (
+          {stage === 'IDLE' && !captureContext && (
+            <div role="tablist" aria-label="What are you uploading?" className="grid grid-cols-3 gap-1 rounded-xl bg-slate-100 p-1 text-xs font-medium sm:text-sm">
+              {UPLOAD_MODE_ORDER.map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  role="tab"
+                  aria-selected={mode === m}
+                  onClick={() => switchMode(m)}
+                  className={`rounded-lg px-2 py-2 transition ${
+                    mode === m ? 'bg-white font-semibold text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  {UPLOAD_MODES[m].tab}
+                </button>
+              ))}
+            </div>
+          )}
+          {stage === 'IDLE' && !modeAvailable && (
+            <p className="rounded-xl bg-amber-50 px-3 py-2 text-sm text-amber-900 ring-1 ring-amber-200">
+              {cfg.title} is coming soon. You can already try it on the How it works page and in demo mode.
+            </p>
+          )}
+          {stage === 'BATCH_SENDING' || stage === 'BATCH_DONE' ? (
+            <BatchView
+              mode={mode}
+              done={stage === 'BATCH_DONE'}
+              fileCount={files.length}
+              topic={unitTopic.trim()}
+              onAnother={() => {
+                reset();
+                setUnitTopic('');
+              }}
+              onClose={close}
+            />
+          ) : stage === 'IDLE' ? (
             <>
+              {!photoMode && (
+                <label className="block">
+                  <span className="mb-1 block text-sm font-medium text-slate-700">Unit or topic</span>
+                  <input
+                    value={unitTopic}
+                    maxLength={200}
+                    onChange={(e) => setUnitTopic(e.target.value)}
+                    placeholder={cfg.topicPlaceholder}
+                    className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:ring-indigo-500"
+                  />
+                </label>
+              )}
               <div>
                 <label className="block">
                   <span className="mb-1 block text-sm font-medium text-slate-700">Student ID</span>
@@ -486,14 +594,18 @@ export default function CaptureModal() {
                 }`}
               >
                 <UploadCloud className="h-9 w-9 text-indigo-500" aria-hidden />
-                <p className="mt-2 text-sm font-semibold text-slate-800">Drag photos here, or tap to choose</p>
+                <p className="mt-2 text-sm font-semibold text-slate-800">
+                  {photoMode ? 'Drag photos here, or tap to choose' : 'Drag files here, or tap to choose'}
+                </p>
                 <p className="text-xs text-slate-500">
-                  JPEG, PNG or WebP · at least 1080p (shorter side ≥ {MIN_SHORT_EDGE}px) · up to {MAX_FILES} pages (12 MB each).
+                  {photoMode
+                    ? `JPEG, PNG or WebP · at least 1080p (shorter side ≥ ${MIN_SHORT_EDGE}px) · up to ${cfg.maxFiles} pages (12 MB each).`
+                    : cfg.subtitle}
                 </p>
                 <input
                   ref={inputRef}
                   type="file"
-                  accept="image/jpeg,image/png,image/webp,image/*"
+                  accept={cfg.accept}
                   multiple
                   className="hidden"
                   onChange={(e) => {
@@ -503,7 +615,7 @@ export default function CaptureModal() {
                 />
               </div>
 
-              {touch && (
+              {touch && photoMode && (
                 <button
                   type="button"
                   onClick={() => cameraRef.current?.click()}
@@ -527,7 +639,9 @@ export default function CaptureModal() {
               <p className="flex items-start gap-2 rounded-xl bg-slate-50 px-3 py-2 text-xs text-slate-600 ring-1 ring-slate-200">
                 <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-indigo-600" aria-hidden />
                 <span>
-                  Before a photo is saved, Quark blurs names, dates, class and student-number fields and removes location data.
+                  {photoMode
+                    ? 'Before a photo is saved, Quark blurs names, dates, class and student-number fields and removes location data.'
+                    : 'Slides and textbook pages are used to make practice, not graded as your work. Leave out pages with other students’ names on them.'}
                 </span>
               </p>
 
@@ -539,7 +653,7 @@ export default function CaptureModal() {
                 </ul>
               )}
 
-              {failedCount > 0 && !analyzing && (
+              {photoMode && failedCount > 0 && !analyzing && (
                 <RetakeTipsCard
                   title={
                     failedCount === 1
@@ -590,21 +704,29 @@ export default function CaptureModal() {
                 ? profile
                   ? 'Link a student on the parent dashboard before uploading.'
                   : 'Sign in on the home page before uploading.'
-                : files.length === 0
-                  ? 'Add at least one photo.'
-                  : analyzing
-                    ? 'Checking image quality…'
-                    : allPassed
-                      ? `${files.length} photo${files.length > 1 ? 's' : ''} ready.`
-                      : 'Retake or remove the photos that did not pass the check.'}
+                : !modeAvailable
+                  ? 'Coming soon on your account.'
+                  : files.length === 0
+                    ? photoMode
+                      ? 'Add at least one photo.'
+                      : 'Add at least one file.'
+                    : analyzing
+                      ? 'Checking image quality…'
+                      : !allPassed
+                        ? photoMode
+                          ? 'Retake or remove the photos that did not pass the check.'
+                          : 'Remove the files that can’t be used.'
+                        : !photoMode && !unitTopic.trim()
+                          ? 'Add the unit or topic.'
+                          : `${files.length} ${photoMode ? 'photo' : 'file'}${files.length > 1 ? 's' : ''} ready.`}
             </p>
             <button
               onClick={() => submit()}
               disabled={!canSubmit}
               className="btn btn-primary"
             >
-              <ImagePlus className="h-4 w-4" aria-hidden />
-              Submit for diagnosis
+              {photoMode ? <ImagePlus className="h-4 w-4" aria-hidden /> : <UploadCloud className="h-4 w-4" aria-hidden />}
+              {cfg.ctaLabel}
             </button>
           </div>
         )}
@@ -648,15 +770,25 @@ function RetakeTipsCard({
 function FileRow({ item, onRemove }: { item: QueuedFile; onRemove: () => void }) {
   const q = item.quality;
   const tier = q ? TIER_STYLE[q.tier] : null;
-  const passed = !item.error && Boolean(q?.passed);
+  const passed = !item.error && (Boolean(item.skipCheck) || Boolean(q?.passed));
   return (
     <li className="flex items-center gap-3 rounded-xl border border-slate-200 p-2.5">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={item.previewUrl} alt="" className="h-14 w-14 shrink-0 rounded-lg bg-slate-100 object-cover" />
+      {item.file.type.startsWith('image/') ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={item.previewUrl} alt="" className="h-14 w-14 shrink-0 rounded-lg bg-slate-100 object-cover" />
+      ) : (
+        <span className="grid h-14 w-14 shrink-0 place-items-center rounded-lg bg-slate-100 text-slate-500">
+          <FileText className="h-6 w-6" aria-hidden />
+        </span>
+      )}
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium text-slate-800">{item.file.name}</p>
         {item.error ? (
           <p className="text-xs text-rose-600">{item.error}</p>
+        ) : item.skipCheck ? (
+          <p className="text-xs text-slate-500">
+            {(item.file.size / (1024 * 1024)).toFixed(1)} MB · ready
+          </p>
         ) : !q ? (
           <p className="flex items-center gap-1 text-xs text-slate-500">
             <Loader2 className="h-3 w-3 animate-spin" /> Checking resolution and sharpness…
@@ -687,7 +819,7 @@ function FileRow({ item, onRemove }: { item: QueuedFile; onRemove: () => void })
           </div>
         )}
       </div>
-      {(q || item.error) &&
+      {(q || item.error || item.skipCheck) &&
         (passed ? (
           <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-500" aria-label="Passed" />
         ) : (
@@ -701,6 +833,62 @@ function FileRow({ item, onRemove }: { item: QueuedFile; onRemove: () => void })
         <Trash2 className="h-4 w-4" />
       </button>
     </li>
+  );
+}
+
+/** Slides and textbook uploads. Demo only: the API (POST /submissions/batch) is not there yet. */
+function BatchView({
+  mode,
+  done,
+  fileCount,
+  topic,
+  onAnother,
+  onClose,
+}: {
+  mode: UploadMode;
+  done: boolean;
+  fileCount: number;
+  topic: string;
+  onAnother: () => void;
+  onClose: () => void;
+}) {
+  const slides = mode === 'SLIDES_DECK';
+  if (!done) {
+    return (
+      <div className="space-y-3 py-10 text-center" aria-live="polite">
+        <Loader2 className="mx-auto h-8 w-8 animate-spin text-indigo-600" aria-hidden />
+        <p className="text-sm font-semibold text-slate-900">
+          {slides ? 'Reading your slides and finding the problems…' : 'Reading your textbook pages…'}
+        </p>
+        <p className="text-xs text-slate-500">Keep this window open.</p>
+      </div>
+    );
+  }
+  return (
+    <div className="space-y-5 py-2" aria-live="polite">
+      <div className="text-center">
+        <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-emerald-50 text-emerald-600">
+          <CheckCircle2 className="h-7 w-7" aria-hidden />
+        </span>
+        <h3 className="mt-3 text-lg font-semibold text-slate-900">Upload received</h3>
+        <p className="mt-1 text-sm text-slate-600">
+          {fileCount} file{fileCount === 1 ? '' : 's'}
+          {topic ? ` for ${topic}` : ''}.{' '}
+          {slides
+            ? 'Quark will turn the problems in them into a practice set on the same six pillars.'
+            : 'Quark will build step-by-step hints for the problems on these pages.'}
+        </p>
+        <p className="mt-2 text-xs text-slate-500">Sample run: nothing was sent. Reference bat_demo00000001.</p>
+      </div>
+      <div className="flex flex-wrap justify-end gap-2">
+        <button type="button" onClick={onAnother} className="btn btn-secondary">
+          Upload more
+        </button>
+        <button type="button" onClick={onClose} className="btn btn-primary">
+          Done
+        </button>
+      </div>
+    </div>
   );
 }
 
