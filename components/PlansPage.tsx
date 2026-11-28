@@ -29,7 +29,7 @@ const COMPARISON_ROWS: {
 }[] = [
   {
     feature: 'Monthly work uploads',
-    detail: 'Handwritten math pages checked per student each calendar month.',
+    detail: 'Handwritten pages checked per student each calendar month.',
     free: '10 per month',
     pro: 'Unlimited',
   },

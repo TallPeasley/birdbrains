@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
   ArrowRight,
@@ -10,6 +11,7 @@ import {
   GraduationCap,
   Lock,
   School,
+  Plug,
   ScanSearch,
   ShieldCheck,
   Sparkles,
@@ -17,6 +19,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { PILLARS, PILLAR_ORDER } from '@/lib/pillars';
+import type { PillarCategory } from '@/types/birdBrains';
 import { IS_LIVE } from '@/lib/api';
 import AccountCard from '@/components/AccountCard';
 import PillarBadge from '@/components/PillarBadge';
@@ -26,8 +29,8 @@ import { MathText } from '@/components/MathText';
 
 /** Telemetry strip under the hero. Each figure is a fact about the product, not a metric. */
 const SPECS: [figure: string, label: string][] = [
-  ['04', 'Pillars in every diagnostic'],
-  ['16', 'Official error codes'],
+  ['06', 'Pillars in every diagnostic'],
+  ['06', 'Subjects planned on the same pillars'],
   ['03', 'Stages in each practice worksheet'],
 ];
 
@@ -73,9 +76,28 @@ const AUDIENCES = [
     who: 'Teachers',
     points: [
       'Class-wide patterns across the six pillars',
-      'Connects with Google Classroom',
+      'Works with Google Classroom, with Canvas and Brightspace next',
       'Progress reports you can share',
     ],
+  },
+];
+
+/** School systems on the home page. Keep these in step with docs/LMS.md and what is deployed. */
+const INTEGRATIONS: { name: string; status: 'Beta' | 'Coming soon'; body: string }[] = [
+  {
+    name: 'Google Classroom',
+    status: 'Beta',
+    body: 'Pro teachers import the photos students hand in and see the diagnosis for each one. Students see their Classroom assignments in Quark. Grades stay in Classroom for now. While Google reviews Quark, places are limited, so teachers sign up to test.',
+  },
+  {
+    name: 'Brightspace (D2L)',
+    status: 'Coming soon',
+    body: 'Import hand-ins from an assignment folder and send scores back as draft feedback you publish yourself. Set up once per school with your Brightspace admin.',
+  },
+  {
+    name: 'Canvas',
+    status: 'Coming soon',
+    body: 'Import hand-ins from an assignment and send scores and feedback back. Set up once per school with your Canvas admin.',
   },
 ];
 
@@ -89,7 +111,7 @@ const PRIVACY = [
 const FAQ: [q: string, a: string][] = [
   [
     'Which courses does Quark cover?',
-    'Ontario Grade 9 (MTH1W) and Grade 10 academic math (MPM2D): linear systems, analytic geometry, quadratics, similar triangles and trigonometry.',
+    'Today Quark grades Ontario Grade 9 (MTH1W) and Grade 10 academic math (MPM2D): linear systems, analytic geometry, quadratics, similar triangles and trigonometry. Chemistry, physics, biology, English and history are next. Their mistake lists are drafted on the same six pillars, but Quark does not grade them yet.',
   ],
   [
     'Do I need an account to try it?',
@@ -115,16 +137,17 @@ export default function HomePage() {
       <section className="grid items-center gap-10 pt-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:gap-14 lg:pt-10">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="aero-badge aero-badge--accent">Ontario · MTH1W · MPM2D</span>
-            <span className="aero-coord">GR 9–10 MATH</span>
+            <span className="aero-badge aero-badge--accent">Ontario curriculum</span>
+            <span className="aero-coord">MATH GR 9–10 LIVE · MORE SUBJECTS NEXT</span>
           </div>
           <h1 className="mt-5 max-w-2xl font-display text-4xl font-extrabold leading-[1.05] tracking-display text-slate-900 sm:text-[3.5rem]">
-            See <em className="font-serif font-normal tracking-normal text-brand">why</em> a math answer went wrong, not
-            just that it did.
+            See <em className="font-serif font-normal tracking-normal text-brand">why</em> an answer went wrong, not just
+            that it did.
           </h1>
           <p className="mt-5 max-w-xl text-lg text-slate-600">
-            Snap a photo of handwritten work. Quark traces every step, separates slips from real gaps, and builds a
-            worksheet that targets exactly what to practise next.
+            Snap a photo of handwritten work. Quark traces every step, sorts each mistake into six pillars so a slip
+            never looks like a real gap, and builds practice that targets exactly what to work on next. Grade 9–10
+            math is live today, with sciences, English and history on the way.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <Link href="/how-it-works" className="btn btn-lg btn-primary">
@@ -189,7 +212,7 @@ export default function HomePage() {
           id="pillars-heading"
           n={2}
           title="The 6-Pillar Diagnostic Framework"
-          sub="Every mistake is sorted into one of six kinds, because each one is fixed a different way."
+          sub="Every mistake is sorted into one of six kinds, because each one is fixed a different way. Shown here for math; the sciences, English and history keep the same six, described for each subject."
         />
         <div className="aero-cells mt-8 sm:grid-cols-2 lg:grid-cols-3">
           {PILLAR_ORDER.map((p, i) => (
@@ -232,10 +255,37 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── School systems ─────────────────────────────────────────────── */}
+      <section aria-labelledby="lms-heading">
+        <SectionHeading
+          id="lms-heading"
+          n={4}
+          title="Works with your school's systems"
+          sub="Teachers bring in the work students already hand in, instead of collecting photos twice. Part of Pro for teachers."
+        />
+        <div className="aero-cells mt-8 md:grid-cols-3">
+          {INTEGRATIONS.map(({ name, status, body }) => (
+            <div key={name} className="p-5 sm:p-6">
+              <div className="flex items-center justify-between gap-2">
+                <span className="flex items-center gap-2 font-display font-bold tracking-display text-slate-900">
+                  <Plug className="h-4 w-4 text-indigo-600" aria-hidden />
+                  {name}
+                </span>
+                <span className={`aero-badge ${status === 'Beta' ? 'aero-badge--accent' : ''}`}>{status}</span>
+              </div>
+              <p className="mt-3 text-sm leading-relaxed text-slate-600">{body}</p>
+            </div>
+          ))}
+        </div>
+        <p className="mt-4 max-w-2xl text-sm text-slate-500">
+          Microsoft Teams for Education, and opening Quark from inside Canvas or Brightspace, are planned for later.
+        </p>
+      </section>
+
       {/* ── Plans + privacy ──────────────────────────────────────────────── */}
       <section className="grid gap-4 lg:grid-cols-2">
         <div className="card flex flex-col p-6 sm:p-8">
-          <SectionIndex n={4} />
+          <SectionIndex n={5} />
           <h2 className="mt-2 font-display text-2xl font-extrabold tracking-display text-slate-900">Start free</h2>
           <p className="mt-2 text-slate-600">
             The free plan reads your work, finds the mistakes across all six pillars and explains them, up to a monthly
@@ -248,7 +298,7 @@ export default function HomePage() {
           </div>
         </div>
         <div className="card flex flex-col p-6 sm:p-8">
-          <SectionIndex n={5} />
+          <SectionIndex n={6} />
           <h2 className="mt-2 flex items-center gap-2 font-display text-2xl font-extrabold tracking-display text-slate-900">
             <ShieldCheck className="h-6 w-6 text-emerald-600" aria-hidden /> Private by design
           </h2>
@@ -267,7 +317,7 @@ export default function HomePage() {
       <section id="get-started" aria-labelledby="start-heading" className="scroll-mt-24">
         <SectionHeading
           id="start-heading"
-          n={6}
+          n={7}
           title="Get started"
           sub={
             IS_LIVE
@@ -292,7 +342,7 @@ export default function HomePage() {
 
       {/* ── FAQ ──────────────────────────────────────────────────────────── */}
       <section aria-labelledby="faq-heading">
-        <SectionHeading id="faq-heading" n={7} title="Questions" />
+        <SectionHeading id="faq-heading" n={8} title="Questions" />
         <div className="mt-6 divide-y divide-slate-200 rounded-2xl border border-slate-200 bg-white">
           {FAQ.map(([q, a]) => (
             <details key={q} className="group p-5 [&_summary::-webkit-details-marker]:hidden">
@@ -337,51 +387,242 @@ function SectionHeading({ id, n, title, sub }: { id: string; n: number; title: s
   );
 }
 
-/** A static picture of what a diagnosis looks like, drawn with the app's own pieces. */
+type PreviewStep = {
+  line: string;
+  ok: boolean;
+  /** Shown under a correct line that builds on an earlier mistake. */
+  carried?: string;
+  pillar?: PillarCategory;
+  /** A slip is a one-off; a gap is something to relearn. */
+  kind?: 'slip' | 'gap';
+  note?: string;
+};
+type PreviewSample = {
+  subject: string;
+  topic: string;
+  /** Math is graded today; the rest are samples of where Quark is going. */
+  live: boolean;
+  /** Render lines as math (KaTeX) or as plain written work. */
+  math: boolean;
+  question: string;
+  steps: PreviewStep[];
+  next: string;
+};
+
+/** Sample work shown in the hero, one per subject. No error codes here: only pillar ids and plain notes. */
+const PREVIEW_SAMPLES: PreviewSample[] = [
+  {
+    subject: 'Math',
+    topic: 'Quadratics',
+    live: true,
+    math: true,
+    question: 'A ball’s height is h = −5t² + 20t + 1 metres. Find its maximum height.',
+    steps: [
+      { line: 't = \\frac{b}{2a} = \\frac{20}{-10} = -2', ok: false, pillar: 'PRC', kind: 'gap', note: 'The vertex is at −b ÷ 2a. The minus sign is part of the formula.' },
+      { line: 'h = -5(-2)^2 + 20(-2) + 1', ok: true, carried: 'Correct from step 1' },
+      { line: 'h = -20 - 40 + 1 = -59', ok: true, carried: 'Correct from step 1' },
+      { line: 'h_{\\text{max}} = -59 \\text{ m}', ok: false, pillar: 'TST', kind: 'slip', note: 'A height below the ground is a sign to go back and check.' },
+    ],
+    next: 'finding the vertex, then checking it makes sense. 6 questions in 3 stages.',
+  },
+  {
+    subject: 'Chemistry',
+    topic: 'Stoichiometry',
+    live: false,
+    math: false,
+    question: 'How many grams of water form when 4 g of hydrogen burns?',
+    steps: [
+      { line: '2 H₂ + O₂ → 2 H₂O', ok: true },
+      { line: 'n(H₂) = 4 g ÷ 2 g/mol = 2 mol', ok: true },
+      { line: 'n(H₂O) = 2 mol × ½ = 1 mol', ok: false, pillar: 'STR', kind: 'gap', note: 'The ratio is 2 H₂ to 2 H₂O, so 1 : 1, not 2 : 1.' },
+      { line: 'm = 1 × 18 = 18', ok: false, pillar: 'COM', kind: 'slip', note: 'The answer needs units: grams.' },
+    ],
+    next: 'reading mole ratios from a balanced equation. 6 questions in 3 stages.',
+  },
+  {
+    subject: 'Physics',
+    topic: 'Motion',
+    live: false,
+    math: false,
+    question: 'A car speeds up from 5 m/s to 25 m/s in 4 s. How far does it go?',
+    steps: [
+      { line: 'a = (25 − 5) ÷ 4 = 5 m/s²', ok: true },
+      { line: 'd = v₂ × t', ok: false, pillar: 'CON', kind: 'gap', note: 'The speed changes, so v × t with the final speed overshoots. Use d = v₁t + ½at².' },
+      { line: 'd = 25 × 4 = 1000 m', ok: false, pillar: 'FAC', kind: 'slip', note: '25 × 4 is 100.' },
+      { line: 'The car travels 1000 m.', ok: true, carried: 'Correct from step 3' },
+    ],
+    next: 'the motion equations and when to use each. 6 questions in 3 stages.',
+  },
+  {
+    subject: 'Biology',
+    topic: 'Osmosis',
+    live: false,
+    math: false,
+    question: 'Explain why a red blood cell shrinks in salt water.',
+    steps: [
+      { line: 'Salt water has more solute than the inside of the cell.', ok: true },
+      { line: 'Water crosses the membrane by osmosis.', ok: true },
+      { line: 'Water moves into the cell, toward the salt.', ok: false, pillar: 'CON', kind: 'gap', note: 'Water moves out of the cell, toward the side with more solute.' },
+      { line: 'So the cell shrinks.', ok: false, pillar: 'COM', kind: 'slip', note: 'Right answer, but it does not follow from step 3.' },
+    ],
+    next: 'which way water moves, and why. 6 questions in 3 stages.',
+  },
+  {
+    subject: 'History',
+    topic: 'Canada in WWI',
+    live: false,
+    math: false,
+    question: 'Was Vimy Ridge a turning point for Canada? Explain.',
+    steps: [
+      { line: 'Claim: Vimy changed how Canada saw itself.', ok: true },
+      { line: 'All four Canadian divisions fought together for the first time.', ok: true },
+      { line: 'Canada then signed the peace treaty in 1918.', ok: false, pillar: 'FAC', kind: 'slip', note: 'The Treaty of Versailles was signed in 1919.' },
+      { line: 'So it was a very important battle.', ok: false, pillar: 'COM', kind: 'gap', note: 'The evidence is never tied back to the claim.' },
+    ],
+    next: 'linking evidence back to a claim. 6 short responses in 3 stages.',
+  },
+  {
+    subject: 'English',
+    topic: 'Essay writing',
+    live: false,
+    math: false,
+    question: 'Argue whether Jonas is right to leave the community.',
+    steps: [
+      { line: 'Jonas lives in a community with no memories.', ok: false, pillar: 'TST', kind: 'gap', note: 'Opens with plot summary; the prompt asks for a position.' },
+      { line: '“He was certain that he could not go back.”', ok: true },
+      { line: 'This shows Jonas is brave.', ok: false, pillar: 'PRC', kind: 'slip', note: 'Names a trait but does not explain how the quote shows it.' },
+      { line: 'In the end, leaving was the right choice.', ok: true },
+    ],
+    next: 'turning a summary into an argument. 6 short responses in 3 stages.',
+  },
+];
+
+const PREVIEW_INTERVAL_MS = 7000;
+
+/** A picture of what a diagnosis looks like, drawn with the app's own pieces. Rotates through subjects. */
 function DiagnosisPreview() {
-  const steps: { line: string; ok: boolean; code?: string; pillar?: 'PRC' | 'FAC'; note?: string }[] = [
-    { line: 'x^2 - 5x + 6 = 0', ok: true },
-    { line: '(x - 2)(x - 3) = 0', ok: true },
-    { line: 'x = -2 or x = -3', ok: false, code: 'PRC_SIGN_OR_FACTOR_DROPPED', pillar: 'PRC', note: 'Sign flipped when solving each factor' },
-  ];
+  const [index, setIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setReducedMotion(mq.matches);
+    const onChange = (e: MediaQueryListEvent) => setReducedMotion(e.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
+
+  useEffect(() => {
+    if (paused || reducedMotion) return;
+    const id = window.setTimeout(() => setIndex((i) => (i + 1) % PREVIEW_SAMPLES.length), PREVIEW_INTERVAL_MS);
+    return () => window.clearTimeout(id);
+  }, [index, paused, reducedMotion]);
+
   return (
-    <figure className="relative m-0" aria-label="Example of a Quark diagnosis">
+    <figure
+      className="relative m-0"
+      aria-label="Examples of a Quark diagnosis in different subjects"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onFocus={() => setPaused(true)}
+      onBlur={() => setPaused(false)}
+    >
       <div className="aero-blueprint absolute -inset-3 rounded-2xl border border-line sm:-inset-5" aria-hidden />
       <div className="relative rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_24px_48px_-24px_rgba(15,23,42,0.35)] sm:p-6">
-        <div className="flex items-center justify-between gap-2">
-          <span className="eyebrow">Question 4 · Quadratics</span>
-          <span className="aero-badge aero-badge--warn">1 issue</span>
-        </div>
-        <ol className="mt-4 space-y-2">
-          {steps.map((s, i) => (
-            <li
-              key={i}
-              className={`rounded-xl border p-3 ${s.ok ? 'border-slate-200' : 'border-rose-200 bg-rose-50/60'}`}
+        <div role="tablist" aria-label="Subject" className="-mx-1 flex flex-wrap gap-1">
+          {PREVIEW_SAMPLES.map((s, i) => (
+            <button
+              key={s.subject}
+              type="button"
+              role="tab"
+              id={`preview-tab-${i}`}
+              aria-controls={`preview-panel-${i}`}
+              aria-selected={i === index}
+              onClick={() => setIndex(i)}
+              className={`rounded-full px-2.5 py-1 text-xs font-semibold transition ${
+                i === index ? 'bg-indigo-600 text-white' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800'
+              }`}
             >
-              <div className="flex items-center gap-3">
-                <span className="font-mono text-xs text-slate-400">{i + 1}</span>
-                <span className="flex-1 text-slate-900">
-                  <MathText text={s.line} mode="math" />
-                </span>
-                {s.ok ? (
-                  <CheckCircle2 className="h-5 w-5 text-emerald-600" aria-label="Correct" />
-                ) : (
-                  <XCircle className="h-5 w-5 text-rose-600" aria-label="Mistake" />
-                )}
-              </div>
-              {!s.ok && s.pillar && (
-                <div className="mt-2 flex flex-wrap items-center gap-2 pl-6 text-sm">
-                  <PillarBadge pillar={s.pillar} />
-                  <span className="text-slate-600">{s.note}</span>
-                </div>
-              )}
-            </li>
+              {s.subject}
+            </button>
           ))}
-        </ol>
-        <div className="mt-4 rounded-xl bg-indigo-50 p-3 text-sm text-indigo-900 ring-1 ring-indigo-200">
-          <span className="font-semibold">Next practice:</span> solving from factored form, 6 questions in 3 stages.
+        </div>
+
+        {/* Every sample sits in the same grid cell, so the card keeps the height of the tallest one. */}
+        <div className="mt-4 grid">
+          {PREVIEW_SAMPLES.map((sample, i) => (
+            <PreviewPanel key={sample.subject} sample={sample} index={i} active={i === index} />
+          ))}
         </div>
       </div>
     </figure>
+  );
+}
+
+function PreviewPanel({ sample, index, active }: { sample: PreviewSample; index: number; active: boolean }) {
+  const gaps = sample.steps.filter((s) => s.kind === 'gap').length;
+  const slips = sample.steps.filter((s) => s.kind === 'slip').length;
+  return (
+    <div
+      role="tabpanel"
+      id={`preview-panel-${index}`}
+      aria-labelledby={`preview-tab-${index}`}
+      aria-hidden={!active}
+      className={`[grid-area:1/1] transition-opacity duration-300 motion-reduce:transition-none ${
+        active ? 'opacity-100' : 'pointer-events-none invisible opacity-0'
+      }`}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <span className="eyebrow">
+          {sample.subject} · {sample.topic}
+        </span>
+        {sample.live ? (
+          <span className="aero-badge aero-badge--warn">
+            {gaps} gap · {slips} slip
+          </span>
+        ) : (
+          <span className="aero-badge">Coming soon</span>
+        )}
+      </div>
+      <p className="mt-2 text-sm font-medium text-slate-800">{sample.question}</p>
+      <ol className="mt-3 space-y-1.5">
+        {sample.steps.map((s, i) => (
+          <li
+            key={i}
+            className={`rounded-xl border px-3 py-2 ${s.ok ? 'border-slate-200' : 'border-rose-200 bg-rose-50/60'}`}
+          >
+            <div className="flex items-center gap-3">
+              <span className="font-mono text-xs text-slate-400">{i + 1}</span>
+              <span className="flex-1 text-sm text-slate-900">
+                {sample.math ? <MathText text={s.line} mode="math" /> : s.line}
+              </span>
+              {s.ok ? (
+                <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" aria-label="Correct" />
+              ) : (
+                <XCircle className="h-4 w-4 shrink-0 text-rose-600" aria-label="Mistake" />
+              )}
+            </div>
+            {s.ok && s.carried && <p className="mt-0.5 pl-6 text-xs text-emerald-700">{s.carried}</p>}
+            {!s.ok && s.pillar && (
+              <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 pl-6 text-xs">
+                <PillarBadge pillar={s.pillar} />
+                <span
+                  className={`rounded-sm px-1.5 py-[3px] font-mono text-[10.5px] font-semibold uppercase leading-none tracking-[0.06em] ${
+                    s.kind === 'gap' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800'
+                  }`}
+                >
+                  {s.kind === 'gap' ? 'Real gap' : 'Slip'}
+                </span>
+                <span className="text-slate-600">{s.note}</span>
+              </div>
+            )}
+          </li>
+        ))}
+      </ol>
+      <div className="mt-3 rounded-xl bg-indigo-50 p-3 text-sm text-indigo-900 ring-1 ring-indigo-200">
+        <span className="font-semibold">Next practice:</span> {sample.next}
+      </div>
+    </div>
   );
 }

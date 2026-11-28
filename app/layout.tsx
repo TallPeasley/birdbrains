@@ -11,7 +11,7 @@ import TesterBar from '@/components/TesterBar';
 import AeroFooter from '@/components/aero/AeroFooter';
 
 const DESCRIPTION =
-  'Six-pillar math diagnostics and three-stage remedial worksheets for Ontario Grade 9–10 students and parents.';
+  'Step-by-step mistake diagnostics on six pillars and three-stage practice worksheets for Ontario students, parents and teachers. Live for Grade 9–10 math, with sciences, English and history on the way.';
 
 export const metadata: Metadata = {
   // Main address (custom domain on boson-quark). The same build is also served at boson-quark.web.app and

@@ -9,7 +9,7 @@ export default function manifest(): MetadataRoute.Manifest {
     id: '/',
     name: 'Quark',
     short_name: 'Quark',
-    description: 'Six-pillar math diagnostics for students and parents.',
+    description: 'Six-pillar mistake diagnostics for students, parents and teachers.',
     start_url: '/?source=pwa',
     scope: '/',
     display: 'standalone',
