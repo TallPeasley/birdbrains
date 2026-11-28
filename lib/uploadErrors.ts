@@ -110,6 +110,13 @@ export const UPLOAD_ERRORS: Record<number, UploadErrorInfo> = {
     retake: true,
     ours: false,
   },
+  207: {
+    title: "Nothing readable in these files",
+    message: "We couldn't find any math to work with in these files.",
+    action: "Check you picked the right slides or pages, or export them again as a PDF.",
+    retake: false,
+    ours: false,
+  },
   301: {
     title: "Name check skipped",
     message: "The name check could not run, so the top of the page was blurred instead.",

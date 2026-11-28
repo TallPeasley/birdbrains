@@ -24,6 +24,7 @@ import type {
   Stage2GradingAndAffectOutput,
   PillarTally,
   SubmissionIngestionPayload,
+  ApiBatch,
   UserProfile,
   WS_3STAGE_V1,
 } from '@/types/birdBrains';
@@ -124,6 +125,14 @@ export const api = {
   getSubmission: (t: string, id: string) => request<SubmissionIngestionPayload>(`/submissions/${id}`, t),
   processSubmission: (t: string, id: string) =>
     request<ProcessResult>(`/submissions/${id}/process`, t, { method: 'POST' }),
+  /** Slides or textbook pages. Form fields: studentId, uploadMode, unitTopic, files (course optional). */
+  createBatch: (t: string, form: FormData) =>
+    request<ApiBatch>('/submissions/batch', t, { method: 'POST', body: form }),
+  /** Reads the files and writes the practice set or hints (synchronous, about 20 to 60 s). */
+  processBatch: (t: string, id: string) => request<ApiBatch>(`/submissions/batch/${id}/process`, t, { method: 'POST' }),
+  getBatch: (t: string, id: string) => request<ApiBatch>(`/submissions/batch/${id}`, t),
+  /** Slides and textbook batches, newest first (max 50). */
+  studentBatches: (t: string, studentId: string) => request<ApiBatch[]>(`/students/${studentId}/batches`, t),
   latestGrading: (t: string, studentId: string) =>
     request<Stage2GradingAndAffectOutput>(`/students/${studentId}/gradings/latest`, t),
   /** Past uploads, newest first (up to 50). */

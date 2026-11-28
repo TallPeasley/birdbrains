@@ -74,6 +74,12 @@ from .schemas import (
     LinkChildRequest,
     RegisterRequest,
     VisitRequest,
+    ApiBatch,
+    ApiBatchFile,
+    ApiPracticeProblem,
+    ApiSlidesPractice,
+    ApiTextbookProblem,
+    BatchMode,
     ScaffoldingModeEnum,
     Stage1TranscriptionOutput,
     Stage2GradingAndAffectOutput,
@@ -86,6 +92,7 @@ from .schemas import (
 from .storage import BlobStorage
 from .store import Store
 from . import attribution as attr
+from .documents import DocPart, DocumentEngine, FakeDocumentEngine, pptx_parts, sniff
 from .taxonomy import CURRICULUM, strand_for
 
 log = logging.getLogger(__name__)
@@ -94,6 +101,13 @@ MIN_SHORT_EDGE = 1080  # matches lib/imageQuality.ts
 MIN_SHARPNESS_SCORE = 59  # the client's "Too Blurry" cut-off (variance 60) on its 0-100 scale
 MAX_FILES = 6
 VISITS_PER_DAY_CAP = 50_000  # anonymous visit records per day (see record_visit)
+# Slides and textbook pages (POST /submissions/batch). Cloud Run caps a request at 32 MiB,
+# so a batch is limited to 30 MB in all, whatever the per-file limit.
+BATCH_MAX_FILES: dict[str, int] = {"SLIDES_DECK": 25, "TEXTBOOK_ASSIST": 10}
+BATCH_MAX_FILE_BYTES = 25 * 1024 * 1024
+BATCH_MAX_TOTAL_BYTES = 30 * 1024 * 1024
+BATCH_HISTORY_LIMIT = 50
+BATCH_RUN_STALE_SECONDS = 360  # longer than the 300 s Cloud Run timeout: a run this old died
 # Extra photos a student adds to an earlier upload (a re-shoot, or close-ups of single
 # questions) are read together with the first ones. Capped so one upload stays one page.
 MAX_TOTAL_FILES = 10
@@ -127,6 +141,7 @@ class Deps:
     auth: Authenticator
     batch_token: Optional[str] = None
     growth_key: Optional[str] = None  # QUARK_GROWTH_KEY: read key for /internal/attribution
+    documents: Optional[DocumentEngine] = None  # slides and textbook pages; None = the fake engine
     cors_origins: tuple[str, ...] = (
         "https://quark.study",  # main address (custom domain on boson-quark)
         "https://www.quark.study",  # redirects to quark.study
@@ -176,11 +191,15 @@ def deps_from_env() -> Deps:
         from .batch_engine import GeminiBatchEngine
         from .pipeline import GeminiPipeline
 
+        from .documents import GeminiDocumentEngine
+
         pipeline, batch = GeminiPipeline(project), GeminiBatchEngine(storage, project)
+        documents: Optional[DocumentEngine] = GeminiDocumentEngine(project)
     else:
         from .fake import FakeBatchEngine, FakePipeline
 
         pipeline, batch = FakePipeline(), FakeBatchEngine()
+        documents = FakeDocumentEngine()
 
     if auth_mode == "firebase":
         from .auth import FirebaseAuthenticator
@@ -241,6 +260,7 @@ def deps_from_env() -> Deps:
         auth=auth,
         batch_token=os.environ.get("BIRDBRAINS_BATCH_TOKEN") or None,
         growth_key=os.environ.get("QUARK_GROWTH_KEY") or None,
+        documents=documents,
         cors_origins=tuple(o.strip() for o in origins.split(",")) if origins else Deps.cors_origins,
         inline_images=backend != "gcp",
         scrubber=scrubber,
@@ -504,6 +524,8 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         month = now.strftime("%Y-%m")
         used = sum(1 for s in d.store.query("submissions", "studentId", student_id)
                    if s["uploadedAt"].startswith(month))
+        used += sum(1 for b in d.store.query("batches", "studentId", student_id)
+                    if b["uploadedAt"].startswith(month))  # a slides or textbook batch is one upload
         plan = effective_plan(student_id)
         # Testers on the Free view see the meter but never hit the cap (see ingest).
         limit = d.free_monthly_limit if plan == "free" and not is_tester(student_id) else None
@@ -565,7 +587,9 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
                     d.store.delete("imagehashes", f"{student_id}_{f['sha256']}")
             d.store.delete("transcriptions", sub["submissionId"])
             d.store.delete("submissions", sub["submissionId"])
-        d.storage.delete_prefix(f"submissions/{student_id}/")
+        for b in d.store.query("batches", "studentId", student_id):
+            d.store.delete("batches", b["batchId"])
+        d.storage.delete_prefix(f"submissions/{student_id}/")  # photos and batch files
         for g in d.store.query("gradings", "studentId", student_id):
             d.store.delete("worksheets", g["gradingId"])
             d.store.delete("gradings", g["gradingId"])
@@ -932,6 +956,165 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         urls = [f"/submissions/{record['submissionId']}/files/{i}" for i in range(len(record["files"]))]
         return SubmissionIngestionPayload(**{k: v for k, v in record.items() if k not in ("files", "uploadedBy", "tenantId", "source", "forWorksheet")},
                                           fileUrls=urls)
+
+    # ------------------------------------------------- batches (slides, textbook pages)
+    documents: DocumentEngine = d.documents or FakeDocumentEngine()
+
+    def batch_view(record: dict) -> ApiBatch:
+        out = ApiBatch(**{k: v for k, v in record.items()
+                          if k in ApiBatch.model_fields and k not in ("files", "practice", "textbookHints")},
+                       files=[ApiBatchFile(name=f["name"], mimeType=f["mimeType"], bytes=f["bytes"])
+                              for f in record["files"]])
+        if record.get("practice"):
+            p = record["practice"]
+            out.practice = ApiSlidesPractice(title=p["title"], summary=p["summary"],
+                                             problems=[ApiPracticeProblem(**x) for x in p["problems"]])
+        out.textbookHints = [ApiTextbookProblem(**x) for x in record.get("textbookHints", [])]
+        return out
+
+    @app.post("/submissions/batch", response_model=ApiBatch, status_code=201)
+    def create_batch(
+        user: User,
+        studentId: Annotated[str, Form(pattern=STUDENT_ID_PATTERN)],
+        uploadMode: Annotated[BatchMode, Form()],
+        unitTopic: Annotated[str, Form(min_length=1, max_length=200)],
+        files: Annotated[list[UploadFile], File()],
+        course: Annotated[Optional[CourseEnum], Form()] = None,
+    ):
+        """Store slides or textbook pages for one student. Run them with
+        POST /submissions/batch/{batchId}/process. Counts as one upload this month."""
+        require_student_access(user, studentId)
+        if not unitTopic.strip():
+            raise UploadFailure(422, 107, "Add the unit or topic")
+        limit = BATCH_MAX_FILES[uploadMode]
+        if not 1 <= len(files) <= limit:
+            raise UploadFailure(422, 107, f"Attach between 1 and {limit} files")
+        course = course or CourseEnum(user.get("course") or CourseEnum.MPM2D.value)
+        if not course.info.gradable:
+            raise UploadFailure(422, 109, "This subject is not available yet")
+        blobs: list[tuple[str, bytes]] = []
+        total = 0
+        for upload in files:
+            data = upload.file.read(BATCH_MAX_FILE_BYTES + 1)
+            if len(data) > BATCH_MAX_FILE_BYTES:
+                raise UploadFailure(413, 106, "Each file must be 25 MB or smaller")
+            total += len(data)
+            if total > BATCH_MAX_TOTAL_BYTES:
+                raise UploadFailure(413, 106, "One upload can be 30 MB in all. Split the files into two uploads.")
+            blobs.append(((upload.filename or "file")[:120], data))
+        kinds = []
+        for i, (name, data) in enumerate(blobs):
+            kind = sniff(data)
+            allowed = ("pdf", "pptx", "image") if uploadMode == "SLIDES_DECK" else ("pdf", "image")
+            if kind is None or kind.kind not in allowed:
+                what = "PowerPoint (.pptx), PDF, JPEG, PNG or WebP" if uploadMode == "SLIDES_DECK" else "PDF, JPEG, PNG or WebP"
+                raise UploadFailure(422, 105, f"File {i + 1} ({name}) can't be used. Use {what}.")
+            kinds.append(kind)
+
+        current = usage(studentId)
+        counter_id = f"{studentId}_{datetime.now(timezone.utc):%Y-%m}"
+        if not d.store.add_to_counter("usagecounters", counter_id, 1, limit=current.monthlyLimit,
+                                      seed=current.usedThisMonth,
+                                      fields={"studentId": studentId, "month": counter_id[-7:]}):
+            raise UploadFailure(402, 402, "FREE_LIMIT_REACHED")
+        batch_id = new_id("bat")
+        records = []
+        try:
+            for i, ((name, data), kind) in enumerate(zip(blobs, kinds)):
+                if kind.kind == "image":
+                    try:  # screenshots and page photos get the same name blur as worksheet photos
+                        data = d.scrubber.scrub(data, kind.ext.upper().replace("JPG", "JPEG"))
+                    except Exception:
+                        log.exception("Batch image scrubbing failed")
+                        raise UploadFailure(503, 302, "We could not check the pages for names. Please try again.")
+                path = f"submissions/{studentId}/batches/{batch_id}/{i}.{kind.ext}"
+                uri = d.storage.write_bytes(path, data, kind.mime)
+                records.append({"name": name, "mimeType": kind.mime, "kind": kind.kind, "bytes": len(data),
+                                "path": path, "uri": uri})
+        except Exception:
+            d.store.add_to_counter("usagecounters", counter_id, -1)
+            d.storage.delete_prefix(f"submissions/{studentId}/batches/{batch_id}/")
+            raise
+        record = {
+            "batchId": batch_id, "studentId": studentId, "uploadMode": uploadMode, "course": course.value,
+            "unitTopic": unitTopic.strip(), "status": "UPLOADED", "files": records, "uploadedAt": now_iso(),
+            "uploadedBy": user["uid"], "tenantId": tenant_of(user),
+        }
+        d.store.put("batches", batch_id, record)
+        return batch_view(record)
+
+    def batch_run_stale(record: dict) -> bool:
+        """A run still marked READING or GENERATING after the Cloud Run timeout died."""
+        started = record.get("startedAt")
+        if not started:
+            return True
+        return datetime.now(timezone.utc) - datetime.fromisoformat(started) > timedelta(seconds=BATCH_RUN_STALE_SECONDS)
+
+    def batch_parts(record: dict) -> list[DocPart]:
+        parts: list[DocPart] = []
+        for f in record["files"]:
+            if f["kind"] == "pptx":
+                parts += pptx_parts(d.storage.read_bytes(f["path"]))
+            elif d.inline_images:
+                parts.append(DocPart(mime=f["mimeType"], data=d.storage.read_bytes(f["path"])))
+            else:
+                parts.append(DocPart(mime=f["mimeType"], uri=f["uri"]))
+        return parts
+
+    @app.post("/submissions/batch/{batch_id}/process", response_model=ApiBatch)
+    def process_batch(batch_id: str, user: User):
+        """Read the files and write the practice set or hints. Synchronous and
+        idempotent: a finished batch is returned as it is."""
+        record = owned("batches", batch_id, user)
+        if record["status"] == "READY":
+            return batch_view(record)
+        if record["status"] == "FAILED" and record.get("failureCode") == 207:
+            return batch_view(record)  # nothing readable: running it again won't help
+        if record["status"] in ("READING", "GENERATING") and not batch_run_stale(record):
+            return batch_view(record)  # another request is working on it
+        # FAILED on our side (5xx), or a run that died part-way: try again at no extra cost.
+
+        def mark(status: str, **extra):
+            record.update(status=status, **extra)
+            d.store.put("batches", batch_id, record)
+
+        record.pop("failureCode", None)
+        record.pop("finishedAt", None)
+        try:
+            mark("READING", startedAt=now_iso())
+            parts = batch_parts(record)
+            mark("GENERATING")
+            if record["uploadMode"] == "SLIDES_DECK":
+                out = documents.slides_practice(record["course"], record["unitTopic"], parts)
+                if out.unreadable or not out.problems:
+                    mark("FAILED", failureCode=207, finishedAt=now_iso())
+                    return batch_view(record)
+                mark("READY", finishedAt=now_iso(), practice={
+                    "title": out.title, "summary": out.summary,
+                    "problems": [p.model_dump(mode="json") for p in out.problems]})
+            else:
+                out = documents.textbook_hints(record["course"], record["unitTopic"], parts)
+                if out.unreadable or not out.problems:
+                    mark("FAILED", failureCode=207, finishedAt=now_iso())
+                    return batch_view(record)
+                mark("READY", finishedAt=now_iso(),
+                     textbookHints=[p.model_dump(mode="json") for p in out.problems])
+        except Exception as e:
+            log.exception("Batch %s failed", batch_id)
+            print(json.dumps({"severity": "ERROR", "event": "batch_failed", "batchId": batch_id,
+                              "error": type(e).__name__, "message": str(e)[:400]}), flush=True)
+            mark("FAILED", failureCode=classify_pipeline_error(e), finishedAt=now_iso())
+        return batch_view(record)
+
+    @app.get("/submissions/batch/{batch_id}", response_model=ApiBatch)
+    def get_batch(batch_id: str, user: User):
+        return batch_view(owned("batches", batch_id, user))
+
+    @app.get("/students/{student_id}/batches", response_model=list[ApiBatch])
+    def student_batches(student_id: str, user: User):
+        require_student_access(user, student_id)
+        rows = sorted(d.store.query("batches", "studentId", student_id), key=lambda b: b["uploadedAt"], reverse=True)
+        return [batch_view(b) for b in rows[:BATCH_HISTORY_LIMIT]]
 
     @app.get("/submissions/{submission_id}", response_model=SubmissionIngestionPayload)
     def get_submission(submission_id: str, user: User):

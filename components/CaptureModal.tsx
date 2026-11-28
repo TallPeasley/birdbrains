@@ -28,10 +28,13 @@ import { api, ApiError } from '@/lib/api';
 import { UPLOAD_ERRORS, uploadErrorCode } from '@/lib/uploadErrors';
 import { useSession } from '@/lib/session';
 import PhoneQrPanel from '@/components/PhoneQrPanel';
+import BatchResult, { demoBatch } from '@/components/student/BatchResult';
 import { MathText } from '@/components/MathText';
 import { acceptsFile, UPLOAD_MODE_ORDER, UPLOAD_MODES, type UploadMode } from '@/lib/uploadModes';
 import type {
+  ApiBatch,
   ApiPhoneUpload,
+  BatchStatus,
   Stage2GradingAndAffectOutput,
   SubmissionIngestionPayload,
 } from '@/types/birdBrains';
@@ -104,6 +107,9 @@ export default function CaptureModal({ initialMode }: { initialMode?: UploadMode
   const [stage, setStage] = useState<Stage>('IDLE');
   const [payload, setPayload] = useState<SubmissionIngestionPayload | null>(null);
   const [grading, setGrading] = useState<Stage2GradingAndAffectOutput | null>(null);
+  // Slides and textbook pages: where the batch is, and the finished result.
+  const [batchStep, setBatchStep] = useState<'UPLOADING' | BatchStatus>('UPLOADING');
+  const [batch, setBatch] = useState<ApiBatch | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   // Phones and tablets get a separate "Take photo" button that opens the rear camera directly
   // (works in the installed app on iPhone and Android, where there is no drag and drop).
@@ -131,6 +137,8 @@ export default function CaptureModal({ initialMode }: { initialMode?: UploadMode
     setStage('IDLE');
     setPayload(null);
     setGrading(null);
+    setBatch(null);
+    setBatchStep('UPLOADING');
   }, []);
 
   const close = useCallback(() => {
@@ -177,6 +185,15 @@ export default function CaptureModal({ initialMode }: { initialMode?: UploadMode
         if (q.file.size > cfg.maxFileBytes) {
           const mb = Math.round(cfg.maxFileBytes / (1024 * 1024));
           return { ...q, error: `Code 106 · File is over ${mb} MB. Please choose a smaller file.` };
+        }
+        if (!photoMode) {
+          const used = [...prev, ...incoming.slice(0, incoming.indexOf(q))]
+            .filter((f) => !('error' in f && f.error))
+            .reduce((sum, f) => sum + f.file.size, 0);
+          if (used + q.file.size > cfg.maxTotalBytes) {
+            const mb = Math.round(cfg.maxTotalBytes / (1024 * 1024));
+            return { ...q, error: `Code 106 · Over ${mb} MB in total. Send the rest in another upload.` };
+          }
         }
         if (photoMode ? !q.file.type.startsWith('image/') : !acceptsFile(mode, q.file)) {
           return {
@@ -245,7 +262,7 @@ export default function CaptureModal({ initialMode }: { initialMode?: UploadMode
   const submit = (again = false) => {
     if (again ? !(allPassed && !analyzing && targetStudentId !== '') : !canSubmit) return;
     if (!photoMode) {
-      submitBatch();
+      void submitBatch();
       return;
     }
     const qualities = files.map((f) => f.quality!);
@@ -284,10 +301,92 @@ export default function CaptureModal({ initialMode }: { initialMode?: UploadMode
     );
   };
 
-  /** Slides and textbook pages: a demo run until POST /submissions/batch exists. */
-  const submitBatch = () => {
+  /** Slides and textbook pages: POST /submissions/batch, then process it (a sample run in demo mode). */
+  const submitBatch = async () => {
+    const batchMode = mode as Exclude<UploadMode, 'WORKSHEET_PHOTO'>;
+    setProblem(null);
+    setBatch(null);
+    setBatchStep('UPLOADING');
     setStage('BATCH_SENDING');
-    timers.current.push(setTimeout(() => setStage('BATCH_DONE'), 1400));
+    if (!live) {
+      timers.current.push(
+        setTimeout(() => setBatchStep('READING'), 500),
+        setTimeout(() => {
+          setBatch(demoBatch(batchMode, unitTopic.trim(), files.length));
+          setStage('BATCH_DONE');
+        }, 1400),
+      );
+      return;
+    }
+    const run = ++runId.current;
+    const alive = () => run === runId.current;
+    let poll: ReturnType<typeof setInterval> | undefined;
+    try {
+      const token = await getToken();
+      const form = new FormData();
+      form.set('studentId', targetStudentId);
+      form.set('uploadMode', batchMode);
+      form.set('unitTopic', unitTopic.trim());
+      files.forEach((f) => form.append('files', f.file, f.file.name));
+      const created = await api.createBatch(token, form);
+      if (!alive()) return;
+      setBatchStep('READING');
+      poll = setInterval(() => {
+        api
+          .getBatch(token, created.batchId)
+          .then((b) => {
+            if (alive() && (b.status === 'READING' || b.status === 'GENERATING')) setBatchStep(b.status);
+          })
+          .catch(() => {});
+      }, 2000);
+      const done = await api.processBatch(token, created.batchId);
+      if (!alive()) return;
+      setBatch(done);
+      setStage('BATCH_DONE');
+      bumpData();
+    } catch (err) {
+      if (!alive()) return;
+      setProblem({
+        code: err instanceof ApiError ? uploadErrorCode(err.status, err.detail, err.code) : 900,
+        message:
+          err instanceof ApiError && err.detail === 'FREE_LIMIT_REACHED'
+            ? 'You have used all your Free uploads for this month. Your allowance resets on the 1st.'
+            : err instanceof Error
+              ? err.message
+              : 'Something went wrong. Please try again.',
+        failedAt: 0,
+        status: err instanceof ApiError ? err.status : undefined,
+      });
+      setStage('BATCH_DONE');
+    } finally {
+      clearInterval(poll);
+    }
+  };
+
+  /** Run a batch that failed on our side (5xx) again: same files, no extra upload. */
+  const retryBatch = async () => {
+    if (!batch) return;
+    const id = batch.batchId;
+    const run = ++runId.current;
+    setProblem(null);
+    setBatchStep('READING');
+    setStage('BATCH_SENDING');
+    try {
+      const done = await api.processBatch(await getToken(), id);
+      if (run !== runId.current) return;
+      setBatch(done);
+      setStage('BATCH_DONE');
+      bumpData();
+    } catch (err) {
+      if (run !== runId.current) return;
+      setProblem({
+        code: err instanceof ApiError ? uploadErrorCode(err.status, err.detail, err.code) : 900,
+        message: err instanceof Error ? err.message : 'Something went wrong. Please try again.',
+        failedAt: 0,
+        status: err instanceof ApiError ? err.status : undefined,
+      });
+      setStage('BATCH_DONE');
+    }
   };
 
   const submitLive = async (sharpnessScore: number) => {
@@ -543,12 +642,20 @@ export default function CaptureModal({ initialMode }: { initialMode?: UploadMode
             <BatchView
               mode={mode}
               done={stage === 'BATCH_DONE'}
-              fileCount={files.length}
-              topic={unitTopic.trim()}
+              step={batchStep}
+              batch={batch}
+              problem={problem}
+              demo={!live}
               onAnother={() => {
                 reset();
                 setUnitTopic('');
               }}
+              onBack={() => {
+                setProblem(null);
+                setBatch(null);
+                setStage('IDLE');
+              }}
+              onRetry={live && batch?.status === 'FAILED' && (batch.failureCode ?? 900) >= 500 ? () => void retryBatch() : undefined}
               onClose={close}
             />
           ) : stage === 'IDLE' ? (
@@ -836,50 +943,115 @@ function FileRow({ item, onRemove }: { item: QueuedFile; onRemove: () => void })
   );
 }
 
-/** Slides and textbook uploads. Demo only: the API (POST /submissions/batch) is not there yet. */
+const BATCH_STEPS: { step: 'UPLOADING' | BatchStatus; label: string }[] = [
+  { step: 'UPLOADING', label: 'Uploading your files' },
+  { step: 'READING', label: 'Reading the slides and pages' },
+  { step: 'GENERATING', label: 'Writing your practice' },
+];
+
+/** Slides and textbook uploads: progress, then the practice set or hints (or what went wrong). */
 function BatchView({
   mode,
   done,
-  fileCount,
-  topic,
+  step,
+  batch,
+  problem,
+  demo,
   onAnother,
+  onBack,
+  onRetry,
   onClose,
 }: {
   mode: UploadMode;
   done: boolean;
-  fileCount: number;
-  topic: string;
+  step: 'UPLOADING' | BatchStatus;
+  batch: ApiBatch | null;
+  problem: ProblemState | null;
+  demo: boolean;
   onAnother: () => void;
+  onBack: () => void;
+  /** Set when the batch failed on our side and can be run again. */
+  onRetry?: () => void;
   onClose: () => void;
 }) {
   const slides = mode === 'SLIDES_DECK';
   if (!done) {
+    const at = Math.max(0, BATCH_STEPS.findIndex((s) => s.step === step));
     return (
-      <div className="space-y-3 py-10 text-center" aria-live="polite">
-        <Loader2 className="mx-auto h-8 w-8 animate-spin text-indigo-600" aria-hidden />
-        <p className="text-sm font-semibold text-slate-900">
-          {slides ? 'Reading your slides and finding the problems…' : 'Reading your textbook pages…'}
-        </p>
-        <p className="text-xs text-slate-500">Keep this window open.</p>
+      <div className="space-y-5 py-4" aria-live="polite">
+        <div className="text-center">
+          <h3 className="text-lg font-semibold text-slate-900">
+            {slides ? 'Making practice from your slides…' : 'Reading your textbook pages…'}
+          </h3>
+          <p className="mt-1 text-sm text-slate-500">This can take up to a minute. Keep this window open.</p>
+        </div>
+        <ol className="space-y-3">
+          {BATCH_STEPS.map((s, i) => (
+            <li key={s.step} className="flex items-center gap-3">
+              <span
+                className={`grid h-8 w-8 shrink-0 place-items-center rounded-full text-xs font-semibold ${
+                  i < at ? 'bg-emerald-500 text-white' : i === at ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-400'
+                }`}
+              >
+                {i < at ? <CheckCircle2 className="h-4 w-4" /> : i === at ? <Loader2 className="h-4 w-4 animate-spin" /> : i + 1}
+              </span>
+              <span className={`text-sm ${i <= at ? 'font-semibold text-slate-900' : 'text-slate-400'}`}>{s.label}</span>
+            </li>
+          ))}
+        </ol>
       </div>
     );
   }
+
+  const failedCode = problem?.code ?? (batch?.status === 'FAILED' ? (batch.failureCode ?? 900) : undefined);
+  if (failedCode !== undefined) {
+    const info = UPLOAD_ERRORS[failedCode];
+    return (
+      <div className="space-y-4 py-2">
+        <div className="text-center">
+          <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-rose-50 text-rose-600">
+            <AlertTriangle className="h-7 w-7" aria-hidden />
+          </span>
+          <h3 className="mt-3 text-lg font-semibold text-slate-900">{info?.title ?? 'That didn’t work'}</h3>
+          <p className="mt-1 text-sm text-slate-600">{problem?.message ?? info?.message ?? 'Something went wrong. Please try again.'}</p>
+          <ErrorCodeLine code={failedCode} />
+        </div>
+        <div className="flex flex-wrap justify-end gap-2">
+          <button type="button" onClick={onBack} className="btn btn-secondary">
+            Back to files
+          </button>
+          {onRetry ? (
+            <button type="button" onClick={onRetry} className="btn btn-primary">
+              <RotateCcw className="h-4 w-4" aria-hidden /> Try again
+            </button>
+          ) : (
+            <button type="button" onClick={onClose} className="btn btn-primary">
+              Close
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-5 py-2" aria-live="polite">
-      <div className="text-center">
-        <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-emerald-50 text-emerald-600">
-          <CheckCircle2 className="h-7 w-7" aria-hidden />
+      <div className="flex items-start gap-3">
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-emerald-50 text-emerald-600">
+          <CheckCircle2 className="h-6 w-6" aria-hidden />
         </span>
-        <h3 className="mt-3 text-lg font-semibold text-slate-900">Upload received</h3>
-        <p className="mt-1 text-sm text-slate-600">
-          {fileCount} file{fileCount === 1 ? '' : 's'}
-          {topic ? ` for ${topic}` : ''}.{' '}
-          {slides
-            ? 'Quark will turn the problems in them into a practice set on the same six pillars.'
-            : 'Quark will build step-by-step hints for the problems on these pages.'}
-        </p>
-        <p className="mt-2 text-xs text-slate-500">Sample run: nothing was sent. Reference bat_demo00000001.</p>
+        <div className="min-w-0">
+          <h3 className="text-lg font-semibold text-slate-900">
+            {slides ? 'Your practice set is ready' : 'Hints for your textbook problems'}
+          </h3>
+          <p className="text-sm text-slate-600">
+            {batch?.unitTopic}
+            {batch ? ` · ${batch.files.length} file${batch.files.length === 1 ? '' : 's'}` : ''}
+            {demo ? ' · sample run, nothing was sent' : ' · saved in your upload history'}
+          </p>
+        </div>
       </div>
+      {batch && <BatchResult batch={batch} />}
       <div className="flex flex-wrap justify-end gap-2">
         <button type="button" onClick={onAnother} className="btn btn-secondary">
           Upload more

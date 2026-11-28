@@ -38,6 +38,64 @@ export interface SubmissionIngestionPayload {
   gradingId?: string | null;
   /** Upload failure code when status is NEEDS_RETAKE or FAILED (lib/uploadErrors.ts). */
   failureCode?: number | null;
+  /** Always WORKSHEET_PHOTO here; slides and textbook pages are ApiBatch. */
+  uploadMode?: 'WORKSHEET_PHOTO';
+}
+
+/** The three ways to send work from the student portal (see lib/uploadModes.ts). */
+export type UploadMode = 'WORKSHEET_PHOTO' | 'SLIDES_DECK' | 'TEXTBOOK_ASSIST';
+export type BatchMode = Exclude<UploadMode, 'WORKSHEET_PHOTO'>;
+export type BatchStatus = 'UPLOADED' | 'READING' | 'GENERATING' | 'READY' | 'FAILED';
+
+export interface ApiPracticeProblem {
+  number: string;
+  prompt: string;
+  /** Final answer only. */
+  answer: string;
+  hint: string;
+  difficulty: 'WARM_UP' | 'CORE' | 'STRETCH';
+}
+
+export interface ApiSlidesPractice {
+  title: string;
+  /** What the slides teach, in a sentence or two. */
+  summary: string;
+  problems: ApiPracticeProblem[];
+}
+
+export interface ApiTextbookProblem {
+  /** The problem's number on the page, e.g. "4b". */
+  label: string;
+  statement: string;
+  /** 1 to 4 hints, each more specific; never the final answer. */
+  hints: string[];
+  /** How to check an answer, without giving it. */
+  check: string;
+}
+
+export interface ApiBatchFile {
+  name: string;
+  mimeType: string;
+  bytes: number;
+}
+
+/** Slides or textbook pages (POST /submissions/batch, then .../process). */
+export interface ApiBatch {
+  batchId: string;
+  studentId: string;
+  uploadMode: BatchMode;
+  course: GradeCourse;
+  unitTopic: string;
+  status: BatchStatus;
+  files: ApiBatchFile[];
+  uploadedAt: string;
+  finishedAt?: string | null;
+  /** Upload failure code when status is FAILED (207: nothing readable). */
+  failureCode?: number | null;
+  /** SLIDES_DECK, when READY. */
+  practice?: ApiSlidesPractice | null;
+  /** TEXTBOOK_ASSIST, when READY. */
+  textbookHints: ApiTextbookProblem[];
 }
 
 export interface PillarBreakdown {

@@ -4,10 +4,11 @@
 //   SLIDES_DECK      a teacher's slides or a PDF booklet, turned into practice
 //   TEXTBOOK_ASSIST  textbook pages or screenshots, for step-by-step hints
 //
-// Only WORKSHEET_PHOTO has an API today. The other two need POST /submissions/batch
-// (see the PR that added this file); until it exists they run in demo mode only and
-// show "coming soon" on the live site.
-export type UploadMode = 'WORKSHEET_PHOTO' | 'SLIDES_DECK' | 'TEXTBOOK_ASSIST';
+// Photos go to POST /submissions; slides and textbook pages to POST /submissions/batch.
+// A batch is limited to 30 MB in all (Cloud Run caps a request at 32 MiB).
+import type { UploadMode } from '@/types/birdBrains';
+
+export type { UploadMode };
 
 export const UPLOAD_MODE_ORDER: UploadMode[] = ['WORKSHEET_PHOTO', 'SLIDES_DECK', 'TEXTBOOK_ASSIST'];
 
@@ -26,6 +27,8 @@ export interface UploadModeConfig {
   allowed: { mimes: string[]; extensions: string[] };
   maxFiles: number;
   maxFileBytes: number;
+  /** All files together, in bytes (one request). */
+  maxTotalBytes: number;
   /** Photos of handwriting get the sharpness and 1080p check from lib/imageQuality.ts;
    *  digital slides, PDFs and screenshots do not. */
   runBlurCheck: boolean;
@@ -48,6 +51,7 @@ export const UPLOAD_MODES: Record<UploadMode, UploadModeConfig> = {
     allowed: { mimes: IMAGES, extensions: ['.jpg', '.jpeg', '.png', '.webp'] },
     maxFiles: 6,
     maxFileBytes: 12 * 1024 * 1024,
+    maxTotalBytes: 6 * 12 * 1024 * 1024,
     runBlurCheck: true,
     ctaLabel: 'Submit for diagnosis',
     topicPlaceholder: 'e.g. Completing the square',
@@ -57,29 +61,31 @@ export const UPLOAD_MODES: Record<UploadMode, UploadModeConfig> = {
     title: 'Generate from Slides',
     tab: 'Slides / PDF',
     blurb: 'Turn your teacher’s slides or a PDF booklet into practice problems.',
-    subtitle: 'PowerPoint (.pptx), PDF booklets or long screenshots, up to 25 files (25 MB each).',
+    subtitle: 'PowerPoint (.pptx), PDF booklets or long screenshots, up to 25 files (30 MB in total).',
     accept: `.pptx,.pdf,${PPTX},application/pdf,image/png,image/jpeg,image/webp`,
     allowed: { mimes: [PPTX, 'application/pdf', ...IMAGES], extensions: ['.pptx', '.pdf', '.png', '.jpg', '.jpeg', '.webp'] },
     maxFiles: 25,
     maxFileBytes: 25 * 1024 * 1024,
+    maxTotalBytes: 30 * 1024 * 1024,
     runBlurCheck: false,
     ctaLabel: 'Upload slides and make practice',
     topicPlaceholder: 'e.g. Unit 6 · Expressions and equations',
-    liveReady: false,
+    liveReady: true,
   },
   TEXTBOOK_ASSIST: {
     title: 'Assist Textbook',
     tab: 'Textbook',
     blurb: 'Send textbook pages or screenshots and get step-by-step hints.',
-    subtitle: 'Textbook pages as PDF or screenshots, up to 10 files (25 MB each).',
+    subtitle: 'Textbook pages as PDF or screenshots, up to 10 files (30 MB in total).',
     accept: '.pdf,application/pdf,image/png,image/jpeg,image/webp',
     allowed: { mimes: ['application/pdf', ...IMAGES], extensions: ['.pdf', '.png', '.jpg', '.jpeg', '.webp'] },
     maxFiles: 10,
     maxFileBytes: 25 * 1024 * 1024,
+    maxTotalBytes: 30 * 1024 * 1024,
     runBlurCheck: false,
     ctaLabel: 'Upload for textbook hints',
     topicPlaceholder: 'e.g. Chapter 4 · Linear systems',
-    liveReady: false,
+    liveReady: true,
   },
 };
 
