@@ -66,11 +66,12 @@ course's level.
 
 ## How it is used
 
-- **Grading prompts.** Ontario's two courses keep their exact unit lists and course
-  choices in Stage 1. Every other course tells Stage 1 its own units and asks it not
-  to guess a course, and tells Stage 2 the curriculum, grade, and the matched topic's
-  learning goals and misconceptions with their codes. The system prompts no longer
-  name Ontario.
+- **Grading prompts.** The course is always the student's own choice; Stage 1 no
+  longer guesses it from the page (stored transcriptions with the old
+  `detected_course` field still load, and it is ignored). Stage 1 gets the course's
+  units: MTH1W and MPM2D keep their own lists, every other course uses the catalog.
+  Stage 2 gets the curriculum, grade, and the matched topic's learning goals and
+  misconceptions with their codes. The system prompts no longer name Ontario.
 - **Strands.** Ontario's two courses use their own strands. Others use the matched
   topic's strand.
 - **Grading scope.** Only math is gradable (`gradable_subjects`). Uploads for a
@@ -79,8 +80,16 @@ course's level.
 - **Site.** `lib/curricula.ts` reads the same `curricula.json`;
   `components/CurriculumPicker.tsx` is the curriculum, grade and subject selector used
   at sign-up, in account settings (students can now change course) and in the
-  teacher import. The parent forecast shows Ontario levels for Ontario courses and
-  plain score bands for everyone else.
+  teacher import.
+- **Forecast names.** The parent forecast keeps the backend's four bands (below 60%,
+  60-69, 70-79, 80+) and names them in the student's own system, from each
+  curriculum's `assessments` in `curricula.json`: EQAO levels (Ontario), the BC
+  proficiency scale, Alberta's acceptable standard and standard of excellence,
+  Quebec marks (pass mark 60%), US state test levels (Smarter Balanced names), Key
+  Stage 1-2 standards, GCSE grades and A level grades (England), IB grades 1-7 (MYP
+  and DP) and AP scores 1-5. Other cases show score ranges. These are approximate
+  translations for families, not published equivalences, and are marked
+  `needs_review`.
 
 ## Review status
 

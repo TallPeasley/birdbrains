@@ -1,5 +1,6 @@
 'use client';
 
+import { attributionForSignup } from '@/lib/attribution';
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { api, ApiError, IS_LIVE } from '@/lib/api';
 import type { GradeCourse, UserProfile } from '@/types/birdBrains';
@@ -180,7 +181,7 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       setSignedIn(true);
     };
     const createProfile = async (p: NewProfile) => {
-      setProfile(await api.register(await getToken(), p));
+      setProfile(await api.register(await getToken(), { ...p, attribution: attributionForSignup() }));
     };
     return {
       live: IS_LIVE && !demoOn,

@@ -4,7 +4,14 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import {
   ArrowRight,
+  Atom,
+  BookOpen,
+  Calculator,
   Camera,
+  Dna,
+  FlaskConical,
+  Globe,
+  Landmark,
   CheckCircle2,
   ChevronDown,
   FileText,
@@ -30,7 +37,7 @@ import { MathText } from '@/components/MathText';
 /** Telemetry strip under the hero. Each figure is a fact about the product, not a metric. */
 const SPECS: [figure: string, label: string][] = [
   ['06', 'Pillars in every diagnostic'],
-  ['06', 'Subjects planned on the same pillars'],
+  ['07', 'Subjects on the same six pillars'],
   ['03', 'Stages in each practice worksheet'],
 ];
 
@@ -98,6 +105,54 @@ const INTEGRATIONS: { name: string; status: 'Beta' | 'Coming soon'; body: string
     name: 'Canvas',
     status: 'Coming soon',
     body: 'Import hand-ins from an assignment and send scores and feedback back. Set up once per school with your Canvas admin.',
+  },
+];
+
+type SubjectStatus = 'Live' | 'Grading next' | 'Planned';
+
+/** What Quark covers. Keep in step with gradable_subjects in curricula.json. */
+const SUBJECTS: { icon: typeof Calculator; name: string; status: SubjectStatus; body: string }[] = [
+  {
+    icon: Calculator,
+    name: 'Math',
+    status: 'Live',
+    body: 'Kindergarten to Grade 12 in your curriculum: number sense, fractions, algebra, geometry, functions, statistics and calculus.',
+  },
+  {
+    icon: Dna,
+    name: 'Biology',
+    status: 'Grading next',
+    body: 'Cells, genetics, ecology, evolution and body systems. Topics and common mistakes are mapped for every grade.',
+  },
+  {
+    icon: FlaskConical,
+    name: 'Chemistry',
+    status: 'Grading next',
+    body: 'Matter, atoms and bonding, reactions, the mole, stoichiometry and equilibrium. Mapped for every grade.',
+  },
+  {
+    icon: Atom,
+    name: 'Physics',
+    status: 'Grading next',
+    body: 'Forces and motion, energy, electricity and magnetism, waves and light. Mapped for every grade.',
+  },
+  {
+    icon: Globe,
+    name: 'Earth & space science',
+    status: 'Grading next',
+    body: 'Weather and climate, rocks and plate tectonics, the solar system and beyond. Mapped for every grade.',
+  },
+  {
+    icon: BookOpen,
+    name: 'English',
+    status: 'Planned',
+    body: 'Reading, essays, evidence and writing, sorted on the same six pillars.',
+  },
+  {
+    icon: Landmark,
+    name: 'History, geography & civics',
+    status: 'Planned',
+    body: 'Thinking with sources, building an argument and recalling the facts that matter.',
   },
 ];
 
@@ -231,9 +286,33 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── Subjects ─────────────────────────────────────────────────────── */}
+      <section aria-labelledby="subjects-heading">
+        <SectionHeading
+          id="subjects-heading"
+          n={3}
+          title="Subjects"
+          sub="Math is graded today from kindergarten to Grade 12. The sciences are mapped grade by grade and are next, then English and history."
+        />
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {SUBJECTS.map(({ icon: Icon, name, status, body }) => (
+            <div key={name} className="card p-5">
+              <div className="flex items-center justify-between gap-2">
+                <span className="grid h-10 w-10 place-items-center rounded-lg bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200">
+                  <Icon className="h-5 w-5" aria-hidden />
+                </span>
+                <span className={`aero-badge ${status === 'Live' ? 'aero-badge--ok' : status === 'Grading next' ? 'aero-badge--accent' : ''}`}>{status}</span>
+              </div>
+              <h3 className="mt-4 font-display text-lg font-bold tracking-display text-slate-900">{name}</h3>
+              <p className="mt-1.5 text-sm text-slate-600">{body}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* ── Who it's for ─────────────────────────────────────────────────── */}
       <section aria-labelledby="who-heading">
-        <SectionHeading id="who-heading" n={3} title="Built for the whole team" sub="One photo, three views." />
+        <SectionHeading id="who-heading" n={4} title="Built for the whole team" sub="One photo, three views." />
         <div className="mt-8 grid gap-4 md:grid-cols-3">
           {AUDIENCES.map(({ icon: Icon, who, points }) => (
             <div key={who} className="card p-6">
@@ -260,7 +339,7 @@ export default function HomePage() {
       <section aria-labelledby="lms-heading">
         <SectionHeading
           id="lms-heading"
-          n={4}
+          n={5}
           title="Works with your school's systems"
           sub="Teachers bring in the work students already hand in, instead of collecting photos twice. Part of Pro for teachers."
         />
@@ -286,7 +365,7 @@ export default function HomePage() {
       {/* ── Plans + privacy ──────────────────────────────────────────────── */}
       <section className="grid gap-4 lg:grid-cols-2">
         <div className="card flex flex-col p-6 sm:p-8">
-          <SectionIndex n={5} />
+          <SectionIndex n={6} />
           <h2 className="mt-2 font-display text-2xl font-extrabold tracking-display text-slate-900">Start free</h2>
           <p className="mt-2 text-slate-600">
             The free plan reads your work, finds the mistakes across all six pillars and explains them, up to a monthly
@@ -299,7 +378,7 @@ export default function HomePage() {
           </div>
         </div>
         <div className="card flex flex-col p-6 sm:p-8">
-          <SectionIndex n={6} />
+          <SectionIndex n={7} />
           <h2 className="mt-2 flex items-center gap-2 font-display text-2xl font-extrabold tracking-display text-slate-900">
             <ShieldCheck className="h-6 w-6 text-emerald-600" aria-hidden /> Private by design
           </h2>
@@ -318,7 +397,7 @@ export default function HomePage() {
       <section id="get-started" aria-labelledby="start-heading" className="scroll-mt-24">
         <SectionHeading
           id="start-heading"
-          n={7}
+          n={8}
           title="Get started"
           sub={
             IS_LIVE
@@ -343,7 +422,7 @@ export default function HomePage() {
 
       {/* ── FAQ ──────────────────────────────────────────────────────────── */}
       <section aria-labelledby="faq-heading">
-        <SectionHeading id="faq-heading" n={8} title="Questions" />
+        <SectionHeading id="faq-heading" n={9} title="Questions" />
         <div className="mt-6 divide-y divide-slate-200 rounded-2xl border border-slate-200 bg-white">
           {FAQ.map(([q, a]) => (
             <details key={q} className="group p-5 [&_summary::-webkit-details-marker]:hidden">

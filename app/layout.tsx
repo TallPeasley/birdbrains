@@ -8,6 +8,7 @@ import Navbar from '@/components/Navbar';
 import CaptureModal from '@/components/CaptureModal';
 import PwaSetup from '@/components/PwaSetup';
 import TesterBar from '@/components/TesterBar';
+import CookieConsent from '@/components/CookieConsent';
 import AeroFooter from '@/components/aero/AeroFooter';
 
 const DESCRIPTION =
@@ -73,6 +74,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </main>
             <AeroFooter />
             <CaptureModal />
+            <CookieConsent />
           </RoleProvider>
         </SessionProvider>
       </body>

@@ -101,11 +101,11 @@ def test_topic_matching_and_strands():
 def test_ontario_prompts_keep_their_course_lists():
     ctx = SubmissionContext("sub_x", CourseEnum.MPM2D, "Completing the Square")
     text = stage1_course_text(ctx)
-    assert "Course choices for detected_course: MTH1W, MPM2D." in text
-    for course, strands in CURRICULUM.items():
-        for units in strands.values():
-            for u in units:
-                assert u in text
+    assert "detected_course" not in text and "Principles of Mathematics" in text
+    for units in CURRICULUM[CourseEnum.MPM2D].values():
+        for u in units:
+            assert u in text
+    assert "Financial Literacy" not in text  # MTH1W's units are not offered to an MPM2D student
     line = course_line(ctx)
     assert line.startswith("Course: MPM2D (") and "misconceptions" not in line
 
@@ -113,7 +113,7 @@ def test_ontario_prompts_keep_their_course_lists():
 def test_other_courses_get_curriculum_and_topic_context():
     ctx = SubmissionContext("sub_x", CourseEnum("eng.y10.math"), "Factoring quadratics")
     s1 = stage1_course_text(ctx)
-    assert "leave detected_course null" in s1 and "Factoring" in s1 and "MPM2D" not in s1
+    assert "detected_course" not in s1 and "Factoring" in s1 and "MPM2D" not in s1
     line = course_line(ctx)
     assert "National Curriculum in England" in line and "Year 10" in line
     assert "PRC_FACTORING_ERROR" in line  # the topic's misconceptions and their codes
@@ -149,7 +149,6 @@ def test_upload_for_a_math_course_outside_ontario_is_graded(client):
     assert r.status_code == 201, r.text
     done = client.post(f"/submissions/{r.json()['submissionId']}/process", headers=auth("sam")).json()
     assert done["submission"]["status"] == "GRADED"
-    # The reading step's detected course (MPM2D in the fake) does not replace the student's own.
     assert done["submission"]["course"] == "eng.y10.math"
 
 
@@ -160,12 +159,14 @@ def test_upload_for_a_science_course_is_refused_with_a_code(client):
     assert r.status_code == 422 and r.json()["code"] == 109
 
 
-def test_ontario_student_upload_still_reads_course_from_page(client, family):
+def test_course_is_never_read_from_the_page(client, family):
+    """An MTH1W student keeps MTH1W, even uploading work that looks like Grade 10."""
+    assert client.patch("/me", json={"name": "Alex Mercer", "course": "MTH1W"}, headers=auth("alex")).status_code == 200
     files = [("files", ("p1.jpg", photo(), "image/jpeg"))]
     r = client.post("/submissions", data={"studentId": family["studentId"], "sharpnessScore": "82"},
                     files=files, headers=auth("alex"))
     done = client.post(f"/submissions/{r.json()['submissionId']}/process", headers=auth("alex")).json()
-    assert done["submission"]["course"] == "MPM2D"
+    assert done["submission"]["course"] == "MTH1W"
 
 
 def test_student_can_switch_course_in_settings(client, family):
@@ -175,3 +176,16 @@ def test_student_can_switch_course_in_settings(client, family):
     # Parents have no course of their own; the field is ignored.
     r = client.patch("/me", json={"name": "Jordan", "course": "bc.g8.math"}, headers=auth("jordan"))
     assert r.status_code == 200 and not r.json().get("course")
+
+
+@pytest.mark.parametrize("course, name", [
+    ("MPM2D", "EQAO achievement level"), ("bc.g7.math", "BC proficiency scale"),
+    ("ab.g9.math", "Alberta provincial standard"), ("qc.sec4.math", "Quebec mark"),
+    ("ccss.g6.math", "State math test level"), ("eng.y6.math", "Key Stage 1–2 standard"),
+    ("eng.y11.math", "GCSE grade (9 to 1)"), ("eng.y8.math", "Score range"),
+    ("ib.dp1.math", "IB grade (1 to 7)"), ("ib.pyp3.math", "Score range"),
+    ("ap.calc_bc.math", "AP score (1 to 5)"), ("ca_other.g5.math", "Score range"),
+])
+def test_forecast_uses_each_curriculums_own_scale(course, name):
+    scale = C.forecast_scale(course)
+    assert scale["name"] == name and len(scale["labels"]) == 4

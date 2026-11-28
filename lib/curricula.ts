@@ -20,12 +20,26 @@ export interface CurriculumGrade {
   subjects?: SubjectId[];
 }
 
+export interface ForecastScale {
+  name: string;
+  short: string;
+  /** Names for Quark's four forecast bands, lowest first. */
+  labels: string[];
+  descriptions?: string[];
+  note: string;
+}
+
+interface Assessment extends ForecastScale {
+  levels: [number, number];
+}
+
 export interface Curriculum {
   id: string;
   name: string;
   region: string;
   grades: CurriculumGrade[];
   notes: string;
+  assessments: Assessment[];
 }
 
 export interface Subject {
@@ -43,6 +57,7 @@ interface LegacyCourse {
 }
 
 interface Registry {
+  forecast: { note: string; default: ForecastScale };
   subjects: Subject[];
   gradable_subjects: SubjectId[];
   default_curriculum: string;
@@ -156,6 +171,23 @@ export function courseSubjectLabel(id: string | null | undefined): string {
   const info = parseCourse(id);
   if (!info) return id ?? '';
   return info.legacy ? info.id : info.subject.name;
+}
+
+/** The caveat shown under every forecast. */
+export const FORECAST_NOTE = REGISTRY.forecast.note;
+
+/**
+ * How Quark's four forecast bands are named for a course: EQAO levels in Ontario, the
+ * BC proficiency scale, GCSE grades in England's Years 10-11, AP scores, and so on.
+ * Falls back to plain score ranges.
+ */
+export function forecastScale(id: string | null | undefined): ForecastScale {
+  const info = parseCourse(id);
+  if (info) {
+    const a = info.curriculum.assessments.find((x) => x.levels[0] <= info.grade.level && info.grade.level <= x.levels[1]);
+    if (a) return a;
+  }
+  return REGISTRY.forecast.default;
 }
 
 /** Ontario courses show Ontario-specific extras such as the EQAO-style level forecast. */

@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from typing import Annotated, Optional
 
-from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, Request, Response, UploadFile
+from fastapi import Depends, FastAPI, File, Form, Header, HTTPException, Query, Request, Response, UploadFile
 from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
@@ -73,6 +73,7 @@ from .schemas import (
     CourseEnum,
     LinkChildRequest,
     RegisterRequest,
+    VisitRequest,
     ScaffoldingModeEnum,
     Stage1TranscriptionOutput,
     Stage2GradingAndAffectOutput,
@@ -84,6 +85,7 @@ from .schemas import (
 )
 from .storage import BlobStorage
 from .store import Store
+from . import attribution as attr
 from .taxonomy import CURRICULUM, strand_for
 
 log = logging.getLogger(__name__)
@@ -91,6 +93,7 @@ log = logging.getLogger(__name__)
 MIN_SHORT_EDGE = 1080  # matches lib/imageQuality.ts
 MIN_SHARPNESS_SCORE = 59  # the client's "Too Blurry" cut-off (variance 60) on its 0-100 scale
 MAX_FILES = 6
+VISITS_PER_DAY_CAP = 50_000  # anonymous visit records per day (see record_visit)
 # Extra photos a student adds to an earlier upload (a re-shoot, or close-ups of single
 # questions) are read together with the first ones. Capped so one upload stays one page.
 MAX_TOTAL_FILES = 10
@@ -123,6 +126,7 @@ class Deps:
     batch: BatchEngine
     auth: Authenticator
     batch_token: Optional[str] = None
+    growth_key: Optional[str] = None  # QUARK_GROWTH_KEY: read key for /internal/attribution
     cors_origins: tuple[str, ...] = (
         "https://quark.study",  # main address (custom domain on boson-quark)
         "https://www.quark.study",  # redirects to quark.study
@@ -236,6 +240,7 @@ def deps_from_env() -> Deps:
         batch=batch,
         auth=auth,
         batch_token=os.environ.get("BIRDBRAINS_BATCH_TOKEN") or None,
+        growth_key=os.environ.get("QUARK_GROWTH_KEY") or None,
         cors_origins=tuple(o.strip() for o in origins.split(",")) if origins else Deps.cors_origins,
         inline_images=backend != "gcp",
         scrubber=scrubber,
@@ -263,7 +268,7 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
         CORSMiddleware,
         allow_origins=list(d.cors_origins),
         allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
-        allow_headers=["Authorization", "Content-Type", "X-Upload-Token"],
+        allow_headers=["Authorization", "Content-Type", "X-Upload-Token", "X-Growth-Key"],
     )
 
     # ------------------------------------------------------------- auth helpers
@@ -323,8 +328,22 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
             out["children"] = children
         return out
 
+    def ensure_referral_code(user: dict) -> None:
+        """Every account gets an invite code (quark.study/?ref=CODE). Accounts made before
+        invite codes get one the next time they load their profile."""
+        if user.get("referralCode"):
+            return
+        for _ in range(5):
+            code = "".join(secrets.choice(_CODE_CHARS) for _ in range(7))
+            if not d.store.get("referralcodes", code):
+                break
+        d.store.put("referralcodes", code, {"uid": user["uid"], "createdAt": now_iso()})
+        user["referralCode"] = code
+        d.store.put("users", user["uid"], user)
+
     @app.get("/me", response_model=UserProfile)
     def me(user: User):
+        ensure_referral_code(user)
         return profile_view(user)
 
     def ensure_own_student(user: dict, course: Optional[CourseEnum] = None) -> str:
@@ -374,8 +393,48 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
             code = "".join(secrets.choice(_CODE_CHARS) for _ in range(8))
             profile |= {"studentId": new_id("stu"), "course": body.course.value, "linkCode": code}
             d.store.put("linkcodes", code, {"studentId": profile["studentId"]})
+        if body.attribution and (body.attribution.first or body.attribution.last):
+            touches = body.attribution.model_dump(mode="json", exclude_none=True)
+            first = touches.get("first") or touches.get("last")
+            profile["attribution"] = touches | {"channel": attr.channel(first)}
+            ref = (first or {}).get("ref") or (touches.get("last") or {}).get("ref")
+            referrer = d.store.get("referralcodes", ref.upper()) if ref else None
+            if referrer and referrer["uid"] != uid:
+                profile["referredBy"] = referrer["uid"]
         d.store.put("users", uid, profile)
+        ensure_referral_code(profile)
         return profile
+
+    @app.post("/attribution/visit", status_code=204)
+    def record_visit(body: VisitRequest):
+        """One anonymous visit a day per visitor who allowed cookies. No sign-in, no IP,
+        no user agent. A daily cap keeps a flood from filling the store."""
+        day = now_iso()[:10]
+        doc_id = f"{body.visitorId}:{day}"
+        if d.store.get("visits", doc_id):
+            return Response(status_code=204)
+        if not d.store.add_to_counter("visitcounts", day, 1, limit=VISITS_PER_DAY_CAP):
+            return Response(status_code=204)
+        touch = body.touch.model_dump(mode="json", exclude_none=True)
+        touch.pop("at", None)
+        d.store.put("visits", doc_id, touch | {"visitorId": body.visitorId, "at": now_iso(),
+                                               "channel": attr.channel(touch)})
+        return Response(status_code=204)
+
+    def require_growth_key(x_growth_key: Annotated[Optional[str], Header()] = None) -> None:
+        """The growth dashboard's read key (QUARK_GROWTH_KEY). Read-only, aggregate data."""
+        if not d.growth_key:
+            raise HTTPException(503, "Growth dashboard is not configured")
+        if not x_growth_key or not hmac.compare_digest(x_growth_key, d.growth_key):
+            raise HTTPException(401, "Bad growth key")
+
+    @app.get("/internal/attribution", dependencies=[Depends(require_growth_key)])
+    def attribution_summary(days: Annotated[int, Query(ge=1, le=365)] = 30):
+        """Where visitors and sign-ups came from. Read by the Planck growth dashboard."""
+        since = attr.since_iso(days)
+        users = d.store.query_since("users", "createdAt", since)
+        visits = d.store.query_since("visits", "at", since)
+        return attr.summary(users, visits, days)
 
     @app.post("/me/children", response_model=UserProfile)
     def link_child(body: LinkChildRequest, user: User):
@@ -982,10 +1041,6 @@ def create_app(deps: Optional[Deps] = None) -> FastAPI:
             read_topic = " · ".join(t for t in (stage1.detected_unit, stage1.detected_topic) if t)
             if not record["unitTopic"].strip() and read_topic:
                 record["unitTopic"] = read_topic[:200]
-            # Only Ontario's two original courses offer choices to Stage 1 (see
-            # pipeline.stage1_course_text); every other course is the student's own pick.
-            if stage1.detected_course in CURRICULUM and record["course"] in CURRICULUM:
-                record["course"] = stage1.detected_course
             ctx = SubmissionContext(submission_id, CourseEnum(record["course"]), record["unitTopic"] or "Not stated",
                                     (record.get("forClassroom") or {}).get("expectations", ""))
 

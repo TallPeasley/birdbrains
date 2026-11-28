@@ -146,6 +146,16 @@ def parse_course(course_id: str) -> Course:
                   f"{g['label']} {sname} · {CURRICULA[curriculum]['name']}")
 
 
+def forecast_scale(course_id: str) -> dict:
+    """How the four forecast bands are named for this course's curriculum and grade
+    (EQAO levels in Ontario, GCSE grades in Years 10-11 in England, AP scores...)."""
+    c = parse_course(course_id)
+    for a in CURRICULA[c.curriculum].get("assessments", []):
+        if a["levels"][0] <= c.level <= a["levels"][1]:
+            return a
+    return REGISTRY["forecast"]["default"]
+
+
 def is_valid_course(course_id: str) -> bool:
     try:
         parse_course(course_id)
@@ -259,6 +269,10 @@ def validate() -> list[str]:
                     problems.append(f"{c['id']}.{g['id']}: unknown subject {s}")
             if not grade_subjects(c["id"], g["id"]):
                 problems.append(f"{c['id']}.{g['id']}: no subject has topics at this level")
+        for a in c.get("assessments", []):
+            lo, hi = a["levels"]
+            if not (0 <= lo <= hi <= 12) or len(a["labels"]) != 4:
+                problems.append(f"{c['id']}: assessment {a['name']} needs a 0-12 level range and 4 labels")
     for lc in LEGACY_COURSES.values():
         if _grade(lc["curriculum"], lc["grade"]) is None:
             problems.append(f"legacy course {lc['id']} points at a missing grade")

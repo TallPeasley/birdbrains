@@ -128,7 +128,31 @@
     }
    ],
    "notes": "Grade 9 and Grade 10 math use the existing MTH1W and MPM2D course data. Every other grade and subject uses Quark's shared K-12 topic catalog; topic placement by grade has not been checked against the Ontario curriculum documents.",
-   "review_status": "needs_review"
+   "review_status": "needs_review",
+   "assessments": [
+    {
+     "levels": [
+      0,
+      12
+     ],
+     "name": "EQAO achievement level",
+     "short": "EQAO",
+     "labels": [
+      "Level 1",
+      "Level 2",
+      "Level 3",
+      "Level 4"
+     ],
+     "descriptions": [
+      "Limited",
+      "Approaching standard",
+      "Provincial standard",
+      "Exceeds standard"
+     ],
+     "note": "Ontario's four achievement levels, which EQAO also reports on.",
+     "review_status": "needs_review"
+    }
+   ]
   },
   {
    "id": "bc",
@@ -202,7 +226,25 @@
     }
    ],
    "notes": "Uses the shared K-12 topic catalog. Grade placement is approximate.",
-   "review_status": "needs_review"
+   "review_status": "needs_review",
+   "assessments": [
+    {
+     "levels": [
+      0,
+      12
+     ],
+     "name": "BC proficiency scale",
+     "short": "Proficiency",
+     "labels": [
+      "Emerging",
+      "Developing",
+      "Proficient",
+      "Extending"
+     ],
+     "note": "The four-point scale BC uses on report cards. The FSA (Grades 4 and 7) and the Graduation Numeracy Assessment report proficiency in similar terms.",
+     "review_status": "needs_review"
+    }
+   ]
   },
   {
    "id": "ab",
@@ -276,7 +318,25 @@
     }
    ],
    "notes": "Uses the shared K-12 topic catalog. Grade placement is approximate.",
-   "review_status": "needs_review"
+   "review_status": "needs_review",
+   "assessments": [
+    {
+     "levels": [
+      0,
+      12
+     ],
+     "name": "Alberta provincial standard",
+     "short": "Provincial standard",
+     "labels": [
+      "Below acceptable standard",
+      "Acceptable standard (lower)",
+      "Acceptable standard (upper)",
+      "Standard of excellence"
+     ],
+     "note": "Provincial Achievement Tests (Grades 6 and 9) and diploma exams (Grade 12) report the acceptable standard and the standard of excellence.",
+     "review_status": "needs_review"
+    }
+   ]
   },
   {
    "id": "qc",
@@ -345,7 +405,25 @@
     }
    ],
    "notes": "Secondary I-V are mapped to grade levels 7-11. Uses the shared K-12 topic catalog; grade placement is approximate.",
-   "review_status": "needs_review"
+   "review_status": "needs_review",
+   "assessments": [
+    {
+     "levels": [
+      0,
+      12
+     ],
+     "name": "Quebec mark",
+     "short": "Mark",
+     "labels": [
+      "Below 60% (below the pass mark)",
+      "60 to 69%",
+      "70 to 79%",
+      "80% and up"
+     ],
+     "note": "Quebec report cards and ministry exams use percentages, with a pass mark of 60%.",
+     "review_status": "needs_review"
+    }
+   ]
   },
   {
    "id": "ca_other",
@@ -419,7 +497,8 @@
     }
    ],
    "notes": "Uses the shared K-12 topic catalog. Grade placement is approximate.",
-   "review_status": "needs_review"
+   "review_status": "needs_review",
+   "assessments": []
   },
   {
    "id": "ccss",
@@ -532,7 +611,25 @@
     }
    ],
    "notes": "Math only. Common Core high-school standards are grouped by conceptual category rather than by grade, so grades 9-12 here are the student's grade, not a Common Core grade.",
-   "review_status": "needs_review"
+   "review_status": "needs_review",
+   "assessments": [
+    {
+     "levels": [
+      0,
+      12
+     ],
+     "name": "State math test level",
+     "short": "State test",
+     "labels": [
+      "Level 1 · Not met",
+      "Level 2 · Nearly met",
+      "Level 3 · Met",
+      "Level 4 · Exceeded"
+     ],
+     "note": "Most US state tests report four achievement levels. These names follow Smarter Balanced; your state's test may use different names.",
+     "review_status": "needs_review"
+    }
+   ]
   },
   {
    "id": "ngss",
@@ -697,7 +794,25 @@
     }
    ],
    "notes": "Science only. NGSS middle-school and high-school expectations are grouped by grade band, so grades 6-12 here are the student's grade, not an NGSS grade.",
-   "review_status": "needs_review"
+   "review_status": "needs_review",
+   "assessments": [
+    {
+     "levels": [
+      0,
+      12
+     ],
+     "name": "State science test level",
+     "short": "State test",
+     "labels": [
+      "Level 1 · Not met",
+      "Level 2 · Nearly met",
+      "Level 3 · Met",
+      "Level 4 · Exceeded"
+     ],
+     "note": "Most US state tests report four achievement levels. These names follow Smarter Balanced; your state's test may use different names.",
+     "review_status": "needs_review"
+    }
+   ]
   },
   {
    "id": "us_other",
@@ -771,7 +886,25 @@
     }
    ],
    "notes": "For states that use their own standards. Uses the shared K-12 topic catalog; grade placement is approximate.",
-   "review_status": "needs_review"
+   "review_status": "needs_review",
+   "assessments": [
+    {
+     "levels": [
+      0,
+      12
+     ],
+     "name": "State test level",
+     "short": "State test",
+     "labels": [
+      "Level 1 · Not met",
+      "Level 2 · Nearly met",
+      "Level 3 · Met",
+      "Level 4 · Exceeded"
+     ],
+     "note": "Most US state tests report four achievement levels. These names follow Smarter Balanced; your state's test may use different names.",
+     "review_status": "needs_review"
+    }
+   ]
   },
   {
    "id": "eng",
@@ -858,7 +991,57 @@
     }
    ],
    "notes": "Year N is mapped to grade level N-1 by age. Years 12-13 sit outside the National Curriculum (typically A level). Scotland, Wales and Northern Ireland have their own curricula and are not covered here.",
-   "review_status": "needs_review"
+   "review_status": "needs_review",
+   "assessments": [
+    {
+     "levels": [
+      0,
+      5
+     ],
+     "name": "Key Stage 1–2 standard",
+     "short": "KS1–2",
+     "labels": [
+      "Well below the expected standard",
+      "Working towards the expected standard",
+      "Expected standard",
+      "Greater depth / high score"
+     ],
+     "note": "Key Stage 2 SATs (Year 6) report whether a pupil met the expected standard; teacher assessment also uses 'working towards' and 'greater depth'.",
+     "review_status": "needs_review"
+    },
+    {
+     "levels": [
+      9,
+      10
+     ],
+     "name": "GCSE grade (9 to 1)",
+     "short": "GCSE",
+     "labels": [
+      "Grade 3 or below",
+      "Grade 4 (standard pass)",
+      "Grades 5–6 (strong pass)",
+      "Grades 7–9"
+     ],
+     "note": "GCSEs are graded 9 to 1; the Department for Education calls grade 4 a standard pass and 5 a strong pass.",
+     "review_status": "needs_review"
+    },
+    {
+     "levels": [
+      11,
+      12
+     ],
+     "name": "A level grade",
+     "short": "A level",
+     "labels": [
+      "E or below",
+      "D to C",
+      "B",
+      "A to A*"
+     ],
+     "note": "A levels are graded A* to E.",
+     "review_status": "needs_review"
+    }
+   ]
   },
   {
    "id": "ib",
@@ -932,7 +1115,25 @@
     }
    ],
    "notes": "PYP years follow the school's local grade. MYP Years 1-5 are mapped to grade levels 6-10 and DP Years 1-2 to 11-12 by age. Topics come from the shared K-12 catalog, not from IB subject guides.",
-   "review_status": "needs_review"
+   "review_status": "needs_review",
+   "assessments": [
+    {
+     "levels": [
+      6,
+      12
+     ],
+     "name": "IB grade (1 to 7)",
+     "short": "IB grade",
+     "labels": [
+      "1 to 3",
+      "4",
+      "5",
+      "6 to 7"
+     ],
+     "note": "MYP and DP subjects are graded 1 to 7. The PYP has no grades, so PYP years show score bands.",
+     "review_status": "needs_review"
+    }
+   ]
   },
   {
    "id": "ap",
@@ -1030,7 +1231,25 @@
     }
    ],
    "notes": "AP is organised by course, not grade; students usually take these in grades 10-12. Each course uses the shared catalog's topics at its level, not the College Board course framework.",
-   "review_status": "needs_review"
+   "review_status": "needs_review",
+   "assessments": [
+    {
+     "levels": [
+      0,
+      12
+     ],
+     "name": "AP score (1 to 5)",
+     "short": "AP score",
+     "labels": [
+      "1 to 2",
+      "3",
+      "4",
+      "5"
+     ],
+     "note": "AP exams are scored 1 to 5; the College Board describes 3 as 'qualified'.",
+     "review_status": "needs_review"
+    }
+   ]
   },
   {
    "id": "other",
@@ -1104,7 +1323,22 @@
     }
    ],
    "notes": "Uses the shared K-12 topic catalog by grade.",
-   "review_status": "needs_review"
+   "review_status": "needs_review",
+   "assessments": []
   }
- ]
+ ],
+ "forecast": {
+  "note": "Quark's forecast is its diagnostic score sorted into four bands (below 60%, 60-69%, 70-79%, 80% and up). The names shown for each curriculum are an approximate translation for families, not an official prediction or a published equivalence. Needs review.",
+  "default": {
+   "name": "Score range",
+   "short": "Score",
+   "labels": [
+    "Below 60%",
+    "60 to 69%",
+    "70 to 79%",
+    "80% and up"
+   ],
+   "note": "No common assessment scale for this curriculum and grade."
+  }
+ }
 }

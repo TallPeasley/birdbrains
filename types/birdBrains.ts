@@ -272,6 +272,8 @@ export interface UserProfile {
   course?: GradeCourse | null;
   /** Students: share with a parent so they can link their account. */
   linkCode?: string | null;
+  /** Invite code: quark.study/?ref=CODE credits this account with new sign-ups. */
+  referralCode?: string | null;
   childStudentIds: string[];
   tenantId?: string | null;
   /** Free by default. A parent on Pro covers every linked child. */

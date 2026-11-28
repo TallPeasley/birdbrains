@@ -26,6 +26,7 @@ import { useSession } from '@/lib/session';
 import { Loading, SignInNotice } from '@/components/DashboardStates';
 import UploadHistory from '@/components/account/UploadHistory';
 import CourseSetting from '@/components/account/CourseSetting';
+import InviteLink from '@/components/account/InviteLink';
 import { courseGradeLabel } from '@/lib/curricula';
 import { ManageBillingButton, UpgradeReturnNotice } from '@/components/billing/Billing';
 import type { ApiClass, ApiUsage, UserProfile } from '@/types/birdBrains';
@@ -539,6 +540,8 @@ export default function AccountSettings() {
       </section>
 
       {/* Student: Parent link code */}
+      {live && activeProfile.referralCode && <InviteLink code={activeProfile.referralCode} />}
+
       {isStudent && activeProfile.linkCode && (
         <section className="card p-5 sm:p-6" aria-labelledby="link-code-heading">
           <div className="flex items-center gap-2">

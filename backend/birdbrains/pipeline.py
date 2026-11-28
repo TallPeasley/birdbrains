@@ -162,9 +162,9 @@ Rules:
     Leave it null otherwise.
 12. Never transcribe people's names, student numbers, signatures, emails or phone
     numbers. Parts of the page may already be blacked out for privacy; ignore them.
-13. Also say what the page is about, from the printed problems and the work.
-    `detected_course` is one of the course ids the request lists as choices, or null
-    if the request lists none or you cannot tell. `detected_unit` is the closest unit
+13. Also say what the page is about, from the printed problems and the work. The
+    student's course is given in the request; do not guess a course. `detected_unit` is
+    the closest unit
     from the request's unit list, copied exactly, or empty if none fits. `detected_topic` is the specific skill in 3 to 6 words
     (for example "Completing the square").
 14. Several images are ALWAYS photos of the SAME worksheet: the whole page, a
@@ -425,20 +425,15 @@ def configure_tracing() -> None:
 
 
 def stage1_course_text(ctx: SubmissionContext) -> str:
-    """The course part of the Stage 1 request: which course ids `detected_course` may
-    take and which units `detected_unit` is copied from.
-
-    Ontario's two original courses keep their old behaviour: either may be detected
-    (a Grade 9 student can upload Grade 10 work) and both unit lists are given. Every
-    other course is the one the student chose, so nothing is detected."""
-    if ctx.course in CURRICULUM:
-        return ("Course choices for detected_course: " + ", ".join(c.value for c in CURRICULUM) + ".\n"
-                "Units by course:\n" + "\n".join(
-                    f"- {course.value}: " + "; ".join(u for units in strands.values() for u in units)
-                    for course, strands in CURRICULUM.items()))
+    """The course part of the Stage 1 request: the student's own course (never guessed
+    from the page) and the units `detected_unit` is copied from. Ontario's MTH1W and
+    MPM2D keep their own unit lists; every other course uses the topic catalog."""
     info = curricula.parse_course(ctx.course.value)
-    return (f"The student's course is {info.name}. The request lists no course choices, so leave "
-            f"detected_course null.\nUnits for this course: " + "; ".join(curricula.unit_names(info.id)) + ".")
+    if ctx.course in CURRICULUM:
+        units = [u for strand_units in CURRICULUM[ctx.course].values() for u in strand_units]
+    else:
+        units = curricula.unit_names(info.id)
+    return f"The student's course is {info.name}.\nUnits for this course: " + "; ".join(units) + "."
 
 
 def course_line(ctx: SubmissionContext) -> str:

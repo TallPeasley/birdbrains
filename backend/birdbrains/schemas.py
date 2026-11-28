@@ -176,8 +176,8 @@ class Stage1VisionOutput(Strict):
     # Only when requires_hitl is true: why the page cannot be graded.
     unreadable_reason: Optional[UnreadableReason] = None
     # What the page is about, read from the printed problems and the work. Students no
-    # longer tag uploads; these fill the course, unit and topic. Empty when unsure.
-    detected_course: Optional[str] = None  # a course id from the request's list, or null
+    # longer tag uploads; these fill the unit and topic. Empty when unsure. The course is
+    # always the student's own choice; Stage 1 no longer guesses it.
     detected_unit: str = ""
     detected_topic: str = ""
     # The worksheet's printed code, such as "BB-W12", when one is printed on the page.
@@ -193,7 +193,8 @@ class Stage1TranscriptionOutput(Strict):
     lines: List[Stage1LineTranscription] = Field(default_factory=list)
     requires_hitl: bool = Field(default=False)
     unreadable_reason: Optional[UnreadableReason] = None
-    detected_course: Optional[str] = None  # a course id from the request's list, or null
+    # No longer requested or used; kept so transcriptions stored before 2026-11-28 load.
+    detected_course: Optional[str] = None
     detected_unit: str = ""
     detected_topic: str = ""
     # The worksheet's printed code, such as "BB-W12", when one is printed on the page.
@@ -756,6 +757,7 @@ class UserProfile(Api):
     studentId: Optional[str] = None
     course: Optional[CourseEnum] = None
     linkCode: Optional[str] = None  # students: share with a parent to link accounts
+    referralCode: Optional[str] = None  # anyone: quark.study/?ref=CODE invites a friend
     childStudentIds: List[str] = Field(default_factory=list)
     tenantId: Optional[str] = None
     plan: PlanTier = "free"
@@ -780,10 +782,40 @@ class AddRosterStudentRequest(Api):
     linkCode: str = Field(..., min_length=6, max_length=12)
 
 
+class TouchPoint(Api):
+    """One arrival on the site: the link's UTM tags and referral code, the referring
+    host, the landing page, and which ad click ids were present (not their values)."""
+
+    source: Optional[str] = Field(None, max_length=100)
+    medium: Optional[str] = Field(None, max_length=100)
+    campaign: Optional[str] = Field(None, max_length=150)
+    content: Optional[str] = Field(None, max_length=150)
+    term: Optional[str] = Field(None, max_length=150)
+    ref: Optional[str] = Field(None, max_length=40, pattern=r"^[A-Za-z0-9_-]+$")
+    referrerHost: Optional[str] = Field(None, max_length=120, pattern=r"^[A-Za-z0-9.-]+$")
+    landingPath: Optional[str] = Field(None, max_length=200)
+    clickIds: List[Literal["gclid", "fbclid", "msclkid", "ttclid", "li_fat_id"]] = Field(default_factory=list,
+                                                                                    max_length=5)
+    at: Optional[str] = Field(None, max_length=40)
+
+
+class AttributionPayload(Api):
+    first: Optional[TouchPoint] = None
+    last: Optional[TouchPoint] = None
+
+
+class VisitRequest(Api):
+    visitorId: str = Field(..., pattern=r"^v_[A-Za-z0-9]{16}$")
+    touch: TouchPoint
+
+
 class RegisterRequest(Api):
     role: Literal["student", "parent", "teacher"]
     name: str = Field(..., min_length=1, max_length=80)
     course: Optional[CourseEnum] = None
+    # Where the account came from (only sent when the visitor allowed cookies, or from
+    # the link they arrived on in this visit). See attribution.py.
+    attribution: Optional[AttributionPayload] = None
 
 
 class LinkChildRequest(Api):
