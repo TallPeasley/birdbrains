@@ -53,6 +53,7 @@ UPLOAD_ERRORS: dict[int, UploadErrorInfo] = dict([
     _e(204, "Questions not visible", "We can see the answers but not the questions they belong to.", "Include the printed questions in the photo, then retake.", True),
     _e(205, "Page cut off", "Part of the page is outside the photo.", "Retake with all four corners of the page in view.", True),
     _e(206, "Glare or shadow", "Glare or a shadow is covering some of the work.", "Move the page out of direct light, avoid your own shadow, and retake.", True),
+    _e(207, "Nothing readable in these files", "We couldn't find any math to work with in these files.", "Check you picked the right slides or pages, or export them again as a PDF."),
     # 3xx: privacy check and storage
     _e(301, "Name check skipped", "The name check could not run, so the top of the page was blurred instead.", "Nothing to do. The upload went ahead.", False, True),
     _e(302, "Photo not saved", "We could not save the photo.", "Please try again in a minute.", False, True),

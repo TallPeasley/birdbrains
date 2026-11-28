@@ -36,7 +36,8 @@ import { api, ApiError } from '@/lib/api';
 import { demoPersonas, gradingOutput, worksheet as demoWorksheet } from '@/lib/mockData';
 import { useSession } from '@/lib/session';
 import { UPLOAD_MODE_ORDER, UPLOAD_MODES, type UploadMode } from '@/lib/uploadModes';
-import type { ApiUsage, PlanTier, PillarCategory, PillarTally, Stage2GradingAndAffectOutput, WS_3STAGE_V1 } from '@/types/birdBrains';
+import { BatchHistoryItem, demoBatch } from '@/components/student/BatchResult';
+import type { ApiBatch, ApiUsage, PlanTier, PillarCategory, PillarTally, Stage2GradingAndAffectOutput, WS_3STAGE_V1 } from '@/types/birdBrains';
 
 const WORKSHEET_NOTES: Record<string, string> = {
   WORKSHEET_QUEUED: 'Your practice worksheet is ready to be made. Make it now, or it will be waiting for you tomorrow morning.',
@@ -78,6 +79,8 @@ export default function StudentDashboard() {
   const [quirkRows, setQuirkRows] = useState<PillarTally[] | null>(null);
   const addInput = useRef<HTMLInputElement>(null);
   const [panel, setPanel] = useState<Panel>('hub');
+  // Slides and textbook uploads (POST /submissions/batch), shown in the history panel.
+  const [batches, setBatches] = useState<ApiBatch[]>([]);
 
   useEffect(() => {
     if (!live || !activeStudentId) return;
@@ -87,10 +90,13 @@ export default function StudentDashboard() {
       const token = await getToken();
       const usagePromise = api.usage(token, activeStudentId).catch(() => null);
       const quirksPromise = api.quirks(token, activeStudentId).catch(() => null);
+      const batchesPromise = api.studentBatches(token, activeStudentId).catch(() => [] as ApiBatch[]);
       const history = await api.gradings(token, activeStudentId);
       const usage = await usagePromise;
       const quirks = await quirksPromise;
+      const batchList = await batchesPromise;
       if (cancelled) return;
+      setBatches(batchList);
       // Lifetime counts from the API; if that fails, count the uploads loaded here.
       setQuirkRows(quirks ?? tallyFromGradings(history));
       if (history.length === 0) {
@@ -150,6 +156,7 @@ export default function StudentDashboard() {
     if (panel === 'history') {
       return (
         <PanelFrame title="Upload history" onBack={() => setPanel('hub')}>
+          <BatchList batches={[demoBatch('SLIDES_DECK', '', 2), demoBatch('TEXTBOOK_ASSIST', '', 1)]} />
           <View
             name={demoPersonas.student.name}
             own
@@ -169,7 +176,7 @@ export default function StudentDashboard() {
         usage={DEMO_PRO_USAGE}
         live={false}
         worksheet={{ state: 'ready', line: demoWorksheet.title }}
-        historyCount={1}
+        historyCount={3}
         lastUpload={gradingOutput.topic}
         onWorksheet={() => setPanel('worksheet')}
         onHistory={() => setPanel('history')}
@@ -179,16 +186,24 @@ export default function StudentDashboard() {
   if (gate) return gate;
   if (state.kind === 'loading') return <Loading variant="student" />;
   if (state.kind === 'empty') {
+    if (panel === 'history' && batches.length > 0) {
+      return (
+        <PanelFrame title="Upload history" onBack={() => setPanel('hub')}>
+          <BatchList batches={batches} />
+        </PanelFrame>
+      );
+    }
     return (
       <PortalHub
         name={profile?.name ?? ''}
         usage={state.usage}
         live
         worksheet={{ state: 'none', line: 'Your first practice worksheet is made from your first graded upload.' }}
-        historyCount={0}
+        historyCount={batches.length}
+        lastUpload={batches[0]?.unitTopic}
         onWorksheet={() => undefined}
-        onHistory={() => undefined}
-        empty={<NoWorkNotice />}
+        onHistory={() => setPanel('history')}
+        empty={batches.length === 0 ? <NoWorkNotice /> : undefined}
       />
     );
   }
@@ -249,7 +264,7 @@ export default function StudentDashboard() {
         usage={state.usage}
         live
         worksheet={worksheetSummary}
-        historyCount={state.history.length}
+        historyCount={state.history.length + batches.length}
         lastUpload={latestGrading.topic}
         onWorksheet={() => {
           setSelectedId(latestGrading.gradingId);
@@ -299,6 +314,7 @@ export default function StudentDashboard() {
 
   return (
     <PanelFrame title="Upload history" subtitle={`${state.history.length} graded`} onBack={backToHub}>
+      <BatchList batches={batches} />
       <UploadHistory history={state.history} selectedId={grading.gradingId} onSelect={setSelectedId} always />
       {profile?.role === 'student' && (
         <div className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm">
@@ -479,7 +495,7 @@ function PortalHub({
           <span className="block truncate text-sm text-slate-500">
             {historyCount === 0
               ? 'Nothing graded yet.'
-              : `${historyCount} graded upload${historyCount === 1 ? '' : 's'}${lastUpload ? ` · latest: ${lastUpload}` : ''}`}
+              : `${historyCount} upload${historyCount === 1 ? '' : 's'}${lastUpload ? ` · latest: ${lastUpload}` : ''}`}
           </span>
         </span>
         {historyCount > 0 && <ChevronRight className="h-5 w-5 shrink-0 text-slate-400" aria-hidden />}
@@ -513,6 +529,26 @@ function PortalHub({
 
       {empty}
     </div>
+  );
+}
+
+/** Slides and textbook uploads, newest first; each opens its practice set or hints. */
+function BatchList({ batches }: { batches: ApiBatch[] }) {
+  if (batches.length === 0) return null;
+  return (
+    <section className="card p-4 sm:p-5" aria-labelledby="batches-title">
+      <div className="flex items-center justify-between gap-3">
+        <h2 id="batches-title" className="flex items-center gap-2 font-semibold text-slate-900">
+          <Presentation className="h-5 w-5 text-indigo-600" aria-hidden /> Slides &amp; textbook
+        </h2>
+        <span className="text-sm text-slate-500">{batches.length}</span>
+      </div>
+      <ul className="mt-3 space-y-2">
+        {batches.map((b) => (
+          <BatchHistoryItem key={b.batchId} batch={b} />
+        ))}
+      </ul>
+    </section>
   );
 }
 

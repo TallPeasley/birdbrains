@@ -78,6 +78,10 @@ own or their linked children's data; anything else is a 404.
 | `GET /submissions/{id}` | owner | `SubmissionIngestionPayload` | 404 |
 | `GET /submissions/{id}/files/{i}` | owner | the image, with names blacked out | 404; 410 `PHOTO_EXPIRED` (photos are deleted after 90 days) |
 | `POST /submissions/{id}/process` | owner | `{submission, grading}`; `grading` is null when `status` is `NEEDS_RETAKE` | 502 pipeline failed (show "try again") |
+| `POST /submissions/batch` multipart | student, linked parent | `ApiBatch`, 201, status `UPLOADED`. Slides (`uploadMode` `SLIDES_DECK`: `.pptx`, PDF, images, 1 to 25 files) or textbook pages (`TEXTBOOK_ASSIST`: PDF, images, 1 to 10). See "Slides and textbook pages" below | 422 code 105 bad type, 107 count or no topic, 109 subject not available; 413 code 106 (25 MB a file, 30 MB in all); 402 `FREE_LIMIT_REACHED`; 503 code 302 |
+| `POST /submissions/batch/{id}/process` | owner | `ApiBatch` `READY` with `practice` (slides) or `textbookHints` (textbook), or `FAILED` with `failureCode` (207 nothing readable, 5xx ours). Synchronous (about 20 to 60 s), idempotent | 404 |
+| `GET /submissions/batch/{id}` | owner | `ApiBatch` (poll `status`: `UPLOADED → READING → GENERATING → READY`/`FAILED` while processing) | 404 |
+| `GET /students/{id}/batches` | owner | `ApiBatch[]`, newest first, max 50 | |
 | `GET /students/{id}/gradings` | owner | `Stage2GradingAndAffectOutput[]`, newest first, max 50 | |
 | `GET /students/{id}/gradings/latest` | owner | `Stage2GradingAndAffectOutput` | 404 `NO_GRADED_WORK` (empty state) |
 | `GET /gradings/{id}` | owner | `Stage2GradingAndAffectOutput` | 404 |
@@ -92,6 +96,25 @@ own or their linked children's data; anything else is a 404.
 | `POST /internal/schools`, `POST /internal/schools/{id}/classes` | admin token only | school, class with `joinCode` | not for the UI |
 | `GET /students/{id}/usage` | owner | `ApiUsage` | |
 | `POST /internal/users/{uid}/plan` `{plan}` | admin token only | `UserProfile` | not for the UI; replaced by billing later |
+
+### Slides and textbook pages
+
+`POST /submissions/batch` form fields: `studentId`, `uploadMode` (`SLIDES_DECK` or
+`TEXTBOOK_ASSIST`), `unitTopic` (1 to 200 characters), `files`, and optional `course`
+(defaults to the student's). Files are checked by their bytes, not their names. No
+sharpness score: the blur check is for photos of handwriting only. One batch counts as
+one upload toward the Free monthly limit. Then call `.../process` (`api.processBatch`)
+and poll `GET /submissions/batch/{id}` for progress, the same pattern as photos.
+
+- `SLIDES_DECK` → `practice {title, summary, problems: [{number, prompt, answer, hint,
+  difficulty: WARM_UP | CORE | STRETCH}]}`: new problems on what the slides teach.
+- `TEXTBOOK_ASSIST` → `textbookHints: [{label, statement, hints (1 to 4, each more
+  specific), check}]`: hints per problem on the pages, never the final answer.
+- Privacy: screenshots and page images get the same name blur as photos before they are
+  stored; PDFs and `.pptx` are stored as sent. Everything is under
+  `submissions/{studentId}/`, so it is deleted after 90 days and with "delete my data".
+- `SubmissionIngestionPayload.uploadMode` is always `WORKSHEET_PHOTO`; batches are
+  their own type (`ApiBatch` in `types/birdBrains.ts`).
 
 Upload form fields for `POST /submissions`: `studentId`, `course` (`MTH1W` or
 `MPM2D`), `unitTopic` (1 to 200 characters), `sharpnessScore` (0 to 100, from

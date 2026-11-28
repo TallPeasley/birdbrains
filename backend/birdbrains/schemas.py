@@ -504,6 +504,8 @@ class SubmissionIngestionPayload(Api):
     status: SubmissionStatus = "UPLOADED"
     gradingId: Optional[str] = None
     failureCode: Optional[int] = None  # upload failure code (upload_errors.py) when status is NEEDS_RETAKE or FAILED
+    # Photos of handwritten work. Slides and textbook pages are batches (ApiBatch).
+    uploadMode: Literal["WORKSHEET_PHOTO"] = "WORKSHEET_PHOTO"
 
 
 class ApiPillarBreakdown(Api):
@@ -1139,3 +1141,88 @@ class ApiCohortReport(Api):
     masteryByStrand: List[ApiStrandLevel]
     errorCodes: List[ApiErrorCodeCount]
     pillarErrorDistribution: List[ApiPillarErrorShare]
+
+
+# ------------------------------------------------------------------ batches (slides and textbook pages)
+BatchMode = Literal["SLIDES_DECK", "TEXTBOOK_ASSIST"]
+BatchStatus = Literal["UPLOADED", "READING", "GENERATING", "READY", "FAILED"]
+PracticeDifficulty = Literal["WARM_UP", "CORE", "STRETCH"]
+
+
+class SlidesPracticeProblem(Strict):
+    """One practice problem made from a slide deck or PDF booklet."""
+
+    number: str
+    prompt: str
+    answer: str
+    hint: str
+    difficulty: PracticeDifficulty
+
+
+class SlidesPracticeOutput(Strict):
+    """Structured output requested from Gemini for a slide deck."""
+
+    title: str
+    summary: str  # what the slides teach, in one or two sentences
+    problems: List[SlidesPracticeProblem] = Field(default_factory=list, max_length=12)
+    unreadable: bool = False  # nothing usable in the files
+
+
+class TextbookProblemHints(Strict):
+    """Progressive hints for one textbook problem: never the full worked answer."""
+
+    label: str  # the problem's number on the page, e.g. "4b"
+    statement: str
+    hints: List[str] = Field(..., min_length=1, max_length=4)
+    check: str  # how the student can check their own answer
+
+
+class TextbookAssistOutput(Strict):
+    """Structured output requested from Gemini for textbook pages."""
+
+    problems: List[TextbookProblemHints] = Field(default_factory=list, max_length=12)
+    unreadable: bool = False
+
+
+class ApiPracticeProblem(Api):
+    number: str
+    prompt: str
+    answer: str
+    hint: str
+    difficulty: PracticeDifficulty
+
+
+class ApiSlidesPractice(Api):
+    title: str
+    summary: str
+    problems: List[ApiPracticeProblem]
+
+
+class ApiTextbookProblem(Api):
+    label: str
+    statement: str
+    hints: List[str]
+    check: str
+
+
+class ApiBatchFile(Api):
+    name: str
+    mimeType: str
+    bytes: int
+
+
+class ApiBatch(Api):
+    """Slides or textbook pages sent from the student portal (POST /submissions/batch)."""
+
+    batchId: str
+    studentId: str
+    uploadMode: BatchMode
+    course: CourseEnum
+    unitTopic: str
+    status: BatchStatus
+    files: List[ApiBatchFile]
+    uploadedAt: str
+    finishedAt: Optional[str] = None
+    failureCode: Optional[int] = None  # upload failure code (upload_errors.py) when status is FAILED
+    practice: Optional[ApiSlidesPractice] = None  # SLIDES_DECK, when READY
+    textbookHints: List[ApiTextbookProblem] = Field(default_factory=list)  # TEXTBOOK_ASSIST, when READY
