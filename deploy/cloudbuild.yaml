@@ -66,7 +66,7 @@ steps:
       - -c
       - |
         URL="$(gcloud run services describe ${_SERVICE} --region ${_REGION} --format='value(status.url)')"
-        for i in 1 2 3 4 5 6; do curl -fsS "$URL/health" && exit 0; sleep 5; done
+        for i in 1 2 3 4 5 6; do curl -fsS "$$URL/health" && exit 0; sleep 5; done  # $$: a literal $ for bash, not a build substitution
         echo "API did not answer /health after the deploy. Site not published." >&2; exit 1
 
   - id: publish-site
