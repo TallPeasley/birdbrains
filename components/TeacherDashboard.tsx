@@ -21,6 +21,7 @@ import { useSession } from '@/lib/session';
 import { Loading, SignInNotice } from '@/components/DashboardStates';
 import MyStudents from '@/components/teacher/MyStudents';
 import ClassroomBetaSignup from '@/components/ClassroomBetaSignup';
+import CurriculumPicker from '@/components/CurriculumPicker';
 import type {
   ClassroomCourse,
   ClassroomCoursework,
@@ -665,15 +666,10 @@ export default function TeacherDashboard() {
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-slate-600">Quark Curriculum</label>
-              <select
-                value={gradeCourse}
-                onChange={(e) => setGradeCourse(e.target.value as GradeCourse)}
-                className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
-              >
-                <option value="MTH1W">Grade 9 · MTH1W</option>
-                <option value="MPM2D">Grade 10 · MPM2D</option>
-              </select>
+              <p className="block text-xs font-medium text-slate-600">Students' course</p>
+              <div className="mt-1">
+                <CurriculumPicker value={gradeCourse} onChange={setGradeCourse} gradableOnly showLabels={false} stacked />
+              </div>
             </div>
 
             <div>

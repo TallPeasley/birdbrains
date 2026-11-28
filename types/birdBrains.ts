@@ -1,4 +1,8 @@
-export type GradeCourse = 'MTH1W' | 'MPM2D';
+/**
+ * A course id: a legacy Ontario code ('MTH1W', 'MPM2D') or '<curriculum>.<grade>.<subject>'
+ * such as 'ccss.g7.math'. See lib/curricula.ts.
+ */
+export type GradeCourse = string;
 /** Affect states from the AI pipeline spec. */
 export type AffectState =
   | 'CONFIDENT_MASTERY'
@@ -172,7 +176,7 @@ export interface Stage2GradingAndAffectOutput {
   /** The plan the work was graded under. */
   plan?: PlanTier;
   gradedAt?: string;
-  /** MTH1W / MPM2D. Set by the API (not on older demo data). */
+  /** A course id (see GradeCourse). Set by the API (not on older demo data). */
   course?: string | null;
   /** QUEUED, PENDING, READY, NOT_NEEDED, PRO_ONLY or FAILED. */
   worksheetStatus?: string | null;
@@ -268,6 +272,8 @@ export interface UserProfile {
   course?: GradeCourse | null;
   /** Students: share with a parent so they can link their account. */
   linkCode?: string | null;
+  /** Invite code: quark.study/?ref=CODE credits this account with new sign-ups. */
+  referralCode?: string | null;
   childStudentIds: string[];
   tenantId?: string | null;
   /** Free by default. A parent on Pro covers every linked child. */

@@ -1,7 +1,7 @@
 import { ERROR_CODES, codePillar, errorCodeInfo } from '@/lib/errorCodes';
 import type { PillarCategory } from '@/types/birdBrains';
 
-/** Plain-words explanation for each error code, written for a Grade 9–10 student. */
+/** Plain-words explanation for each error code, written for a school student. */
 export const ERROR_CODE_HELP: Record<string, string> = Object.fromEntries(
   ERROR_CODES.map((c) => [c.id, c.student_help]),
 );

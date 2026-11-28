@@ -1,0 +1,848 @@
+{
+ "version": 1,
+ "subject": "chemistry",
+ "name": "Chemistry",
+ "review_note": "Draft written for Quark. Grade levels are typical North American placements and vary by curriculum. Needs review by a subject teacher before it is treated as authoritative.",
+ "taxonomy": "chemistry",
+ "topics": [
+  {
+   "id": "chem.properties_materials",
+   "strand": "Matter",
+   "name": "Properties of materials",
+   "levels": [
+    0,
+    3
+   ],
+   "learning_goals": [
+    "Describe and sort materials by properties such as hardness, flexibility and whether they float.",
+    "Choose materials for a purpose."
+   ],
+   "key_concepts": [
+    "Observable properties",
+    "Natural and made materials",
+    "Fit for purpose"
+   ],
+   "prerequisites": [],
+   "misconceptions": [
+    {
+     "error_code": "COM_OBSERVATION_VS_INFERENCE",
+     "description": "States a guess as an observation.",
+     "example": "'It is made of plastic' after only looking at its colour."
+    },
+    {
+     "error_code": "COM_IMPRECISE_TERMS",
+     "description": "Uses a vague property word.",
+     "example": "'It is strong-ish.'"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Why are windows made of glass?",
+     "answer": "Glass is transparent, so light passes through"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "chem.states_of_matter",
+   "strand": "Matter",
+   "name": "States of matter and changes of state",
+   "levels": [
+    2,
+    6
+   ],
+   "learning_goals": [
+    "Describe solids, liquids and gases.",
+    "Explain melting, freezing, evaporation, condensation and boiling."
+   ],
+   "key_concepts": [
+    "Shape and volume",
+    "Heating and cooling cause changes of state",
+    "Mass stays the same"
+   ],
+   "prerequisites": [
+    "chem.properties_materials"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "CON_MASS_CONSERVATION",
+     "description": "Thinks mass changes when a substance changes state.",
+     "example": "'Ice weighs more than the water it melts into.'"
+    },
+    {
+     "error_code": "CON_PARTICLE_PROPERTIES",
+     "description": "Thinks the bubbles in boiling water are air.",
+     "example": "'The bubbles are oxygen and hydrogen.'"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "What is the change of state when water vapour forms droplets on a cold glass?",
+     "answer": "Condensation"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "chem.mixtures_solutions",
+   "strand": "Matter",
+   "name": "Mixtures, solutions and separation",
+   "levels": [
+    4,
+    8
+   ],
+   "learning_goals": [
+    "Distinguish pure substances, mixtures and solutions.",
+    "Choose separation methods such as filtering, evaporation and distillation."
+   ],
+   "key_concepts": [
+    "Solute, solvent, solution",
+    "Solubility",
+    "Mechanical mixtures",
+    "Separation techniques"
+   ],
+   "prerequisites": [
+    "chem.states_of_matter"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "CON_MASS_CONSERVATION",
+     "description": "Thinks a dissolved solid has disappeared.",
+     "example": "'The sugar is gone, so the mass went down.'"
+    },
+    {
+     "error_code": "STR_WRONG_REACTION",
+     "description": "Chooses a method that cannot separate the mixture.",
+     "example": "Filters salt water to get salt."
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "How would you get salt back from salt water?",
+     "answer": "Evaporate the water"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "chem.particle_model",
+   "strand": "Matter",
+   "name": "Particle model of matter",
+   "levels": [
+    5,
+    9
+   ],
+   "learning_goals": [
+    "Use the particle model to explain states, diffusion and expansion.",
+    "Relate particle motion to temperature."
+   ],
+   "key_concepts": [
+    "Particles are always moving",
+    "Spaces between particles",
+    "Temperature and kinetic energy"
+   ],
+   "prerequisites": [
+    "chem.states_of_matter"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "CON_PARTICLE_PROPERTIES",
+     "description": "Gives particles the bulk properties of the substance.",
+     "example": "'Particles of a hot metal expand.'"
+    },
+    {
+     "error_code": "CON_PARTICLE_PROPERTIES",
+     "description": "Thinks there is air between particles.",
+     "example": "'Air fills the gaps between water particles.'"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Why does a balloon get bigger when warmed?",
+     "answer": "The gas particles move faster and hit the walls harder and more often, pushing the balloon out"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "chem.physical_chemical_change",
+   "strand": "Reactions",
+   "name": "Physical and chemical changes",
+   "levels": [
+    5,
+    9
+   ],
+   "learning_goals": [
+    "Tell physical changes from chemical changes.",
+    "Use evidence of a chemical change: gas, colour, precipitate, energy."
+   ],
+   "key_concepts": [
+    "New substance forms",
+    "Evidence of a reaction",
+    "Reversible vs irreversible"
+   ],
+   "prerequisites": [
+    "chem.states_of_matter"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "COM_OBSERVATION_VS_INFERENCE",
+     "description": "Treats any change of appearance as chemical.",
+     "example": "'Melting ice is a chemical change because it looks different.'"
+    },
+    {
+     "error_code": "CON_MASS_CONSERVATION",
+     "description": "Thinks burning destroys matter.",
+     "example": "'When wood burns the mass is destroyed.'"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Is rusting a physical or chemical change? Why?",
+     "answer": "Chemical: a new substance (iron oxide) forms"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "chem.atomic_structure",
+   "strand": "Atoms & bonding",
+   "name": "Atomic structure and the periodic table",
+   "levels": [
+    8,
+    11
+   ],
+   "learning_goals": [
+    "Describe protons, neutrons and electrons and draw Bohr-Rutherford diagrams.",
+    "Use the periodic table to find atomic number, mass and trends."
+   ],
+   "key_concepts": [
+    "Atomic number and mass number",
+    "Isotopes",
+    "Electron shells",
+    "Groups and periods"
+   ],
+   "prerequisites": [
+    "chem.particle_model"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "FAC_SCIENCE_FACT_RECALL",
+     "description": "Uses mass number as the number of electrons.",
+     "example": "Sodium-23 has 23 electrons."
+    },
+    {
+     "error_code": "FAC_ION_CHARGE_RECALL",
+     "description": "Gets the number of valence electrons wrong for a group.",
+     "example": "Chlorine has 5 valence electrons."
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "How many protons, neutrons and electrons are in a neutral atom of oxygen-16?",
+     "answer": "8 protons, 8 neutrons, 8 electrons"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "chem.equations_balancing",
+   "strand": "Reactions",
+   "name": "Balancing equations and conservation of mass",
+   "levels": [
+    8,
+    11
+   ],
+   "learning_goals": [
+    "Write word and skeleton equations.",
+    "Balance chemical equations using coefficients."
+   ],
+   "key_concepts": [
+    "Law of conservation of mass",
+    "Coefficients vs subscripts",
+    "Diatomic elements"
+   ],
+   "prerequisites": [
+    "chem.physical_chemical_change",
+    "chem.atomic_structure"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "PRC_BALANCING",
+     "description": "Changes subscripts to balance.",
+     "example": "H2 + O2 -> H2O2"
+    },
+    {
+     "error_code": "FAC_SCIENCE_FACT_RECALL",
+     "description": "Writes diatomic elements as single atoms.",
+     "example": "H + O -> H2O"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Balance: __ Fe + __ O2 -> __ Fe2O3",
+     "answer": "4 Fe + 3 O2 -> 2 Fe2O3"
+    },
+    {
+     "prompt": "Balance: __ CH4 + __ O2 -> __ CO2 + __ H2O",
+     "answer": "CH4 + 2 O2 -> CO2 + 2 H2O"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "chem.bonding",
+   "strand": "Atoms & bonding",
+   "name": "Ionic and covalent bonding",
+   "levels": [
+    9,
+    12
+   ],
+   "learning_goals": [
+    "Explain ionic and covalent bonding.",
+    "Draw Lewis structures and predict properties from bond type."
+   ],
+   "key_concepts": [
+    "Electron transfer and sharing",
+    "Ions",
+    "Lewis structures",
+    "Electronegativity"
+   ],
+   "prerequisites": [
+    "chem.atomic_structure"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "CON_IONIC_AS_MOLECULE",
+     "description": "Describes an ionic compound as separate molecules.",
+     "example": "'A molecule of NaCl.'"
+    },
+    {
+     "error_code": "PRC_LEWIS_STRUCTURE",
+     "description": "Miscounts total valence electrons in a Lewis structure.",
+     "example": "CO2 drawn with 14 electrons"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "What type of bond forms between magnesium and chlorine? Write the formula.",
+     "answer": "Ionic; MgCl2"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "chem.naming_formulas",
+   "strand": "Atoms & bonding",
+   "name": "Chemical names and formulas",
+   "levels": [
+    9,
+    11
+   ],
+   "learning_goals": [
+    "Name and write formulas for ionic and molecular compounds, including polyatomic ions.",
+    "Use the criss-cross method correctly."
+   ],
+   "key_concepts": [
+    "Ion charges",
+    "Polyatomic ions",
+    "Prefixes for molecular compounds",
+    "Roman numerals for multivalent metals"
+   ],
+   "prerequisites": [
+    "chem.bonding"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "PRC_FORMULA_FROM_IONS",
+     "description": "Does not balance charges.",
+     "example": "Calcium chloride written CaCl"
+    },
+    {
+     "error_code": "PRC_NAMING_RULES",
+     "description": "Uses prefixes for ionic compounds.",
+     "example": "MgCl2 named magnesium dichloride"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Write the formula for aluminium oxide.",
+     "answer": "Al2O3"
+    },
+    {
+     "prompt": "Name CuSO4.",
+     "answer": "Copper(II) sulfate"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "chem.reaction_types",
+   "strand": "Reactions",
+   "name": "Types of chemical reactions",
+   "levels": [
+    9,
+    11
+   ],
+   "learning_goals": [
+    "Classify reactions as synthesis, decomposition, single and double displacement, combustion and neutralization.",
+    "Predict products of simple reactions."
+   ],
+   "key_concepts": [
+    "Reaction patterns",
+    "Activity series",
+    "Precipitates"
+   ],
+   "prerequisites": [
+    "chem.equations_balancing"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "STR_WRONG_REACTION",
+     "description": "Predicts products for the wrong reaction type.",
+     "example": "Treats Zn + CuSO4 as synthesis"
+    },
+    {
+     "error_code": "FAC_SCIENCE_FACT_RECALL",
+     "description": "Forgets water as a product of complete combustion.",
+     "example": "C3H8 + O2 -> CO2"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Classify: 2 KClO3 -> 2 KCl + 3 O2",
+     "answer": "Decomposition"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "chem.acids_bases",
+   "strand": "Reactions",
+   "name": "Acids, bases and pH",
+   "levels": [
+    9,
+    12
+   ],
+   "learning_goals": [
+    "Describe properties of acids and bases and use the pH scale.",
+    "Write neutralization reactions and (later) calculate pH."
+   ],
+   "key_concepts": [
+    "pH scale",
+    "Neutralization forms a salt and water",
+    "pH = -log[H+]",
+    "Strong vs weak"
+   ],
+   "prerequisites": [
+    "chem.reaction_types"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "CON_STRONG_VS_CONCENTRATED",
+     "description": "Confuses strong with concentrated.",
+     "example": "'Dilute HCl is a weak acid.'"
+    },
+    {
+     "error_code": "FAC_CALCULATOR_ENTRY",
+     "description": "Takes the log without the negative sign.",
+     "example": "[H+] = 1 x 10^-3 gives pH = -3"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "What is the pH of a solution with [H+] = 1 x 10^-4 mol/L?",
+     "answer": "4"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "chem.mole",
+   "strand": "Quantities",
+   "name": "The mole and molar mass",
+   "levels": [
+    10,
+    12
+   ],
+   "learning_goals": [
+    "Use the mole to count particles.",
+    "Convert between mass, moles and number of particles."
+   ],
+   "key_concepts": [
+    "Avogadro's number 6.02 x 10^23",
+    "Molar mass",
+    "n = m / M"
+   ],
+   "prerequisites": [
+    "chem.equations_balancing",
+    "math.exponents.laws"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "CON_MOLE_MEANING",
+     "description": "Thinks a mole is a mass.",
+     "example": "'A mole of anything weighs 1 g.'"
+    },
+    {
+     "error_code": "FAC_MOLAR_MASS",
+     "description": "Miscalculates molar mass by missing a subscript.",
+     "example": "M(H2O) = 17 g/mol"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "How many moles are in 36 g of water (M = 18.02 g/mol)?",
+     "answer": "2.0 mol (1.998)"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "chem.stoichiometry",
+   "strand": "Quantities",
+   "name": "Stoichiometry and limiting reagents",
+   "levels": [
+    11,
+    12
+   ],
+   "learning_goals": [
+    "Use mole ratios from balanced equations to calculate amounts.",
+    "Identify the limiting reagent and calculate theoretical and percent yield."
+   ],
+   "key_concepts": [
+    "Mole ratio",
+    "Limiting and excess reagent",
+    "Percent yield"
+   ],
+   "prerequisites": [
+    "chem.mole"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "STR_WRONG_MOLE_RATIO",
+     "description": "Uses a mass ratio instead of a mole ratio.",
+     "example": "Uses grams directly in the equation's coefficients"
+    },
+    {
+     "error_code": "STR_LIMITING_REAGENT_IGNORED",
+     "description": "Calculates yield from the reagent in excess.",
+     "example": "Uses the larger amount to find product mass"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "2 H2 + O2 -> 2 H2O. How many moles of water form from 3 mol of H2 with excess O2?",
+     "answer": "3 mol"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "chem.solutions_concentration",
+   "strand": "Quantities",
+   "name": "Solution concentration and dilution",
+   "levels": [
+    11,
+    12
+   ],
+   "learning_goals": [
+    "Calculate molar concentration.",
+    "Use C1V1 = C2V2 for dilutions."
+   ],
+   "key_concepts": [
+    "c = n / V",
+    "Volumes in litres",
+    "Dilution"
+   ],
+   "prerequisites": [
+    "chem.mole",
+    "chem.mixtures_solutions"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "FAC_UNIT_CONVERSION",
+     "description": "Uses millilitres in c = n / V.",
+     "example": "0.5 mol in 250 mL gives 0.002 mol/L"
+    },
+    {
+     "error_code": "STR_FORMULA_MISSELECTION",
+     "description": "Uses C1V1 = C2V2 when there is a reaction, not a dilution.",
+     "example": "Titration solved with C1V1 = C2V2 for a 1:2 ratio"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "What is the concentration of 0.25 mol of NaCl in 500 mL of solution?",
+     "answer": "0.50 mol/L"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "chem.gases",
+   "strand": "Quantities",
+   "name": "Gas laws",
+   "levels": [
+    11,
+    12
+   ],
+   "learning_goals": [
+    "Use Boyle's, Charles's and combined gas laws and the ideal gas law PV = nRT.",
+    "Explain gas behaviour with kinetic molecular theory."
+   ],
+   "key_concepts": [
+    "Pressure, volume, temperature",
+    "Kelvin scale",
+    "Ideal gas law",
+    "STP and SATP"
+   ],
+   "prerequisites": [
+    "chem.particle_model",
+    "chem.mole"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "FAC_UNIT_CONVERSION",
+     "description": "Uses degrees Celsius in a gas law.",
+     "example": "V2 = V1 x 40/20 for 20 to 40 degrees C"
+    },
+    {
+     "error_code": "FAC_SCIENCE_FACT_RECALL",
+     "description": "Uses the wrong value of R for the units.",
+     "example": "R = 8.314 with pressure in atm"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "A gas occupies 2.0 L at 300 K. What volume at 450 K at constant pressure?",
+     "answer": "3.0 L"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "chem.thermochemistry",
+   "strand": "Equilibrium & energy",
+   "name": "Energy changes in reactions",
+   "levels": [
+    11,
+    12
+   ],
+   "learning_goals": [
+    "Describe exothermic and endothermic reactions.",
+    "Calculate enthalpy changes using q = mc(delta T), Hess's law or bond energies."
+   ],
+   "key_concepts": [
+    "Enthalpy",
+    "Sign of delta H",
+    "Calorimetry",
+    "Hess's law"
+   ],
+   "prerequisites": [
+    "chem.bonding"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "PRC_ENERGY_SIGN",
+     "description": "Gives an exothermic reaction a positive delta H.",
+     "example": "Combustion: delta H = +890 kJ/mol"
+    },
+    {
+     "error_code": "CON_BOND_ENERGY",
+     "description": "Thinks breaking bonds releases energy.",
+     "example": "'Energy is released when the bonds break.'"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "100 g of water warms by 5.0 degrees C (c = 4.18 J/g C). How much energy did it absorb?",
+     "answer": "2,090 J"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "chem.rates",
+   "strand": "Equilibrium & energy",
+   "name": "Reaction rates",
+   "levels": [
+    11,
+    12
+   ],
+   "learning_goals": [
+    "Explain how temperature, concentration, surface area and catalysts affect rate.",
+    "Use collision theory."
+   ],
+   "key_concepts": [
+    "Collision theory",
+    "Activation energy",
+    "Catalysts"
+   ],
+   "prerequisites": [
+    "chem.reaction_types",
+    "chem.particle_model"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "CON_PARTICLE_PROPERTIES",
+     "description": "Thinks a catalyst is used up or changes the products.",
+     "example": "'The catalyst becomes part of the product.'"
+    },
+    {
+     "error_code": "COM_UNSUPPORTED_ANSWER",
+     "description": "States the effect without the collision-theory reason.",
+     "example": "'Higher temperature makes it faster.'"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Why does powdered zinc react faster with acid than a lump of zinc?",
+     "answer": "Larger surface area gives more collisions per second"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "chem.intermolecular",
+   "strand": "Atoms & bonding",
+   "name": "Intermolecular forces and properties",
+   "levels": [
+    11,
+    12
+   ],
+   "learning_goals": [
+    "Identify dispersion, dipole-dipole and hydrogen bonding forces.",
+    "Relate them to boiling point and solubility."
+   ],
+   "key_concepts": [
+    "Polarity",
+    "Hydrogen bonding",
+    "Like dissolves like"
+   ],
+   "prerequisites": [
+    "chem.bonding"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "CON_INTER_INTRA_FORCES",
+     "description": "Thinks covalent bonds break when a molecular substance boils.",
+     "example": "'Water boils when the O-H bonds break.'"
+    },
+    {
+     "error_code": "FAC_SCIENCE_FACT_RECALL",
+     "description": "Calls any H-containing molecule hydrogen-bonded.",
+     "example": "CH4 has hydrogen bonding"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Why does water have a much higher boiling point than methane?",
+     "answer": "Water molecules form hydrogen bonds; methane has only weak dispersion forces"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "chem.organic",
+   "strand": "Atoms & bonding",
+   "name": "Organic chemistry basics",
+   "levels": [
+    11,
+    12
+   ],
+   "learning_goals": [
+    "Name simple hydrocarbons and functional groups.",
+    "Draw structural formulas and isomers."
+   ],
+   "key_concepts": [
+    "Alkanes, alkenes, alkynes",
+    "Functional groups",
+    "IUPAC naming",
+    "Isomers"
+   ],
+   "prerequisites": [
+    "chem.bonding"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "PRC_NAMING_RULES",
+     "description": "Numbers the main chain from the wrong end.",
+     "example": "4-methylpentane instead of 2-methylpentane"
+    },
+    {
+     "error_code": "PRC_LEWIS_STRUCTURE",
+     "description": "Gives carbon more or fewer than four bonds.",
+     "example": "A carbon with five bonds"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Name CH3-CH2-CH2-CH3.",
+     "answer": "Butane"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "chem.equilibrium",
+   "strand": "Equilibrium & energy",
+   "name": "Chemical equilibrium",
+   "levels": [
+    12,
+    12
+   ],
+   "learning_goals": [
+    "Describe dynamic equilibrium and write equilibrium expressions.",
+    "Use Le Chatelier's principle to predict shifts."
+   ],
+   "key_concepts": [
+    "Dynamic equilibrium",
+    "K expression",
+    "Le Chatelier's principle"
+   ],
+   "prerequisites": [
+    "chem.stoichiometry"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "CON_STATIC_EQUILIBRIUM",
+     "description": "Thinks reactions stop at equilibrium.",
+     "example": "'At equilibrium nothing is reacting.'"
+    },
+    {
+     "error_code": "PRC_EQUILIBRIUM_EXPRESSION",
+     "description": "Includes solids or liquids in K.",
+     "example": "K = [CO2][CaO]/[CaCO3]"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "For N2 + 3 H2 <-> 2 NH3 (exothermic), which way does it shift if temperature rises?",
+     "answer": "Left, toward N2 and H2"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  }
+ ]
+}

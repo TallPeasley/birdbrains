@@ -52,6 +52,17 @@ the Free plan it is not shown and not stored.
 and basic technical logs (time, type of request, errors) needed to run and
 secure the service.
 
+**How you found us.** [Draft for legal review.] When you arrive, the site notes
+the tags in the link you followed (such as "utm_source" or an invite code), the
+website that linked to us, and the first page you opened. If you choose "Allow"
+in the cookie notice, we keep this in first-party cookies for up to 90 days and
+count one anonymous visit a day; if you choose "No thanks", nothing is stored on
+your device. When you make an account, we save where it came from with the
+account and, if you used someone's invite link, which account invited you. This
+holds no name, email or IP address, is used only to see which schools, tutors
+and posts bring people to Quark, and is never shared with advertisers. You can
+change your choice by clearing the "quark_" cookies in your browser.
+
 We do not collect home addresses, phone numbers, government ID numbers, school
 records or payment card numbers. [If paid plans launch with Stripe: payments are
 handled by Stripe; we receive only the plan, payment status and a customer

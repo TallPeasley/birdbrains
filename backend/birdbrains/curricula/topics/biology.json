@@ -1,0 +1,758 @@
+{
+ "version": 1,
+ "subject": "biology",
+ "name": "Biology",
+ "review_note": "Draft written for Quark. Grade levels are typical North American placements and vary by curriculum. Needs review by a subject teacher before it is treated as authoritative.",
+ "taxonomy": "biology",
+ "topics": [
+  {
+   "id": "bio.living_nonliving",
+   "strand": "Living things",
+   "name": "Living things and their needs",
+   "levels": [
+    0,
+    2
+   ],
+   "learning_goals": [
+    "Tell living from non-living things.",
+    "Describe what plants and animals need to survive."
+   ],
+   "key_concepts": [
+    "Characteristics of living things",
+    "Needs: food, water, air, shelter, light"
+   ],
+   "prerequisites": [],
+   "misconceptions": [
+    {
+     "error_code": "FAC_SCIENCE_FACT_RECALL",
+     "description": "Classifies moving things as alive and still things as not.",
+     "example": "Says a car is alive because it moves, and a tree is not."
+    },
+    {
+     "error_code": "COM_IMPRECISE_TERMS",
+     "description": "Gives a vague need without saying what it is for.",
+     "example": "'Plants need stuff.'"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Name three things a plant needs to grow.",
+     "answer": "Water, light and air (carbon dioxide); also nutrients from soil"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "bio.life_cycles",
+   "strand": "Living things",
+   "name": "Life cycles",
+   "levels": [
+    1,
+    3
+   ],
+   "learning_goals": [
+    "Describe and compare the life cycles of plants and animals.",
+    "Order the stages of a life cycle."
+   ],
+   "key_concepts": [
+    "Birth, growth, reproduction, death",
+    "Metamorphosis",
+    "Seeds and germination"
+   ],
+   "prerequisites": [
+    "bio.living_nonliving"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "FAC_SEQUENCE_RECALL",
+     "description": "Puts life-cycle stages in the wrong order.",
+     "example": "Butterfly: egg, pupa, larva, adult"
+    },
+    {
+     "error_code": "FAC_TERM_RECALL",
+     "description": "Mixes up names of stages.",
+     "example": "Calls a tadpole a larva of a butterfly."
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Put in order: adult, egg, pupa, larva (butterfly).",
+     "answer": "egg, larva, pupa, adult"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "bio.plants_animals_structures",
+   "strand": "Living things",
+   "name": "Plant and animal structures",
+   "levels": [
+    1,
+    4
+   ],
+   "learning_goals": [
+    "Identify the parts of plants and animals and their functions.",
+    "Explain how structures help survival."
+   ],
+   "key_concepts": [
+    "Roots, stems, leaves, flowers",
+    "Adaptations",
+    "Structure and function"
+   ],
+   "prerequisites": [
+    "bio.living_nonliving"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "FAC_STRUCTURE_LABEL",
+     "description": "Labels a structure incorrectly.",
+     "example": "Labels the stem as the root."
+    },
+    {
+     "error_code": "CON_NEED_DRIVES_EVOLUTION",
+     "description": "Says an animal grew a feature because it wanted or needed it.",
+     "example": "'The giraffe stretched its neck so its babies had long necks.'"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "What is the job of a plant's roots?",
+     "answer": "Take in water and nutrients and anchor the plant"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "bio.habitats_ecosystems",
+   "strand": "Ecology",
+   "name": "Habitats, food chains and food webs",
+   "levels": [
+    2,
+    6
+   ],
+   "learning_goals": [
+    "Describe how living things depend on their habitat and on each other.",
+    "Build and interpret food chains and food webs."
+   ],
+   "key_concepts": [
+    "Producers, consumers, decomposers",
+    "Arrows show the direction energy flows",
+    "Predator and prey"
+   ],
+   "prerequisites": [
+    "bio.living_nonliving"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "COM_MISSING_LABELS",
+     "description": "Draws food-chain arrows from eater to eaten.",
+     "example": "fox -> rabbit -> grass"
+    },
+    {
+     "error_code": "CON_ENERGY_MATTER_CYCLING",
+     "description": "Thinks removing one species affects only its direct predator.",
+     "example": "Says removing grass affects only rabbits."
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "In grass -> grasshopper -> frog -> snake, which is the producer?",
+     "answer": "grass"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "bio.classification",
+   "strand": "Evolution & diversity",
+   "name": "Classifying living things",
+   "levels": [
+    4,
+    9
+   ],
+   "learning_goals": [
+    "Sort organisms using shared characteristics.",
+    "Use and build dichotomous keys."
+   ],
+   "key_concepts": [
+    "Vertebrates and invertebrates",
+    "Kingdoms and domains",
+    "Binomial names",
+    "Dichotomous keys"
+   ],
+   "prerequisites": [
+    "bio.plants_animals_structures"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "PRC_CLASSIFICATION_KEY",
+     "description": "Follows a branch of a key without checking the feature.",
+     "example": "Takes the 'has wings' branch for a beetle larva."
+    },
+    {
+     "error_code": "FAC_SCIENCE_FACT_RECALL",
+     "description": "Classifies an animal by habitat rather than features.",
+     "example": "Says a whale is a fish."
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Is a bat a bird or a mammal? Give one reason.",
+     "answer": "A mammal: it has fur and feeds its young milk"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "bio.human_body_systems",
+   "strand": "Body systems",
+   "name": "Human body systems",
+   "levels": [
+    4,
+    10
+   ],
+   "learning_goals": [
+    "Describe the main organs and functions of the digestive, respiratory, circulatory and other systems.",
+    "Explain how body systems work together."
+   ],
+   "key_concepts": [
+    "Organ systems",
+    "Structure and function",
+    "Interacting systems"
+   ],
+   "prerequisites": [
+    "bio.plants_animals_structures"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "FAC_STRUCTURE_LABEL",
+     "description": "Mislabels an organ.",
+     "example": "Labels the stomach as the liver."
+    },
+    {
+     "error_code": "CON_ENERGY_MATTER_CYCLING",
+     "description": "Thinks blood goes to the lungs to make oxygen.",
+     "example": "'The lungs turn carbon dioxide into oxygen.'"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Which two systems work together to deliver oxygen to cells?",
+     "answer": "The respiratory and circulatory systems"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "bio.microscopy",
+   "strand": "Cells & processes",
+   "name": "Microscopes and magnification",
+   "levels": [
+    6,
+    10
+   ],
+   "learning_goals": [
+    "Use a light microscope and prepare a slide.",
+    "Calculate magnification and actual size."
+   ],
+   "key_concepts": [
+    "Ocular x objective magnification",
+    "Magnification = image size / actual size",
+    "Unit conversions (mm, um)"
+   ],
+   "prerequisites": [],
+   "misconceptions": [
+    {
+     "error_code": "PRC_MAGNIFICATION",
+     "description": "Multiplies when the formula needs a division.",
+     "example": "Actual size = image size x magnification"
+    },
+    {
+     "error_code": "FAC_UNIT_CONVERSION",
+     "description": "Mixes mm and micrometres.",
+     "example": "Image 20 mm at x400 gives actual size 0.05 um"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "A cell image is 30 mm long at x600. What is the actual length in micrometres?",
+     "answer": "50 um"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "bio.cells",
+   "strand": "Cells & processes",
+   "name": "Cells and cell structures",
+   "levels": [
+    6,
+    10
+   ],
+   "learning_goals": [
+    "Describe cell theory and the structures of plant, animal and bacterial cells.",
+    "Explain the function of key organelles."
+   ],
+   "key_concepts": [
+    "Cell theory",
+    "Nucleus, membrane, cytoplasm, mitochondria",
+    "Cell wall and chloroplasts in plants",
+    "Prokaryotic vs eukaryotic"
+   ],
+   "prerequisites": [
+    "bio.plants_animals_structures"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "FAC_STRUCTURE_LABEL",
+     "description": "Says animal cells have a cell wall or chloroplasts.",
+     "example": "Labels a cell wall on a cheek cell."
+    },
+    {
+     "error_code": "CON_PLANT_MATTER_ENERGY",
+     "description": "Thinks plant cells have no mitochondria because they photosynthesize.",
+     "example": "'Plants make energy with chloroplasts so they don't need mitochondria.'"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Name two structures found in plant cells but not animal cells.",
+     "answer": "Cell wall and chloroplasts (also a large central vacuole)"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "bio.ecology_cycles",
+   "strand": "Ecology",
+   "name": "Energy flow and matter cycling in ecosystems",
+   "levels": [
+    6,
+    12
+   ],
+   "learning_goals": [
+    "Explain how energy flows and matter cycles through ecosystems.",
+    "Describe the carbon and nitrogen cycles and energy pyramids."
+   ],
+   "key_concepts": [
+    "Trophic levels",
+    "About 10% of energy passes to the next level",
+    "Carbon and nitrogen cycles"
+   ],
+   "prerequisites": [
+    "bio.habitats_ecosystems"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "CON_ENERGY_MATTER_CYCLING",
+     "description": "Says energy is recycled like matter.",
+     "example": "'Decomposers return energy to the soil for plants.'"
+    },
+    {
+     "error_code": "FAC_ARITHMETIC_SLIP",
+     "description": "Applies the 10% rule incorrectly.",
+     "example": "Producers 10,000 kJ, primary consumers 100 kJ"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Producers store 20,000 kJ. About how much reaches secondary consumers?",
+     "answer": "About 200 kJ"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "bio.photosynthesis_respiration",
+   "strand": "Cells & processes",
+   "name": "Photosynthesis and cellular respiration",
+   "levels": [
+    7,
+    12
+   ],
+   "learning_goals": [
+    "Write and explain the overall equations for photosynthesis and aerobic respiration.",
+    "Describe where each happens and how they are linked."
+   ],
+   "key_concepts": [
+    "6CO2 + 6H2O -> C6H12O6 + 6O2 (light)",
+    "Respiration releases energy as ATP",
+    "Chloroplasts and mitochondria",
+    "Plants respire too"
+   ],
+   "prerequisites": [
+    "bio.cells"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "CON_PLANT_MATTER_ENERGY",
+     "description": "Thinks a plant's mass comes mainly from the soil.",
+     "example": "'The tree is heavy because it absorbed soil.'"
+    },
+    {
+     "error_code": "CON_PLANT_MATTER_ENERGY",
+     "description": "Thinks plants photosynthesize instead of respiring.",
+     "example": "'Animals respire; plants photosynthesize.'"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "What are the reactants of photosynthesis?",
+     "answer": "Carbon dioxide and water (with light energy)"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "bio.transport_membranes",
+   "strand": "Cells & processes",
+   "name": "Diffusion, osmosis and membrane transport",
+   "levels": [
+    8,
+    12
+   ],
+   "learning_goals": [
+    "Explain diffusion, osmosis and active transport.",
+    "Predict what happens to cells in different solutions."
+   ],
+   "key_concepts": [
+    "Concentration gradient",
+    "Selectively permeable membrane",
+    "Hypotonic, isotonic, hypertonic",
+    "Active transport needs ATP"
+   ],
+   "prerequisites": [
+    "bio.cells"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "CON_DIFFUSION_OSMOSIS",
+     "description": "Says water moves toward the lower solute concentration.",
+     "example": "A cell in salt water swells."
+    },
+    {
+     "error_code": "CON_DIFFUSION_OSMOSIS",
+     "description": "Thinks particles stop moving at equilibrium.",
+     "example": "'At equilibrium diffusion stops.'"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "A red blood cell is put in pure water. What happens and why?",
+     "answer": "It swells and may burst: water moves in by osmosis to the higher solute concentration inside"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "bio.cell_division",
+   "strand": "Cells & processes",
+   "name": "Mitosis and meiosis",
+   "levels": [
+    8,
+    11
+   ],
+   "learning_goals": [
+    "Describe the stages and purpose of mitosis and meiosis.",
+    "Compare chromosome numbers in the cells produced."
+   ],
+   "key_concepts": [
+    "Diploid and haploid",
+    "Stages of mitosis",
+    "Meiosis produces gametes",
+    "Crossing over"
+   ],
+   "prerequisites": [
+    "bio.cells"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "FAC_SEQUENCE_RECALL",
+     "description": "Orders the phases of mitosis wrongly.",
+     "example": "prophase, anaphase, metaphase, telophase"
+    },
+    {
+     "error_code": "CON_GENE_ALLELE_SCALE",
+     "description": "Confuses chromosomes, chromatids and genes.",
+     "example": "'Each chromatid is a different gene.'"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "A cell with 46 chromosomes undergoes meiosis. How many chromosomes are in each gamete?",
+     "answer": "23"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "bio.genetics_mendelian",
+   "strand": "Genetics",
+   "name": "Mendelian genetics",
+   "levels": [
+    8,
+    12
+   ],
+   "learning_goals": [
+    "Use Punnett squares to predict offspring ratios for monohybrid and dihybrid crosses.",
+    "Interpret pedigrees and non-Mendelian patterns (incomplete dominance, codominance, sex linkage)."
+   ],
+   "key_concepts": [
+    "Genes and alleles",
+    "Dominant and recessive",
+    "Genotype and phenotype",
+    "Probability in inheritance"
+   ],
+   "prerequisites": [
+    "bio.cell_division"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "PRC_PUNNETT_SQUARE",
+     "description": "Puts both alleles of one parent on the same side incorrectly.",
+     "example": "Writes Aa x aa as AA / aa gametes."
+    },
+    {
+     "error_code": "CON_DOMINANT_MEANS_COMMON",
+     "description": "Thinks dominant traits are always the most common.",
+     "example": "'Polydactyly is dominant so most people have it.'"
+    },
+    {
+     "error_code": "COM_GENETICS_NOTATION",
+     "description": "Uses different letters for alleles of the same gene.",
+     "example": "T and s for tall and short"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Two Aa parents are crossed. What is the expected phenotype ratio?",
+     "answer": "3 dominant : 1 recessive"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "bio.evolution",
+   "strand": "Evolution & diversity",
+   "name": "Natural selection and evolution",
+   "levels": [
+    8,
+    12
+   ],
+   "learning_goals": [
+    "Explain natural selection: variation, inheritance, selection and time.",
+    "Use evidence such as fossils, anatomy and DNA to support evolution."
+   ],
+   "key_concepts": [
+    "Variation",
+    "Selective pressure",
+    "Adaptation",
+    "Common ancestry"
+   ],
+   "prerequisites": [
+    "bio.classification",
+    "bio.genetics_mendelian"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "CON_NEED_DRIVES_EVOLUTION",
+     "description": "Says individuals change because they need to.",
+     "example": "'Bacteria became resistant because they needed to survive.'"
+    },
+    {
+     "error_code": "CON_ACQUIRED_TRAITS",
+     "description": "Thinks traits gained during life are inherited.",
+     "example": "'Bodybuilders have stronger babies.'"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Explain how antibiotic resistance spreads in a bacterial population.",
+     "answer": "Some bacteria already carry resistance; the antibiotic kills the others; survivors reproduce, so resistance becomes common"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "bio.dna_protein",
+   "strand": "Genetics",
+   "name": "DNA and protein synthesis",
+   "levels": [
+    9,
+    12
+   ],
+   "learning_goals": [
+    "Describe DNA structure and replication.",
+    "Explain transcription and translation."
+   ],
+   "key_concepts": [
+    "Base pairing (A-T, C-G; A-U in RNA)",
+    "Codons",
+    "Mutations"
+   ],
+   "prerequisites": [
+    "bio.cells",
+    "bio.genetics_mendelian"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "PRC_TRANSCRIPTION_TRANSLATION",
+     "description": "Pairs A with T when transcribing to mRNA.",
+     "example": "DNA TAC -> mRNA ATG"
+    },
+    {
+     "error_code": "CON_GENE_ALLELE_SCALE",
+     "description": "Thinks each cell type has different DNA.",
+     "example": "'Muscle cells have muscle DNA.'"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Transcribe the DNA template strand TACGGA into mRNA.",
+     "answer": "AUGCCU"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "bio.populations",
+   "strand": "Ecology",
+   "name": "Population dynamics",
+   "levels": [
+    9,
+    12
+   ],
+   "learning_goals": [
+    "Describe population growth, carrying capacity and limiting factors.",
+    "Interpret population graphs."
+   ],
+   "key_concepts": [
+    "Exponential and logistic growth",
+    "Carrying capacity",
+    "Density-dependent factors"
+   ],
+   "prerequisites": [
+    "bio.ecology_cycles"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "PRC_DATA_PROCESSING",
+     "description": "Misreads a population graph's scale or axis.",
+     "example": "Reads the peak as the carrying capacity in a logistic curve."
+    },
+    {
+     "error_code": "STR_CORRELATION_CAUSATION",
+     "description": "Claims one population causes another's change without evidence.",
+     "example": "Two populations rose together, so one caused the other."
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "What is the carrying capacity of an environment?",
+     "answer": "The largest population the environment can support over time"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "bio.enzymes",
+   "strand": "Cells & processes",
+   "name": "Enzymes and biochemistry",
+   "levels": [
+    10,
+    12
+   ],
+   "learning_goals": [
+    "Describe the main biological molecules.",
+    "Explain how enzymes work and what affects their activity."
+   ],
+   "key_concepts": [
+    "Carbohydrates, lipids, proteins, nucleic acids",
+    "Active site",
+    "Denaturation",
+    "Effect of temperature and pH"
+   ],
+   "prerequisites": [
+    "bio.cells"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "CON_ENZYME_FUNCTION",
+     "description": "Says enzymes are used up in reactions.",
+     "example": "'The enzyme ran out after one reaction.'"
+    },
+    {
+     "error_code": "CON_ENZYME_FUNCTION",
+     "description": "Says high temperature kills enzymes.",
+     "example": "'The enzyme died at 70 degrees C.'"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Why does enzyme activity drop sharply above the optimum temperature?",
+     "answer": "The enzyme denatures: its active site changes shape and the substrate no longer fits"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "bio.homeostasis",
+   "strand": "Body systems",
+   "name": "Homeostasis, nervous and endocrine systems",
+   "levels": [
+    10,
+    12
+   ],
+   "learning_goals": [
+    "Explain negative feedback in homeostasis.",
+    "Compare nervous and hormonal control."
+   ],
+   "key_concepts": [
+    "Negative feedback",
+    "Blood glucose and insulin",
+    "Thermoregulation",
+    "Neurons and hormones"
+   ],
+   "prerequisites": [
+    "bio.human_body_systems"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "STR_WRONG_PROCESS",
+     "description": "Describes positive feedback for a negative-feedback system.",
+     "example": "High blood glucose triggers more glucose release."
+    },
+    {
+     "error_code": "FAC_TERM_RECALL",
+     "description": "Confuses glucagon and glycogen.",
+     "example": "'Glycogen is the hormone that raises blood sugar.'"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "What happens when blood glucose rises after a meal?",
+     "answer": "The pancreas releases insulin; cells take up glucose and the liver stores it as glycogen"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  }
+ ]
+}

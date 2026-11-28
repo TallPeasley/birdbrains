@@ -42,6 +42,7 @@ from .schemas import (
     Stage1VisionOutput,
     Stage2GradingAndAffectOutput,
 )
+from . import curricula
 from .taxonomy import CURRICULUM, cached_context_text
 from .quirks import clean_requirement_checks
 
@@ -109,7 +110,8 @@ CACHE_TTL_SECONDS = 24 * 60 * 60
 HITL_CONFIDENCE_FLOOR = 0.60
 
 STAGE1_SYSTEM = """\
-You transcribe photographs of handwritten secondary-school mathematics worksheets.
+You transcribe photographs of handwritten school mathematics worksheets (kindergarten to
+Grade 12, any curriculum).
 
 Rules:
 1. Segment the page by question: identify every printed or numbered question on the
@@ -160,10 +162,10 @@ Rules:
     Leave it null otherwise.
 12. Never transcribe people's names, student numbers, signatures, emails or phone
     numbers. Parts of the page may already be blacked out for privacy; ignore them.
-13. Also say what the page is about, from the printed problems and the work.
-    `detected_course` is MTH1W (Grade 9) or MPM2D (Grade 10), or null if you cannot
-    tell. `detected_unit` is the closest unit from the list below, copied exactly, or
-    empty if none fits. `detected_topic` is the specific skill in 3 to 6 words
+13. Also say what the page is about, from the printed problems and the work. The
+    student's course is given in the request; do not guess a course. `detected_unit` is
+    the closest unit
+    from the request's unit list, copied exactly, or empty if none fits. `detected_topic` is the specific skill in 3 to 6 words
     (for example "Completing the square").
 14. Several images are ALWAYS photos of the SAME worksheet: the whole page, a
     re-shoot of it, and/or close-ups of single questions. Merge them into ONE
@@ -177,15 +179,12 @@ Rules:
     empty.
 Do not grade. Do not comment. Output only the structured result.
 """
-STAGE1_SYSTEM += "\nUnits by course:\n" + "\n".join(
-    f"- {course.value}: " + "; ".join(u for units in strands.values() for u in units)
-    for course, strands in CURRICULUM.items()
-) + "\n"
 
 STAGE2_SYSTEM = """\
-You are the diagnostic reasoning stage of BirdBrains, an error-analysis tool for
-Ontario Grade 9 (MTH1W) and Grade 10 (MPM2D) mathematics. You receive a verbatim
-transcription of ONE question from a student's worksheet (its problem_statement and
+You are the diagnostic reasoning stage of Quark, an error-analysis tool for school
+mathematics from kindergarten to Grade 12 in several curriculums. Each request states
+the student's curriculum, grade and course; pitch the answer key to that level. You
+receive a verbatim transcription of ONE question from a student's worksheet (its problem_statement and
 its handwritten lines) plus visual affect markers. You grade THIS question in
 complete isolation—never assume or reference steps from any other question.
 
@@ -425,11 +424,32 @@ def configure_tracing() -> None:
         mlflow.tracing.disable()
 
 
+def stage1_course_text(ctx: SubmissionContext) -> str:
+    """The course part of the Stage 1 request: the student's own course (never guessed
+    from the page) and the units `detected_unit` is copied from. Ontario's MTH1W and
+    MPM2D keep their own unit lists; every other course uses the topic catalog."""
+    info = curricula.parse_course(ctx.course.value)
+    if ctx.course in CURRICULUM:
+        units = [u for strand_units in CURRICULUM[ctx.course].values() for u in strand_units]
+    else:
+        units = curricula.unit_names(info.id)
+    return f"The student's course is {info.name}.\nUnits for this course: " + "; ".join(units) + "."
+
+
+def course_line(ctx: SubmissionContext) -> str:
+    """The Stage 2 course header: the course id and name, plus, for courses outside
+    Ontario's original two, the curriculum, grade and matching topic's misconceptions."""
+    info = curricula.parse_course(ctx.course.value)
+    if info.legacy:
+        return f"Course: {info.id} ({info.name})\n"
+    return f"Course: {info.id} ({info.name})\n{curricula.course_context_text(info.id, ctx.unit_topic)}\n"
+
+
 def stage2_question_prompt(ctx: SubmissionContext, question: Stage1QuestionTranscription, plan: str = "pro") -> str:
     """Prompt for grading ONE isolated question from Stage 1."""
     return (FREE_MODE_NOTE + "\n" if plan == "free" else "") + (
-        f"Course: {ctx.course.value}\n"
-        f"Unit / topic tags: {ctx.unit_topic}\n"
+        course_line(ctx)
+        + f"Unit / topic tags: {ctx.unit_topic}\n"
         f"submission_id: {ctx.submission_id}\n"
         f"question_number: {question.question_number}\n\n"
         + (f"What the teacher asked for on this assignment (instructions and rubric). Use it to judge what a "
@@ -702,6 +722,7 @@ class GeminiPipeline:
                 "line of student work per question (including initial setup equations and multi-column steps)."
                 + (f" These {len(images)} images are photos of the same worksheet: merge them into one "
                    "transcription, reading each line from the clearest photo." if len(images) > 1 else "")
+                + "\n\n" + stage1_course_text(ctx)
             )
         ))
         config = types.GenerateContentConfig(

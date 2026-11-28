@@ -13,7 +13,7 @@ PROJECT="${1:?usage: ./deploy.sh <gcp-project-id> [frontend-origin]}"
 ORIGIN="${2:-https://quark.study}"
 # Also allowed: www.quark.study (redirects to quark.study), the boson-quark Firebase addresses and the
 # first address (<project>.web.app), all still served.
-CORS="$ORIGIN,https://quark.study,https://www.quark.study,https://boson-quark.web.app,https://boson-quark.firebaseapp.com,https://${PROJECT}.web.app,https://${PROJECT}.firebaseapp.com"
+CORS="$ORIGIN,https://quark.study,https://www.quark.study,https://boson-quark.web.app,https://boson-quark.firebaseapp.com,https://boson-planck.web.app,https://boson-planck.firebaseapp.com,https://${PROJECT}.web.app,https://${PROJECT}.firebaseapp.com"
 REGION="northamerica-northeast1"   # PIPEDA: everything stays in Montréal
 SERVICE="birdbrains-api"
 BUCKET="${PROJECT}-birdbrains"
@@ -99,6 +99,15 @@ fi
 optional_secret BIRDBRAINS_LMS_KEY              birdbrains-lms-token-key
 optional_secret MICROSOFT_OAUTH_CLIENT_ID       birdbrains-microsoft-oauth-client-id
 optional_secret MICROSOFT_OAUTH_CLIENT_SECRET   birdbrains-microsoft-oauth-client-secret
+# Read key for the growth dashboard in Planck (GET /internal/attribution). Made once
+# here; paste it into Planck's growth page with
+#   gcloud secrets versions access latest --secret=quark-growth-key
+if ! gcloud secrets describe quark-growth-key >/dev/null 2>&1; then
+  openssl rand -base64 32 | tr '+/' '-_' | tr -d '\n' | \
+    gcloud secrets create quark-growth-key --data-file=- \
+      --replication-policy=user-managed --locations="$REGION"
+fi
+optional_secret QUARK_GROWTH_KEY                quark-growth-key
 
 echo "== Build permissions"
 # New projects build source deploys as the default compute service account, which

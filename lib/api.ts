@@ -1,3 +1,4 @@
+import type { TouchPoint } from '@/lib/attribution';
 import type {
   ApiClass,
   ClassroomBetaStatus,
@@ -41,6 +42,8 @@ export class ApiError extends Error {
     super(detail);
   }
 }
+
+type Attribution = { first?: TouchPoint; last?: TouchPoint };
 
 async function request<T>(path: string, token: string, init?: RequestInit): Promise<T> {
   return send<T>(path, { Authorization: `Bearer ${token}` }, init);
@@ -109,8 +112,12 @@ export const api = {
   cancelPhoneUpload: (t: string, sessionId: string) =>
     request<void>(`/phone-uploads/${sessionId}`, t, { method: 'DELETE' }),
   me: (t: string) => request<UserProfile>('/me', t),
-  register: (t: string, body: { role: 'student' | 'parent' | 'teacher'; name: string; course?: string }) =>
-    request<UserProfile>('/me', t, json(body)),
+  register: (
+    t: string,
+    body: { role: 'student' | 'parent' | 'teacher'; name: string; course?: string; attribution?: Attribution },
+  ) => request<UserProfile>('/me', t, json(body)),
+  /** One anonymous visit a day, only after the visitor allowed cookies (lib/attribution.ts). */
+  recordVisit: (body: { visitorId: string; touch: TouchPoint }) => send<void>('/attribution/visit', {}, json(body)),
   linkChild: (t: string, linkCode: string) => request<UserProfile>('/me/children', t, json({ linkCode })),
   createSubmission: (t: string, form: FormData) =>
     request<SubmissionIngestionPayload>('/submissions', t, { method: 'POST', body: form }),
@@ -256,7 +263,8 @@ export const api = {
     request<CohortReport>(`/teacher/report${googleCourseId ? `?googleCourseId=${encodeURIComponent(googleCourseId)}` : ''}`, t),
   /** Plan and uploads left this month. A 402 FREE_LIMIT_REACHED on upload means remaining hit 0. */
   usage: (t: string, studentId: string) => request<ApiUsage>(`/students/${studentId}/usage`, t),
-  updateProfile: (t: string, name: string) => request<UserProfile>('/me', t, { ...json({ name }), method: 'PATCH' }),
+  updateProfile: (t: string, name: string, course?: string) =>
+    request<UserProfile>('/me', t, { ...json(course ? { name, course } : { name }), method: 'PATCH' }),
   myClasses: (t: string) => request<ApiClass[]>('/me/classes', t),
   joinClass: (t: string, joinCode: string) => request<ApiClass[]>('/me/classes', t, json({ joinCode })),
   leaveClass: (t: string, classId: string) => request<ApiClass[]>(`/me/classes/${classId}`, t, { method: 'DELETE' }),

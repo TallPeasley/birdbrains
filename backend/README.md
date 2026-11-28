@@ -6,7 +6,8 @@ serves the JSON contracts in `../types/birdBrains.ts`.
 ```
 birdbrains/
   schemas.py                 Pydantic v2 contracts (pipeline: strict snake_case; API: camelCase)
-  taxonomy.py                the 16 official error codes + Ontario curriculum registry (the cached context)
+  taxonomy.py                the error-code taxonomy + curriculum registry text (the cached context)
+  curricula/                 curriculums, grades, subjects and the K-12 topic catalog (see docs/CURRICULA.md)
   pipeline.py                Stage 1 and Stage 2 (gemini-3.5-flash, thinking levels), 24h context cache, MLflow traces
   mastery_affect_ledger.py   Dual EWMA (mastery 0.30, valence 0.35) + scaffolding-mode state machine
   batch_engine.py            Nightly worksheet generation through the Vertex AI Batch API

@@ -8,10 +8,11 @@ import Navbar from '@/components/Navbar';
 import CaptureModal from '@/components/CaptureModal';
 import PwaSetup from '@/components/PwaSetup';
 import TesterBar from '@/components/TesterBar';
+import CookieConsent from '@/components/CookieConsent';
 import AeroFooter from '@/components/aero/AeroFooter';
 
 const DESCRIPTION =
-  'Step-by-step mistake diagnostics on six pillars and three-stage practice worksheets for Ontario students, parents and teachers. Live for Grade 9–10 math, with sciences, English and history on the way.';
+  'Step-by-step mistake diagnostics on six pillars and three-stage practice worksheets for students, parents and teachers. Pick your curriculum and grade: math is graded from kindergarten to Grade 12, with sciences, English and history on the way.';
 
 export const metadata: Metadata = {
   // Main address (custom domain on boson-quark). The same build is also served at boson-quark.web.app and
@@ -73,6 +74,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </main>
             <AeroFooter />
             <CaptureModal />
+            <CookieConsent />
           </RoleProvider>
         </SessionProvider>
       </body>

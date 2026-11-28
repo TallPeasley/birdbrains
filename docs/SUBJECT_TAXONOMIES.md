@@ -68,8 +68,10 @@ for every subject; only the labels change per subject.
 ## Not done yet
 
 - **Grading.** The pipeline, Stage 1 reading and Stage 2 prompts are
-  maths-only (`CourseEnum` is MTH1W and MPM2D). To use a subject:
-  add its courses, pass `subjects.taxonomy_text(subject)` to Stage 2 instead
+  maths-only. Course ids now cover every curriculum and science subject (see
+  [CURRICULA.md](CURRICULA.md)), but uploads for a non-math course are refused
+  with upload code 109 until grading is wired. To use a subject: mark it in
+  `gradable_subjects` in `curricula/curricula.json`, pass `subjects.taxonomy_text(subject)` to Stage 2 instead
   of the maths taxonomy, and teach Stage 1 to read prose answers, not just
   maths lines. English and history need a different Stage 1 entirely
   (paragraphs and essays, not numbered steps).

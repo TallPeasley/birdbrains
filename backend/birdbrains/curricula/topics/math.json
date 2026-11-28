@@ -1,0 +1,3038 @@
+{
+ "version": 1,
+ "subject": "math",
+ "name": "Math",
+ "review_note": "Draft written for Quark. Grade levels are typical North American placements and vary by curriculum. Needs review by a subject teacher before it is treated as authoritative.",
+ "topics": [
+  {
+   "id": "math.count.whole_numbers",
+   "strand": "Number",
+   "name": "Counting and cardinality",
+   "levels": [
+    0,
+    1
+   ],
+   "learning_goals": [
+    "Count objects to 20 and beyond, saying one number for each object.",
+    "Know that the last number said tells how many are in the set."
+   ],
+   "key_concepts": [
+    "One-to-one correspondence",
+    "Cardinality",
+    "Counting on from a known number"
+   ],
+   "prerequisites": [],
+   "misconceptions": [
+    {
+     "error_code": "CON_FOUNDATIONAL_MISCONCEPTION",
+     "description": "Counts an object twice or skips one, so the count does not match the set.",
+     "example": "Counts 7 blocks as '1, 2, 3, 4, 5, 6, 7, 8' after touching one block twice."
+    },
+    {
+     "error_code": "FAC_FACT_RECALL",
+     "description": "Skips or repeats a number in the counting sequence.",
+     "example": "'...12, 13, 15, 16'"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "How many stars? (picture of 9 stars)",
+     "answer": "9"
+    },
+    {
+     "prompt": "What number comes after 19?",
+     "answer": "20"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.patterns.repeating",
+   "strand": "Algebra",
+   "name": "Patterns",
+   "levels": [
+    0,
+    3
+   ],
+   "learning_goals": [
+    "Identify, extend and create repeating and growing patterns.",
+    "Describe the rule of a pattern in words."
+   ],
+   "key_concepts": [
+    "Pattern core (the part that repeats)",
+    "Growing patterns",
+    "Pattern rules"
+   ],
+   "prerequisites": [],
+   "misconceptions": [
+    {
+     "error_code": "CON_OVERGENERALISED_RULE",
+     "description": "Extends a growing pattern as if it repeated.",
+     "example": "2, 4, 6, 8, ... continued as 2, 4, 6, 8"
+    },
+    {
+     "error_code": "STR_DIAGRAM_MISREAD",
+     "description": "Misidentifies the core of a repeating pattern.",
+     "example": "Core of red-red-blue taken as red-blue."
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "What comes next? 3, 6, 9, 12, __",
+     "answer": "15"
+    },
+    {
+     "prompt": "Extend: circle, square, square, circle, square, square, __",
+     "answer": "circle"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.add_sub.within_20",
+   "strand": "Number",
+   "name": "Addition and subtraction facts within 20",
+   "levels": [
+    0,
+    2
+   ],
+   "learning_goals": [
+    "Add and subtract fluently within 20.",
+    "Use strategies such as making ten, doubles and counting on."
+   ],
+   "key_concepts": [
+    "Part-part-whole",
+    "Making ten",
+    "Addition and subtraction are inverse operations"
+   ],
+   "prerequisites": [
+    "math.count.whole_numbers"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "FAC_FACT_RECALL",
+     "description": "Recalls an addition or subtraction fact incorrectly.",
+     "example": "8 + 7 = 14"
+    },
+    {
+     "error_code": "CON_FOUNDATIONAL_MISCONCEPTION",
+     "description": "Believes subtraction can be done in either order.",
+     "example": "3 - 8 = 5"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "9 + 6 = ?",
+     "answer": "15"
+    },
+    {
+     "prompt": "Sam had 14 stickers and gave away 5. How many are left?",
+     "answer": "9"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.place_value.two_digit",
+   "strand": "Number",
+   "name": "Place value to 100",
+   "levels": [
+    1,
+    2
+   ],
+   "learning_goals": [
+    "Understand that the digits of a two-digit number stand for tens and ones.",
+    "Compare two-digit numbers using place value."
+   ],
+   "key_concepts": [
+    "Tens and ones",
+    "Expanded form",
+    "Comparing with <, > and ="
+   ],
+   "prerequisites": [
+    "math.count.whole_numbers"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "CON_FOUNDATIONAL_MISCONCEPTION",
+     "description": "Reads the digits without their place value.",
+     "example": "Writes 'forty-three' as 403."
+    },
+    {
+     "error_code": "COM_NOTATION_MISUSE",
+     "description": "Reverses the comparison symbol.",
+     "example": "Writes 52 < 25."
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "What is the value of the 6 in 64?",
+     "answer": "60"
+    },
+    {
+     "prompt": "Write 3 tens and 8 ones as a number.",
+     "answer": "38"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.geometry.shapes_2d3d",
+   "strand": "Geometry & Measurement",
+   "name": "2D and 3D shapes",
+   "levels": [
+    0,
+    2
+   ],
+   "learning_goals": [
+    "Name and describe common 2D and 3D shapes.",
+    "Sort shapes by attributes such as sides, vertices, faces and edges."
+   ],
+   "key_concepts": [
+    "Defining vs non-defining attributes",
+    "Sides and vertices",
+    "Faces and edges"
+   ],
+   "prerequisites": [],
+   "misconceptions": [
+    {
+     "error_code": "CON_OVERGENERALISED_RULE",
+     "description": "Thinks a shape stops being a triangle or square when it is rotated.",
+     "example": "A square turned 45 degrees is called a 'diamond, not a square'."
+    },
+    {
+     "error_code": "FAC_FACT_RECALL",
+     "description": "Miscounts the faces or vertices of a solid.",
+     "example": "Says a cube has 4 faces."
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "How many sides does a hexagon have?",
+     "answer": "6"
+    },
+    {
+     "prompt": "How many faces does a cube have?",
+     "answer": "6"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.measure.length_time",
+   "strand": "Geometry & Measurement",
+   "name": "Measuring length and telling time",
+   "levels": [
+    1,
+    3
+   ],
+   "learning_goals": [
+    "Measure length using standard units and appropriate tools.",
+    "Tell and write time from analog and digital clocks."
+   ],
+   "key_concepts": [
+    "Units of length",
+    "Starting a measurement at zero",
+    "Hour and minute hands"
+   ],
+   "prerequisites": [
+    "math.count.whole_numbers"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "STR_DIAGRAM_MISREAD",
+     "description": "Starts measuring at 1 instead of 0 on the ruler.",
+     "example": "An object from 1 cm to 6 cm is recorded as 6 cm."
+    },
+    {
+     "error_code": "STR_DIAGRAM_MISREAD",
+     "description": "Confuses the hour and minute hands.",
+     "example": "Reads 3:45 as 9:15."
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "A pencil starts at 0 cm and ends at 12 cm on a ruler. How long is it?",
+     "answer": "12 cm"
+    },
+    {
+     "prompt": "What time is it when the hour hand is just past 4 and the minute hand points to 6?",
+     "answer": "4:30"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.data.pictographs",
+   "strand": "Data & Probability",
+   "name": "Pictographs and bar graphs",
+   "levels": [
+    1,
+    3
+   ],
+   "learning_goals": [
+    "Collect data and show it in pictographs and bar graphs.",
+    "Answer questions by reading and comparing data in a graph."
+   ],
+   "key_concepts": [
+    "Categories",
+    "Scale and key",
+    "Comparing totals"
+   ],
+   "prerequisites": [
+    "math.count.whole_numbers"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "STR_DIAGRAM_MISREAD",
+     "description": "Ignores the key when each picture stands for more than one.",
+     "example": "Counts 4 pictures as 4 when each picture means 2."
+    },
+    {
+     "error_code": "COM_ANSWERED_DIFFERENT_QUESTION",
+     "description": "Reports a total when asked 'how many more'.",
+     "example": "Asked how many more chose apples than pears, answers 13 instead of 3."
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "In a pictograph each icon is 2 votes. Apples has 5 icons. How many votes?",
+     "answer": "10"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.add_sub.multi_digit",
+   "strand": "Number",
+   "name": "Multi-digit addition and subtraction",
+   "levels": [
+    2,
+    4
+   ],
+   "learning_goals": [
+    "Add and subtract multi-digit whole numbers using place value strategies and the standard algorithm.",
+    "Estimate to check whether a sum or difference is reasonable."
+   ],
+   "key_concepts": [
+    "Regrouping (carrying and borrowing)",
+    "Lining up place values",
+    "Estimation"
+   ],
+   "prerequisites": [
+    "math.place_value.two_digit",
+    "math.add_sub.within_20"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "CON_FOUNDATIONAL_MISCONCEPTION",
+     "description": "Subtracts the smaller digit from the larger in each column.",
+     "example": "52 - 38 = 26 (did 8 - 2 in the ones)"
+    },
+    {
+     "error_code": "PRC_STEP_OMITTED",
+     "description": "Forgets to add the regrouped ten.",
+     "example": "47 + 38 = 75"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "406 - 178 = ?",
+     "answer": "228"
+    },
+    {
+     "prompt": "1,265 + 2,847 = ?",
+     "answer": "4,112"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.place_value.large",
+   "strand": "Number",
+   "name": "Place value and rounding of large numbers",
+   "levels": [
+    3,
+    5
+   ],
+   "learning_goals": [
+    "Read, write and compare whole numbers to at least one million.",
+    "Round whole numbers to a given place."
+   ],
+   "key_concepts": [
+    "Each place is ten times the place to its right",
+    "Rounding rules",
+    "Expanded form"
+   ],
+   "prerequisites": [
+    "math.place_value.two_digit"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "FAC_ROUNDING",
+     "description": "Rounds by looking at the wrong digit.",
+     "example": "Rounds 3,462 to the nearest hundred as 3,400 (looked at the ones digit, not the tens)."
+    },
+    {
+     "error_code": "CON_FOUNDATIONAL_MISCONCEPTION",
+     "description": "Compares numbers by their first digit regardless of length.",
+     "example": "Says 987 > 1,203."
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Round 47,385 to the nearest thousand.",
+     "answer": "47,000"
+    },
+    {
+     "prompt": "Write 300,000 + 5,000 + 20 + 7 in standard form.",
+     "answer": "305,027"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.mult_div.facts",
+   "strand": "Number",
+   "name": "Multiplication and division facts",
+   "levels": [
+    3,
+    4
+   ],
+   "learning_goals": [
+    "Understand multiplication as equal groups and arrays, and division as sharing or grouping.",
+    "Know multiplication facts to 10 x 10 and the related division facts."
+   ],
+   "key_concepts": [
+    "Equal groups and arrays",
+    "Commutative property",
+    "Division as the inverse of multiplication"
+   ],
+   "prerequisites": [
+    "math.add_sub.within_20"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "FAC_FACT_RECALL",
+     "description": "Recalls a multiplication fact incorrectly.",
+     "example": "7 x 8 = 54"
+    },
+    {
+     "error_code": "CON_FOUNDATIONAL_MISCONCEPTION",
+     "description": "Treats division as commutative.",
+     "example": "3 / 12 = 4"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "6 x 7 = ?",
+     "answer": "42"
+    },
+    {
+     "prompt": "24 pencils are shared equally among 4 students. How many each?",
+     "answer": "6"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.mult_div.multi_digit",
+   "strand": "Number",
+   "name": "Multi-digit multiplication and division",
+   "levels": [
+    4,
+    6
+   ],
+   "learning_goals": [
+    "Multiply multi-digit numbers using area models, partial products and the standard algorithm.",
+    "Divide with remainders and interpret the remainder in context."
+   ],
+   "key_concepts": [
+    "Distributive property",
+    "Partial products",
+    "Interpreting remainders"
+   ],
+   "prerequisites": [
+    "math.mult_div.facts",
+    "math.place_value.large"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "PRC_STEP_OMITTED",
+     "description": "Forgets the placeholder zero in the second partial product.",
+     "example": "34 x 26: writes 68 instead of 680 for 34 x 20, getting 272."
+    },
+    {
+     "error_code": "COM_ANSWERED_DIFFERENT_QUESTION",
+     "description": "Ignores the context when interpreting a remainder.",
+     "example": "45 students, 10 per van: answers 4 vans (remainder 5) instead of 5 vans."
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "234 x 18 = ?",
+     "answer": "4,212"
+    },
+    {
+     "prompt": "How many boxes of 12 are needed for 100 eggs?",
+     "answer": "9 boxes (8 full, one with 4)"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.fractions.meaning",
+   "strand": "Number",
+   "name": "Fractions as numbers",
+   "levels": [
+    3,
+    4
+   ],
+   "learning_goals": [
+    "Understand a fraction a/b as a parts of size 1/b.",
+    "Place fractions on a number line."
+   ],
+   "key_concepts": [
+    "Equal-sized parts",
+    "Numerator and denominator",
+    "Fractions on a number line"
+   ],
+   "prerequisites": [
+    "math.mult_div.facts"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "CON_FOUNDATIONAL_MISCONCEPTION",
+     "description": "Counts parts that are not equal in size.",
+     "example": "Calls one of three unequal pieces 'one third'."
+    },
+    {
+     "error_code": "CON_OVERGENERALISED_RULE",
+     "description": "Thinks a larger denominator means a larger fraction.",
+     "example": "Says 1/8 > 1/4."
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Which is larger, 1/3 or 1/5?",
+     "answer": "1/3"
+    },
+    {
+     "prompt": "What fraction of a pizza cut into 8 equal slices is 3 slices?",
+     "answer": "3/8"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.fractions.equivalent",
+   "strand": "Number",
+   "name": "Equivalent fractions and comparing fractions",
+   "levels": [
+    3,
+    5
+   ],
+   "learning_goals": [
+    "Generate equivalent fractions by multiplying or dividing numerator and denominator by the same number.",
+    "Compare fractions with different denominators."
+   ],
+   "key_concepts": [
+    "Equivalent fractions",
+    "Common denominators",
+    "Benchmark fractions (0, 1/2, 1)"
+   ],
+   "prerequisites": [
+    "math.fractions.meaning"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "CON_OVERGENERALISED_RULE",
+     "description": "Adds the same number to top and bottom to make an equivalent fraction.",
+     "example": "2/3 = 4/5"
+    },
+    {
+     "error_code": "PRC_INCOMPLETE_SIMPLIFICATION",
+     "description": "Stops before the fraction is in lowest terms.",
+     "example": "12/18 = 6/9"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Write 3/4 with a denominator of 20.",
+     "answer": "15/20"
+    },
+    {
+     "prompt": "Simplify 18/24.",
+     "answer": "3/4"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.fractions.add_sub",
+   "strand": "Number",
+   "name": "Adding and subtracting fractions",
+   "levels": [
+    4,
+    6
+   ],
+   "learning_goals": [
+    "Add and subtract fractions and mixed numbers, including unlike denominators.",
+    "Solve word problems with fractions."
+   ],
+   "key_concepts": [
+    "Common denominators",
+    "Mixed numbers and improper fractions",
+    "Regrouping a whole"
+   ],
+   "prerequisites": [
+    "math.fractions.equivalent"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "CON_FOUNDATIONAL_MISCONCEPTION",
+     "description": "Adds numerators and denominators separately.",
+     "example": "1/2 + 1/3 = 2/5"
+    },
+    {
+     "error_code": "PRC_STEP_OMITTED",
+     "description": "Converts the denominator but not the numerator.",
+     "example": "1/4 + 2/3 = 1/12 + 8/12"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "2/3 + 1/4 = ?",
+     "answer": "11/12"
+    },
+    {
+     "prompt": "3 1/2 - 1 3/4 = ?",
+     "answer": "1 3/4"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.fractions.mult_div",
+   "strand": "Number",
+   "name": "Multiplying and dividing fractions",
+   "levels": [
+    5,
+    7
+   ],
+   "learning_goals": [
+    "Multiply fractions and mixed numbers.",
+    "Divide fractions and explain why dividing by a fraction less than 1 gives a larger result."
+   ],
+   "key_concepts": [
+    "Fraction of a quantity",
+    "Reciprocals",
+    "Converting mixed numbers before multiplying"
+   ],
+   "prerequisites": [
+    "math.fractions.equivalent",
+    "math.mult_div.facts"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "CON_OVERGENERALISED_RULE",
+     "description": "Believes multiplication always makes a number bigger.",
+     "example": "Says 6 x 1/2 must be more than 6."
+    },
+    {
+     "error_code": "PRC_INVERSE_OPERATION",
+     "description": "Flips the wrong fraction when dividing.",
+     "example": "2/3 / 4/5 = 3/2 x 4/5"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "3/4 x 2/5 = ?",
+     "answer": "3/10"
+    },
+    {
+     "prompt": "2/3 / 1/6 = ?",
+     "answer": "4"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.decimals.place_value",
+   "strand": "Number",
+   "name": "Decimals and place value",
+   "levels": [
+    4,
+    6
+   ],
+   "learning_goals": [
+    "Read, write and compare decimals to thousandths.",
+    "Relate decimals to fractions with denominators of 10, 100 and 1000."
+   ],
+   "key_concepts": [
+    "Tenths, hundredths, thousandths",
+    "Decimal-fraction equivalence",
+    "Comparing decimals"
+   ],
+   "prerequisites": [
+    "math.fractions.meaning",
+    "math.place_value.large"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "CON_OVERGENERALISED_RULE",
+     "description": "Thinks a decimal with more digits is larger.",
+     "example": "Says 0.125 > 0.5."
+    },
+    {
+     "error_code": "CON_FOUNDATIONAL_MISCONCEPTION",
+     "description": "Reads the digits after the point as a whole number.",
+     "example": "Says 0.07 = 7/10."
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Which is greater, 0.6 or 0.58?",
+     "answer": "0.6"
+    },
+    {
+     "prompt": "Write 0.35 as a fraction in lowest terms.",
+     "answer": "7/20"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.decimals.operations",
+   "strand": "Number",
+   "name": "Decimal operations",
+   "levels": [
+    5,
+    7
+   ],
+   "learning_goals": [
+    "Add, subtract, multiply and divide decimals.",
+    "Estimate to check the placement of the decimal point."
+   ],
+   "key_concepts": [
+    "Lining up decimal points",
+    "Counting decimal places when multiplying",
+    "Dividing by a decimal"
+   ],
+   "prerequisites": [
+    "math.decimals.place_value",
+    "math.mult_div.multi_digit"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "PRC_STEP_OMITTED",
+     "description": "Lines up the last digits instead of the decimal points.",
+     "example": "4.5 + 1.25 = 1.70 (lined up 45 under 125)"
+    },
+    {
+     "error_code": "FAC_ARITHMETIC_SLIP",
+     "description": "Places the decimal point wrongly in a product.",
+     "example": "0.3 x 0.2 = 0.6"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "3.6 x 0.25 = ?",
+     "answer": "0.9"
+    },
+    {
+     "prompt": "7.2 / 0.4 = ?",
+     "answer": "18"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.measure.area_perimeter",
+   "strand": "Geometry & Measurement",
+   "name": "Area and perimeter",
+   "levels": [
+    3,
+    5
+   ],
+   "learning_goals": [
+    "Find the perimeter and area of rectangles and composite rectilinear shapes.",
+    "Choose the right measure (area or perimeter) for a situation."
+   ],
+   "key_concepts": [
+    "Area as square units",
+    "Perimeter as distance around",
+    "Splitting composite shapes"
+   ],
+   "prerequisites": [
+    "math.mult_div.facts"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "STR_FORMULA_MISSELECTION",
+     "description": "Finds area when perimeter is asked, or the reverse.",
+     "example": "A 4 m by 6 m garden needs fencing: answers 24 m."
+    },
+    {
+     "error_code": "COM_MISSING_UNITS",
+     "description": "Gives area in linear units or leaves units off.",
+     "example": "Area = 24 cm"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Find the area and perimeter of a 7 cm by 3 cm rectangle.",
+     "answer": "Area 21 cm^2; perimeter 20 cm"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.data.line_plots",
+   "strand": "Data & Probability",
+   "name": "Line plots and interpreting data",
+   "levels": [
+    3,
+    5
+   ],
+   "learning_goals": [
+    "Make line plots and bar graphs with scales.",
+    "Solve problems using information in graphs."
+   ],
+   "key_concepts": [
+    "Scale intervals",
+    "Frequency",
+    "Reading a graph accurately"
+   ],
+   "prerequisites": [
+    "math.data.pictographs"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "STR_DIAGRAM_MISREAD",
+     "description": "Reads a bar against the wrong grid line when the scale counts by 2s or 5s.",
+     "example": "Bar halfway between 10 and 15 read as 11."
+    },
+    {
+     "error_code": "COM_ANSWERED_DIFFERENT_QUESTION",
+     "description": "Gives the category instead of the value.",
+     "example": "Asked how many, answers 'blue'."
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "A bar graph uses a scale of 5. A bar reaches halfway between 20 and 25. What value is it?",
+     "answer": "22.5"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.geometry.angles",
+   "strand": "Geometry & Measurement",
+   "name": "Angles and angle measurement",
+   "levels": [
+    4,
+    7
+   ],
+   "learning_goals": [
+    "Measure and draw angles with a protractor.",
+    "Use angle facts: angles on a line, around a point and in a triangle."
+   ],
+   "key_concepts": [
+    "Degrees",
+    "Acute, right, obtuse, straight",
+    "Angle sums"
+   ],
+   "prerequisites": [
+    "math.geometry.shapes_2d3d"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "STR_DIAGRAM_MISREAD",
+     "description": "Reads the wrong scale on the protractor.",
+     "example": "Measures a 50 degree angle as 130 degrees."
+    },
+    {
+     "error_code": "CON_FOUNDATIONAL_MISCONCEPTION",
+     "description": "Thinks the length of the arms changes the size of the angle.",
+     "example": "Says the angle with longer arms is bigger."
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Two angles of a triangle are 48 and 67 degrees. Find the third.",
+     "answer": "65 degrees"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.measure.volume",
+   "strand": "Geometry & Measurement",
+   "name": "Volume of rectangular prisms",
+   "levels": [
+    5,
+    6
+   ],
+   "learning_goals": [
+    "Understand volume as the number of unit cubes that fill a solid.",
+    "Use V = l x w x h for rectangular prisms."
+   ],
+   "key_concepts": [
+    "Cubic units",
+    "Layers of cubes",
+    "Volume vs surface area"
+   ],
+   "prerequisites": [
+    "math.measure.area_perimeter"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "STR_FORMULA_MISSELECTION",
+     "description": "Adds the dimensions or finds surface area instead of volume.",
+     "example": "Box 2 x 3 x 4: answers 9 or 52."
+    },
+    {
+     "error_code": "COM_MISSING_UNITS",
+     "description": "Uses square units for volume.",
+     "example": "V = 24 cm^2"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Find the volume of a box 5 cm by 4 cm by 3 cm.",
+     "answer": "60 cm^3"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.geometry.coordinate_plane",
+   "strand": "Geometry & Measurement",
+   "name": "The coordinate plane",
+   "levels": [
+    5,
+    6
+   ],
+   "learning_goals": [
+    "Plot and read points in the coordinate plane, including all four quadrants.",
+    "Find horizontal and vertical distances between points."
+   ],
+   "key_concepts": [
+    "Ordered pairs (x, y)",
+    "Axes and origin",
+    "Quadrants"
+   ],
+   "prerequisites": [
+    "math.place_value.two_digit"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "STR_DIAGRAM_MISREAD",
+     "description": "Swaps the x and y coordinates.",
+     "example": "Plots (2, 5) at x = 5, y = 2."
+    },
+    {
+     "error_code": "CON_SIGN_DIRECTION_MEANING",
+     "description": "Moves the wrong way for a negative coordinate.",
+     "example": "Plots (-3, 2) at (3, 2)."
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "What is the distance between (2, -1) and (2, 6)?",
+     "answer": "7 units"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.algebra.order_of_operations",
+   "strand": "Algebra",
+   "name": "Order of operations",
+   "levels": [
+    5,
+    7
+   ],
+   "learning_goals": [
+    "Evaluate expressions with brackets, exponents, multiplication, division, addition and subtraction.",
+    "Insert brackets to make a statement true."
+   ],
+   "key_concepts": [
+    "Brackets first",
+    "Multiplication and division left to right",
+    "Addition and subtraction left to right"
+   ],
+   "prerequisites": [
+    "math.mult_div.facts"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "PRC_ORDER_OF_OPERATIONS",
+     "description": "Works strictly left to right.",
+     "example": "3 + 4 x 2 = 14"
+    },
+    {
+     "error_code": "PRC_ORDER_OF_OPERATIONS",
+     "description": "Always does multiplication before division (or addition before subtraction).",
+     "example": "12 / 3 x 2 = 2"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Evaluate 20 - 3 x (4 + 2).",
+     "answer": "2"
+    },
+    {
+     "prompt": "Evaluate 18 / 3 x 2 + 1.",
+     "answer": "13"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.ratio.ratios_rates",
+   "strand": "Number",
+   "name": "Ratios and unit rates",
+   "levels": [
+    6,
+    7
+   ],
+   "learning_goals": [
+    "Use ratio language and tables of equivalent ratios.",
+    "Find and compare unit rates."
+   ],
+   "key_concepts": [
+    "Part-to-part and part-to-whole ratios",
+    "Equivalent ratios",
+    "Unit rate"
+   ],
+   "prerequisites": [
+    "math.fractions.mult_div"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "STR_SETUP_FROM_WORDS",
+     "description": "Writes the ratio in the wrong order.",
+     "example": "'3 cats to 5 dogs' written 5:3."
+    },
+    {
+     "error_code": "CON_FOUNDATIONAL_MISCONCEPTION",
+     "description": "Uses additive instead of multiplicative reasoning.",
+     "example": "2:3 = 4:5 (added 2 to each)"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "A car travels 270 km in 3 hours. What is its unit rate?",
+     "answer": "90 km/h"
+    },
+    {
+     "prompt": "Which is the better buy: 6 for $4.50 or 10 for $7.20?",
+     "answer": "10 for $7.20 ($0.72 each vs $0.75)"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.ratio.percent",
+   "strand": "Number",
+   "name": "Percent",
+   "levels": [
+    6,
+    8
+   ],
+   "learning_goals": [
+    "Find a percent of a quantity and the whole from a part and a percent.",
+    "Solve problems with percent increase, decrease, discounts and tax."
+   ],
+   "key_concepts": [
+    "Percent as per hundred",
+    "Percent change",
+    "Multiplier method"
+   ],
+   "prerequisites": [
+    "math.ratio.ratios_rates",
+    "math.decimals.operations"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "STR_SETUP_FROM_WORDS",
+     "description": "Divides by the wrong quantity when finding percent change.",
+     "example": "Price rises from $40 to $50: says 20% (divided by 50)."
+    },
+    {
+     "error_code": "CON_OVERGENERALISED_RULE",
+     "description": "Thinks successive percent changes add.",
+     "example": "Up 10% then down 10% returns to the start."
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Find 15% of 80.",
+     "answer": "12"
+    },
+    {
+     "prompt": "A $60 jacket is 25% off. What is the sale price?",
+     "answer": "$45"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.ratio.proportional",
+   "strand": "Algebra",
+   "name": "Proportional relationships",
+   "levels": [
+    7,
+    8
+   ],
+   "learning_goals": [
+    "Recognise proportional relationships in tables, graphs and equations y = kx.",
+    "Solve proportion problems."
+   ],
+   "key_concepts": [
+    "Constant of proportionality",
+    "Graph through the origin",
+    "Cross-multiplication"
+   ],
+   "prerequisites": [
+    "math.ratio.ratios_rates"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "CON_GRAPH_FEATURE_MEANING",
+     "description": "Calls any straight line proportional, even one not through the origin.",
+     "example": "Says y = 2x + 3 is proportional."
+    },
+    {
+     "error_code": "STR_SETUP_FROM_WORDS",
+     "description": "Sets up the proportion with mismatched quantities.",
+     "example": "3/5 = x/12 with units flipped on one side"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "If 4 notebooks cost $10, how much do 10 cost?",
+     "answer": "$25"
+    },
+    {
+     "prompt": "y is proportional to x, and y = 21 when x = 3. Find y when x = 8.",
+     "answer": "56"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.integers.operations",
+   "strand": "Number",
+   "name": "Integers and signed numbers",
+   "levels": [
+    6,
+    8
+   ],
+   "learning_goals": [
+    "Add, subtract, multiply and divide integers.",
+    "Use a number line to reason about signed numbers."
+   ],
+   "key_concepts": [
+    "Opposites and absolute value",
+    "Subtracting a negative",
+    "Sign rules for multiplication and division"
+   ],
+   "prerequisites": [
+    "math.add_sub.multi_digit"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "FAC_SIGNED_NUMBER",
+     "description": "Applies a sign rule wrongly.",
+     "example": "-7 - (-3) = -10"
+    },
+    {
+     "error_code": "CON_OVERGENERALISED_RULE",
+     "description": "Applies 'two negatives make a positive' to addition.",
+     "example": "-4 + (-5) = 9"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "-8 + 13 = ?",
+     "answer": "5"
+    },
+    {
+     "prompt": "(-6)(-4) / (-3) = ?",
+     "answer": "-8"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.algebra.expressions",
+   "strand": "Algebra",
+   "name": "Algebraic expressions and like terms",
+   "levels": [
+    6,
+    8
+   ],
+   "learning_goals": [
+    "Write and evaluate algebraic expressions.",
+    "Simplify expressions by collecting like terms and using the distributive property."
+   ],
+   "key_concepts": [
+    "Variables and coefficients",
+    "Like terms",
+    "Distributive property"
+   ],
+   "prerequisites": [
+    "math.algebra.order_of_operations"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "CON_LIKE_TERMS",
+     "description": "Combines unlike terms.",
+     "example": "3x + 2y = 5xy"
+    },
+    {
+     "error_code": "PRC_SIGN_OR_FACTOR_DROPPED",
+     "description": "Distributes to only the first term in the bracket.",
+     "example": "3(x + 4) = 3x + 4"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Simplify 4a - 2b + 3a + 5b.",
+     "answer": "7a + 3b"
+    },
+    {
+     "prompt": "Expand and simplify 2(3x - 1) - (x - 4).",
+     "answer": "5x + 2"
+    }
+   ],
+   "aliases": [
+    "Algebraic Expressions"
+   ],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.algebra.one_step_equations",
+   "strand": "Algebra",
+   "name": "Solving one- and two-step equations",
+   "levels": [
+    6,
+    8
+   ],
+   "learning_goals": [
+    "Solve one- and two-step linear equations.",
+    "Check a solution by substituting it back."
+   ],
+   "key_concepts": [
+    "Equality as balance",
+    "Inverse operations",
+    "Checking by substitution"
+   ],
+   "prerequisites": [
+    "math.algebra.expressions"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "CON_EQUATION_BALANCE",
+     "description": "Performs an operation on only one side.",
+     "example": "x + 5 = 12 -> x + 5 - 5 = 12, so x = 12"
+    },
+    {
+     "error_code": "PRC_INVERSE_OPERATION",
+     "description": "Uses the same operation instead of its inverse.",
+     "example": "3x = 12 -> x = 36"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Solve 4x - 7 = 21.",
+     "answer": "x = 7"
+    },
+    {
+     "prompt": "Solve x/5 + 3 = 9.",
+     "answer": "x = 30"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.algebra.inequalities",
+   "strand": "Algebra",
+   "name": "Linear inequalities",
+   "levels": [
+    7,
+    9
+   ],
+   "learning_goals": [
+    "Solve linear inequalities and graph the solution on a number line.",
+    "Interpret inequality solutions in context."
+   ],
+   "key_concepts": [
+    "Inequality symbols",
+    "Reversing the sign when multiplying or dividing by a negative",
+    "Open vs closed circles"
+   ],
+   "prerequisites": [
+    "math.algebra.one_step_equations"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "PRC_INEQUALITY_DIRECTION",
+     "description": "Does not reverse the inequality after dividing by a negative.",
+     "example": "-2x > 6 -> x > -3"
+    },
+    {
+     "error_code": "COM_NOTATION_MISUSE",
+     "description": "Uses a closed circle for a strict inequality.",
+     "example": "x < 4 drawn with a filled dot at 4"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Solve 5 - 3x <= 20.",
+     "answer": "x >= -5"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.exponents.laws",
+   "strand": "Number",
+   "name": "Exponent laws and scientific notation",
+   "levels": [
+    8,
+    9
+   ],
+   "learning_goals": [
+    "Apply exponent laws for products, quotients, powers, zero and negative exponents.",
+    "Write and calculate with numbers in scientific notation."
+   ],
+   "key_concepts": [
+    "a^m x a^n = a^(m+n)",
+    "(a^m)^n = a^(mn)",
+    "a^0 = 1 and a^(-n) = 1/a^n",
+    "Scientific notation"
+   ],
+   "prerequisites": [
+    "math.integers.operations"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "CON_EXPONENT_LAW",
+     "description": "Multiplies exponents when multiplying powers with the same base.",
+     "example": "x^3 * x^4 = x^12"
+    },
+    {
+     "error_code": "CON_EXPONENT_LAW",
+     "description": "Thinks a negative exponent makes the number negative.",
+     "example": "2^(-3) = -8"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Simplify (3x^2)^3.",
+     "answer": "27x^6"
+    },
+    {
+     "prompt": "Write 0.00045 in scientific notation.",
+     "answer": "4.5 x 10^(-4)"
+    }
+   ],
+   "aliases": [
+    "Powers"
+   ],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.measure.circles",
+   "strand": "Geometry & Measurement",
+   "name": "Circumference and area of circles",
+   "levels": [
+    7,
+    8
+   ],
+   "learning_goals": [
+    "Use C = 2 pi r (or pi d) and A = pi r^2.",
+    "Solve problems with circles and parts of circles."
+   ],
+   "key_concepts": [
+    "Radius and diameter",
+    "pi as the ratio C/d",
+    "Area formula"
+   ],
+   "prerequisites": [
+    "math.measure.area_perimeter",
+    "math.decimals.operations"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "STR_WRONG_SUBSTITUTION",
+     "description": "Uses the diameter where the radius is needed.",
+     "example": "d = 10: A = pi(10)^2"
+    },
+    {
+     "error_code": "STR_FORMULA_MISSELECTION",
+     "description": "Mixes up the circumference and area formulas.",
+     "example": "Area = 2 pi r"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Find the area of a circle with diameter 12 cm, to one decimal place.",
+     "answer": "113.1 cm^2"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.measure.surface_volume",
+   "strand": "Geometry & Measurement",
+   "name": "Surface area and volume of solids",
+   "levels": [
+    7,
+    10
+   ],
+   "learning_goals": [
+    "Find surface area and volume of prisms, cylinders, pyramids, cones and spheres.",
+    "Solve optimization-style problems with solids."
+   ],
+   "key_concepts": [
+    "Nets",
+    "V = (area of base) x height",
+    "Cones and pyramids are one third of the prism",
+    "Sphere formulas"
+   ],
+   "prerequisites": [
+    "math.measure.volume",
+    "math.measure.circles"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "PRC_STEP_OMITTED",
+     "description": "Leaves out the 1/3 in cone or pyramid volume.",
+     "example": "Cone r = 3, h = 4: V = 36 pi"
+    },
+    {
+     "error_code": "STR_FORMULA_MISSELECTION",
+     "description": "Uses slant height where perpendicular height is needed.",
+     "example": "Uses slant 5 instead of height 4 in V = (1/3) pi r^2 h"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Find the volume of a cylinder with r = 3 cm and h = 10 cm, in terms of pi.",
+     "answer": "90 pi cm^3"
+    },
+    {
+     "prompt": "Find the volume of a sphere with r = 3 cm, in terms of pi.",
+     "answer": "36 pi cm^3"
+    }
+   ],
+   "aliases": [
+    "Measurement"
+   ],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.geometry.transformations",
+   "strand": "Geometry & Measurement",
+   "name": "Transformations and congruence",
+   "levels": [
+    6,
+    9
+   ],
+   "learning_goals": [
+    "Perform and describe translations, reflections, rotations and dilations.",
+    "Use transformations to reason about congruence and similarity."
+   ],
+   "key_concepts": [
+    "Image and pre-image",
+    "Mapping rules on coordinates",
+    "Scale factor"
+   ],
+   "prerequisites": [
+    "math.geometry.coordinate_plane"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "STR_DIAGRAM_MISREAD",
+     "description": "Reflects in the wrong axis.",
+     "example": "Reflecting (3, 2) in the x-axis gives (-3, 2)."
+    },
+    {
+     "error_code": "CON_SIGN_DIRECTION_MEANING",
+     "description": "Rotates in the wrong direction.",
+     "example": "Rotates 90 degrees clockwise when counter-clockwise was asked."
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Reflect (4, -1) in the y-axis.",
+     "answer": "(-4, -1)"
+    },
+    {
+     "prompt": "Dilate (2, 6) by scale factor 1/2 about the origin.",
+     "answer": "(1, 3)"
+    }
+   ],
+   "aliases": [
+    "Geometric Relationships"
+   ],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.data.statistics",
+   "strand": "Data & Probability",
+   "name": "Mean, median, mode and range",
+   "levels": [
+    6,
+    8
+   ],
+   "learning_goals": [
+    "Calculate and interpret measures of centre and spread.",
+    "Choose the most suitable measure for a data set."
+   ],
+   "key_concepts": [
+    "Mean, median, mode",
+    "Range",
+    "Effect of outliers"
+   ],
+   "prerequisites": [
+    "math.decimals.operations"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "PRC_STEP_OMITTED",
+     "description": "Finds the median without ordering the data.",
+     "example": "Median of 7, 2, 9, 4, 5 given as 9."
+    },
+    {
+     "error_code": "FAC_ARITHMETIC_SLIP",
+     "description": "Divides by the wrong count when finding the mean.",
+     "example": "Mean of 5 values divided by 4."
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Find the mean and median of 4, 8, 6, 10, 2.",
+     "answer": "Mean 6, median 6"
+    }
+   ],
+   "aliases": [
+    "Data",
+    "Data Collection and Analysis"
+   ],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.probability.simple",
+   "strand": "Data & Probability",
+   "name": "Simple and compound probability",
+   "levels": [
+    7,
+    9
+   ],
+   "learning_goals": [
+    "Find theoretical and experimental probabilities.",
+    "Use tree diagrams and tables for compound events."
+   ],
+   "key_concepts": [
+    "Sample space",
+    "P(event) = favourable / possible",
+    "Independent events"
+   ],
+   "prerequisites": [
+    "math.fractions.mult_div"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "CON_FOUNDATIONAL_MISCONCEPTION",
+     "description": "Believes past results change independent outcomes (gambler's fallacy).",
+     "example": "After 4 heads, says tails is more likely."
+    },
+    {
+     "error_code": "STR_MISSING_CASE",
+     "description": "Misses outcomes in the sample space.",
+     "example": "Two coins: lists HH, HT, TT only."
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Two fair dice are rolled. What is the probability the sum is 7?",
+     "answer": "1/6"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.functions.linear_relations",
+   "strand": "Functions",
+   "name": "Linear relations: slope and rate of change",
+   "levels": [
+    8,
+    9
+   ],
+   "learning_goals": [
+    "Represent linear relations with tables, graphs and equations.",
+    "Interpret slope as a rate of change and the y-intercept as an initial value."
+   ],
+   "key_concepts": [
+    "Slope = rise / run",
+    "Initial value",
+    "First differences"
+   ],
+   "prerequisites": [
+    "math.ratio.proportional",
+    "math.geometry.coordinate_plane"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "CON_GRAPH_FEATURE_MEANING",
+     "description": "Computes slope as run over rise.",
+     "example": "Slope through (1, 2) and (3, 8) given as 1/3."
+    },
+    {
+     "error_code": "FAC_SIGNED_NUMBER",
+     "description": "Loses a sign when subtracting coordinates.",
+     "example": "(2 - (-4)) / (1 - 3) = -2/(-2)"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Find the slope through (-1, 4) and (3, -4).",
+     "answer": "-2"
+    },
+    {
+     "prompt": "A taxi charges $3.50 plus $2 per km. Write the relation.",
+     "answer": "C = 2d + 3.5"
+    }
+   ],
+   "aliases": [
+    "Linear Relations",
+    "Algebra & Linear Relations",
+    "Mathematical Modelling"
+   ],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.algebra.multi_step_equations",
+   "strand": "Algebra",
+   "name": "Multi-step linear equations",
+   "levels": [
+    8,
+    9
+   ],
+   "learning_goals": [
+    "Solve linear equations with variables on both sides, brackets and fractions.",
+    "Rearrange formulas for a given variable."
+   ],
+   "key_concepts": [
+    "Clearing fractions",
+    "Collecting variables on one side",
+    "Formula rearrangement"
+   ],
+   "prerequisites": [
+    "math.algebra.one_step_equations",
+    "math.integers.operations"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "PRC_SIGN_OR_FACTOR_DROPPED",
+     "description": "Loses a sign when moving a term across the equals sign.",
+     "example": "5x + 3 = 2x - 9 -> 3x = -6"
+    },
+    {
+     "error_code": "PRC_STEP_OMITTED",
+     "description": "Multiplies only some terms by the common denominator.",
+     "example": "x/2 + 3 = 5/4: multiplies to 2x + 3 = 5"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Solve 3(x - 2) = 5x + 4.",
+     "answer": "x = -5"
+    },
+    {
+     "prompt": "Solve (x + 1)/3 = (x - 2)/2.",
+     "answer": "x = 8"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.geometry.pythagorean",
+   "strand": "Geometry & Measurement",
+   "name": "The Pythagorean theorem",
+   "levels": [
+    8,
+    9
+   ],
+   "learning_goals": [
+    "Use a^2 + b^2 = c^2 to find a missing side of a right triangle.",
+    "Use the converse to test whether a triangle is right-angled."
+   ],
+   "key_concepts": [
+    "Hypotenuse",
+    "Squares and square roots",
+    "Converse"
+   ],
+   "prerequisites": [
+    "math.measure.area_perimeter",
+    "math.exponents.laws"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "STR_WRONG_SUBSTITUTION",
+     "description": "Puts a leg in the hypotenuse position.",
+     "example": "Legs 5 and 13: 5^2 + 13^2 = c^2 when 13 is the hypotenuse"
+    },
+    {
+     "error_code": "CON_OVERGENERALISED_RULE",
+     "description": "Takes the square root of each term separately.",
+     "example": "sqrt(9 + 16) = 3 + 4"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "A right triangle has legs 9 and 12. Find the hypotenuse.",
+     "answer": "15"
+    },
+    {
+     "prompt": "Is a triangle with sides 7, 24, 25 right-angled?",
+     "answer": "Yes, 49 + 576 = 625"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.financial.interest",
+   "strand": "Number",
+   "name": "Simple and compound interest",
+   "levels": [
+    8,
+    12
+   ],
+   "learning_goals": [
+    "Calculate simple interest I = Prt and compound amounts A = P(1 + i)^n.",
+    "Compare savings, loans and credit options."
+   ],
+   "key_concepts": [
+    "Principal, rate and time",
+    "Compounding periods",
+    "Effective cost of borrowing"
+   ],
+   "prerequisites": [
+    "math.ratio.percent",
+    "math.exponents.laws"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "STR_WRONG_SUBSTITUTION",
+     "description": "Uses the annual rate with monthly periods.",
+     "example": "Monthly compounding with i = 0.06 and n = 36"
+    },
+    {
+     "error_code": "FAC_UNIT_CONVERSION",
+     "description": "Uses the percent as a whole number.",
+     "example": "I = 500 x 4 x 2 instead of 500 x 0.04 x 2"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "$2,000 is invested at 5% per year compounded annually for 3 years. Find the amount.",
+     "answer": "$2,315.25"
+    },
+    {
+     "prompt": "Find the simple interest on $800 at 3% per year for 4 years.",
+     "answer": "$96"
+    }
+   ],
+   "aliases": [
+    "Financial Literacy",
+    "Financial Decisions"
+   ],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.data.two_variable",
+   "strand": "Data & Probability",
+   "name": "Scatter plots, correlation and lines of best fit",
+   "levels": [
+    8,
+    12
+   ],
+   "learning_goals": [
+    "Make and interpret scatter plots and describe correlation.",
+    "Fit a line and use it to make predictions, knowing the limits of extrapolation."
+   ],
+   "key_concepts": [
+    "Positive, negative and no correlation",
+    "Line of best fit",
+    "Correlation is not causation",
+    "Residuals"
+   ],
+   "prerequisites": [
+    "math.data.statistics",
+    "math.functions.linear_relations"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "CON_GRAPH_FEATURE_MEANING",
+     "description": "Treats correlation as proof of cause.",
+     "example": "Ice cream sales and drownings rise together, so ice cream causes drowning."
+    },
+    {
+     "error_code": "STR_IGNORED_CONDITION",
+     "description": "Extrapolates far beyond the data.",
+     "example": "Predicts a 40-year-old's height from children's growth data."
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "A line of best fit is y = 2.5x + 10. Predict y when x = 8.",
+     "answer": "30"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.functions.linear_equations",
+   "strand": "Functions",
+   "name": "Equations of lines",
+   "levels": [
+    9,
+    10
+   ],
+   "learning_goals": [
+    "Find the equation of a line from a slope and a point, or from two points.",
+    "Convert between slope-intercept, point-slope and standard forms; recognise parallel and perpendicular lines."
+   ],
+   "key_concepts": [
+    "y = mx + b",
+    "Ax + By + C = 0",
+    "Parallel slopes are equal; perpendicular slopes are negative reciprocals"
+   ],
+   "prerequisites": [
+    "math.functions.linear_relations",
+    "math.algebra.multi_step_equations"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "CON_GRAPH_FEATURE_MEANING",
+     "description": "Uses the reciprocal without the sign change for a perpendicular slope.",
+     "example": "Perpendicular to slope 2/3 given as 3/2."
+    },
+    {
+     "error_code": "PRC_SIGN_OR_FACTOR_DROPPED",
+     "description": "Drops a sign when solving for b.",
+     "example": "Through (2, -1) with m = 3: -1 = 6 + b -> b = 5"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Find the equation of the line through (1, 5) and (3, 9).",
+     "answer": "y = 2x + 3"
+    },
+    {
+     "prompt": "Find the line perpendicular to y = -1/2 x + 4 through (0, 1).",
+     "answer": "y = 2x + 1"
+    }
+   ],
+   "aliases": [
+    "Analytic Geometry"
+   ],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.algebra.linear_systems",
+   "strand": "Algebra",
+   "name": "Linear systems",
+   "levels": [
+    9,
+    10
+   ],
+   "learning_goals": [
+    "Solve systems of two linear equations by graphing, substitution and elimination.",
+    "Interpret the solution, and recognise no-solution and infinite-solution cases."
+   ],
+   "key_concepts": [
+    "Point of intersection",
+    "Substitution",
+    "Elimination",
+    "Parallel and coincident lines"
+   ],
+   "prerequisites": [
+    "math.functions.linear_equations"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "PRC_SYSTEM_COMBINING",
+     "description": "Adds equations when the variable needs subtracting, or multiplies only one side.",
+     "example": "Eliminating x from 2x + y = 7 and 2x - 3y = -1 by adding."
+    },
+    {
+     "error_code": "TST_UNCHECKED_ANSWER",
+     "description": "Checks the solution in only one of the original equations.",
+     "example": "Substitutes (3, 1) into the equation used last and stops."
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Solve x + y = 10 and x - y = 4.",
+     "answer": "(7, 3)"
+    },
+    {
+     "prompt": "Solve 3x + 2y = 16 and x - y = 2.",
+     "answer": "(4, 2)"
+    }
+   ],
+   "aliases": [
+    "Linear Systems"
+   ],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.algebra.polynomials",
+   "strand": "Algebra",
+   "name": "Polynomial operations",
+   "levels": [
+    9,
+    10
+   ],
+   "learning_goals": [
+    "Add, subtract and multiply polynomials.",
+    "Expand binomial products, including special products."
+   ],
+   "key_concepts": [
+    "Degree and terms",
+    "Distributive property",
+    "(a + b)^2 = a^2 + 2ab + b^2",
+    "(a + b)(a - b) = a^2 - b^2"
+   ],
+   "prerequisites": [
+    "math.algebra.expressions",
+    "math.exponents.laws"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "CON_OVERGENERALISED_RULE",
+     "description": "Squares a binomial by squaring each term.",
+     "example": "(x + 3)^2 = x^2 + 9"
+    },
+    {
+     "error_code": "PRC_SIGN_OR_FACTOR_DROPPED",
+     "description": "Drops the sign when subtracting a polynomial.",
+     "example": "(3x^2 + 2x) - (x^2 - 5x) = 2x^2 - 3x"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Expand (2x - 3)(x + 4).",
+     "answer": "2x^2 + 5x - 12"
+    },
+    {
+     "prompt": "Expand (x - 5)^2.",
+     "answer": "x^2 - 10x + 25"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.algebra.factoring",
+   "strand": "Algebra",
+   "name": "Factoring",
+   "levels": [
+    9,
+    11
+   ],
+   "learning_goals": [
+    "Factor using a common factor, trinomials, difference of squares and perfect squares.",
+    "Check a factorization by expanding."
+   ],
+   "key_concepts": [
+    "Greatest common factor",
+    "Trinomial factoring (simple and complex)",
+    "Difference of squares"
+   ],
+   "prerequisites": [
+    "math.algebra.polynomials"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "PRC_FACTORING_ERROR",
+     "description": "Chooses factors that give the right product but the wrong sum.",
+     "example": "x^2 + 7x + 12 = (x + 2)(x + 6)"
+    },
+    {
+     "error_code": "PRC_INCOMPLETE_SIMPLIFICATION",
+     "description": "Does not factor fully.",
+     "example": "2x^2 - 18 = 2(x^2 - 9)"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Factor x^2 - x - 20.",
+     "answer": "(x - 5)(x + 4)"
+    },
+    {
+     "prompt": "Factor 6x^2 + 7x - 3.",
+     "answer": "(3x - 1)(2x + 3)"
+    }
+   ],
+   "aliases": [
+    "Factoring"
+   ],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.geometry.analytic",
+   "strand": "Geometry & Measurement",
+   "name": "Analytic geometry: distance, midpoint and line segments",
+   "levels": [
+    9,
+    10
+   ],
+   "learning_goals": [
+    "Find the length and midpoint of a line segment.",
+    "Use them to verify properties of triangles and quadrilaterals and to find equations of medians and bisectors."
+   ],
+   "key_concepts": [
+    "Distance formula",
+    "Midpoint formula",
+    "Perpendicular bisector"
+   ],
+   "prerequisites": [
+    "math.geometry.pythagorean",
+    "math.functions.linear_equations"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "FAC_SIGNED_NUMBER",
+     "description": "Mishandles a negative coordinate in the distance formula.",
+     "example": "(3 - (-2))^2 written as (1)^2"
+    },
+    {
+     "error_code": "STR_FORMULA_MISSELECTION",
+     "description": "Subtracts coordinates in the midpoint formula.",
+     "example": "Midpoint = ((x2 - x1)/2, (y2 - y1)/2)"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Find the midpoint and length of the segment from (-2, 1) to (4, 9).",
+     "answer": "Midpoint (1, 5); length 10"
+    }
+   ],
+   "aliases": [
+    "Properties of Line Segments",
+    "Analytic Geometry"
+   ],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.geometry.similar_triangles",
+   "strand": "Geometry & Measurement",
+   "name": "Similar triangles",
+   "levels": [
+    9,
+    10
+   ],
+   "learning_goals": [
+    "Determine whether triangles are similar and find missing sides.",
+    "Solve indirect measurement problems."
+   ],
+   "key_concepts": [
+    "Corresponding angles equal",
+    "Proportional corresponding sides",
+    "Scale factor"
+   ],
+   "prerequisites": [
+    "math.ratio.proportional"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "STR_DIAGRAM_MISREAD",
+     "description": "Matches sides that do not correspond.",
+     "example": "Pairs the shortest side of one triangle with the longest of the other."
+    },
+    {
+     "error_code": "CON_FOUNDATIONAL_MISCONCEPTION",
+     "description": "Uses differences instead of ratios between similar shapes.",
+     "example": "Sides 4 -> 6, so 7 -> 9."
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Triangle ABC ~ DEF with AB = 6, DE = 9 and BC = 8. Find EF.",
+     "answer": "12"
+    }
+   ],
+   "aliases": [
+    "Similar Triangles"
+   ],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.trig.right_triangle",
+   "strand": "Geometry & Measurement",
+   "name": "Right-triangle trigonometry",
+   "levels": [
+    9,
+    11
+   ],
+   "learning_goals": [
+    "Use sine, cosine and tangent to find sides and angles in right triangles.",
+    "Solve problems involving angles of elevation and depression."
+   ],
+   "key_concepts": [
+    "SOH CAH TOA",
+    "Opposite, adjacent and hypotenuse depend on the angle",
+    "Inverse trig to find angles"
+   ],
+   "prerequisites": [
+    "math.geometry.similar_triangles",
+    "math.geometry.pythagorean"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "STR_DIAGRAM_MISREAD",
+     "description": "Labels opposite and adjacent relative to the wrong angle.",
+     "example": "Uses tan = 5/12 when the reference angle makes it 12/5."
+    },
+    {
+     "error_code": "FAC_CALCULATOR_ENTRY",
+     "description": "Calculator is in radian mode.",
+     "example": "sin 30 = -0.988"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "In a right triangle the hypotenuse is 10 and an angle is 30 degrees. Find the side opposite it.",
+     "answer": "5"
+    },
+    {
+     "prompt": "A ladder 6 m long reaches 5 m up a wall. Find the angle with the ground, to the nearest degree.",
+     "answer": "56 degrees"
+    }
+   ],
+   "aliases": [
+    "Trigonometry"
+   ],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.trig.sine_cosine_law",
+   "strand": "Geometry & Measurement",
+   "name": "Sine law and cosine law",
+   "levels": [
+    10,
+    12
+   ],
+   "learning_goals": [
+    "Use the sine law and cosine law to solve acute (and later obtuse) triangles.",
+    "Choose the right law for the information given."
+   ],
+   "key_concepts": [
+    "a/sin A = b/sin B = c/sin C",
+    "c^2 = a^2 + b^2 - 2ab cos C",
+    "Ambiguous case (SSA)"
+   ],
+   "prerequisites": [
+    "math.trig.right_triangle"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "STR_FORMULA_MISSELECTION",
+     "description": "Uses the sine law with SAS information.",
+     "example": "Two sides and the included angle, then a/sin A = ..."
+    },
+    {
+     "error_code": "PRC_ORDER_OF_OPERATIONS",
+     "description": "Subtracts before multiplying in the cosine law.",
+     "example": "c^2 = (a^2 + b^2 - 2ab) cos C"
+    },
+    {
+     "error_code": "STR_MISSING_CASE",
+     "description": "Misses the second triangle in the ambiguous case.",
+     "example": "SSA gives only the acute solution."
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "In triangle ABC, a = 8, b = 11 and C = 60 degrees. Find c, to one decimal place.",
+     "answer": "c = 9.8 (c^2 = 97)"
+    }
+   ],
+   "aliases": [
+    "Sine and Cosine Laws"
+   ],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.functions.quadratics",
+   "strand": "Functions",
+   "name": "Quadratic relations and their graphs",
+   "levels": [
+    10,
+    11
+   ],
+   "learning_goals": [
+    "Identify key features of a parabola: vertex, axis of symmetry, zeros, direction and optimal value.",
+    "Move between standard, factored and vertex forms."
+   ],
+   "key_concepts": [
+    "y = a(x - h)^2 + k",
+    "y = a(x - r)(x - s)",
+    "Second differences",
+    "Maximum or minimum value"
+   ],
+   "prerequisites": [
+    "math.algebra.factoring",
+    "math.functions.linear_equations"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "CON_SIGN_DIRECTION_MEANING",
+     "description": "Reads the vertex of y = a(x - h)^2 + k with the wrong sign.",
+     "example": "y = (x + 3)^2 - 2 has vertex (3, -2)."
+    },
+    {
+     "error_code": "CON_GRAPH_FEATURE_MEANING",
+     "description": "Confuses the y-intercept with the vertex.",
+     "example": "y = x^2 - 4x + 7 has vertex (0, 7)."
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Find the vertex of y = 2(x - 1)^2 + 5.",
+     "answer": "(1, 5)"
+    },
+    {
+     "prompt": "Find the zeros of y = (x - 2)(x + 6).",
+     "answer": "x = 2 and x = -6"
+    }
+   ],
+   "aliases": [
+    "Quadratic Relations"
+   ],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.algebra.quadratic_equations",
+   "strand": "Algebra",
+   "name": "Solving quadratic equations",
+   "levels": [
+    10,
+    11
+   ],
+   "learning_goals": [
+    "Solve quadratic equations by factoring, the quadratic formula and square roots.",
+    "Use the discriminant to find the number of real roots."
+   ],
+   "key_concepts": [
+    "Zero product property",
+    "x = (-b +/- sqrt(b^2 - 4ac)) / 2a",
+    "Discriminant"
+   ],
+   "prerequisites": [
+    "math.algebra.factoring"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "STR_MISSING_CASE",
+     "description": "Takes only the positive square root.",
+     "example": "x^2 = 25 -> x = 5"
+    },
+    {
+     "error_code": "PRC_SIGN_OR_FACTOR_DROPPED",
+     "description": "Divides only -b by 2a in the quadratic formula.",
+     "example": "x = -b +/- sqrt(...)/2a"
+    },
+    {
+     "error_code": "CON_EQUATION_BALANCE",
+     "description": "Uses the zero product property when the product is not zero.",
+     "example": "(x - 1)(x + 2) = 4 -> x = 1 or x = -2"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Solve x^2 - 5x + 6 = 0.",
+     "answer": "x = 2 or x = 3"
+    },
+    {
+     "prompt": "Solve 2x^2 + 3x - 2 = 0.",
+     "answer": "x = 1/2 or x = -2"
+    }
+   ],
+   "aliases": [
+    "Solving Quadratic Equations"
+   ],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.algebra.completing_square",
+   "strand": "Algebra",
+   "name": "Completing the square and vertex form",
+   "levels": [
+    10,
+    11
+   ],
+   "learning_goals": [
+    "Rewrite y = ax^2 + bx + c in vertex form by completing the square.",
+    "Use vertex form to find the maximum or minimum value."
+   ],
+   "key_concepts": [
+    "Adding and subtracting (b/2)^2",
+    "Factoring out a first",
+    "Vertex form"
+   ],
+   "prerequisites": [
+    "math.functions.quadratics"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "PRC_STEP_OMITTED",
+     "description": "Adds (b/2)^2 without subtracting it again.",
+     "example": "x^2 + 6x + 2 = (x + 3)^2 + 2"
+    },
+    {
+     "error_code": "PRC_SIGN_OR_FACTOR_DROPPED",
+     "description": "Forgets to multiply the subtracted term by a.",
+     "example": "2x^2 + 12x + 1 = 2(x + 3)^2 - 9 + 1"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Write y = x^2 + 8x + 3 in vertex form.",
+     "answer": "y = (x + 4)^2 - 13"
+    },
+    {
+     "prompt": "Write y = 2x^2 - 12x + 7 in vertex form.",
+     "answer": "y = 2(x - 3)^2 - 11"
+    }
+   ],
+   "aliases": [
+    "Completing the Square"
+   ],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.functions.function_notation",
+   "strand": "Functions",
+   "name": "Functions, domain and range",
+   "levels": [
+    10,
+    11
+   ],
+   "learning_goals": [
+    "Use function notation and decide whether a relation is a function.",
+    "State the domain and range, including restricted domains in context."
+   ],
+   "key_concepts": [
+    "f(x) notation",
+    "Vertical line test",
+    "Domain and range",
+    "Inverse functions"
+   ],
+   "prerequisites": [
+    "math.functions.linear_equations"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "COM_NOTATION_MISUSE",
+     "description": "Reads f(x) as f times x.",
+     "example": "f(3) with f(x) = 2x + 1 computed as 3f"
+    },
+    {
+     "error_code": "CON_DOMAIN_RESTRICTION",
+     "description": "Ignores values that make the function undefined.",
+     "example": "Domain of 1/(x - 2) given as all reals"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "If f(x) = x^2 - 3x, find f(-2).",
+     "answer": "10"
+    },
+    {
+     "prompt": "State the domain of f(x) = sqrt(x - 4).",
+     "answer": "x >= 4"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.functions.exponential",
+   "strand": "Functions",
+   "name": "Exponential functions",
+   "levels": [
+    10,
+    12
+   ],
+   "learning_goals": [
+    "Graph and interpret exponential growth and decay.",
+    "Model situations such as population growth, half-life and compound interest."
+   ],
+   "key_concepts": [
+    "y = a(b)^x",
+    "Growth vs decay factor",
+    "Asymptotes",
+    "Exponential vs linear growth"
+   ],
+   "prerequisites": [
+    "math.exponents.laws",
+    "math.functions.function_notation"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "CON_OVERGENERALISED_RULE",
+     "description": "Treats exponential growth as adding a fixed amount.",
+     "example": "Doubles every year from 100: 100, 200, 300, 400"
+    },
+    {
+     "error_code": "STR_WRONG_SUBSTITUTION",
+     "description": "Uses the percent instead of the growth factor.",
+     "example": "Grows 5% per year: y = 100(0.05)^t"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "A culture of 500 bacteria doubles every 3 hours. How many after 12 hours?",
+     "answer": "8,000"
+    },
+    {
+     "prompt": "A car worth $30,000 loses 15% of its value each year. Write its value after t years.",
+     "answer": "V = 30000(0.85)^t"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.functions.logarithms",
+   "strand": "Functions",
+   "name": "Logarithms",
+   "levels": [
+    11,
+    12
+   ],
+   "learning_goals": [
+    "Understand the logarithm as the inverse of an exponential function.",
+    "Use log laws to solve exponential and logarithmic equations."
+   ],
+   "key_concepts": [
+    "log_b(x) = y means b^y = x",
+    "Product, quotient and power laws",
+    "Change of base"
+   ],
+   "prerequisites": [
+    "math.functions.exponential"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "CON_OVERGENERALISED_RULE",
+     "description": "Splits the log of a sum.",
+     "example": "log(x + y) = log x + log y"
+    },
+    {
+     "error_code": "CON_DOMAIN_RESTRICTION",
+     "description": "Keeps a solution that makes the argument of a log non-positive.",
+     "example": "Accepts x = -3 in log(x) + log(x + 5) = ..."
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Evaluate log_2 32.",
+     "answer": "5"
+    },
+    {
+     "prompt": "Solve 3^x = 20, to two decimal places.",
+     "answer": "x = 2.73"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.functions.transformations",
+   "strand": "Functions",
+   "name": "Transformations of functions",
+   "levels": [
+    11,
+    12
+   ],
+   "learning_goals": [
+    "Apply translations, stretches, compressions and reflections to parent functions.",
+    "Write the equation of a transformed function from its graph."
+   ],
+   "key_concepts": [
+    "y = a f(k(x - d)) + c",
+    "Order of transformations",
+    "Mapping notation"
+   ],
+   "prerequisites": [
+    "math.functions.function_notation",
+    "math.functions.quadratics"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "CON_SIGN_DIRECTION_MEANING",
+     "description": "Shifts the wrong way horizontally.",
+     "example": "f(x - 3) moved 3 units left"
+    },
+    {
+     "error_code": "PRC_ORDER_OF_OPERATIONS",
+     "description": "Applies a horizontal shift before factoring out k.",
+     "example": "f(2x - 6) read as shift right 6"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Describe y = -2f(x + 1) - 4 relative to y = f(x).",
+     "answer": "Reflect in the x-axis, vertical stretch by 2, shift left 1 and down 4"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.functions.polynomial_rational",
+   "strand": "Functions",
+   "name": "Polynomial and rational functions",
+   "levels": [
+    11,
+    12
+   ],
+   "learning_goals": [
+    "Relate the degree, leading coefficient and factors of a polynomial to its graph.",
+    "Find asymptotes and holes of rational functions; solve polynomial and rational inequalities."
+   ],
+   "key_concepts": [
+    "End behaviour",
+    "Multiplicity of zeros",
+    "Factor and remainder theorems",
+    "Vertical and horizontal asymptotes"
+   ],
+   "prerequisites": [
+    "math.algebra.factoring",
+    "math.functions.function_notation"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "CON_GRAPH_FEATURE_MEANING",
+     "description": "Treats a removable discontinuity as an asymptote.",
+     "example": "(x^2 - 4)/(x - 2) has a vertical asymptote at x = 2"
+    },
+    {
+     "error_code": "STR_MISSING_CASE",
+     "description": "Misses a sign change interval when solving an inequality.",
+     "example": "Tests only one interval"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Find the remainder when x^3 - 2x + 5 is divided by x - 2.",
+     "answer": "9"
+    },
+    {
+     "prompt": "State the vertical and horizontal asymptotes of f(x) = (2x + 1)/(x - 3).",
+     "answer": "x = 3 and y = 2"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.trig.functions",
+   "strand": "Functions",
+   "name": "Trigonometric functions and identities",
+   "levels": [
+    11,
+    12
+   ],
+   "learning_goals": [
+    "Graph sine, cosine and tangent functions and their transformations.",
+    "Use radians, the unit circle, and trigonometric identities to solve equations."
+   ],
+   "key_concepts": [
+    "Radian measure",
+    "Unit circle",
+    "Amplitude, period and phase shift",
+    "Pythagorean identity"
+   ],
+   "prerequisites": [
+    "math.trig.right_triangle",
+    "math.functions.function_notation"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "STR_MISSING_CASE",
+     "description": "Finds only one solution of a trig equation in the interval.",
+     "example": "sin x = 1/2 on [0, 2 pi): x = pi/6 only"
+    },
+    {
+     "error_code": "CON_GRAPH_FEATURE_MEANING",
+     "description": "Computes the period as k instead of 2 pi / k.",
+     "example": "y = sin(3x) has period 3"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Solve 2 cos x = 1 for 0 <= x < 2 pi.",
+     "answer": "x = pi/3 or x = 5 pi/3"
+    },
+    {
+     "prompt": "State the period of y = 4 sin(2x).",
+     "answer": "pi"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.sequences.series",
+   "strand": "Algebra",
+   "name": "Sequences and series",
+   "levels": [
+    10,
+    12
+   ],
+   "learning_goals": [
+    "Find terms and sums of arithmetic and geometric sequences.",
+    "Use recursive and explicit formulas."
+   ],
+   "key_concepts": [
+    "t_n = a + (n - 1)d",
+    "t_n = a r^(n - 1)",
+    "Sum formulas",
+    "Infinite geometric series"
+   ],
+   "prerequisites": [
+    "math.functions.linear_equations",
+    "math.functions.exponential"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "PRC_STEP_OMITTED",
+     "description": "Uses n instead of n - 1 in the general term.",
+     "example": "t_n = 3 + 5n for 3, 8, 13, ..."
+    },
+    {
+     "error_code": "STR_FORMULA_MISSELECTION",
+     "description": "Uses the arithmetic formula for a geometric sequence.",
+     "example": "2, 6, 18: t_5 = 2 + 4(4)"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Find t_20 for 7, 11, 15, ...",
+     "answer": "83"
+    },
+    {
+     "prompt": "Find the sum of the first 6 terms of 3, 6, 12, ...",
+     "answer": "189"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.probability.counting",
+   "strand": "Data & Probability",
+   "name": "Counting, permutations and combinations",
+   "levels": [
+    11,
+    12
+   ],
+   "learning_goals": [
+    "Use the fundamental counting principle, permutations and combinations.",
+    "Calculate probabilities using counting methods."
+   ],
+   "key_concepts": [
+    "n!",
+    "nPr when order matters",
+    "nCr when order does not",
+    "Complement"
+   ],
+   "prerequisites": [
+    "math.probability.simple"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "STR_FORMULA_MISSELECTION",
+     "description": "Uses permutations when order does not matter.",
+     "example": "Choosing a 3-person committee from 10 as 10P3"
+    },
+    {
+     "error_code": "STR_MISSING_CASE",
+     "description": "Forgets to account for repeated letters.",
+     "example": "Arrangements of LEVEL given as 5!"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "How many ways can a committee of 4 be chosen from 9 people?",
+     "answer": "126"
+    },
+    {
+     "prompt": "How many arrangements of the letters in BOOK?",
+     "answer": "12"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.stats.distributions",
+   "strand": "Data & Probability",
+   "name": "Probability distributions and the normal distribution",
+   "levels": [
+    11,
+    12
+   ],
+   "learning_goals": [
+    "Work with discrete distributions, expected value and the binomial distribution.",
+    "Use z-scores and the normal distribution to find probabilities."
+   ],
+   "key_concepts": [
+    "Expected value",
+    "Binomial probability",
+    "z = (x - mean) / sd",
+    "Empirical rule"
+   ],
+   "prerequisites": [
+    "math.data.statistics",
+    "math.probability.simple"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "STR_WRONG_SUBSTITUTION",
+     "description": "Divides by the variance instead of the standard deviation.",
+     "example": "z = (x - mean)/sd^2"
+    },
+    {
+     "error_code": "COM_ANSWERED_DIFFERENT_QUESTION",
+     "description": "Gives P(Z < z) when P(Z > z) was asked.",
+     "example": "Answers 0.84 instead of 0.16"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Scores are normal with mean 70 and sd 8. What is the z-score of 86?",
+     "answer": "2"
+    },
+    {
+     "prompt": "A fair coin is tossed 4 times. Find P(exactly 2 heads).",
+     "answer": "3/8"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.stats.inference",
+   "strand": "Data & Probability",
+   "name": "Sampling, confidence intervals and hypothesis tests",
+   "levels": [
+    12,
+    12
+   ],
+   "learning_goals": [
+    "Describe sampling methods and bias.",
+    "Construct and interpret confidence intervals and carry out a significance test."
+   ],
+   "key_concepts": [
+    "Sampling distribution",
+    "Standard error",
+    "Confidence level",
+    "p-value"
+   ],
+   "prerequisites": [
+    "math.stats.distributions"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "COM_UNSUPPORTED_ANSWER",
+     "description": "States the conclusion without referring to the p-value or context.",
+     "example": "'Reject H0.' with no interpretation"
+    },
+    {
+     "error_code": "CON_FOUNDATIONAL_MISCONCEPTION",
+     "description": "Reads a 95% confidence interval as a 95% chance the parameter is in this interval.",
+     "example": "'There is a 95% probability the true mean is between 4.1 and 5.3.'"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "A sample of 100 has mean 52 and the population sd is 10. Find the 95% confidence interval for the mean (z* = 1.96).",
+     "answer": "(50.04, 53.96)"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.vectors.intro",
+   "strand": "Geometry & Measurement",
+   "name": "Vectors",
+   "levels": [
+    11,
+    12
+   ],
+   "learning_goals": [
+    "Represent vectors geometrically and algebraically and add, subtract and scale them.",
+    "Use the dot product (and cross product, where taught) to find angles and projections."
+   ],
+   "key_concepts": [
+    "Magnitude and direction",
+    "Components",
+    "Dot product",
+    "Unit vectors"
+   ],
+   "prerequisites": [
+    "math.trig.right_triangle"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "CON_OVERGENERALISED_RULE",
+     "description": "Adds magnitudes of non-parallel vectors.",
+     "example": "|a + b| = |a| + |b| for perpendicular vectors"
+    },
+    {
+     "error_code": "FAC_SIGNED_NUMBER",
+     "description": "Loses a sign in a component.",
+     "example": "(3, -2) - (1, 4) = (2, 2)"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Find the magnitude of (6, -8).",
+     "answer": "10"
+    },
+    {
+     "prompt": "Find (2, 3) . (4, -1).",
+     "answer": "5"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.calc.limits",
+   "strand": "Calculus",
+   "name": "Limits and continuity",
+   "levels": [
+    12,
+    12
+   ],
+   "learning_goals": [
+    "Evaluate limits numerically, graphically and algebraically.",
+    "Decide where a function is continuous."
+   ],
+   "key_concepts": [
+    "Limit notation",
+    "One-sided limits",
+    "Indeterminate form 0/0",
+    "Continuity"
+   ],
+   "prerequisites": [
+    "math.functions.function_notation",
+    "math.functions.polynomial_rational"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "CON_FOUNDATIONAL_MISCONCEPTION",
+     "description": "Thinks 0/0 means the limit does not exist.",
+     "example": "lim (x^2 - 9)/(x - 3) as x -> 3 'does not exist'"
+    },
+    {
+     "error_code": "STR_IGNORED_CONDITION",
+     "description": "Ignores that left and right limits differ.",
+     "example": "Gives one value for a jump discontinuity"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Evaluate lim (x^2 - 9)/(x - 3) as x -> 3.",
+     "answer": "6"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.calc.derivatives",
+   "strand": "Calculus",
+   "name": "Derivatives and differentiation rules",
+   "levels": [
+    12,
+    12
+   ],
+   "learning_goals": [
+    "Understand the derivative as an instantaneous rate of change and slope of the tangent.",
+    "Differentiate using the power, product, quotient and chain rules."
+   ],
+   "key_concepts": [
+    "Limit definition",
+    "Power rule",
+    "Product and quotient rules",
+    "Chain rule"
+   ],
+   "prerequisites": [
+    "math.calc.limits"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "PRC_STEP_OMITTED",
+     "description": "Forgets the inner derivative in the chain rule.",
+     "example": "d/dx (3x^2 + 1)^4 = 4(3x^2 + 1)^3"
+    },
+    {
+     "error_code": "CON_OVERGENERALISED_RULE",
+     "description": "Differentiates a product as the product of derivatives.",
+     "example": "d/dx (x^2 sin x) = 2x cos x"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Differentiate f(x) = 4x^3 - 5x + 2.",
+     "answer": "f'(x) = 12x^2 - 5"
+    },
+    {
+     "prompt": "Differentiate y = (2x + 1)^5.",
+     "answer": "y' = 10(2x + 1)^4"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.calc.derivative_apps",
+   "strand": "Calculus",
+   "name": "Applications of derivatives",
+   "levels": [
+    12,
+    12
+   ],
+   "learning_goals": [
+    "Use derivatives to find maxima, minima and points of inflection and to sketch curves.",
+    "Solve optimization and related-rates problems."
+   ],
+   "key_concepts": [
+    "Critical points",
+    "First and second derivative tests",
+    "Optimization",
+    "Related rates"
+   ],
+   "prerequisites": [
+    "math.calc.derivatives"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "STR_MISSING_CASE",
+     "description": "Does not check endpoints in a closed-interval optimization.",
+     "example": "Reports a local max as the absolute max"
+    },
+    {
+     "error_code": "COM_MISSING_CONCLUSION",
+     "description": "Finds the critical value but does not answer the question asked.",
+     "example": "Finds x = 5 but never states the maximum area"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Find the maximum area of a rectangle with perimeter 40 m.",
+     "answer": "100 m^2 (a 10 m by 10 m square)"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "math.calc.integrals",
+   "strand": "Calculus",
+   "name": "Integrals and the Fundamental Theorem of Calculus",
+   "levels": [
+    12,
+    12
+   ],
+   "learning_goals": [
+    "Find antiderivatives and evaluate definite integrals.",
+    "Interpret a definite integral as accumulated change or signed area."
+   ],
+   "key_concepts": [
+    "Antiderivative and + C",
+    "Riemann sums",
+    "Fundamental Theorem of Calculus",
+    "u-substitution"
+   ],
+   "prerequisites": [
+    "math.calc.derivatives"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "PRC_STEP_OMITTED",
+     "description": "Leaves out the constant of integration.",
+     "example": "integral of 2x dx = x^2"
+    },
+    {
+     "error_code": "FAC_SIGNED_NUMBER",
+     "description": "Subtracts in the wrong order when evaluating.",
+     "example": "F(a) - F(b) instead of F(b) - F(a)"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Evaluate the integral of 3x^2 from 0 to 2.",
+     "answer": "8"
+    },
+    {
+     "prompt": "Find the integral of (4x - 1) dx.",
+     "answer": "2x^2 - x + C"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  }
+ ]
+}

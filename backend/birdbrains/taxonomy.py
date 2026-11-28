@@ -7,6 +7,7 @@ six pillars on 2026-11-25 and readable ids with fuller detail on 2026-11-26.
 """
 from __future__ import annotations
 
+from . import curricula
 from .codes import CODES, LEGACY_CODES, ErrorCode, current_code  # noqa: F401  (re-exported)
 from .schemas import CourseEnum
 
@@ -86,8 +87,9 @@ def _taxonomy_text() -> str:
 SIX_PILLAR_TAXONOMY = _taxonomy_text()
 FOUR_PILLAR_TAXONOMY = SIX_PILLAR_TAXONOMY  # old name, kept for imports
 
-# course -> strand -> units. Strand names follow the Ontario curriculum
-# (MTH1W, 2021; MPM2D, 2005 revised).
+# Ontario's two original courses: course -> strand -> units. Strand names follow the
+# Ontario curriculum (MTH1W, 2021; MPM2D, 2005 revised). Every other course takes its
+# strands and units from the shared topic catalog in ``curricula/``.
 CURRICULUM: dict[CourseEnum, dict[str, list[str]]] = {
     CourseEnum.MTH1W: {
         "Number": ["Number Sense", "Powers", "Rational Numbers", "Proportional Reasoning"],
@@ -111,6 +113,8 @@ CURRICULUM: dict[CourseEnum, dict[str, list[str]]] = {
 
 def strand_for(course: CourseEnum, unit_topic: str) -> str:
     """Map a free-text unit/topic tag to a curriculum strand."""
+    if course not in CURRICULUM:
+        return curricula.strand_for(str(course), unit_topic)
     text = unit_topic.lower()
     strands = CURRICULUM[course]
     for strand, units in strands.items():
@@ -120,9 +124,22 @@ def strand_for(course: CourseEnum, unit_topic: str) -> str:
 
 
 def curriculum_registry_text() -> str:
-    lines = ["# Curriculum Registry (Ontario)"]
+    """The cached-context curriculum section. It describes Ontario's two original
+    courses in full (unchanged, so cached prompts for them do not move) and names the
+    other curriculums; each request carries its own course's details."""
+    lines = [
+        "# Curriculum Registry",
+        "",
+        "Students may follow any of these curriculums: "
+        + "; ".join(c["name"] for c in curricula.REGISTRY["curricula"]) + ".",
+        "Each request states the student's curriculum, grade and subject, and the topic's",
+        "learning goals and common misconceptions when known. Use those; the course list",
+        "below covers only Ontario's Grade 9 and Grade 10 math courses.",
+        "",
+        "## Ontario",
+    ]
     for course, strands in CURRICULUM.items():
-        grade = "Grade 9 de-streamed" if course is CourseEnum.MTH1W else "Grade 10 academic"
+        grade = "Grade 9 de-streamed" if course == CourseEnum.MTH1W else "Grade 10 academic"
         lines.append(f"\n## {course.value} ({grade})")
         for strand, units in strands.items():
             lines.append(f"- Strand: {strand}. Units: {', '.join(units)}.")

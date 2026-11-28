@@ -7,6 +7,8 @@ import { ApiError, api } from '@/lib/api';
 import { useSession } from '@/lib/session';
 import { useRole } from '@/lib/roleContext';
 import type { GradeCourse } from '@/types/birdBrains';
+import CurriculumPicker from '@/components/CurriculumPicker';
+import { DEFAULT_COURSE } from '@/lib/curricula';
 
 const input = 'w-full rounded-xl border border-slate-300 px-3 py-2 text-sm';
 
@@ -20,7 +22,7 @@ export default function AccountCard() {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [role, setLocalRole] = useState<'student' | 'parent' | 'teacher'>('student');
-  const [course, setCourse] = useState<GradeCourse>('MPM2D');
+  const [course, setCourse] = useState<GradeCourse>(DEFAULT_COURSE);
   const [lmsMenu, setLmsMenu] = useState<'brightspace' | 'canvas' | null>(null);
   const [lmsUrl, setLmsUrl] = useState('');
   const [busy, setBusy] = useState(false);
@@ -140,11 +142,7 @@ export default function AccountCard() {
               ))}
             </div>
             {role === 'student' && (
-              <select value={course} onChange={(e) => setCourse(e.target.value as GradeCourse)} className={input}
-                aria-label="Course">
-                <option value="MTH1W">Grade 9 · MTH1W</option>
-                <option value="MPM2D">Grade 10 · MPM2D</option>
-              </select>
+              <CurriculumPicker value={course} onChange={setCourse} gradableOnly selectClassName={input} />
             )}
           </>
         )}

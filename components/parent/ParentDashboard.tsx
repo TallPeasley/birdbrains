@@ -19,6 +19,7 @@ import { parentSummary as demoSummary } from '@/lib/mockData';
 import { useSession } from '@/lib/session';
 import type { ApiUsage, ParentProjectionSummary, PlanTier } from '@/types/birdBrains';
 import { MathText } from '@/components/MathText';
+import { courseGradeLabel, courseSubjectLabel } from '@/lib/curricula';
 import StudentProgressPanel from '@/components/StudentProgressPanel';
 import UploadHistory from '@/components/account/UploadHistory';
 import { LinkChildForm } from '@/components/DashboardStates';
@@ -160,12 +161,12 @@ function View({ s, usage, sample = false }: { s: ParentProjectionSummary; usage:
         <div>
           <p className="eyebrow">Parent dashboard</p>
           <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
-            How {s.studentName.split(' ')[0]} is doing in <MathText text={s.course} />
+            How {s.studentName.split(' ')[0]} is doing in <MathText text={courseSubjectLabel(s.course)} />
           </h1>
         </div>
         {sample ? <span className="aero-badge aero-badge--accent">Sample data</span> : <ParentUploadButton />}
         <span className="rounded-full bg-white px-3 py-1 text-xs font-medium text-slate-600 ring-1 ring-slate-200">
-          {s.studentName} · <MathText text={s.course === 'MPM2D' ? 'Grade 10' : 'Grade 9'} />
+          {s.studentName} · <MathText text={courseGradeLabel(s.course) || s.course} />
         </span>
       </header>
 

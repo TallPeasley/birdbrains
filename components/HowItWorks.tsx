@@ -103,7 +103,7 @@ export default function HowItWorks() {
         n={2}
         icon={Users}
         title={`The parent view · ${demoPersonas.parent.name}`}
-        sub="Progress over time, which strands are solid, where the mistakes come from, and an EQAO forecast."
+        sub="Progress over time, which strands are solid, where the mistakes come from, and an achievement forecast."
       >
         <ParentDemo plan={plan} />
       </DemoSection>

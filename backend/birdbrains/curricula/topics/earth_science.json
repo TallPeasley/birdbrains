@@ -1,0 +1,613 @@
+{
+ "version": 1,
+ "subject": "earth_science",
+ "name": "Earth & space science",
+ "review_note": "Draft written for Quark. Grade levels are typical North American placements and vary by curriculum. Needs review by a subject teacher before it is treated as authoritative.",
+ "taxonomy": null,
+ "taxonomy_note": "No earth-science error-code list exists yet. Each misconception names the science taxonomy (physics, chemistry or biology) its code comes from. Needs review.",
+ "topics": [
+  {
+   "id": "earth.weather_seasons",
+   "strand": "Weather & climate",
+   "name": "Weather and seasons",
+   "levels": [
+    0,
+    2
+   ],
+   "learning_goals": [
+    "Observe and record daily weather.",
+    "Describe patterns across the seasons."
+   ],
+   "key_concepts": [
+    "Temperature, precipitation, wind, cloud",
+    "Seasonal patterns",
+    "Weather tools"
+   ],
+   "prerequisites": [],
+   "misconceptions": [
+    {
+     "error_code": "COM_OBSERVATION_VS_INFERENCE",
+     "description": "Records a feeling instead of an observation.",
+     "example": "'Weather: nice.'",
+     "taxonomy": "physics"
+    },
+    {
+     "error_code": "COM_IMPRECISE_TERMS",
+     "description": "Uses vague weather words.",
+     "example": "'It was weird weather.'",
+     "taxonomy": "physics"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Name two things you can measure about the weather.",
+     "answer": "Temperature and rainfall (also wind speed, cloud cover)"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "earth.sun_moon",
+   "strand": "Space",
+   "name": "Sun, Moon and the day-night cycle",
+   "levels": [
+    1,
+    5
+   ],
+   "learning_goals": [
+    "Explain day and night with Earth's rotation.",
+    "Describe the apparent motion of the Sun across the sky."
+   ],
+   "key_concepts": [
+    "Rotation (24 h)",
+    "The Sun does not move around Earth",
+    "Shadows change through the day"
+   ],
+   "prerequisites": [],
+   "misconceptions": [
+    {
+     "error_code": "STR_WRONG_SYSTEM",
+     "description": "Explains day and night by the Sun moving around Earth.",
+     "example": "'Night is when the Sun goes around to the other side.'",
+     "taxonomy": "physics"
+    },
+    {
+     "error_code": "COM_IMPRECISE_TERMS",
+     "description": "Mixes up rotation and revolution.",
+     "example": "'Earth revolves on its axis every day.'",
+     "taxonomy": "physics"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "What causes day and night?",
+     "answer": "Earth rotating on its axis once about every 24 hours"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "earth.materials.rocks_soil",
+   "strand": "Earth materials & processes",
+   "name": "Rocks, minerals and soil",
+   "levels": [
+    2,
+    4
+   ],
+   "learning_goals": [
+    "Describe properties of rocks, minerals and soils.",
+    "Explain how soil forms."
+   ],
+   "key_concepts": [
+    "Minerals make up rocks",
+    "Soil layers",
+    "Properties: hardness, lustre, colour"
+   ],
+   "prerequisites": [],
+   "misconceptions": [
+    {
+     "error_code": "COM_OBSERVATION_VS_INFERENCE",
+     "description": "Identifies a mineral by colour alone.",
+     "example": "'It is gold because it is yellow.'",
+     "taxonomy": "chemistry"
+    },
+    {
+     "error_code": "FAC_SCIENCE_FACT_RECALL",
+     "description": "Confuses rocks and minerals.",
+     "example": "'Granite is a mineral.'",
+     "taxonomy": "chemistry"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Which is harder on the Mohs scale, talc or quartz?",
+     "answer": "Quartz"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "earth.water_cycle",
+   "strand": "Weather & climate",
+   "name": "The water cycle",
+   "levels": [
+    2,
+    6
+   ],
+   "learning_goals": [
+    "Describe evaporation, condensation, precipitation and collection.",
+    "Explain the Sun's role in the water cycle."
+   ],
+   "key_concepts": [
+    "Evaporation",
+    "Condensation",
+    "Precipitation",
+    "Runoff and groundwater"
+   ],
+   "prerequisites": [
+    "chem.states_of_matter"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "CON_PARTICLE_PROPERTIES",
+     "description": "Thinks clouds are made of water vapour.",
+     "example": "'Clouds are steam.'",
+     "taxonomy": "chemistry"
+    },
+    {
+     "error_code": "FAC_SCIENCE_FACT_RECALL",
+     "description": "Orders the cycle wrongly.",
+     "example": "precipitation -> condensation -> evaporation",
+     "taxonomy": "chemistry"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "What process turns water vapour into cloud droplets?",
+     "answer": "Condensation"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "earth.processes.erosion",
+   "strand": "Earth materials & processes",
+   "name": "Weathering, erosion and deposition",
+   "levels": [
+    3,
+    5
+   ],
+   "learning_goals": [
+    "Distinguish weathering, erosion and deposition.",
+    "Describe how water, wind and ice shape land."
+   ],
+   "key_concepts": [
+    "Mechanical and chemical weathering",
+    "Agents of erosion",
+    "Deposition"
+   ],
+   "prerequisites": [
+    "earth.materials.rocks_soil"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "COM_IMPRECISE_TERMS",
+     "description": "Uses weathering and erosion as the same thing.",
+     "example": "'Erosion broke the rock into pieces.'",
+     "taxonomy": "physics"
+    },
+    {
+     "error_code": "STR_WRONG_SYSTEM",
+     "description": "Thinks landforms never change.",
+     "example": "'Mountains have always looked like this.'",
+     "taxonomy": "physics"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "A river carries sand to the sea and drops it. What is the dropping called?",
+     "answer": "Deposition"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "earth.space.seasons_phases",
+   "strand": "Space",
+   "name": "Seasons and Moon phases",
+   "levels": [
+    5,
+    8
+   ],
+   "learning_goals": [
+    "Explain the seasons using Earth's tilt.",
+    "Explain the phases of the Moon and eclipses."
+   ],
+   "key_concepts": [
+    "Axial tilt about 23.5 degrees",
+    "Angle of sunlight and day length",
+    "Moon phases from its position",
+    "Eclipses"
+   ],
+   "prerequisites": [
+    "earth.sun_moon"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "STR_WRONG_SYSTEM",
+     "description": "Explains seasons by Earth's distance from the Sun.",
+     "example": "'Summer is when Earth is closest to the Sun.'",
+     "taxonomy": "physics"
+    },
+    {
+     "error_code": "STR_WRONG_SYSTEM",
+     "description": "Explains Moon phases by Earth's shadow.",
+     "example": "'The crescent is Earth's shadow on the Moon.'",
+     "taxonomy": "physics"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Why is it summer in the Northern Hemisphere in July?",
+     "answer": "The Northern Hemisphere is tilted toward the Sun, so sunlight is more direct and days are longer"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "earth.solar_system",
+   "strand": "Space",
+   "name": "The solar system and gravity",
+   "levels": [
+    5,
+    9
+   ],
+   "learning_goals": [
+    "Describe the Sun, planets, moons and other bodies.",
+    "Explain how gravity keeps objects in orbit."
+   ],
+   "key_concepts": [
+    "Order of planets",
+    "Orbits",
+    "Gravity depends on mass and distance",
+    "Scale of the solar system"
+   ],
+   "prerequisites": [
+    "earth.sun_moon"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "CON_FORCE_IMPLIES_MOTION",
+     "description": "Thinks there is no gravity in space.",
+     "example": "'Astronauts float because there is no gravity.'",
+     "taxonomy": "physics"
+    },
+    {
+     "error_code": "FAC_SCIENCE_FACT_RECALL",
+     "description": "Gets the order of planets wrong.",
+     "example": "Mercury, Venus, Mars, Earth",
+     "taxonomy": "chemistry"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Why do astronauts on the space station feel weightless?",
+     "answer": "They and the station are in free fall together around Earth; gravity is still acting"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "earth.rock_cycle",
+   "strand": "Earth materials & processes",
+   "name": "The rock cycle",
+   "levels": [
+    6,
+    8
+   ],
+   "learning_goals": [
+    "Describe igneous, sedimentary and metamorphic rocks.",
+    "Explain the processes linking them."
+   ],
+   "key_concepts": [
+    "Melting and cooling",
+    "Weathering, compaction and cementation",
+    "Heat and pressure"
+   ],
+   "prerequisites": [
+    "earth.materials.rocks_soil",
+    "earth.processes.erosion"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "CON_MASS_CONSERVATION",
+     "description": "Thinks rocks are created from nothing or destroyed.",
+     "example": "'Old rocks just disappear.'",
+     "taxonomy": "chemistry"
+    },
+    {
+     "error_code": "FAC_SCIENCE_FACT_RECALL",
+     "description": "Mixes up rock types and how they form.",
+     "example": "'Sedimentary rock forms from cooling magma.'",
+     "taxonomy": "chemistry"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "How does sedimentary rock become metamorphic rock?",
+     "answer": "Heat and pressure change it without melting it"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "earth.atmosphere_climate",
+   "strand": "Weather & climate",
+   "name": "Atmosphere, weather systems and climate",
+   "levels": [
+    6,
+    9
+   ],
+   "learning_goals": [
+    "Describe layers and composition of the atmosphere.",
+    "Distinguish weather from climate and explain air masses and fronts."
+   ],
+   "key_concepts": [
+    "Layers of the atmosphere",
+    "Air pressure",
+    "Fronts and air masses",
+    "Weather vs climate"
+   ],
+   "prerequisites": [
+    "earth.water_cycle"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "COM_IMPRECISE_TERMS",
+     "description": "Uses weather and climate interchangeably.",
+     "example": "'The climate was rainy yesterday.'",
+     "taxonomy": "physics"
+    },
+    {
+     "error_code": "CON_ENERGY_ACCOUNTING",
+     "description": "Thinks the Sun heats air mainly directly rather than through the ground.",
+     "example": "'Air is warmest high up because it is closer to the Sun.'",
+     "taxonomy": "physics"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "What is the difference between weather and climate?",
+     "answer": "Weather is conditions over hours or days; climate is the average pattern over many years"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "earth.plate_tectonics",
+   "strand": "Earth materials & processes",
+   "name": "Plate tectonics, earthquakes and volcanoes",
+   "levels": [
+    6,
+    9
+   ],
+   "learning_goals": [
+    "Describe Earth's layers and tectonic plates.",
+    "Relate plate boundaries to earthquakes, volcanoes and mountains."
+   ],
+   "key_concepts": [
+    "Crust, mantle, core",
+    "Convergent, divergent, transform boundaries",
+    "Evidence for plate movement"
+   ],
+   "prerequisites": [
+    "earth.rock_cycle"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "STR_WRONG_SYSTEM",
+     "description": "Thinks the mantle is a liquid ocean of magma.",
+     "example": "'Plates float on a sea of lava.'",
+     "taxonomy": "physics"
+    },
+    {
+     "error_code": "FAC_SCIENCE_FACT_RECALL",
+     "description": "Matches the wrong landform to a boundary type.",
+     "example": "Mid-ocean ridges form at convergent boundaries",
+     "taxonomy": "chemistry"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "What kind of plate boundary forms a mid-ocean ridge?",
+     "answer": "Divergent"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "earth.geologic_time",
+   "strand": "Earth materials & processes",
+   "name": "Fossils and geologic time",
+   "levels": [
+    6,
+    10
+   ],
+   "learning_goals": [
+    "Use the law of superposition to order rock layers.",
+    "Explain how fossils and radiometric dating show Earth's history."
+   ],
+   "key_concepts": [
+    "Superposition",
+    "Index fossils",
+    "Relative vs absolute dating",
+    "Geologic time scale"
+   ],
+   "prerequisites": [
+    "earth.rock_cycle"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "STR_CORRELATION_CAUSATION",
+     "description": "Assumes rock layers are always in age order even after folding or faulting.",
+     "example": "Calls the top layer youngest in an overturned fold",
+     "taxonomy": "biology"
+    },
+    {
+     "error_code": "FAC_SCIENCE_FACT_RECALL",
+     "description": "Thinks humans and non-avian dinosaurs lived at the same time.",
+     "example": "'Early people hunted dinosaurs.'",
+     "taxonomy": "biology"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "In undisturbed layers, which layer is oldest?",
+     "answer": "The bottom layer"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "earth.climate_change",
+   "strand": "Weather & climate",
+   "name": "The greenhouse effect and climate change",
+   "levels": [
+    8,
+    12
+   ],
+   "learning_goals": [
+    "Explain the greenhouse effect.",
+    "Use evidence to describe human impacts on climate and possible responses."
+   ],
+   "key_concepts": [
+    "Greenhouse gases absorb infrared",
+    "Carbon cycle",
+    "Evidence: temperature records, ice cores",
+    "Mitigation and adaptation"
+   ],
+   "prerequisites": [
+    "earth.atmosphere_climate"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "STR_WRONG_SYSTEM",
+     "description": "Confuses the greenhouse effect with ozone depletion.",
+     "example": "'Climate change is caused by the ozone hole.'",
+     "taxonomy": "physics"
+    },
+    {
+     "error_code": "STR_CORRELATION_CAUSATION",
+     "description": "Uses one cold day as evidence against warming.",
+     "example": "'It snowed in April, so the climate isn't warming.'",
+     "taxonomy": "biology"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "How do greenhouse gases warm Earth's surface?",
+     "answer": "They absorb infrared radiation given off by Earth and re-emit some back toward the surface"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "earth.resources_sustainability",
+   "strand": "Resources & sustainability",
+   "name": "Earth's resources and human impact",
+   "levels": [
+    4,
+    12
+   ],
+   "learning_goals": [
+    "Classify resources as renewable or non-renewable.",
+    "Evaluate the environmental effects of using them."
+   ],
+   "key_concepts": [
+    "Renewable and non-renewable",
+    "Fossil fuels",
+    "Conservation",
+    "Trade-offs"
+   ],
+   "prerequisites": [],
+   "misconceptions": [
+    {
+     "error_code": "COM_UNSUPPORTED_ANSWER",
+     "description": "Gives an opinion without evidence.",
+     "example": "'Wind power is bad.'",
+     "taxonomy": "biology"
+    },
+    {
+     "error_code": "FAC_SCIENCE_FACT_RECALL",
+     "description": "Classifies a resource wrongly.",
+     "example": "'Coal is renewable because there is a lot of it.'",
+     "taxonomy": "biology"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Is natural gas renewable or non-renewable? Why?",
+     "answer": "Non-renewable: it forms over millions of years"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "earth.universe_stars",
+   "strand": "Space",
+   "name": "Stars, galaxies and the universe",
+   "levels": [
+    9,
+    12
+   ],
+   "learning_goals": [
+    "Describe the life cycle of stars.",
+    "Describe galaxies and evidence for an expanding universe."
+   ],
+   "key_concepts": [
+    "Fusion in stars",
+    "Stellar life cycle",
+    "Light-years",
+    "Red shift"
+   ],
+   "prerequisites": [
+    "earth.solar_system"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "COM_IMPRECISE_TERMS",
+     "description": "Thinks a light-year is a unit of time.",
+     "example": "'That star is 4 light-years old.'",
+     "taxonomy": "physics"
+    },
+    {
+     "error_code": "FAC_SCIENCE_FACT_RECALL",
+     "description": "Thinks stars burn by combustion.",
+     "example": "'The Sun is a big fire.'",
+     "taxonomy": "chemistry"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "What is a light-year?",
+     "answer": "The distance light travels in one year (about 9.5 x 10^12 km)"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  }
+ ]
+}

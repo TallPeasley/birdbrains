@@ -1,0 +1,855 @@
+{
+ "version": 1,
+ "subject": "physics",
+ "name": "Physics",
+ "review_note": "Draft written for Quark. Grade levels are typical North American placements and vary by curriculum. Needs review by a subject teacher before it is treated as authoritative.",
+ "taxonomy": "physics",
+ "topics": [
+  {
+   "id": "phys.pushes_pulls",
+   "strand": "Forces & motion",
+   "name": "Pushes, pulls and motion",
+   "levels": [
+    0,
+    2
+   ],
+   "learning_goals": [
+    "Describe how pushes and pulls change how things move.",
+    "Compare the effects of bigger and smaller pushes."
+   ],
+   "key_concepts": [
+    "Forces as pushes and pulls",
+    "Speed and direction change",
+    "Friction slows things"
+   ],
+   "prerequisites": [],
+   "misconceptions": [
+    {
+     "error_code": "CON_FORCE_IMPLIES_MOTION",
+     "description": "Thinks a moving object keeps a push inside it.",
+     "example": "'The ball keeps rolling because the push is still in it.'"
+    },
+    {
+     "error_code": "COM_IMPRECISE_TERMS",
+     "description": "Describes motion without direction or speed words.",
+     "example": "'It moved.'"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "What happens to a toy car if you push it harder?",
+     "answer": "It moves faster and goes farther"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "phys.light_sound",
+   "strand": "Waves & light",
+   "name": "Light and sound",
+   "levels": [
+    1,
+    4
+   ],
+   "learning_goals": [
+    "Explain that sound is made by vibrations and light travels from sources.",
+    "Describe shadows and reflection."
+   ],
+   "key_concepts": [
+    "Vibration",
+    "Light sources",
+    "Shadows",
+    "Reflection"
+   ],
+   "prerequisites": [],
+   "misconceptions": [
+    {
+     "error_code": "CON_WAVE_PROPERTIES",
+     "description": "Thinks we see because light comes out of our eyes.",
+     "example": "Arrows drawn from the eye to the object"
+    },
+    {
+     "error_code": "CON_WAVE_PROPERTIES",
+     "description": "Thinks sound travels in space.",
+     "example": "'Astronauts can hear an explosion in space.'"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Why does a shadow form?",
+     "answer": "An opaque object blocks light"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "phys.magnets",
+   "strand": "Electricity & magnetism",
+   "name": "Magnets",
+   "levels": [
+    2,
+    4
+   ],
+   "learning_goals": [
+    "Describe how magnets attract and repel.",
+    "Identify magnetic materials."
+   ],
+   "key_concepts": [
+    "Poles",
+    "Like poles repel, unlike attract",
+    "Magnetic materials (iron, nickel, cobalt)"
+   ],
+   "prerequisites": [],
+   "misconceptions": [
+    {
+     "error_code": "FAC_SCIENCE_FACT_RECALL",
+     "description": "Thinks all metals are magnetic.",
+     "example": "'Aluminium cans stick to magnets.'",
+     "taxonomy": "chemistry"
+    },
+    {
+     "error_code": "CON_VECTOR_AS_SCALAR",
+     "description": "Thinks a bigger magnet is always stronger.",
+     "example": "'The large magnet must be stronger.'"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Will two north poles attract or repel?",
+     "answer": "Repel"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "phys.simple_machines",
+   "strand": "Forces & motion",
+   "name": "Simple machines",
+   "levels": [
+    3,
+    6
+   ],
+   "learning_goals": [
+    "Identify levers, pulleys, inclined planes, wedges, screws and wheels and axles.",
+    "Explain how machines trade force for distance."
+   ],
+   "key_concepts": [
+    "Effort and load",
+    "Mechanical advantage",
+    "Fulcrum"
+   ],
+   "prerequisites": [
+    "phys.pushes_pulls"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "CON_ENERGY_ACCOUNTING",
+     "description": "Thinks a machine reduces the work needed.",
+     "example": "'The ramp means less work.'"
+    },
+    {
+     "error_code": "STR_WRONG_SYSTEM",
+     "description": "Misidentifies the fulcrum.",
+     "example": "Calls the load point of a wheelbarrow the fulcrum."
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "How does a ramp make lifting a box easier?",
+     "answer": "You push with less force over a longer distance"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "phys.energy_forms",
+   "strand": "Energy",
+   "name": "Forms of energy and energy transfer",
+   "levels": [
+    3,
+    7
+   ],
+   "learning_goals": [
+    "Identify forms of energy and energy transformations.",
+    "Explain that energy is conserved."
+   ],
+   "key_concepts": [
+    "Kinetic, potential, thermal, electrical, chemical, light, sound",
+    "Transformations",
+    "Conservation of energy"
+   ],
+   "prerequisites": [],
+   "misconceptions": [
+    {
+     "error_code": "CON_ENERGY_ACCOUNTING",
+     "description": "Thinks energy is used up or disappears.",
+     "example": "'The battery's energy is gone forever.'"
+    },
+    {
+     "error_code": "COM_IMPRECISE_TERMS",
+     "description": "Calls force, power and energy the same thing.",
+     "example": "'The car has a lot of force energy.'"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Describe the energy transformation in a flashlight.",
+     "answer": "Chemical (battery) -> electrical -> light and thermal"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "phys.electricity_circuits_basic",
+   "strand": "Electricity & magnetism",
+   "name": "Electricity and simple circuits",
+   "levels": [
+    4,
+    9
+   ],
+   "learning_goals": [
+    "Build and draw simple series and parallel circuits.",
+    "Identify conductors and insulators."
+   ],
+   "key_concepts": [
+    "Closed circuit",
+    "Conductors and insulators",
+    "Series and parallel",
+    "Circuit symbols"
+   ],
+   "prerequisites": [
+    "phys.energy_forms"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "CON_CURRENT_USED_UP",
+     "description": "Thinks current is used up by bulbs.",
+     "example": "'Less current flows back to the battery.'"
+    },
+    {
+     "error_code": "COM_MISSING_LABELS",
+     "description": "Draws circuits with incorrect or missing symbols.",
+     "example": "Draws a bulb as a resistor without labels"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "If one bulb in a series circuit breaks, what happens to the others?",
+     "answer": "They go out because the circuit is broken"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "phys.forces_balanced",
+   "strand": "Forces & motion",
+   "name": "Balanced and unbalanced forces",
+   "levels": [
+    5,
+    8
+   ],
+   "learning_goals": [
+    "Use force diagrams to show balanced and unbalanced forces.",
+    "Relate net force to changes in motion."
+   ],
+   "key_concepts": [
+    "Net force",
+    "Gravity, friction, normal force",
+    "Balanced forces mean constant velocity"
+   ],
+   "prerequisites": [
+    "phys.pushes_pulls"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "CON_FORCE_IMPLIES_MOTION",
+     "description": "Thinks a constant-speed object has an unbalanced force.",
+     "example": "'The car moves at constant speed because the engine force is bigger.'"
+    },
+    {
+     "error_code": "STR_FREE_BODY_DIAGRAM",
+     "description": "Adds a 'force of motion'.",
+     "example": "Draws a forward arrow for a sliding puck"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "A 20 N push right and 5 N friction left act on a box. What is the net force?",
+     "answer": "15 N right"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "phys.heat",
+   "strand": "Energy",
+   "name": "Heat and temperature",
+   "levels": [
+    5,
+    8
+   ],
+   "learning_goals": [
+    "Distinguish heat and temperature.",
+    "Explain conduction, convection and radiation."
+   ],
+   "key_concepts": [
+    "Thermal energy transfer",
+    "Conduction, convection, radiation",
+    "Insulators"
+   ],
+   "prerequisites": [
+    "chem.particle_model"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "CON_ENERGY_ACCOUNTING",
+     "description": "Thinks cold flows into warm objects.",
+     "example": "'The ice puts cold into the drink.'"
+    },
+    {
+     "error_code": "COM_IMPRECISE_TERMS",
+     "description": "Uses heat and temperature as the same thing.",
+     "example": "'The bath has more temperature than the cup.'"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Why does a metal spoon in hot soup get hot?",
+     "answer": "Thermal energy is conducted from the soup through the metal"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "phys.kinematics_1d",
+   "strand": "Forces & motion",
+   "name": "Motion in one dimension",
+   "levels": [
+    8,
+    11
+   ],
+   "learning_goals": [
+    "Describe motion with distance, displacement, speed, velocity and acceleration.",
+    "Use motion graphs and kinematic equations."
+   ],
+   "key_concepts": [
+    "Scalar vs vector",
+    "Slope of d-t is velocity; slope of v-t is acceleration",
+    "Kinematic equations"
+   ],
+   "prerequisites": [
+    "phys.forces_balanced",
+    "math.functions.linear_relations"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "CON_VELOCITY_VS_ACCELERATION",
+     "description": "Thinks zero velocity means zero acceleration.",
+     "example": "'At the top of its flight the ball has no acceleration.'"
+    },
+    {
+     "error_code": "PRC_GRAPH_ANALYSIS",
+     "description": "Reads a v-t graph as a position graph.",
+     "example": "Says the object moves backward when v decreases"
+    },
+    {
+     "error_code": "COM_DIRECTION_MISSING",
+     "description": "Gives a velocity without direction.",
+     "example": "v = 12 m/s"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "A car speeds up from 5 m/s to 25 m/s in 4 s. Find its acceleration.",
+     "answer": "5 m/s^2 forward"
+    },
+    {
+     "prompt": "How far does an object fall from rest in 3 s (g = 9.8 m/s^2)?",
+     "answer": "44.1 m"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "phys.newton_laws",
+   "strand": "Forces & motion",
+   "name": "Newton's laws",
+   "levels": [
+    9,
+    12
+   ],
+   "learning_goals": [
+    "Apply Newton's three laws to everyday and quantitative problems.",
+    "Draw free-body diagrams and use F_net = ma."
+   ],
+   "key_concepts": [
+    "Inertia",
+    "F_net = ma",
+    "Action-reaction pairs act on different objects",
+    "Weight = mg"
+   ],
+   "prerequisites": [
+    "phys.kinematics_1d"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "CON_THIRD_LAW_PAIRS",
+     "description": "Says third-law pairs cancel.",
+     "example": "'The horse can't pull the cart because the forces cancel.'"
+    },
+    {
+     "error_code": "STR_FREE_BODY_DIAGRAM",
+     "description": "Includes forces acting on other objects.",
+     "example": "Adds the force the box exerts on the floor"
+    },
+    {
+     "error_code": "FAC_UNIT_CONVERSION",
+     "description": "Uses mass in grams in F = ma.",
+     "example": "F = 500 x 2 for a 500 g cart"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "A net force of 30 N acts on a 6 kg cart. Find its acceleration.",
+     "answer": "5 m/s^2"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "phys.energy_work_power",
+   "strand": "Energy",
+   "name": "Work, energy and power",
+   "levels": [
+    9,
+    12
+   ],
+   "learning_goals": [
+    "Calculate work, kinetic and gravitational potential energy and power.",
+    "Use conservation of energy to solve problems."
+   ],
+   "key_concepts": [
+    "W = Fd cos(theta)",
+    "Ek = (1/2)mv^2",
+    "Eg = mgh",
+    "P = W / t",
+    "Efficiency"
+   ],
+   "prerequisites": [
+    "phys.energy_forms",
+    "phys.newton_laws"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "CON_ENERGY_ACCOUNTING",
+     "description": "Leaves out an energy store or transfer.",
+     "example": "Ignores thermal energy lost to friction"
+    },
+    {
+     "error_code": "FAC_FORMULA_RECALL",
+     "description": "Forgets the 1/2 or the square in kinetic energy.",
+     "example": "Ek = mv^2"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "A 2 kg ball is dropped from 5 m. Find its speed just before it lands (g = 9.8 m/s^2).",
+     "answer": "9.9 m/s"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "phys.waves",
+   "strand": "Waves & light",
+   "name": "Waves and sound",
+   "levels": [
+    9,
+    12
+   ],
+   "learning_goals": [
+    "Describe transverse and longitudinal waves.",
+    "Use v = f(lambda) and describe interference and resonance."
+   ],
+   "key_concepts": [
+    "Amplitude, wavelength, frequency, period",
+    "v = f(lambda)",
+    "Superposition",
+    "Standing waves"
+   ],
+   "prerequisites": [
+    "phys.light_sound"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "CON_WAVE_PROPERTIES",
+     "description": "Thinks a higher frequency makes a wave travel faster in the same medium.",
+     "example": "'High notes reach you first.'"
+    },
+    {
+     "error_code": "STR_WRONG_SUBSTITUTION",
+     "description": "Uses period where frequency is needed.",
+     "example": "v = T x lambda"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "A wave has frequency 50 Hz and wavelength 4 m. Find its speed.",
+     "answer": "200 m/s"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "phys.light_optics",
+   "strand": "Waves & light",
+   "name": "Light, reflection and refraction",
+   "levels": [
+    7,
+    12
+   ],
+   "learning_goals": [
+    "Apply the law of reflection and Snell's law.",
+    "Draw ray diagrams for mirrors and lenses."
+   ],
+   "key_concepts": [
+    "Angle of incidence = angle of reflection",
+    "Refraction and index of refraction",
+    "Real and virtual images"
+   ],
+   "prerequisites": [
+    "phys.light_sound"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "STR_ANGLE_REFERENCE",
+     "description": "Measures angles from the surface instead of the normal.",
+     "example": "Angle of incidence 30 degrees from the mirror surface"
+    },
+    {
+     "error_code": "PRC_RAY_DIAGRAM",
+     "description": "Draws a ray through the focus incorrectly.",
+     "example": "Ray parallel to the axis refracts through the near-side focus"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Light enters glass (n = 1.50) from air at 30 degrees to the normal. Find the angle of refraction.",
+     "answer": "19.5 degrees"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "phys.circuits_ohm",
+   "strand": "Electricity & magnetism",
+   "name": "Current, voltage, resistance and Ohm's law",
+   "levels": [
+    9,
+    12
+   ],
+   "learning_goals": [
+    "Use V = IR and power P = VI.",
+    "Find equivalent resistance in series and parallel circuits."
+   ],
+   "key_concepts": [
+    "Current, potential difference, resistance",
+    "Ohm's law",
+    "Series: R = R1 + R2",
+    "Parallel: 1/R = 1/R1 + 1/R2"
+   ],
+   "prerequisites": [
+    "phys.electricity_circuits_basic"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "PRC_CIRCUIT_REDUCTION",
+     "description": "Adds parallel resistors as if in series.",
+     "example": "6 ohm and 3 ohm in parallel = 9 ohm"
+    },
+    {
+     "error_code": "CON_CURRENT_USED_UP",
+     "description": "Thinks current decreases after each resistor in series.",
+     "example": "'2 A before the bulb, 1 A after.'"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "Find the equivalent resistance of 6 ohm and 3 ohm in parallel.",
+     "answer": "2 ohm"
+    },
+    {
+     "prompt": "A 12 V battery drives current through a 4 ohm resistor. Find the current.",
+     "answer": "3 A"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "phys.momentum",
+   "strand": "Forces & motion",
+   "name": "Momentum and collisions",
+   "levels": [
+    11,
+    12
+   ],
+   "learning_goals": [
+    "Use p = mv and impulse.",
+    "Apply conservation of momentum to collisions and explosions."
+   ],
+   "key_concepts": [
+    "Momentum is a vector",
+    "Impulse = F(delta t) = delta p",
+    "Elastic and inelastic collisions"
+   ],
+   "prerequisites": [
+    "phys.newton_laws"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "CON_VECTOR_AS_SCALAR",
+     "description": "Ignores direction when adding momenta.",
+     "example": "Adds momenta of objects moving toward each other"
+    },
+    {
+     "error_code": "STR_SIGN_CONVENTION",
+     "description": "Changes the sign convention part-way through.",
+     "example": "Takes right as positive, then a leftward velocity as positive"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "A 2 kg cart at 3 m/s hits and sticks to a stationary 1 kg cart. Find their speed.",
+     "answer": "2 m/s"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "phys.vectors_2d",
+   "strand": "Forces & motion",
+   "name": "Two-dimensional motion and vectors",
+   "levels": [
+    11,
+    12
+   ],
+   "learning_goals": [
+    "Resolve and add vectors.",
+    "Solve projectile motion problems."
+   ],
+   "key_concepts": [
+    "Components",
+    "Independence of horizontal and vertical motion",
+    "Projectile motion"
+   ],
+   "prerequisites": [
+    "phys.kinematics_1d",
+    "math.trig.right_triangle"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "PRC_VECTOR_ADDITION",
+     "description": "Adds magnitudes of perpendicular vectors.",
+     "example": "3 m east + 4 m north = 7 m"
+    },
+    {
+     "error_code": "CON_FORCE_IMPLIES_MOTION",
+     "description": "Thinks a projectile has a horizontal force.",
+     "example": "Draws a forward force on a ball in flight"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "A ball is thrown horizontally at 10 m/s from a 20 m cliff. How long is it in the air (g = 9.8 m/s^2)?",
+     "answer": "2.0 s"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "phys.circular_gravitation",
+   "strand": "Forces & motion",
+   "name": "Circular motion and gravitation",
+   "levels": [
+    11,
+    12
+   ],
+   "learning_goals": [
+    "Analyse uniform circular motion with centripetal acceleration and force.",
+    "Apply Newton's law of universal gravitation."
+   ],
+   "key_concepts": [
+    "a_c = v^2 / r",
+    "Centripetal force is a net force, not a new force",
+    "F_g = Gm1m2 / r^2",
+    "Orbits"
+   ],
+   "prerequisites": [
+    "phys.newton_laws",
+    "phys.vectors_2d"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "CON_CENTRIFUGAL_FORCE",
+     "description": "Adds an outward centrifugal force in an inertial frame.",
+     "example": "Draws an outward force on a car going round a curve"
+    },
+    {
+     "error_code": "FAC_CONSTANT_RECALL",
+     "description": "Uses the wrong value or power of ten for G.",
+     "example": "G = 6.67 x 10^11"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "A 0.5 kg ball moves in a circle of radius 2 m at 4 m/s. Find the centripetal force.",
+     "answer": "4 N"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "phys.electromagnetism",
+   "strand": "Electricity & magnetism",
+   "name": "Magnetic fields and electromagnetism",
+   "levels": [
+    10,
+    12
+   ],
+   "learning_goals": [
+    "Describe magnetic fields around magnets and currents.",
+    "Explain motors, generators and induction."
+   ],
+   "key_concepts": [
+    "Field lines",
+    "Right-hand rules",
+    "Electromagnetic induction",
+    "Transformers"
+   ],
+   "prerequisites": [
+    "phys.magnets",
+    "phys.circuits_ohm"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "STR_SIGN_CONVENTION",
+     "description": "Applies the hand rule with the wrong hand or current direction.",
+     "example": "Uses the left hand for conventional current"
+    },
+    {
+     "error_code": "CON_ENERGY_ACCOUNTING",
+     "description": "Thinks a transformer creates energy.",
+     "example": "'A step-up transformer increases power.'"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "What happens to induced current if a magnet is moved faster into a coil?",
+     "answer": "It increases"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "phys.fields_charges",
+   "strand": "Electricity & magnetism",
+   "name": "Electric charge and electric fields",
+   "levels": [
+    11,
+    12
+   ],
+   "learning_goals": [
+    "Use Coulomb's law and describe electric fields.",
+    "Relate field, force and potential difference."
+   ],
+   "key_concepts": [
+    "Charge conservation",
+    "F = kq1q2 / r^2",
+    "E = F / q",
+    "Field lines"
+   ],
+   "prerequisites": [
+    "phys.circuits_ohm"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "FAC_FORMULA_RECALL",
+     "description": "Forgets to square the distance.",
+     "example": "F = kq1q2 / r"
+    },
+    {
+     "error_code": "CON_VECTOR_AS_SCALAR",
+     "description": "Adds field strengths from two charges without direction.",
+     "example": "Fields from opposite sides added as if parallel"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "If the distance between two charges doubles, what happens to the force between them?",
+     "answer": "It becomes one quarter as large"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  },
+  {
+   "id": "phys.modern_nuclear",
+   "strand": "Modern physics",
+   "name": "Atomic and nuclear physics",
+   "levels": [
+    11,
+    12
+   ],
+   "learning_goals": [
+    "Describe radioactive decay and half-life.",
+    "Write nuclear equations and explain fission and fusion."
+   ],
+   "key_concepts": [
+    "Alpha, beta and gamma radiation",
+    "Half-life",
+    "Mass-energy equivalence"
+   ],
+   "prerequisites": [
+    "chem.atomic_structure"
+   ],
+   "misconceptions": [
+    {
+     "error_code": "STR_FORMULA_MISSELECTION",
+     "description": "Treats decay as linear, subtracting the same amount each half-life.",
+     "example": "100 g after two half-lives = 0 g"
+    },
+    {
+     "error_code": "PRC_STEP_OMITTED",
+     "description": "Does not balance mass or atomic numbers in a nuclear equation.",
+     "example": "Alpha decay of U-238 gives Th-238"
+    }
+   ],
+   "example_problems": [
+    {
+     "prompt": "A 80 g sample has a half-life of 5 days. How much remains after 15 days?",
+     "answer": "10 g"
+    }
+   ],
+   "aliases": [],
+   "review_status": "needs_review"
+  }
+ ]
+}

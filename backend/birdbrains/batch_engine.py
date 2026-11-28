@@ -48,9 +48,11 @@ def _thinking_json() -> dict:
     return {"thinkingLevel": WORKSHEET_THINKING}
 
 WORKSHEET_SYSTEM = """\
-You write short remedial mathematics worksheets for Ontario Grade 9 (MTH1W) and
-Grade 10 (MPM2D) students, targeted at one diagnosed root-cause error. When the
-request names a "Target error", the whole worksheet practises that error.
+You write short remedial mathematics worksheets for school students (kindergarten to
+Grade 12, any curriculum), targeted at one diagnosed root-cause error. The request
+names the student's course and grade: keep the numbers, wording and methods at that
+level. When the request names a "Target error", the whole worksheet practises that
+error.
 
 The worksheet has four sections:
 A. diagnostic_mirror: for each line where a root-cause error first appeared, show
@@ -156,7 +158,7 @@ def worksheet_prompt(item: FlaggedGrading) -> str:
     target = max(counts, key=lambda c: (counts[c], -list(counts).index(c))) if counts else ""
     focus = f"Target error: {target} ({counts[target]} of {len(roots)} root-cause errors)\n" if target else ""
     return (
-        f"Course: {item.course.value}\nUnit / topic: {item.unit_topic}\n"
+        f"Course: {item.course.value} ({item.course.info.name})\nUnit / topic: {item.unit_topic}\n"
         f"Scaffolding mode: {item.scaffolding_mode.value}\n{focus}\n"
         f"Root-cause errors:\n{json.dumps(roots, indent=1)}\n\n"
         f"{work_section}"
