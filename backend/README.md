@@ -91,7 +91,7 @@ To exercise real Gemini from your machine, keep `BIRDBRAINS_BACKEND=local`, set
 | `BIRDBRAINS_PRIVACY_DETECTOR` | `gemini` | what finds names and dates on photos before storage: `gemini` (Montréal) or `dlp` (Cloud DLP; its image inspection is not offered in Montréal) |
 | `BIRDBRAINS_AUTH` | `firebase` | `firebase` or `dev`. `dev`/`local` are refused on Cloud Run |
 | `GOOGLE_CLOUD_PROJECT`, `BIRDBRAINS_BUCKET` | | Required with `gcp` |
-| `BIRDBRAINS_CORS_ORIGINS` | Firebase Hosting sites (boson-quark + birdbrain-514606, web.app and firebaseapp.com) + localhost:3000 | Comma-separated origins allowed to call the API |
+| `BIRDBRAINS_CORS_ORIGINS` | quark.study, www.quark.study, the Firebase Hosting sites (boson-quark + birdbrain-514606, web.app and firebaseapp.com) + localhost:3000 | Comma-separated origins allowed to call the API |
 | `BIRDBRAINS_BATCH_TOKEN` | unset (batch routes off) | Shared secret for the scheduler |
 | `BIRDBRAINS_STAGE1_MODEL`, `BIRDBRAINS_STAGE2_MODEL`, `BIRDBRAINS_WORKSHEET_MODEL` | spec models | Override when Google retires a model |
 | `BIRDBRAINS_HEADER_MASK` | `0` | Optional backstop: share of the page, from the top, blacked out before storage. Detected name/date/class fields are blurred regardless |
@@ -100,7 +100,7 @@ To exercise real Gemini from your machine, keep `BIRDBRAINS_BACKEND=local`, set
 | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_ID` | unset (upgrades off) | Stripe key, webhook signing secret and the Pro price id. `deploy.sh` reads them from Secret Manager (`tools/stripe_setup.py` writes them) |
 | `STRIPE_PORTAL_CONFIGURATION` | unset (account default) | Customer portal settings id (`bpc_...`) |
 | `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET`, `BIRDBRAINS_PUBLIC_URL` | unset (Classroom off) | Google OAuth web client and the API's own URL (for the redirect) |
-| `BIRDBRAINS_SITE_URL` | Firebase Hosting site | Where Stripe and Google send people back to |
+| `BIRDBRAINS_SITE_URL` | `https://quark.study` | Where Stripe and Google send people back to |
 | `MLFLOW_TRACKING_URI` | unset (tracing off) | Where `@mlflow.trace` spans go |
 | `BIRDBRAINS_CLASSROOM` | unset | `demo` swaps in a pretend Google Classroom (3 classes, invented students) for testing. Refused on Cloud Run. See `docs/TEST_CLASSROOMS.md` |
 

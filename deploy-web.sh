@@ -4,16 +4,21 @@
 #   ./deploy-web.sh [gcp-project-id]
 #
 # The API, Firestore and sign-in live in the GCP project (birdbrain-514606). The site is
-# published to every Firebase project in HOSTING_PROJECTS: boson-quark first (the main
-# address, https://boson-quark.web.app), then the GCP project itself so the first address
-# keeps working. Override with HOSTING_PROJECTS="boson-quark" ./deploy-web.sh to skip one.
+# published to every Firebase project in HOSTING_PROJECTS: boson-quark first (its custom domain
+# https://quark.study is the main address; https://boson-quark.web.app keeps working), then the
+# GCP project itself so the first address keeps working. Override with
+# HOSTING_PROJECTS="boson-quark" ./deploy-web.sh to skip one. quark.boson.systems and
+# www.quark.study are Firebase redirects to https://quark.study, set up in the console.
+# Before quark.study is connected in Firebase Hosting, run with
+# SITE_URL=https://boson-quark.web.app ./deploy-web.sh so Stripe and Classroom send people back
+# to an address that works.
 #
 # Run only from Maalik's PC (Aero Sites\bb-deploy-main, moved to origin/main first), after he types
 # "go" in the deploy thread. Needs gcloud, node 20+ and npm, signed in as a project owner. It:
 #   1. reads the API URL from Cloud Run and the Firebase web config from Firebase,
 #   2. builds the static site with those values,
 #   3. lets the API accept calls from the new address (CORS) and send people back to it,
-#   4. deploys to https://boson-quark.web.app and https://<project>.web.app.
+#   4. deploys to boson-quark (https://quark.study, https://boson-quark.web.app) and https://<project>.web.app.
 # Safe to run again; each run is one new Hosting release (roll back in the console).
 set -euo pipefail
 
@@ -21,12 +26,12 @@ PROJECT="${1:-birdbrain-514606}"
 REGION="northamerica-northeast1"
 SERVICE="birdbrains-api"
 HOSTING_PROJECTS="${HOSTING_PROJECTS:-boson-quark $PROJECT}"
-MAIN_HOSTING="${HOSTING_PROJECTS%% *}"
-SITE="https://${MAIN_HOSTING}.web.app"
+SITE="${SITE_URL:-https://quark.study}"
+SITE="${SITE%/}"
 # Every address the site is served from may call the API.
-ORIGINS=""
+ORIGINS="https://quark.study,https://www.quark.study"
 for h in $HOSTING_PROJECTS; do ORIGINS="$ORIGINS,https://$h.web.app,https://$h.firebaseapp.com"; done
-ORIGINS="${ORIGINS#,}"
+case ",$ORIGINS," in *",$SITE,"*) ;; *) ORIGINS="$ORIGINS,$SITE" ;; esac
 cd "$(dirname "$0")"
 
 gcloud config set project "$PROJECT" >/dev/null
@@ -70,4 +75,4 @@ done
 
 echo
 echo "Site is live at: $SITE"
-for h in $HOSTING_PROJECTS; do [ "$h" = "$MAIN_HOSTING" ] || echo "         and at: https://$h.web.app"; done
+for h in $HOSTING_PROJECTS; do echo "         and at: https://$h.web.app"; done

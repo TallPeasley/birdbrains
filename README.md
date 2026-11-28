@@ -16,7 +16,7 @@ npm run build && npm start
 
 ## Publish it
 
-The live site is on Firebase Hosting at https://boson-quark.web.app (Firebase project `boson-quark`). The same build is also published to https://birdbrain-514606.web.app so the first address keeps working. The API, Firestore and sign-in stay in GCP project `birdbrain-514606`. From Google Cloud Shell, in the repo root:
+The live site is https://quark.study, a custom domain on Firebase Hosting project `boson-quark` (also served at https://boson-quark.web.app; https://www.quark.study and https://quark.boson.systems redirect to https://quark.study). The same build is also published to https://birdbrain-514606.web.app so the first address keeps working. The API, Firestore and sign-in stay in GCP project `birdbrain-514606`. From Google Cloud Shell, in the repo root:
 
 ```bash
 ./deploy-web.sh            # builds with the live API + Firebase config, then deploys

@@ -53,7 +53,7 @@ Shared files, changed only with the owner's review:
 - Errors arrive as `ApiError { status, detail }`. `detail` is a sentence you can
   show to the user, except the codes listed under each route below.
 - Live API: `https://birdbrains-api-28737473918.northamerica-northeast1.run.app`
-  (Cloud Run, Montréal). Live site: https://boson-quark.web.app (Firebase Hosting, project `boson-quark`; also still at https://birdbrain-514606.web.app), published with `./deploy-web.sh`.
+  (Cloud Run, Montréal). Live site: https://quark.study (custom domain on Firebase Hosting project `boson-quark`; also served at https://boson-quark.web.app and https://birdbrain-514606.web.app; quark.boson.systems redirects to quark.study), published with `./deploy-web.sh`.
 
 ## 4. API contract
 

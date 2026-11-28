@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://boson-quark.web.app/sitemap.xml
+Sitemap: https://quark.study/sitemap.xml
