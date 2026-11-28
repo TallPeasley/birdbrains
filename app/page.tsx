@@ -10,6 +10,7 @@ import {
   GraduationCap,
   Lock,
   School,
+  Plug,
   ScanSearch,
   ShieldCheck,
   Sparkles,
@@ -26,8 +27,8 @@ import { MathText } from '@/components/MathText';
 
 /** Telemetry strip under the hero. Each figure is a fact about the product, not a metric. */
 const SPECS: [figure: string, label: string][] = [
-  ['04', 'Pillars in every diagnostic'],
-  ['16', 'Official error codes'],
+  ['06', 'Pillars in every diagnostic'],
+  ['06', 'Subjects planned on the same pillars'],
   ['03', 'Stages in each practice worksheet'],
 ];
 
@@ -73,9 +74,28 @@ const AUDIENCES = [
     who: 'Teachers',
     points: [
       'Class-wide patterns across the six pillars',
-      'Connects with Google Classroom',
+      'Works with Google Classroom, with Canvas and Brightspace next',
       'Progress reports you can share',
     ],
+  },
+];
+
+/** School systems on the home page. Keep these in step with docs/LMS.md and what is deployed. */
+const INTEGRATIONS: { name: string; status: 'Beta' | 'Coming soon'; body: string }[] = [
+  {
+    name: 'Google Classroom',
+    status: 'Beta',
+    body: 'Pro teachers import the photos students hand in and see the diagnosis for each one. Students see their Classroom assignments in Quark. Grades stay in Classroom for now. While Google reviews Quark, places are limited, so teachers sign up to test.',
+  },
+  {
+    name: 'Brightspace (D2L)',
+    status: 'Coming soon',
+    body: 'Import hand-ins from an assignment folder and send scores back as draft feedback you publish yourself. Set up once per school with your Brightspace admin.',
+  },
+  {
+    name: 'Canvas',
+    status: 'Coming soon',
+    body: 'Import hand-ins from an assignment and send scores and feedback back. Set up once per school with your Canvas admin.',
   },
 ];
 
@@ -89,7 +109,7 @@ const PRIVACY = [
 const FAQ: [q: string, a: string][] = [
   [
     'Which courses does Quark cover?',
-    'Ontario Grade 9 (MTH1W) and Grade 10 academic math (MPM2D): linear systems, analytic geometry, quadratics, similar triangles and trigonometry.',
+    'Today Quark grades Ontario Grade 9 (MTH1W) and Grade 10 academic math (MPM2D): linear systems, analytic geometry, quadratics, similar triangles and trigonometry. Chemistry, physics, biology, English and history are next. Their mistake lists are drafted on the same six pillars, but Quark does not grade them yet.',
   ],
   [
     'Do I need an account to try it?',
@@ -115,16 +135,17 @@ export default function HomePage() {
       <section className="grid items-center gap-10 pt-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:gap-14 lg:pt-10">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="aero-badge aero-badge--accent">Ontario · MTH1W · MPM2D</span>
-            <span className="aero-coord">GR 9–10 MATH</span>
+            <span className="aero-badge aero-badge--accent">Ontario curriculum</span>
+            <span className="aero-coord">MATH GR 9–10 LIVE · MORE SUBJECTS NEXT</span>
           </div>
           <h1 className="mt-5 max-w-2xl font-display text-4xl font-extrabold leading-[1.05] tracking-display text-slate-900 sm:text-[3.5rem]">
-            See <em className="font-serif font-normal tracking-normal text-brand">why</em> a math answer went wrong, not
-            just that it did.
+            See <em className="font-serif font-normal tracking-normal text-brand">why</em> an answer went wrong, not just
+            that it did.
           </h1>
           <p className="mt-5 max-w-xl text-lg text-slate-600">
-            Snap a photo of handwritten work. Quark traces every step, separates slips from real gaps, and builds a
-            worksheet that targets exactly what to practise next.
+            Snap a photo of handwritten work. Quark traces every step, sorts each mistake into six pillars so a slip
+            never looks like a real gap, and builds practice that targets exactly what to work on next. Grade 9–10
+            math is live today, with sciences, English and history on the way.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <Link href="/how-it-works" className="btn btn-lg btn-primary">
@@ -189,7 +210,7 @@ export default function HomePage() {
           id="pillars-heading"
           n={2}
           title="The 6-Pillar Diagnostic Framework"
-          sub="Every mistake is sorted into one of six kinds, because each one is fixed a different way."
+          sub="Every mistake is sorted into one of six kinds, because each one is fixed a different way. Shown here for math; the sciences, English and history keep the same six, described for each subject."
         />
         <div className="aero-cells mt-8 sm:grid-cols-2 lg:grid-cols-3">
           {PILLAR_ORDER.map((p, i) => (
@@ -232,10 +253,37 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── School systems ─────────────────────────────────────────────── */}
+      <section aria-labelledby="lms-heading">
+        <SectionHeading
+          id="lms-heading"
+          n={4}
+          title="Works with your school's systems"
+          sub="Teachers bring in the work students already hand in, instead of collecting photos twice. Part of Pro for teachers."
+        />
+        <div className="aero-cells mt-8 md:grid-cols-3">
+          {INTEGRATIONS.map(({ name, status, body }) => (
+            <div key={name} className="p-5 sm:p-6">
+              <div className="flex items-center justify-between gap-2">
+                <span className="flex items-center gap-2 font-display font-bold tracking-display text-slate-900">
+                  <Plug className="h-4 w-4 text-indigo-600" aria-hidden />
+                  {name}
+                </span>
+                <span className={`aero-badge ${status === 'Beta' ? 'aero-badge--accent' : ''}`}>{status}</span>
+              </div>
+              <p className="mt-3 text-sm leading-relaxed text-slate-600">{body}</p>
+            </div>
+          ))}
+        </div>
+        <p className="mt-4 max-w-2xl text-sm text-slate-500">
+          Microsoft Teams for Education, and opening Quark from inside Canvas or Brightspace, are planned for later.
+        </p>
+      </section>
+
       {/* ── Plans + privacy ──────────────────────────────────────────────── */}
       <section className="grid gap-4 lg:grid-cols-2">
         <div className="card flex flex-col p-6 sm:p-8">
-          <SectionIndex n={4} />
+          <SectionIndex n={5} />
           <h2 className="mt-2 font-display text-2xl font-extrabold tracking-display text-slate-900">Start free</h2>
           <p className="mt-2 text-slate-600">
             The free plan reads your work, finds the mistakes across all six pillars and explains them, up to a monthly
@@ -248,7 +296,7 @@ export default function HomePage() {
           </div>
         </div>
         <div className="card flex flex-col p-6 sm:p-8">
-          <SectionIndex n={5} />
+          <SectionIndex n={6} />
           <h2 className="mt-2 flex items-center gap-2 font-display text-2xl font-extrabold tracking-display text-slate-900">
             <ShieldCheck className="h-6 w-6 text-emerald-600" aria-hidden /> Private by design
           </h2>
@@ -267,7 +315,7 @@ export default function HomePage() {
       <section id="get-started" aria-labelledby="start-heading" className="scroll-mt-24">
         <SectionHeading
           id="start-heading"
-          n={6}
+          n={7}
           title="Get started"
           sub={
             IS_LIVE
@@ -292,7 +340,7 @@ export default function HomePage() {
 
       {/* ── FAQ ──────────────────────────────────────────────────────────── */}
       <section aria-labelledby="faq-heading">
-        <SectionHeading id="faq-heading" n={7} title="Questions" />
+        <SectionHeading id="faq-heading" n={8} title="Questions" />
         <div className="mt-6 divide-y divide-slate-200 rounded-2xl border border-slate-200 bg-white">
           {FAQ.map(([q, a]) => (
             <details key={q} className="group p-5 [&_summary::-webkit-details-marker]:hidden">
