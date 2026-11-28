@@ -2,7 +2,20 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { CalendarClock, Camera, History, Layers, RefreshCw, Smartphone, Sparkles, UploadCloud } from 'lucide-react';
+import {
+  ArrowLeft,
+  BookOpen,
+  CalendarClock,
+  Camera,
+  ChevronRight,
+  History,
+  Layers,
+  Presentation,
+  RefreshCw,
+  Smartphone,
+  Sparkles,
+  UploadCloud,
+} from 'lucide-react';
 import PhoneQrPanel from '@/components/PhoneQrPanel';
 import { useRole } from '@/lib/roleContext';
 import AffectCard from '@/components/student/AffectCard';
@@ -22,6 +35,7 @@ import {
 import { api, ApiError } from '@/lib/api';
 import { demoPersonas, gradingOutput, worksheet as demoWorksheet } from '@/lib/mockData';
 import { useSession } from '@/lib/session';
+import { UPLOAD_MODE_ORDER, UPLOAD_MODES, type UploadMode } from '@/lib/uploadModes';
 import type { ApiUsage, PlanTier, PillarCategory, PillarTally, Stage2GradingAndAffectOutput, WS_3STAGE_V1 } from '@/types/birdBrains';
 
 const WORKSHEET_NOTES: Record<string, string> = {
@@ -36,6 +50,9 @@ type State =
   | { kind: 'empty'; usage: ApiUsage | null }
   | { kind: 'error'; message: string }
   | { kind: 'data'; history: Stage2GradingAndAffectOutput[]; usage: ApiUsage | null };
+
+/** The portal opens on the hub; the worksheet and the upload history are one tap away. */
+type Panel = 'hub' | 'worksheet' | 'history';
 
 interface WorksheetState {
   gradingId: string;
@@ -60,6 +77,7 @@ export default function StudentDashboard() {
   const [adding, setAdding] = useState<{ busy: boolean; error: string }>({ busy: false, error: '' });
   const [quirkRows, setQuirkRows] = useState<PillarTally[] | null>(null);
   const addInput = useRef<HTMLInputElement>(null);
+  const [panel, setPanel] = useState<Panel>('hub');
 
   useEffect(() => {
     if (!live || !activeStudentId) return;
@@ -84,6 +102,8 @@ export default function StudentDashboard() {
       const fresh = known.current.size > 0 && !known.current.has(history[0].gradingId);
       known.current = new Set(history.map((g) => g.gradingId));
       setSelectedId((id) => (!fresh && id && known.current.has(id) ? id : history[0].gradingId));
+      // A just-finished upload opens its result in the history view.
+      if (fresh) setPanel('history');
     })().catch((err) => {
       if (cancelled) return;
       setState({ kind: 'error', message: err instanceof Error ? err.message : 'Something went wrong.' });
@@ -120,16 +140,39 @@ export default function StudentDashboard() {
   }, [live, selectedId, getToken]);
 
   if (!live) {
+    if (panel === 'worksheet') {
+      return (
+        <PanelFrame title="Today’s worksheet" onBack={() => setPanel('hub')}>
+          <WorksheetViewer worksheet={demoWorksheet} steps={gradingOutput.stepDiagnostics} />
+        </PanelFrame>
+      );
+    }
+    if (panel === 'history') {
+      return (
+        <PanelFrame title="Upload history" onBack={() => setPanel('hub')}>
+          <View
+            name={demoPersonas.student.name}
+            own
+            grading={gradingOutput}
+            worksheet={demoWorksheet}
+            worksheetNote=""
+            worksheetProOnly={false}
+            usage={DEMO_PRO_USAGE}
+            quirkRows={tallyFromGradings([gradingOutput])}
+          />
+        </PanelFrame>
+      );
+    }
     return (
-      <View
+      <PortalHub
         name={demoPersonas.student.name}
-        own
-        grading={gradingOutput}
-        worksheet={demoWorksheet}
-        worksheetNote=""
-        worksheetProOnly={false}
         usage={DEMO_PRO_USAGE}
-        quirkRows={tallyFromGradings([gradingOutput])}
+        live={false}
+        worksheet={{ state: 'ready', line: demoWorksheet.title }}
+        historyCount={1}
+        lastUpload={gradingOutput.topic}
+        onWorksheet={() => setPanel('worksheet')}
+        onHistory={() => setPanel('history')}
       />
     );
   }
@@ -137,18 +180,29 @@ export default function StudentDashboard() {
   if (state.kind === 'loading') return <Loading variant="student" />;
   if (state.kind === 'empty') {
     return (
-      <div className="space-y-6">
-        {state.usage && <UploadsLeftMeter usage={state.usage} />}
-        <NoWorkNotice />
-      </div>
+      <PortalHub
+        name={profile?.name ?? ''}
+        usage={state.usage}
+        live
+        worksheet={{ state: 'none', line: 'Your first practice worksheet is made from your first graded upload.' }}
+        historyCount={0}
+        onWorksheet={() => undefined}
+        onHistory={() => undefined}
+        empty={<NoWorkNotice />}
+      />
     );
   }
   if (state.kind === 'error') {
     return <LoadError title="We couldn’t load your results" message={state.message} onRetry={() => setAttempt((n) => n + 1)} />;
   }
 
-  const grading = state.history.find((g) => g.gradingId === selectedId) ?? state.history[0];
+  const latestGrading = state.history[0];
+  const grading = state.history.find((g) => g.gradingId === selectedId) ?? latestGrading;
   const sheet = ws && ws.gradingId === grading.gradingId ? ws : null;
+  const backToHub = () => {
+    setSelectedId(latestGrading.gradingId);
+    setPanel('hub');
+  };
 
   const runRecheck = async () => {
     setRecheck({ busy: true, error: '' });
@@ -179,9 +233,73 @@ export default function StudentDashboard() {
     }
   };
 
+  if (panel === 'hub') {
+    // The hub always describes the newest upload's worksheet.
+    const latestSheet = ws && ws.gradingId === latestGrading.gradingId ? ws : null;
+    const worksheetSummary: HubWorksheet = !latestSheet
+      ? { state: 'loading', line: 'Loading your latest practice worksheet…' }
+      : latestSheet.worksheet
+        ? { state: 'ready', line: latestSheet.worksheet.title }
+        : latestSheet.proOnly || latestGrading.plan === 'free'
+          ? { state: 'locked', line: 'Pro makes a practice worksheet from every upload with a mistake to practise.' }
+          : { state: latestSheet.canMake ? 'makeable' : 'waiting', line: latestSheet.note };
+    return (
+      <PortalHub
+        name={profile!.name}
+        usage={state.usage}
+        live
+        worksheet={worksheetSummary}
+        historyCount={state.history.length}
+        lastUpload={latestGrading.topic}
+        onWorksheet={() => {
+          setSelectedId(latestGrading.gradingId);
+          setPanel('worksheet');
+        }}
+        onHistory={() => setPanel('history')}
+      />
+    );
+  }
+
+  if (panel === 'worksheet') {
+    return (
+      <PanelFrame title="Today’s worksheet" subtitle={latestGrading.topic || undefined} onBack={backToHub}>
+        {!sheet ? (
+          <Loading variant="student" />
+        ) : sheet.worksheet ? (
+          <WorksheetViewer worksheet={sheet.worksheet} steps={grading.stepDiagnostics} />
+        ) : sheet.proOnly || grading.plan === 'free' ? (
+          <LockedProCard
+            title="3-stage practice worksheet"
+            description="Pro builds a custom practice worksheet whenever your work has a mistake to practise."
+            features={[
+              'Stage A · Diagnostic Mirror: your line side-by-side with the corrected step.',
+              'Stage B · Faded Scaffolding: guided practice with fill-in-the-blank checkpoints.',
+              'Stage C · Independent Transfer: a fresh problem with a self-check list.',
+            ]}
+          />
+        ) : (
+          <section className="card flex flex-wrap items-start gap-3 p-6">
+            <CalendarClock className="mt-0.5 h-5 w-5 shrink-0 text-indigo-600" aria-hidden />
+            <div className="min-w-0 flex-1">
+              <h2 className="font-semibold text-slate-900">Practice worksheet</h2>
+              <p className="mt-1 text-sm text-slate-600">{sheet.note}</p>
+            </div>
+            {sheet.canMake && (
+              <MakeWorksheetButton
+                gradingId={grading.gradingId}
+                onMade={(made) => setWs({ gradingId: sheet.gradingId, worksheet: made, note: '', proOnly: false })}
+                className=""
+              />
+            )}
+          </section>
+        )}
+      </PanelFrame>
+    );
+  }
+
   return (
-    <div className="space-y-6">
-      <UploadHistory history={state.history} selectedId={grading.gradingId} onSelect={setSelectedId} />
+    <PanelFrame title="Upload history" subtitle={`${state.history.length} graded`} onBack={backToHub}>
+      <UploadHistory history={state.history} selectedId={grading.gradingId} onSelect={setSelectedId} always />
       {profile?.role === 'student' && (
         <div className="flex flex-wrap items-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm">
           <div className="min-w-0 flex-1">
@@ -263,6 +381,165 @@ export default function StudentDashboard() {
         quirkRows={quirkRows ?? tallyFromGradings(state.history)}
         newQuirks={firstTimeQuirks(state.history, grading.gradingId)}
       />
+    </PanelFrame>
+  );
+}
+
+interface HubWorksheet {
+  state: 'ready' | 'makeable' | 'waiting' | 'locked' | 'loading' | 'none';
+  line: string;
+}
+
+const MODE_ICONS: Record<UploadMode, typeof Camera> = {
+  WORKSHEET_PHOTO: Camera,
+  SLIDES_DECK: Presentation,
+  TEXTBOOK_ASSIST: BookOpen,
+};
+
+/**
+ * The student portal's home: today's worksheet, the upload history, and the three ways
+ * to send work (photo, slides, textbook). Results open from here instead of filling the
+ * page by default.
+ */
+function PortalHub({
+  name,
+  usage,
+  live,
+  worksheet,
+  historyCount,
+  lastUpload,
+  onWorksheet,
+  onHistory,
+  empty,
+}: {
+  name: string;
+  usage: ApiUsage | null;
+  live: boolean;
+  worksheet: HubWorksheet;
+  historyCount: number;
+  lastUpload?: string;
+  onWorksheet: () => void;
+  onHistory: () => void;
+  /** Shown under the hub when there is nothing graded yet. */
+  empty?: React.ReactNode;
+}) {
+  const { openCaptureMode } = useRole();
+  const limitReached = usage !== null && usage.plan === 'free' && usage.remaining === 0;
+  const first = name.split(' ')[0];
+  const noWorksheet = worksheet.state === 'none';
+  return (
+    <div className="space-y-5">
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <p className="eyebrow">Student portal</p>
+          <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+            {first ? `Hi ${first}, what are we working on?` : 'What are we working on?'}
+          </h1>
+        </div>
+        {limitReached && (
+          <Link href="/plans" className="btn btn-primary">
+            <Sparkles className="h-4 w-4" aria-hidden /> Upgrade for more uploads
+          </Link>
+        )}
+      </header>
+
+      {usage && <UploadsLeftMeter usage={usage} compact />}
+
+      {/* Row 1: today's worksheet and online practice */}
+      <button
+        type="button"
+        onClick={onWorksheet}
+        disabled={noWorksheet}
+        className="group flex w-full items-center gap-4 rounded-2xl bg-indigo-600 px-5 py-5 text-left text-white shadow-[0_10px_30px_-12px_rgba(79,70,229,0.7)] transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:bg-indigo-300 disabled:shadow-none sm:px-6 sm:py-6"
+      >
+        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-white/15">
+          <Layers className="h-6 w-6" aria-hidden />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block font-display text-lg font-bold leading-snug sm:text-xl">
+            View Today’s Worksheet / Online Practice Portal
+          </span>
+          <span className="mt-1 block text-sm text-indigo-100">{worksheet.line}</span>
+        </span>
+        {!noWorksheet && <ChevronRight className="h-6 w-6 shrink-0 transition group-hover:translate-x-0.5" aria-hidden />}
+      </button>
+
+      {/* Row 2: upload history */}
+      <button
+        type="button"
+        onClick={onHistory}
+        disabled={historyCount === 0}
+        className="group flex w-full items-center gap-4 rounded-2xl border border-slate-200 bg-white px-5 py-4 text-left transition hover:border-indigo-300 hover:bg-indigo-50/40 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:border-slate-200 disabled:hover:bg-white"
+      >
+        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200">
+          <History className="h-5 w-5" aria-hidden />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block font-semibold text-slate-900">Upload History</span>
+          <span className="block truncate text-sm text-slate-500">
+            {historyCount === 0
+              ? 'Nothing graded yet.'
+              : `${historyCount} graded upload${historyCount === 1 ? '' : 's'}${lastUpload ? ` · latest: ${lastUpload}` : ''}`}
+          </span>
+        </span>
+        {historyCount > 0 && <ChevronRight className="h-5 w-5 shrink-0 text-slate-400" aria-hidden />}
+      </button>
+
+      {/* Row 3: the three ways to send work */}
+      <div className="grid gap-3 sm:grid-cols-3">
+        {UPLOAD_MODE_ORDER.map((m) => {
+          const cfg = UPLOAD_MODES[m];
+          const Icon = MODE_ICONS[m];
+          const soon = live && !cfg.liveReady;
+          return (
+            <button
+              key={m}
+              type="button"
+              onClick={() => openCaptureMode(m)}
+              className="card flex h-full flex-col items-start gap-3 p-5 text-left transition hover:border-indigo-300 hover:shadow-md"
+            >
+              <span className="flex w-full items-center justify-between gap-2">
+                <span className="grid h-10 w-10 place-items-center rounded-lg bg-indigo-50 text-indigo-700 ring-1 ring-indigo-200">
+                  <Icon className="h-5 w-5" aria-hidden />
+                </span>
+                {soon && <span className="aero-badge">Coming soon</span>}
+              </span>
+              <span className="font-display font-bold tracking-display text-slate-900">{cfg.title}</span>
+              <span className="text-sm text-slate-600">{cfg.blurb}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {empty}
+    </div>
+  );
+}
+
+/** A portal page (worksheet or history) with a way back to the hub. */
+function PanelFrame({
+  title,
+  subtitle,
+  onBack,
+  children,
+}: {
+  title: string;
+  subtitle?: string;
+  onBack: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-5">
+      <div className="flex flex-wrap items-center gap-3">
+        <button type="button" onClick={onBack} className="btn btn-sm btn-secondary">
+          <ArrowLeft className="h-4 w-4" aria-hidden /> Student portal
+        </button>
+        <div className="min-w-0">
+          <h1 className="text-xl font-bold tracking-tight text-slate-900 sm:text-2xl">{title}</h1>
+          {subtitle && <p className="truncate text-sm text-slate-500">{subtitle}</p>}
+        </div>
+      </div>
+      {children}
     </div>
   );
 }
@@ -272,13 +549,16 @@ function UploadHistory({
   history,
   selectedId,
   onSelect,
+  always = false,
 }: {
   history: Stage2GradingAndAffectOutput[];
   selectedId: string;
   onSelect: (id: string) => void;
+  /** Show the list even with one upload (the history page). */
+  always?: boolean;
 }) {
   const [open, setOpen] = useState(false);
-  if (history.length < 2) return null;
+  if (history.length < (always ? 1 : 2)) return null;
   const shown = open ? history : history.slice(0, 4);
   return (
     <section className="card p-4 sm:p-5" aria-labelledby="history-title">
