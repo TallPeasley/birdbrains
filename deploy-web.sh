@@ -29,7 +29,7 @@ HOSTING_PROJECTS="${HOSTING_PROJECTS:-boson-quark $PROJECT}"
 SITE="${SITE_URL:-https://quark.study}"
 SITE="${SITE%/}"
 # Every address the site is served from may call the API.
-ORIGINS="https://quark.study,https://www.quark.study"
+ORIGINS="https://quark.study,https://www.quark.study,https://boson-planck.web.app,https://boson-planck.firebaseapp.com"  # Planck reads the growth dashboard API
 for h in $HOSTING_PROJECTS; do ORIGINS="$ORIGINS,https://$h.web.app,https://$h.firebaseapp.com"; done
 case ",$ORIGINS," in *",$SITE,"*) ;; *) ORIGINS="$ORIGINS,$SITE" ;; esac
 cd "$(dirname "$0")"
